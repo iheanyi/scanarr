@@ -6,7 +6,7 @@ Audience: Solo builder
 
 ## Summary
 
-Build a self-hosted manga manager and reader with Sonarr-like automation. The system discovers, downloads, and organizes manga from diverse sources (trackers, usenet, scanlation sites) and supports multi-language libraries. It provides a modern web and mobile reader experience, integrates with AniList/MAL/Kitsu, and uses a first-party scraper framework rather than a Mihon extension bridge. Strong network controls (proxy/VPN) and security boundaries protect users and the host.
+Build a self-hosted manga manager and reader with Sonarr-like automation. The system discovers, downloads, and organizes manga from diverse sources (trackers, usenet, scanlation sites) and supports multi-language libraries. It provides a modern web and mobile reader experience, integrates with AniList/MAL/Kitsu, uses a first-party scraper framework, and supports pluggable storage backends (NAS/S3). Strong network controls (proxy/VPN) and security boundaries protect users and the host.
 
 ## Goals
 
@@ -33,8 +33,9 @@ Build a self-hosted manga manager and reader with Sonarr-like automation. The sy
 - Modular monolith + worker queue.
 - Open-source.
 - Bidirectional sync with AniList, MyAnimeList, and Kitsu.
-- First-party scraper framework for source ecosystem.
-- Paperback iOS integration via custom extension.
+- First-party scraper framework for source ecosystem (no dependency on extension ecosystems).
+- Pluggable storage backends for NAS and object storage.
+- Stretch goals: Mihon client compatibility, Paperback extension, OPDS/WebDAV.
 
 ## Personas and Use Cases
 
