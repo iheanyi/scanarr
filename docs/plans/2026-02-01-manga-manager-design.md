@@ -165,6 +165,11 @@ Storage abstraction:
 - Import pipeline stages are storage-agnostic, with finalization delegated to the adapter.
 - NAS use cases are supported via filesystem adapters pointing at SMB/NFS mounts, with health checks for mount availability.
 - In Rails deployments, the adapter may wrap ActiveStorage services for consistent blob handling.
+- ActiveStorage is used for blob metadata and service routing; the adapter focuses on library layout, naming, and file operations.
+- Storage migration supports copy/verify jobs and optional dual-write periods for NAS -> S3 moves.
+- Quotas and alerts are enforced per library or user to prevent disk exhaustion.
+- Backend failure handling includes read-only mode, queued writes, and operator alerts.
+- Retention policies can auto-archive older chapters or prune failed imports.
 
 ## Storage Adapter Appendix
 
@@ -184,6 +189,7 @@ Notes:
 - Adapter selection is per library root to allow mixed storage.
 - Reader service can either proxy image streams through the API or issue signed read URLs; signed URLs reduce server bandwidth but require short TTLs and strict scopes.
 - Backup/restore should include both DB snapshots and storage manifest checksums; restore validates checksum consistency before reindexing.
+- Object storage should use lifecycle policies (tiering/expiry) and cost alerts for large libraries.
 
 Example config (filesystem/NAS):
 ```
@@ -241,6 +247,8 @@ The job system uses Rails ActiveJob and persists retries across restarts.
 - Job types: poll, search, grab, download-monitor, import, sync, cleanup.
 - Retry policy: exponential backoff with max retries and dead-letter queue.
 - Events: internal pub/sub for download complete, import complete, and sync updates.
+- Durability: jobs survive restarts and resume from last known state.
+- Backpressure: cap concurrent imports/downloads and shed load with queued delays.
 
 ## Matching and Scoring
 
@@ -325,6 +333,9 @@ State machine (example):
 Failure handling:
 - Retries with backoff and temporary blacklist.
 - Auto-disable sources when repeated failures occur.
+- Blacklist windows are time-bound and cleared on successful grabs.
+- Resume interrupted downloads/imports after crashes using persisted job state.
+- Pipeline health metrics drive alerts on queue backlog, error rates, and latency.
 
 ## Library and File Management
 
@@ -371,6 +382,11 @@ Bidirectional sync is driven per user with configurable direction and conflict r
 - **Sync schedule**: periodic sync jobs plus event-driven sync on progress updates.
 - **Mapping**: store provider ids per series; fallback fuzzy matching for unknowns.
 - **Rate limits**: provider-specific throttling and exponential backoff on failures.
+- **Token refresh**: auto-refresh before expiry; revoke tokens on repeated failures.
+- **Partial failures**: per-series error tracking with retries and user-visible warnings.
+- **Provider drift**: versioned adapters with deprecation handling for API changes.
+- **Provider-specific fields**: preserve custom lists/tags when possible, otherwise store as metadata.
+- **Downtime handling**: queue sync jobs and resume with jittered backoff when providers recover.
 
 ## Source Scraper Framework
 
@@ -398,6 +414,7 @@ Security and isolation:
 Proxy/VPN integration:
 - Proxy configuration passed per source to the scraper runtime.
 - Scraper runtime uses a managed HTTP client with proxy and rate limit settings.
+- Download clients can be pinned to VPN interfaces or SOCKS proxies via per-client profiles.
 
 API surface (example):
 - `GET /sources`
@@ -410,6 +427,8 @@ Optional Mihon client compatibility (Stretch Goal):
 - Ship a **custom Mihon extension** that points to this server API ([Mihon](https://github.com/mihonapp/mihon)).
 - This is a client integration only and does not use Mihon’s extension ecosystem for scraping.
 - Use the Mihon/Keiyoushi extension source as inspiration for adapter ergonomics, not as runtime dependency ([extensions-source](https://github.com/keiyoushi/extensions-source)).
+- Version the client API and maintain backward compatibility for at least one minor version.
+- Provide extension update/rollback guidance for break-glass fixes.
 
 ## Paperback iOS Integration (Stretch Goal)
 
@@ -427,6 +446,11 @@ Auth and pagination:
 - Auth via API token or basic auth.
 - Cursor or page/limit pagination.
 - Rate limits tuned for continuous reading.
+
+Extension lifecycle:
+- Token generation with scopes, rotation, and revocation.
+- Retry and timeout rules for extension requests.
+- Clear error envelopes and compatibility docs per API version.
 
 Server support:
 - Stable API versioning for the extension.
@@ -463,6 +487,10 @@ Operational security:
 - Strict input validation and path traversal protections.
 - Least-privilege filesystem access for the bridge and download clients.
 - Rate limits and abuse detection for external-facing endpoints.
+- Storage security with IAM roles/bucket policies and restricted NAS permissions.
+- OAuth token rotation and revocation on suspicious activity.
+- Patch management with scheduled updates and migration rollbacks.
+- Incident response plan with audit trail retention and alerting thresholds.
 
 ## Observability
 
@@ -551,3 +579,10 @@ Config:
 - **Release**: a downloadable package for a chapter (group, language, format).
 - **Group**: scanlation group that produced a release.
 - **Source**: a tracker, indexer, or website providing manga content.
+
+## References
+
+- Mihon client project: https://github.com/mihonapp/mihon
+- Mihon extension source: https://github.com/keiyoushi/extensions-source
+- Overseer task management: https://github.com/dmmulroy/overseer
+- Rails ActiveStorage overview: https://guides.rubyonrails.org/active_storage_overview.html

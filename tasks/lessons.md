@@ -4,3 +4,4 @@
 - 2026-02-02: Zeitwerk autoloading expects constants that match file paths; align scraper class/module names with app/scrapers paths to avoid NameError. Also convert Nokogiri NodeSet to arrays before using Array methods like concat.
 - 2026-02-02: Don't miss basic Rails conventions. Before running tests, sanity-check Zeitwerk naming (file paths ↔ constants) and avoid obvious autoload pitfalls.
 - 2026-02-02: Don't ship download artifacts without anchoring them to core domain models. Define Series/Chapter (and Release/FileAsset as needed) before persisting downloaded content.
+- 2026-02-02: Verify git repo state with `git status -sb` before claiming no repo. When using Overseer, use the correct DB path (`/Users/iheanyi/.overseer/tasks.db`) or set `OVERSEER_DB_PATH` explicitly.

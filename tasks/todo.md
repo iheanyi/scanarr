@@ -41,3 +41,7 @@ Notes:
 - [x] Populate chapter_number_value in model
 - [x] Sort chapters by numeric value in controllers
 - [x] Verify updated tests
+
+## Current plan: Manga manager design spec
+- Overseer milestone: task_01KGDVR714NJXGR6EBTV74HGS6
+- Use: `os task list --db /Users/iheanyi/.overseer/tasks.db`
