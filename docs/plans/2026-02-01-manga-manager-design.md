@@ -406,8 +406,9 @@ API surface (example):
 - `GET /chapters/{id}/pages`
 
 Optional Mihon client compatibility (Stretch Goal):
-- Ship a **custom Mihon extension** that points to this server API.
+- Ship a **custom Mihon extension** that points to this server API ([Mihon](https://github.com/mihonapp/mihon)).
 - This is a client integration only and does not use Mihon’s extension ecosystem for scraping.
+- Use the Mihon/Keiyoushi extension source as inspiration for adapter ergonomics, not as runtime dependency ([extensions-source](https://github.com/keiyoushi/extensions-source)).
 
 ## Paperback iOS Integration (Stretch Goal)
 
@@ -478,7 +479,7 @@ Testing spans unit, integration, and end-to-end flows.
 
 - Unit tests for search/decision logic and parsers.
 - Integration tests against mock indexers and download clients.
-- Contract tests for the Kotlin bridge API.
+- Contract tests for client integration APIs (Mihon/Paperback) as stretch goals.
 - End-to-end tests for add → search → download → import → read.
 - Load tests for large libraries and multi-user concurrency.
 
@@ -528,7 +529,7 @@ Config:
 
 ## Risks and Mitigations
 
-- **Source breakage**: mitigate with extension bridge updates and caching.
+- **Source breakage**: mitigate with adapter monitoring, caching, and fast fixes.
 - **Security of extensions**: sandbox and restrict network access.
 - **Legal risk**: self-hosted only, no hosted content.
 - **Metadata mismatches**: store multiple ids and enable manual overrides.
