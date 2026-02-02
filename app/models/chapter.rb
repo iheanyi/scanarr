@@ -16,11 +16,11 @@ class Chapter < ApplicationRecord
   private
 
   def set_chapter_number_value
-    value = chapter_number.to_s.strip
-    self.chapter_number_value = if value.match?(/\A\d+(\.\d+)?\z/)
-                                  BigDecimal(value)
-    else
-                                  nil
-    end
+    numeric = extract_numeric_value(chapter_number) || extract_numeric_value(title)
+    self.chapter_number_value = numeric ? BigDecimal(numeric) : nil
+  end
+
+  def extract_numeric_value(text)
+    text.to_s[/\d+(\.\d+)?/]
   end
 end

@@ -34,12 +34,12 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     source = sources(:one)
     Chapter.create!(series: series, source: source, chapter_number: "10", title: "Chapter 10")
     Chapter.create!(series: series, source: source, chapter_number: "10.5", title: "Chapter 10.5")
-    Chapter.create!(series: series, source: source, chapter_number: "Extra", title: "Chapter Extra")
+    Chapter.create!(series: series, source: source, chapter_number: "Extra", title: "Chapter 10 Extra")
 
     with_adapter(FakeAdapter.new) do
-      get "/sources/weeb-central/one-piece/chapters/2"
+      get "/sources/weeb-central/one-piece/chapters/10"
       assert_response :success
-      assert_includes @response.body, "/sources/weeb-central/one-piece/chapters/10"
+      assert_includes @response.body, "/sources/weeb-central/one-piece/chapters/Extra"
     end
   end
 

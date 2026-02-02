@@ -20,14 +20,14 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     source = sources(:one)
     Chapter.create!(series: series, source: source, chapter_number: "10", title: "Chapter 10")
     Chapter.create!(series: series, source: source, chapter_number: "10.5", title: "Chapter 10.5")
-    Chapter.create!(series: series, source: source, chapter_number: "Extra", title: "Chapter Extra")
+    Chapter.create!(series: series, source: source, chapter_number: "Extra", title: "Chapter 10 Extra")
 
     get "/sources/weeb-central/one-piece"
     assert_response :success
     body = @response.body
     assert body.index(">Chapter 1</a>") < body.index(">Chapter 2</a>")
     assert body.index(">Chapter 2</a>") < body.index(">Chapter 10</a>")
-    assert body.index(">Chapter 10</a>") < body.index(">Chapter 10.5</a>")
-    assert body.index(">Chapter 10.5</a>") < body.index(">Chapter Extra</a>")
+    assert body.index(">Chapter 10</a>") < body.index(">Chapter Extra</a>")
+    assert body.index(">Chapter Extra</a>") < body.index(">Chapter 10.5</a>")
   end
 end

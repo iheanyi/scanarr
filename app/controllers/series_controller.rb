@@ -15,7 +15,12 @@ class SeriesController < ApplicationController
     @chapters = @series.chapters
                        .where(source: @source)
                        .includes(releases: :file_asset)
-                       .order(Arel.sql("chapter_number_value ASC NULLS LAST"), :chapter_number, :id)
+                       .order(
+                         Arel.sql("chapter_number_value ASC NULLS LAST"),
+                         Arel.sql("title ASC NULLS LAST"),
+                         :chapter_number,
+                         :id
+                       )
   end
 
   def update

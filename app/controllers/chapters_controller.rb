@@ -87,7 +87,12 @@ class ChaptersController < ApplicationController
   def set_navigation
     ordered = @series.chapters
                      .where(source: @source)
-                     .order(Arel.sql("chapter_number_value ASC NULLS LAST"), :chapter_number, :id)
+                     .order(
+                       Arel.sql("chapter_number_value ASC NULLS LAST"),
+                       Arel.sql("title ASC NULLS LAST"),
+                       :chapter_number,
+                       :id
+                     )
                      .to_a
     index = ordered.index(@chapter)
     return unless index
