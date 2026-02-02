@@ -380,6 +380,7 @@ Adapter format and loading:
 - Adapters are Ruby modules within the scraper runtime.
 - Each adapter defines search, series, chapter, and page retrieval methods.
 - Adapters can optionally use a headless browser for dynamic sites.
+- HTTP client uses Faraday with retries/timeouts and request instrumentation.
 
 Responsibilities:
 - Adapter registry management (enable/disable per source).
@@ -479,6 +480,7 @@ Testing spans unit, integration, and end-to-end flows.
 
 - Unit tests for search/decision logic and parsers.
 - Integration tests against mock indexers and download clients.
+- VCR cassettes for scraper HTTP flows and parsing regression tests.
 - Contract tests for client integration APIs (Mihon/Paperback) as stretch goals.
 - End-to-end tests for add → search → download → import → read.
 - Load tests for large libraries and multi-user concurrency.
