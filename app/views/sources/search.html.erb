@@ -1,0 +1,50 @@
+<main class="space-y-6">
+  <header class="space-y-2">
+    <p class="text-sm text-zinc-400"><%= @source.name || @source.key %></p>
+    <h1 class="text-3xl font-semibold text-balance">Search</h1>
+    <p class="text-zinc-400 text-pretty">Search the source and import a series into your library.</p>
+  </header>
+
+  <section class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+    <%= form_with url: source_search_path(source_slug: source_slug(@source)), method: :get, local: true do |form| %>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div class="flex-1 space-y-1">
+          <%= form.label :q, "Series title", class: "text-sm text-zinc-300" %>
+          <%= form.text_field :q,
+                              value: @query,
+                              placeholder: "One Piece",
+                              class: "w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600" %>
+        </div>
+        <%= form.submit "Search",
+                        class: "inline-flex items-center justify-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
+      </div>
+    <% end %>
+  </section>
+
+  <% if @query.present? %>
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold text-balance">Results</h2>
+      <% if @results.any? %>
+        <ul class="space-y-3">
+          <% @results.each do |result| %>
+            <li class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="space-y-1">
+                  <p class="text-sm text-zinc-400">Series</p>
+                  <p class="text-lg font-semibold text-balance"><%= result.title %></p>
+                </div>
+                <%= button_to "Import series",
+                              source_import_path(source_slug: source_slug(@source)),
+                              method: :post,
+                              params: { series_url: result.url },
+                              class: "inline-flex items-center rounded-md border border-emerald-500/40 px-4 py-2 text-sm font-semibold text-emerald-300" %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-sm text-zinc-400 text-pretty">No results.</p>
+      <% end %>
+    </section>
+  <% end %>
+</main>

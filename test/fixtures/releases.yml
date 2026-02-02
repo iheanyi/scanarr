@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  chapter: one
+  format: pages
+  public_id: releasepub001
+  source: one
+  source_url: https://weebcentral.com/chapters/01CHAPTER
+
+two:
+  chapter: two
+  format: pages
+  public_id: releasepub002
+  source: one
+  source_url: https://weebcentral.com/chapters/02CHAPTER

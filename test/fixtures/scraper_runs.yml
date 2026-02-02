@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  source: one
+  run_type: smoke
+  status: success
+  started_at: 2026-02-01 20:50:30
+  finished_at: 2026-02-01 20:50:30
+  error: MyText
+  stats_json: 
+
+two:
+  source: two
+  run_type: smoke
+  status: failed
+  started_at: 2026-02-01 20:50:30
+  finished_at: 2026-02-01 20:50:30
+  error: MyText
+  stats_json: 

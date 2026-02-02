@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  series: one
+  chapter_number: "1"
+  chapter_number_value: 1
+  title: Chapter 1
+  public_id: chapterpub001
+  source: one
+  source_url: https://weebcentral.com/chapters/01CHAPTER
+
+two:
+  series: one
+  chapter_number: "2"
+  chapter_number_value: 2
+  title: Chapter 2
+  public_id: chapterpub002
+  source: one
+  source_url: https://weebcentral.com/chapters/02CHAPTER

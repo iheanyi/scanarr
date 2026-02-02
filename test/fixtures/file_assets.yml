@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  release: one
+  format: pages
+  public_id: fileasset001
+  download_status: complete
+  pages_expected: 2
+  pages_downloaded: 2
+
+two:
+  release: two
+  format: pages
+  public_id: fileasset002
+  download_status: pending
+  pages_expected:
+  pages_downloaded: 0

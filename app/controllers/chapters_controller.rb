@@ -1,0 +1,122 @@
+class ChaptersController < ApplicationController
+  before_action :load_context, only: %i[show enqueue_download]
+
+  helper_method :source_slug, :chapter_identifier
+
+  def show
+    @release = latest_release
+    file_asset = @release&.file_asset
+    @pages = if file_asset
+               file_asset.pages.includes(image_attachment: :blob).order(:position).select { |page| page.image.attached? }
+    else
+               []
+    end
+    @file_asset = file_asset
+    @reading_style = params[:reading_style].presence || @series.reading_style.presence || "left_to_right"
+    @source_pages = []
+    if @pages.empty?
+      source_url = @chapter.source_url || @release&.source_url
+      @source_pages = adapter_for(@source).pages(source_url) if source_url.present?
+    end
+    set_navigation
+  end
+
+  def enqueue_download
+    series_source = @series.series_sources.find_by(source: @source)
+    source_url = @chapter.source_url || latest_release&.source_url
+
+    if source_url.blank?
+      redirect_to source_series_chapter_path(
+        source_slug: source_slug(@source),
+        series_slug: @series.friendly_id,
+        chapter_identifier: chapter_identifier(@chapter)
+      ) and return
+    end
+
+    DownloadChapterJob.perform_later(
+      source_url,
+      source_key: @source.key,
+      series_title: @series.canonical_title,
+      source_series_id: series_source&.source_series_id,
+      chapter_number: @chapter.chapter_number,
+      chapter_title: @chapter.title,
+      language: @chapter.language,
+      group: @chapter.group
+    )
+
+    redirect_to source_series_chapter_path(
+      source_slug: source_slug(@source),
+      series_slug: @series.friendly_id,
+      chapter_identifier: chapter_identifier(@chapter)
+    )
+  end
+
+  def redirect
+    chapter = Chapter.find_by!(public_id: params[:public_id])
+    series = chapter.series
+    source = chapter.source || chapter.releases.first&.source
+    raise ActiveRecord::RecordNotFound, "Source not found" unless source
+
+    identifier = chapter.chapter_number.presence || chapter.public_id
+    redirect_to source_series_chapter_path(
+      source_slug: source_slug(source),
+      series_slug: series.friendly_id,
+      chapter_identifier: identifier
+    )
+  end
+
+  private
+
+  def load_context
+    @source = find_source
+    @series = Series.joins(:series_sources)
+                    .where(series_sources: { source_id: @source.id })
+                    .friendly
+                    .find(params[:series_slug])
+
+    identifier = params[:chapter_identifier].to_s
+    chapter_scope = @series.chapters.where(source: @source)
+    @chapter = chapter_scope.find_by(public_id: identifier) || chapter_scope.find_by(chapter_number: identifier)
+    raise ActiveRecord::RecordNotFound, "Chapter not found" unless @chapter
+  end
+
+  def latest_release
+    @chapter.releases.where(source: @source).order(created_at: :desc).first
+  end
+
+  def set_navigation
+    ordered = @series.chapters
+                     .where(source: @source)
+                     .order(Arel.sql("chapter_number_value ASC NULLS LAST"), :chapter_number, :id)
+                     .to_a
+    index = ordered.index(@chapter)
+    return unless index
+
+    @previous_chapter = ordered[index - 1] if index.positive?
+    @next_chapter = ordered[index + 1] if index < ordered.length - 1
+  end
+
+  def chapter_identifier(chapter)
+    chapter.chapter_number.presence || chapter.public_id
+  end
+
+  def find_source
+    key = params[:source_slug].to_s.tr("-", "_")
+    Source.find_by!(key: key)
+  end
+
+  def adapter_for(source)
+    case source.key.to_s
+    when "weeb_central"
+      WeebCentral::Adapter.new(config: Rails.configuration.scraper_sources.fetch("weeb_central", {}))
+    when "mangadex"
+      Mangadex::Adapter.new(config: Rails.configuration.scraper_sources.fetch("mangadex", {}))
+    else
+      raise ArgumentError, "Unknown source key #{source.key.inspect}"
+    end
+  end
+
+  def source_slug(source)
+    source.key.to_s.tr("_", "-")
+  end
+end

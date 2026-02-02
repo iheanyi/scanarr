@@ -1,0 +1,27 @@
+default: &default
+  weeb_central:
+    base_url: "https://weebcentral.com"
+    delay_ms: 400
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    proxy_url:
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+  mangadex:
+    base_url: "https://api.mangadex.org"
+    delay_ms: 200
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

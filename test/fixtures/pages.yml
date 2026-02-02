@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  file_asset: one
+  position: 1
+  source_url: https://img.example.com/page-1.jpg
+
+two:
+  file_asset: one
+  position: 2
+  source_url: https://img.example.com/page-2.jpg

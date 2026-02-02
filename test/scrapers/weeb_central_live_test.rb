@@ -1,0 +1,22 @@
+require "test_helper"
+
+class WeebCentralLiveTest < ActiveSupport::TestCase
+  def test_live_flow_records_with_vcr
+    VCR.use_cassette("weeb_central_live", record: :once) do
+      config = Rails.configuration.scraper_sources.fetch("weeb_central", {})
+      adapter = WeebCentral::Adapter.new(config: config)
+
+      results = adapter.search("one piece")
+      assert results.any?, "expected search results"
+
+      series = adapter.series(results.first.url)
+      assert series.title.present?, "expected series title"
+
+      chapters = adapter.chapters(series.url)
+      assert chapters.any?, "expected chapters"
+
+      pages = adapter.pages(chapters.first.url)
+      assert pages.any?, "expected pages"
+    end
+  end
+end

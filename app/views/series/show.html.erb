@@ -1,0 +1,83 @@
+<main class="space-y-6">
+  <header class="space-y-2">
+    <p class="text-sm text-zinc-400"><%= @source.name || @source.key %></p>
+    <h1 class="text-3xl font-semibold text-balance"><%= @series.canonical_title %></h1>
+    <p class="text-zinc-400 text-pretty">Choose a chapter to read or download.</p>
+    <div class="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
+      <span class="text-xs uppercase text-zinc-500">Reading style</span>
+      <%= form_with model: @series,
+                    url: source_series_update_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+                    method: :patch,
+                    local: true do |form| %>
+        <%= form.select :reading_style,
+                        options_for_select(
+                          [
+                            [ "Left to Right", "left_to_right" ],
+                            [ "Right to Left", "right_to_left" ],
+                            [ "Long Strip", "long_strip" ],
+                            [ "Webcomic", "webcomic" ]
+                          ],
+                          @series.reading_style
+                        ),
+                        {},
+                        class: "rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-sm text-zinc-100" %>
+        <%= form.submit "Save", class: "ml-2 rounded-md border border-emerald-500/40 px-3 py-1 text-xs font-semibold text-emerald-300" %>
+      <% end %>
+    </div>
+  </header>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold text-balance">Chapters</h2>
+    <% if @chapters.any? %>
+      <ul class="space-y-2">
+        <% @chapters.each do |chapter| %>
+          <li class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div class="space-y-1">
+                <%= link_to "Chapter #{chapter.chapter_number}",
+                            source_series_chapter_path(
+                              source_slug: @source.key.to_s.tr("_", "-"),
+                              series_slug: @series.friendly_id,
+                              chapter_identifier: chapter.chapter_number
+                            ),
+                            class: "text-base font-semibold text-emerald-300" %>
+                <% if chapter.title.present? %>
+                  <p class="text-sm text-zinc-400 text-pretty"><%= chapter.title %></p>
+                <% end %>
+                <% latest_release = chapter.releases.max_by(&:created_at) %>
+                <% file_asset = latest_release&.file_asset %>
+                <% if file_asset&.download_status.present? %>
+                  <p class="text-xs text-zinc-500">
+                    <% if file_asset.download_status == "downloading" && file_asset.pages_expected.present? %>
+                      Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
+                    <% elsif file_asset.download_status == "failed" %>
+                      Download failed
+                    <% elsif file_asset.download_status == "complete" %>
+                      Ready
+                    <% else %>
+                      Queued
+                    <% end %>
+                  </p>
+                <% end %>
+              </div>
+              <% if chapter.source_url.present? %>
+                <%= button_to "Download",
+                              source_series_chapter_download_path(
+                                source_slug: @source.key.to_s.tr("_", "-"),
+                                series_slug: @series.friendly_id,
+                                chapter_identifier: chapter.chapter_number
+                              ),
+                              method: :post,
+                              class: "inline-flex items-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300" %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="rounded-lg border border-dashed border-zinc-800/80 bg-zinc-900/40 p-6">
+        <p class="text-zinc-400 text-pretty">No chapters imported yet.</p>
+      </div>
+    <% end %>
+  </section>
+</main>
