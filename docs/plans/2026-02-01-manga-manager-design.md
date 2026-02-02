@@ -53,7 +53,7 @@ Core boundaries:
 - **Job workers (Rails ActiveJob)**: scheduled polling, searches, decision engine, download monitoring, post-processing, sync jobs.
 - **Scraper runtime**: runs first-party source adapters to access scanlation sites and other sources, returns normalized results.
 - **Download clients (external)**: torrent and usenet clients via adapters.
-- **Storage**: Postgres as primary DB, optional SQLite for lightweight installs; object storage or filesystem for library files; cache for hot metadata.
+- **Storage**: Postgres as primary DB, optional SQLite for lightweight installs; ActiveStorage for binary blobs (pages, covers, archives) backed by filesystem or S3; cache for hot metadata.
 
 Scaling model:
 - Single-host default with multiple job workers.
@@ -126,6 +126,7 @@ Core entities (expanded):
 - **Chapter**: id, series_id, volume_id (nullable), chapter_number, title, language, group, source_id.
 - **Release**: id, chapter_id, source_id, quality, format, filesize, hash, published_at.
 - **FileAsset**: id, release_id, path, format, page_count, checksum, storage_id.
+- **ActiveStorage::Blob/Attachment**: binary asset metadata and links to storage services.
 - **ReadingProgress**: id, user_id, series_id, chapter_id (nullable), page, updated_at.
 - **Category**: id, name; **SeriesCategory** join table.
 - **Download**: id, client_id, release_id, status, progress, error.
@@ -154,6 +155,7 @@ Storage choices:
   - Local filesystem (default) for direct-attached disks and NAS mounts.
   - S3-compatible object storage for remote or cloud deployments.
   - Future adapters for WebDAV or other backends.
+- **ActiveStorage** for binary assets, with Disk/S3/S3-compatible services and signed URLs for clients.
 - **Cache** for hot metadata and image tiles.
 - **Thumbnails** generated and stored separately for fast browsing.
 
@@ -162,6 +164,7 @@ Storage abstraction:
 - The adapter is configured per library root, allowing mixed backends (NAS + S3).
 - Import pipeline stages are storage-agnostic, with finalization delegated to the adapter.
 - NAS use cases are supported via filesystem adapters pointing at SMB/NFS mounts, with health checks for mount availability.
+- In Rails deployments, the adapter may wrap ActiveStorage services for consistent blob handling.
 
 ## Storage Adapter Appendix
 
