@@ -1,11 +1,23 @@
 module Admin
   class DownloadsController < ApplicationController
+    # Custom ordering: downloading first, then queued, then complete, then failed
+    STATUS_ORDER = Arel.sql(<<~SQL.squish)
+      CASE download_status
+        WHEN 'downloading' THEN 1
+        WHEN 'queued' THEN 2
+        WHEN 'pending' THEN 3
+        WHEN 'complete' THEN 4
+        WHEN 'failed' THEN 5
+        ELSE 6
+      END
+    SQL
+
     def index
       @statuses = %w[queued downloading complete failed]
 
       @downloads = FileAsset.includes(release: { chapter: :series })
                             .where.not(download_status: %w[pending cancelled])
-                            .order(updated_at: :desc)
+                            .order(STATUS_ORDER, updated_at: :desc)
 
       # Allow filtering by specific status, including cancelled if explicitly requested
       if params[:status].present?
