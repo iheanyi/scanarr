@@ -1,6 +1,10 @@
 <% page_count = @pages.any? ? @pages.length : @source_pages.length %>
-<% initial_page_index = @chapter_progress&.page_index || (page_count.positive? ? 1 : 0) %>
-<% initial_page_index = page_count.positive? ? [initial_page_index, page_count].min : 0 %>
+<% initial_page_index = @initial_page_index || @chapter_progress&.page_index || (page_count.positive? ? 1 : 0) %>
+<% if page_count.positive? %>
+  <% initial_page_index = [[initial_page_index, page_count].min, 1].max %>
+<% else %>
+  <% initial_page_index = 0 %>
+<% end %>
 <% progress_percent = page_count.positive? ? ((initial_page_index.to_f / page_count) * 100.0) : 0 %>
 <main data-controller="reader"
       data-reader-style-value="<%= @reading_style %>"
@@ -22,13 +26,18 @@
       </div>
       <div class="mt-2 h-1 w-full rounded-full bg-zinc-800">
         <div data-reader-target="progressBar"
-             class="h-1 rounded-full bg-emerald-500 transition-all"
+             class="h-1 rounded-full bg-emerald-500 transition-[width] duration-200"
              style="width: <%= progress_percent %>%"></div>
       </div>
     </div>
   <% end %>
 
   <nav class="flex flex-wrap items-center gap-2">
+    <button type="button"
+            class="inline-flex items-center rounded-md border border-zinc-700/70 px-3 py-1.5 text-sm font-semibold text-zinc-200"
+            data-action="click->reader#toggleLightbox">
+      Lightbox
+    </button>
     <% if @previous_chapter %>
       <%= link_to "Previous Chapter",
                   source_series_chapter_path(
@@ -92,11 +101,16 @@
     <% end %>
   </nav>
 
+  <% is_horizontal = @reading_style == 'left_to_right' || @reading_style == 'right_to_left' %>
+  <% viewport_class = is_horizontal ? 'flex overflow-x-auto snap-x snap-mandatory w-full' : 'flex flex-col items-center gap-2' %>
+  <% page_class = is_horizontal ? 'snap-start shrink-0 w-full min-w-full flex items-center justify-center p-4 cursor-pointer' : 'w-full max-w-3xl cursor-pointer' %>
+  <% image_class = is_horizontal ? 'max-h-[calc(100vh-280px)] w-auto max-w-[95vw] object-contain rounded-md pointer-events-none' : 'w-full h-auto rounded-md pointer-events-none' %>
+
   <section data-reader-target="viewport"
-           class="<%= @reading_style == 'left_to_right' || @reading_style == 'right_to_left' ? 'flex overflow-x-auto gap-4 snap-x snap-mandatory' : 'space-y-6' %>"
+           class="<%= viewport_class %>"
            <%= @reading_style == 'right_to_left' ? 'dir="rtl"' : '' %>>
     <% if @file_asset&.download_status.present? %>
-      <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4 text-sm text-zinc-300">
+      <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4 text-sm text-zinc-300 <%= is_horizontal ? 'shrink-0 w-screen flex items-center justify-center' : '' %>">
         <% if @file_asset.download_status == "downloading" && @file_asset.pages_expected.present? %>
           Downloading pages (<%= @file_asset.pages_downloaded %>/<%= @file_asset.pages_expected %>)
         <% elsif @file_asset.download_status == "failed" %>
@@ -108,25 +122,53 @@
         <% end %>
       </div>
     <% end %>
-    <% if @pages.empty? %>
-      <div class="rounded-lg border border-dashed border-zinc-800/80 bg-zinc-900/40 p-6 space-y-2">
+    <% if @pages.empty? && @source_pages.empty? %>
+      <div class="rounded-lg border border-dashed border-zinc-800/80 bg-zinc-900/40 p-6 space-y-2 <%= is_horizontal ? 'shrink-0 w-screen flex flex-col items-center justify-center' : '' %>">
         <p class="text-zinc-400 text-pretty">Streaming from source while download completes.</p>
         <p class="text-xs text-zinc-500">This does not store pages locally yet.</p>
       </div>
     <% end %>
     <% @pages.each do |page| %>
-      <article data-reader-target="page" class="rounded-lg border border-zinc-800/80 bg-zinc-900/20 p-2 <%= @reading_style == 'left_to_right' || @reading_style == 'right_to_left' ? 'snap-start shrink-0 w-[85vw]' : '' %>">
+      <article data-reader-target="page"
+               data-action="click->reader#openLightboxForPage"
+               class="<%= page_class %>">
         <% if page.image.attached? %>
-          <%= image_tag url_for(page.image), alt: "Page #{page.position}", class: "w-full rounded-md" %>
+          <%= image_tag url_for(page.image), alt: "Page #{page.position}", class: image_class %>
         <% else %>
           <p class="text-sm text-zinc-400 text-pretty">Image unavailable.</p>
         <% end %>
       </article>
     <% end %>
     <% @source_pages.each do |page| %>
-      <article data-reader-target="page" class="rounded-lg border border-zinc-800/80 bg-zinc-900/20 p-2 <%= @reading_style == 'left_to_right' || @reading_style == 'right_to_left' ? 'snap-start shrink-0 w-[85vw]' : '' %>">
-        <%= image_tag page.url, alt: "Source page #{page.index}", class: "w-full rounded-md" %>
+      <article data-reader-target="page"
+               data-action="click->reader#openLightboxForPage"
+               class="<%= page_class %>">
+        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class %>
       </article>
     <% end %>
   </section>
+
+  <%# Lightbox overlay - must be inside controller scope %>
+  <div data-reader-target="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-6">
+    <button type="button"
+            class="absolute right-6 top-6 rounded-full border border-zinc-700/70 bg-zinc-900/80 px-3 py-2 text-sm font-semibold text-zinc-200 hover:bg-zinc-800"
+            data-action="click->reader#closeLightbox">
+      Close
+    </button>
+    <button type="button"
+            class="absolute left-6 top-1/2 -translate-y-1/2 rounded-full border border-zinc-700/70 bg-zinc-900/80 px-4 py-3 text-xl text-zinc-200 hover:bg-zinc-800"
+            data-action="click->reader#lightboxPrev"
+            aria-label="Previous page">
+      &larr;
+    </button>
+    <button type="button"
+            class="absolute right-6 top-1/2 -translate-y-1/2 rounded-full border border-zinc-700/70 bg-zinc-900/80 px-4 py-3 text-xl text-zinc-200 hover:bg-zinc-800"
+            data-action="click->reader#lightboxNext"
+            aria-label="Next page">
+      &rarr;
+    </button>
+    <img data-reader-target="lightboxImage"
+         class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
+         alt="Reader page" />
+  </div>
 </main>
