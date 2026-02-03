@@ -5,32 +5,33 @@ class SearchController < ApplicationController
     @selected_source_ids = params[:sources].present? ? Array(params[:sources]) : @sources.pluck(:id).map(&:to_s)
 
     @results = []
+    @errors = []
     return if @query.blank?
 
     selected_sources = @sources.where(id: @selected_source_ids)
     selected_sources.each do |source|
-      begin
-        adapter = adapter_for(source)
-        adapter.search(@query).each do |result|
-          @results << { source: source, result: result }
-        end
-      rescue => e
-        Rails.logger.warn "Search failed for #{source.key}: #{e.message}"
-      end
+      search_source(source)
     end
   end
 
   private
 
-  def adapter_for(source)
-    case source.key.to_s
-    when "weeb_central"
-      WeebCentral::Adapter.new(config: Rails.configuration.scraper_sources.fetch("weeb_central", {}))
-    when "mangadex"
-      Mangadex::Adapter.new(config: Rails.configuration.scraper_sources.fetch("mangadex", {}))
-    else
-      raise ArgumentError, "Unknown source key #{source.key.inspect}"
+  def search_source(source)
+    unless AdapterRegistry.registered?(source.key)
+      @errors << { source: source, message: "Adapter not implemented" }
+      return
     end
+
+    adapter = AdapterRegistry.for(source)
+    adapter.search(@query).each do |result|
+      @results << { source: source, result: result }
+    end
+  rescue AdapterRegistry::UnknownSourceError => e
+    @errors << { source: source, message: "Source not configured" }
+    Rails.logger.warn "Search skipped for #{source.key}: #{e.message}"
+  rescue StandardError => e
+    @errors << { source: source, message: e.message.truncate(100) }
+    Rails.logger.warn "Search failed for #{source.key}: #{e.class} - #{e.message}"
   end
 
   def source_slug(source)

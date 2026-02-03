@@ -54,14 +54,11 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   private
 
   def with_adapter(adapter)
-    original = SourcesController.instance_method(:adapter_for) rescue nil
-    SourcesController.define_method(:adapter_for) { |_source = nil| adapter }
+    # Stub AdapterRegistry.for to return fake adapter
+    original_for = AdapterRegistry.method(:for)
+    AdapterRegistry.define_singleton_method(:for) { |_source| adapter }
     yield
   ensure
-    if original
-      SourcesController.define_method(:adapter_for, original)
-    else
-      SourcesController.remove_method(:adapter_for)
-    end
+    AdapterRegistry.define_singleton_method(:for, original_for)
   end
 end

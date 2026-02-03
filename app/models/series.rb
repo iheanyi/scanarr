@@ -3,6 +3,7 @@ class Series < ApplicationRecord
 
   before_validation :generate_slug, on: :create
   before_validation :update_slug_if_title_changed, on: :update
+  after_create :auto_link_library_series
 
   belongs_to :library_series, optional: true
   has_many :volumes, dependent: :destroy
@@ -177,5 +178,14 @@ class Series < ApplicationRecord
     else
       :ongoing
     end
+  end
+
+  # Auto-link to LibrarySeries on creation
+  def auto_link_library_series
+    return if library_series_id.present?
+
+    ensure_library_series!
+  rescue StandardError => e
+    Rails.logger.warn "Failed to auto-link LibrarySeries for #{canonical_title}: #{e.message}"
   end
 end

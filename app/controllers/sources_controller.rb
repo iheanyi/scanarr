@@ -9,7 +9,20 @@ class SourcesController < ApplicationController
 
   def search
     @query = params[:q].to_s.strip
-    @results = @query.present? ? adapter_for(@source).search(@query) : []
+    @results = []
+    @error = nil
+
+    return if @query.blank?
+
+    unless AdapterRegistry.registered?(@source.key)
+      @error = "This source doesn't have a search adapter yet"
+      return
+    end
+
+    @results = AdapterRegistry.for(@source).search(@query)
+  rescue StandardError => e
+    @error = "Search failed: #{e.message}"
+    Rails.logger.warn "Search failed for #{@source.key}: #{e.class} - #{e.message}"
   end
 
   def import
@@ -18,7 +31,11 @@ class SourcesController < ApplicationController
       redirect_to source_search_path(source_slug: source_slug(@source)), alert: "No series URL provided" and return
     end
 
-    importer = SeriesImporter.new(source: @source, adapter: adapter_for(@source))
+    unless AdapterRegistry.registered?(@source.key)
+      redirect_to search_path, alert: "Import not available for this source" and return
+    end
+
+    importer = SeriesImporter.new(source: @source, adapter: AdapterRegistry.for(@source))
     series = importer.import!(series_url)
     chapter_count = series.chapters.where(source: @source).count
 
@@ -37,17 +54,6 @@ class SourcesController < ApplicationController
   def set_source
     key = params[:source_slug].to_s.tr("-", "_")
     @source = Source.find_by!(key: key)
-  end
-
-  def adapter_for(source)
-    case source.key.to_s
-    when "weeb_central"
-      WeebCentral::Adapter.new(config: Rails.configuration.scraper_sources.fetch("weeb_central", {}))
-    when "mangadex"
-      Mangadex::Adapter.new(config: Rails.configuration.scraper_sources.fetch("mangadex", {}))
-    else
-      raise ArgumentError, "Unknown source key #{source.key.inspect}"
-    end
   end
 
   def source_slug(source)

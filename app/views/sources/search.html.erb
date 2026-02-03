@@ -22,8 +22,14 @@
   </section>
 
   <% if @query.present? %>
+    <% if @error.present? %>
+      <div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <%= @error %>
+      </div>
+    <% end %>
+
     <section class="space-y-3">
-      <h2 class="text-xl font-semibold text-balance">Results</h2>
+      <h2 class="text-xl font-semibold text-balance">Results (<%= @results.size %>)</h2>
       <% if @results.any? %>
         <ul class="space-y-3">
           <% @results.each do |result| %>

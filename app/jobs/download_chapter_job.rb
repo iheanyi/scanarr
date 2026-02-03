@@ -285,14 +285,7 @@ class DownloadChapterJob < ApplicationJob
   end
 
   def adapter_for(source_key)
-    case source_key.to_s
-    when "weeb_central"
-      WeebCentral::Adapter.new(config: Rails.configuration.scraper_sources.fetch("weeb_central", {}))
-    when "mangadex"
-      Mangadex::Adapter.new(config: Rails.configuration.scraper_sources.fetch("mangadex", {}))
-    else
-      raise ArgumentError, "Unknown source_key #{source_key.inspect}"
-    end
+    AdapterRegistry.for(source_key.to_s)
   end
 
   def find_or_create_series(source:, series_title:, source_series_id:)

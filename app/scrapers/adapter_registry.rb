@@ -36,7 +36,7 @@ class AdapterRegistry
     private
 
     def source_config(key)
-      Rails.application.config_for(:sources).fetch(key, {}).deep_symbolize_keys
+      Rails.application.config_for(:sources).fetch(key.to_sym, {}).to_h.deep_stringify_keys
     rescue RuntimeError
       {}
     end

@@ -42,14 +42,7 @@ class RefreshAllCoversJob < ApplicationJob
   private
 
   def adapter_for(source)
-    case source.key.to_s
-    when "weeb_central"
-      WeebCentral::Adapter.new(config: Rails.configuration.scraper_sources.fetch("weeb_central", {}))
-    when "mangadex"
-      Mangadex::Adapter.new(config: Rails.configuration.scraper_sources.fetch("mangadex", {}))
-    else
-      raise ArgumentError, "Unknown source key #{source.key.inspect}"
-    end
+    AdapterRegistry.for(source)
   end
 
   def download_cover(series, cover_url)
