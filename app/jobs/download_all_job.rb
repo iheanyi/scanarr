@@ -1,6 +1,9 @@
 class DownloadAllJob < ApplicationJob
   queue_as :default
 
+  # Only one "download all" job per series at a time
+  limits_concurrency to: 1, key: ->(series_id, source_id) { "download_all:#{series_id}:#{source_id}" }
+
   def perform(series_id, source_id)
     series = Series.find(series_id)
     source = Source.find(source_id)

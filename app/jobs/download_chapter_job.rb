@@ -3,6 +3,10 @@ class DownloadChapterJob < ApplicationJob
 
   queue_as :default
 
+  # Limit concurrent downloads per source to avoid overloading
+  # Key format: "download_chapter:weeb_central" or "download_chapter:mangadex"
+  limits_concurrency to: 3, key: ->(chapter_url, **kwargs) { "download_chapter:#{kwargs[:source_key] || 'weeb_central'}" }
+
   def perform(
     chapter_url,
     source_key: "weeb_central",

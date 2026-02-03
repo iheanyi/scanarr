@@ -1,6 +1,9 @@
 class RefreshAllCoversJob < ApplicationJob
   queue_as :default
 
+  # Only one refresh all covers job at a time globally
+  limits_concurrency to: 1, key: -> { "refresh_all_covers" }
+
   def perform
     refreshed = 0
     failed = 0

@@ -1,6 +1,10 @@
 class ImportSeriesJob < ApplicationJob
   queue_as :default
 
+  # Limit imports per source to respect rate limits (3 concurrent per source)
+  # Also prevent duplicate imports of the same series URL
+  limits_concurrency to: 1, key: ->(run_id, series_url) { "import_series:#{series_url}" }
+
   def perform(run_id, series_url)
     run = ScraperRun.find(run_id)
     source = run.source
