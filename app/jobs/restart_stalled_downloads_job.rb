@@ -28,9 +28,12 @@ class RestartStalledDownloadsJob < ApplicationJob
   def restart_download(file_asset)
     release = file_asset.release
     chapter = release&.chapter
+    series = chapter&.series
     source = chapter&.source || release&.source
 
-    return unless chapter && source
+    return unless chapter && series && source && chapter.source_url.present?
+
+    series_source = series.series_sources.find_by(source: source)
 
     # Reset status to queued
     file_asset.update!(
@@ -38,10 +41,16 @@ class RestartStalledDownloadsJob < ApplicationJob
       download_error: nil
     )
 
-    # Re-enqueue the download job
+    # Re-enqueue the download job with correct signature
     DownloadChapterJob.perform_later(
-      chapter.id,
-      source.key,
+      chapter.source_url,
+      source_key: source.key,
+      series_title: series.canonical_title,
+      source_series_id: series_source&.source_series_id,
+      chapter_number: chapter.chapter_number,
+      chapter_title: chapter.title,
+      language: chapter.language,
+      group: chapter.group,
       release_id: release.id
     )
 

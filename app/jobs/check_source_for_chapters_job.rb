@@ -36,8 +36,18 @@ class CheckSourceForChaptersJob < ApplicationJob
         chapter: chapter
       )
 
-      if follow.auto_download?
-        DownloadChapterJob.perform_later(chapter.id, series.source.key)
+      if follow.auto_download? && chapter.source_url.present?
+        series_source = series.series_sources.find_by(source: series.source)
+        DownloadChapterJob.perform_later(
+          chapter.source_url,
+          source_key: series.source.key,
+          series_title: series.canonical_title,
+          source_series_id: series_source&.source_series_id,
+          chapter_number: chapter.chapter_number,
+          chapter_title: chapter.title,
+          language: chapter.language,
+          group: chapter.group
+        )
       end
 
       new_chapter_count += 1
