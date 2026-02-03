@@ -98,7 +98,11 @@ class DownloadChapterJob < ApplicationJob
     end
 
     if @release_id.present?
-      @release = Release.find(@release_id)
+      @release = Release.find_by(id: @release_id)
+      unless @release
+        Rails.logger.info "DownloadChapterJob: Release #{@release_id} no longer exists, skipping"
+        return # Release was deleted, nothing to do
+      end
       @chapter = @release.chapter
       @series = @chapter.series
     else
@@ -124,7 +128,9 @@ class DownloadChapterJob < ApplicationJob
       )
     end
 
-    series_source = SeriesSource.find_by!(series: @series, source: @source)
+    series_source = SeriesSource.find_by(series: @series, source: @source)
+    series_source ||= SeriesSource.create!(series: @series, source: @source)
+
     builder = LibraryPathBuilder.new(series: @series, source: @source)
     base_path = builder.base_path
     if base_path.present? && series_source.library_base_path != base_path
@@ -172,14 +178,20 @@ class DownloadChapterJob < ApplicationJob
       position = idx + 1
 
       # Skip if this page already exists (idempotent)
-      next if @file_asset.pages.exists?(position: position)
+      existing_page = @file_asset.pages.find_by(position: position)
+      if existing_page&.image&.attached?
+        next # Already downloaded
+      end
 
       # Get the URL from the page data (handles both Page struct and string)
       page_url = page_data.respond_to?(:url) ? page_data.url : page_data.to_s
 
       # Download the page
       response = current_http.get(page_url)
-      next unless response_success?(response)
+      unless response_success?(response)
+        Rails.logger.warn "DownloadChapterJob: Failed to download page #{position} from #{page_url}"
+        next
+      end
 
       content_type = response_content_type(response)
       extension = case content_type
@@ -189,7 +201,8 @@ class DownloadChapterJob < ApplicationJob
                   else "jpg"
                   end
 
-      page = @file_asset.pages.create!(position: position)
+      # Use find_or_create_by! to handle race conditions
+      page = existing_page || @file_asset.pages.find_or_create_by!(position: position)
       page.image.attach(
         io: StringIO.new(response.body),
         filename: "#{position.to_s.rjust(3, '0')}.#{extension}",
@@ -221,6 +234,7 @@ class DownloadChapterJob < ApplicationJob
   rescue_from(StandardError) do |error|
     @file_asset&.update!(download_status: "failed", download_error: "#{error.class}: #{error.message}")
     broadcast_chapter_update(@chapter, @source) if @chapter
+    broadcast_admin_download_update
     raise
   end
 
@@ -228,14 +242,31 @@ class DownloadChapterJob < ApplicationJob
 
   def broadcast_chapter_update(chapter, source)
     series = chapter.series
+    # Broadcast to series page
     Turbo::StreamsChannel.broadcast_replace_to(
       [series, :downloads],
       target: ActionView::RecordIdentifier.dom_id(chapter),
       partial: "series/chapter_row",
       locals: { chapter: chapter.reload, source: source, series: series, progress: nil }
     )
+
+    # Broadcast to admin downloads page
+    broadcast_admin_download_update
   rescue StandardError => e
     Rails.logger.warn "Failed to broadcast chapter update: #{e.message}"
+  end
+
+  def broadcast_admin_download_update
+    return unless @file_asset
+
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "admin_downloads",
+      target: ActionView::RecordIdentifier.dom_id(@file_asset),
+      partial: "admin/downloads/download_row",
+      locals: { download: @file_asset.reload }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "Failed to broadcast admin download update: #{e.message}"
   end
 
   def adapter_for(source_key)

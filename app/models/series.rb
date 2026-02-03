@@ -36,12 +36,18 @@ class Series < ApplicationRecord
   end
 
   # Returns download progress stats for this series
+  # NOTE: For best performance, ensure chapters are preloaded with:
+  #   series.chapters.includes(releases: :file_asset)
   def download_progress
     @download_progress ||= begin
       stats = { total: 0, downloaded: 0, downloading: 0, queued: 0, failed: 0 }
 
-      chapters.each do |chapter|
+      # Use preloaded data if available, otherwise query efficiently
+      chaps = chapters.loaded? ? chapters : chapters.includes(releases: :file_asset)
+
+      chaps.each do |chapter|
         stats[:total] += 1
+        # Use preloaded releases if available
         file_asset = chapter.releases.first&.file_asset
         next unless file_asset
 
@@ -50,7 +56,7 @@ class Series < ApplicationRecord
           stats[:downloaded] += 1
         when "downloading"
           stats[:downloading] += 1
-        when "queued"
+        when "queued", "pending"
           stats[:queued] += 1
         when "failed", "cancelled"
           stats[:failed] += 1
@@ -61,13 +67,13 @@ class Series < ApplicationRecord
     end
   end
 
-  # Returns the primary source for this series (first one)
+  # Returns the primary source for this series (first added)
   def primary_source
-    @primary_source ||= sources.first
+    @primary_source ||= sources.order(:id).first
   end
 
   # Returns the series source for the primary source
   def primary_series_source
-    @primary_series_source ||= series_sources.first
+    @primary_series_source ||= series_sources.order(:id).first
   end
 end

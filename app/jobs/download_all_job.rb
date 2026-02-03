@@ -5,8 +5,13 @@ class DownloadAllJob < ApplicationJob
   limits_concurrency to: 1, key: ->(series_id, source_id) { "download_all:#{series_id}:#{source_id}" }
 
   def perform(series_id, source_id)
-    series = Series.find(series_id)
-    source = Source.find(source_id)
+    series = Series.find_by(id: series_id)
+    source = Source.find_by(id: source_id)
+
+    unless series && source
+      Rails.logger.info "DownloadAllJob: Series or source no longer exists, skipping"
+      return
+    end
 
     chapters = series.chapters.where(source: source).includes(releases: :file_asset)
     enqueued = 0

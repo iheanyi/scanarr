@@ -1,11 +1,13 @@
 <main class="space-y-8">
+  <%= turbo_stream_from "admin_downloads" %>
+
   <header class="space-y-2">
     <p class="text-sm text-zinc-400">Admin</p>
     <h1 class="text-3xl font-semibold text-balance">Download Queue</h1>
     <p class="text-zinc-400 text-pretty">Monitor download progress and view recent downloads.</p>
   </header>
 
-  <section class="grid gap-4 md:grid-cols-4">
+  <section id="download_stats" class="grid gap-4 md:grid-cols-4">
     <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
       <p class="text-xs uppercase text-zinc-500">Queued</p>
       <p class="text-2xl font-semibold text-amber-400"><%= @stats["queued"] || 0 %></p>
@@ -99,49 +101,9 @@
               <th class="px-4 py-3">Error</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-zinc-800/80 text-zinc-200">
+          <tbody id="downloads_list" class="divide-y divide-zinc-800/80 text-zinc-200">
             <% @downloads.each do |download| %>
-              <% chapter = download.release&.chapter %>
-              <% series = chapter&.series %>
-              <% progress_pct = download.pages_expected.to_i > 0 ? (download.pages_downloaded.to_f / download.pages_expected * 100).round : 0 %>
-              <tr>
-                <td class="px-4 py-3">
-                  <% if series && chapter %>
-                    <span class="font-semibold"><%= series.canonical_title %></span>
-                    <span class="text-zinc-400">Ch. <%= chapter.chapter_number %></span>
-                  <% else %>
-                    <span class="text-zinc-500">Unknown</span>
-                  <% end %>
-                </td>
-                <td class="px-4 py-3">
-                  <% case download.download_status %>
-                  <% when "queued" %>
-                    <span class="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">Queued</span>
-                  <% when "downloading" %>
-                    <span class="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-300">Downloading</span>
-                  <% when "complete" %>
-                    <span class="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">Complete</span>
-                  <% when "failed" %>
-                    <span class="inline-flex items-center rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-300">Failed</span>
-                  <% end %>
-                </td>
-                <td class="px-4 py-3">
-                  <% if download.pages_expected.to_i > 0 %>
-                    <div class="flex items-center gap-2">
-                      <div class="h-2 flex-1 rounded-full bg-zinc-800">
-                        <div class="h-2 rounded-full bg-emerald-500 transition-all" style="width: <%= progress_pct %>%"></div>
-                      </div>
-                      <span class="text-xs text-zinc-400 tabular-nums"><%= download.pages_downloaded %>/<%= download.pages_expected %></span>
-                    </div>
-                  <% else %>
-                    <span class="text-zinc-500">—</span>
-                  <% end %>
-                </td>
-                <td class="px-4 py-3 text-zinc-400 tabular-nums"><%= download.updated_at.strftime("%Y-%m-%d %H:%M") %></td>
-                <td class="px-4 py-3 text-zinc-400 max-w-xs truncate" title="<%= download.download_error %>">
-                  <%= download.download_error.present? ? truncate(download.download_error, length: 50) : "—" %>
-                </td>
-              </tr>
+              <%= render "admin/downloads/download_row", download: download %>
             <% end %>
           </tbody>
         </table>

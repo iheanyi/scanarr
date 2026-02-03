@@ -1,0 +1,43 @@
+<% chapter = download.release&.chapter %>
+<% series = chapter&.series %>
+<% progress_pct = download.pages_expected.to_i > 0 ? (download.pages_downloaded.to_f / download.pages_expected * 100).round : 0 %>
+<tr id="<%= dom_id(download) %>">
+  <td class="px-4 py-3">
+    <% if series && chapter %>
+      <span class="font-semibold"><%= series.canonical_title %></span>
+      <span class="text-zinc-400">Ch. <%= chapter.chapter_number %></span>
+    <% else %>
+      <span class="text-zinc-500">Unknown</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-3">
+    <% case download.download_status %>
+    <% when "queued", "pending" %>
+      <span class="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">Queued</span>
+    <% when "downloading" %>
+      <span class="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-300">Downloading</span>
+    <% when "complete" %>
+      <span class="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">Complete</span>
+    <% when "failed" %>
+      <span class="inline-flex items-center rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-300">Failed</span>
+    <% when "cancelled" %>
+      <span class="inline-flex items-center rounded-full bg-zinc-500/20 px-2 py-0.5 text-xs font-medium text-zinc-300">Cancelled</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-3">
+    <% if download.pages_expected.to_i > 0 %>
+      <div class="flex items-center gap-2">
+        <div class="h-2 flex-1 rounded-full bg-zinc-800">
+          <div class="h-2 rounded-full <%= download.download_status == 'complete' ? 'bg-emerald-500' : 'bg-blue-500' %> transition-all" style="width: <%= progress_pct %>%"></div>
+        </div>
+        <span class="text-xs text-zinc-400 tabular-nums"><%= download.pages_downloaded %>/<%= download.pages_expected %></span>
+      </div>
+    <% else %>
+      <span class="text-zinc-500">—</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 text-zinc-400 tabular-nums"><%= download.updated_at.strftime("%Y-%m-%d %H:%M") %></td>
+  <td class="px-4 py-3 text-zinc-400 max-w-xs truncate" title="<%= download.download_error %>">
+    <%= download.download_error.present? ? truncate(download.download_error, length: 50) : "—" %>
+  </td>
+</tr>

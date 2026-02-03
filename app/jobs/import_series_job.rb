@@ -6,7 +6,11 @@ class ImportSeriesJob < ApplicationJob
   limits_concurrency to: 1, key: ->(run_id, series_url) { "import_series:#{series_url}" }
 
   def perform(run_id, series_url)
-    run = ScraperRun.find(run_id)
+    run = ScraperRun.find_by(id: run_id)
+    unless run
+      Rails.logger.info "ImportSeriesJob: ScraperRun #{run_id} no longer exists, skipping"
+      return
+    end
     source = run.source
 
     importer = SeriesImporter.new(source: source, adapter: adapter_for(source))

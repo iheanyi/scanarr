@@ -1,8 +1,18 @@
 class ScraperSmokeJob < ApplicationJob
   queue_as :default
 
+  # Only one smoke test per source at a time
+  limits_concurrency to: 1, key: ->(run_id) {
+    run = ScraperRun.find_by(id: run_id)
+    "smoke_test:#{run&.source_id || 'unknown'}"
+  }
+
   def perform(run_id)
-    run = ScraperRun.find(run_id)
+    run = ScraperRun.find_by(id: run_id)
+    unless run
+      Rails.logger.info "ScraperSmokeJob: ScraperRun #{run_id} no longer exists, skipping"
+      return
+    end
     source = run.source
     adapter = adapter_for(source)
 
