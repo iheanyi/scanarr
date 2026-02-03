@@ -193,6 +193,30 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_remove_download_deletes_file_asset
+    chapter = chapters(:one)
+    release = releases(:one)
+    file_asset = file_assets(:one)
+
+    assert file_asset.persisted?
+    assert_equal "complete", file_asset.download_status
+
+    delete "/sources/weeb-central/one-piece/chapters/#{chapter.chapter_number}/download"
+
+    assert_redirected_to "/sources/weeb-central/one-piece"
+    assert_not FileAsset.exists?(file_asset.id)
+  end
+
+  def test_remove_download_shows_flash_message
+    chapter = chapters(:one)
+
+    delete "/sources/weeb-central/one-piece/chapters/#{chapter.chapter_number}/download"
+
+    assert_redirected_to "/sources/weeb-central/one-piece"
+    follow_redirect!
+    assert_includes @response.body, "Download removed"
+  end
+
   private
 
   def with_adapter(adapter)

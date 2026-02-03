@@ -23,6 +23,9 @@ Rails.application.routes.draw do
   post "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/download",
        to: "chapters#enqueue_download",
        as: :source_series_chapter_download
+  delete "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/download",
+         to: "chapters#remove_download",
+         as: :source_series_chapter_remove_download
 
   namespace :admin do
     get "scrapers", to: "scrapers#index", as: :scrapers

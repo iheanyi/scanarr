@@ -1,5 +1,5 @@
 class ChaptersController < ApplicationController
-  before_action :load_context, only: %i[show enqueue_download update_progress]
+  before_action :load_context, only: %i[show enqueue_download update_progress remove_download]
   before_action :authenticate_user!, only: %i[update_progress]
 
   helper_method :source_slug, :chapter_identifier
@@ -72,6 +72,29 @@ class ChaptersController < ApplicationController
       source_slug: source_slug(@source),
       series_slug: @series.friendly_id,
       chapter_identifier: chapter_identifier(@chapter)
+    )
+  end
+
+  def remove_download
+    release = latest_release
+    file_asset = release&.file_asset
+
+    if file_asset
+      # Purge all attached files
+      file_asset.archive.purge if file_asset.archive.attached?
+      file_asset.pages.each do |page|
+        page.image.purge if page.image.attached?
+      end
+      file_asset.pages.destroy_all
+      file_asset.destroy!
+      flash[:notice] = "Download removed for Chapter #{@chapter.chapter_number}"
+    else
+      flash[:alert] = "No download found to remove"
+    end
+
+    redirect_to source_series_path(
+      source_slug: source_slug(@source),
+      series_slug: @series.friendly_id
     )
   end
 
