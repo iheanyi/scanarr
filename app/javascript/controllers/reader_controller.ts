@@ -57,12 +57,16 @@ export default class extends Controller {
       this.closeLightbox()
       return
     }
+    
+    // In RTL mode, arrow keys are reversed (right goes back, left goes forward)
+    const isRtl = this.isRtl()
+    
     if (event.key === "ArrowRight" || event.key === "j") {
       event.preventDefault()
-      this.next()
+      isRtl ? this.previous() : this.next()
     } else if (event.key === "ArrowLeft" || event.key === "k") {
       event.preventDefault()
-      this.previous()
+      isRtl ? this.next() : this.previous()
     }
   }
 
@@ -108,13 +112,15 @@ export default class extends Controller {
   lightboxNext(event?: Event) {
     event?.preventDefault()
     event?.stopPropagation()
-    this.next()
+    // In RTL mode, the "next" button (right arrow) goes to previous page
+    this.isRtl() ? this.previous() : this.next()
   }
 
   lightboxPrev(event?: Event) {
     event?.preventDefault()
     event?.stopPropagation()
-    this.previous()
+    // In RTL mode, the "prev" button (left arrow) goes to next page
+    this.isRtl() ? this.next() : this.previous()
   }
 
   private resolveInitialIndex() {
@@ -167,6 +173,15 @@ export default class extends Controller {
 
   private isHorizontal() {
     return this.styleValue === "left_to_right" || this.styleValue === "right_to_left"
+  }
+
+  private isRtl() {
+    // Check both the style value and the data attribute on viewport
+    if (this.styleValue === "right_to_left") return true
+    if (this.hasViewportTarget) {
+      return this.viewportTarget.dataset.readerRtl === "true"
+    }
+    return false
   }
 
   private observePages() {
