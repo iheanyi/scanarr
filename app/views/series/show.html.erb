@@ -34,18 +34,45 @@
           <li class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div class="space-y-1">
-                <%= link_to "Chapter #{chapter.chapter_number}",
-                            source_series_chapter_path(
-                              source_slug: @source.key.to_s.tr("_", "-"),
-                              series_slug: @series.friendly_id,
-                              chapter_identifier: chapter.chapter_number
-                            ),
-                            class: "text-base font-semibold text-emerald-300" %>
+                <div class="flex flex-wrap items-center gap-2">
+                  <%= link_to "Chapter #{chapter.chapter_number}",
+                              source_series_chapter_path(
+                                source_slug: @source.key.to_s.tr("_", "-"),
+                                series_slug: @series.friendly_id,
+                                chapter_identifier: chapter.chapter_number
+                              ),
+                              class: "text-base font-semibold text-emerald-300" %>
+                  <% latest_release = chapter.releases.max_by(&:created_at) %>
+                  <% file_asset = latest_release&.file_asset %>
+                  <% if file_asset&.download_status.present? %>
+                    <% label = case file_asset.download_status
+                               when "downloading"
+                                 "Downloading"
+                               when "failed"
+                                 "Failed"
+                               when "complete"
+                                 "Ready"
+                               else
+                                 "Queued"
+                               end %>
+                    <% label_classes = case file_asset.download_status
+                                       when "downloading"
+                                         "bg-emerald-500/10 text-emerald-200 border-emerald-500/30"
+                                       when "failed"
+                                         "bg-rose-500/10 text-rose-200 border-rose-500/30"
+                                       when "complete"
+                                         "bg-sky-500/10 text-sky-200 border-sky-500/30"
+                                       else
+                                         "bg-zinc-800/60 text-zinc-200 border-zinc-700"
+                                       end %>
+                    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold <%= label_classes %>">
+                      <%= label %>
+                    </span>
+                  <% end %>
+                </div>
                 <% if chapter.title.present? %>
                   <p class="text-sm text-zinc-400 text-pretty"><%= chapter.title %></p>
                 <% end %>
-                <% latest_release = chapter.releases.max_by(&:created_at) %>
-                <% file_asset = latest_release&.file_asset %>
                 <% if file_asset&.download_status.present? %>
                   <p class="text-xs text-zinc-500">
                     <% if file_asset.download_status == "downloading" && file_asset.pages_expected.present? %>
@@ -61,6 +88,12 @@
                 <% end %>
               </div>
               <% if chapter.source_url.present? %>
+                <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>
+                <% button_class = if download_in_progress
+                                    "inline-flex items-center rounded-md border border-zinc-700/70 px-3 py-1.5 text-sm font-semibold text-zinc-400 cursor-not-allowed"
+                                  else
+                                    "inline-flex items-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300"
+                                  end %>
                 <%= button_to "Download",
                               source_series_chapter_download_path(
                                 source_slug: @source.key.to_s.tr("_", "-"),
@@ -68,7 +101,9 @@
                                 chapter_identifier: chapter.chapter_number
                               ),
                               method: :post,
-                              class: "inline-flex items-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300" %>
+                              class: button_class,
+                              disabled: download_in_progress,
+                              aria: { disabled: download_in_progress } %>
               <% end %>
             </div>
           </li>

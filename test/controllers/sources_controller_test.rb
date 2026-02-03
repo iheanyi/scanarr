@@ -8,7 +8,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
           id: "series-123",
           title: "One Piece",
           url: "https://weebcentral.com/series/OP",
-          cover_url: nil,
+          cover_url: "https://img.example.com/cover.jpg",
           language: nil
         )
       ]
@@ -38,6 +38,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       get "/sources/weeb-central/search", params: { q: "one piece" }
       assert_response :success
       assert_includes @response.body, "One Piece"
+      assert_includes @response.body, "https://img.example.com/cover.jpg"
     end
   end
 

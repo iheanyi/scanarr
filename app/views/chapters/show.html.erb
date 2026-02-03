@@ -25,14 +25,26 @@
                   class: "inline-flex items-center rounded-md border border-zinc-800 px-3 py-1.5 text-sm font-semibold text-zinc-200" %>
     <% end %>
     <% if @chapter.source_url.present? || @release&.source_url.present? %>
-      <%= button_to "Download this chapter",
+      <% download_label = if @download_in_progress
+                            @file_asset&.download_status == "downloading" ? "Downloading..." : "Download queued"
+                          else
+                            "Download this chapter"
+                          end %>
+      <% download_class = if @download_in_progress
+                            "inline-flex items-center rounded-md bg-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-200 cursor-not-allowed"
+                          else
+                            "inline-flex items-center rounded-md bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-zinc-950"
+                          end %>
+      <%= button_to download_label,
                     source_series_chapter_download_path(
                       source_slug: source_slug(@source),
                       series_slug: @series.friendly_id,
                       chapter_identifier: chapter_identifier(@chapter)
                     ),
                     method: :post,
-                    class: "inline-flex items-center rounded-md bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-zinc-950" %>
+                    class: download_class,
+                    disabled: @download_in_progress,
+                    aria: { disabled: @download_in_progress } %>
     <% end %>
     <%= form_with url: source_series_chapter_path(
                     source_slug: source_slug(@source),

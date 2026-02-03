@@ -29,9 +29,20 @@
           <% @results.each do |result| %>
             <li class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div class="space-y-1">
-                  <p class="text-sm text-zinc-400">Series</p>
-                  <p class="text-lg font-semibold text-balance"><%= result.title %></p>
+                <div class="flex items-center gap-4">
+                  <div class="h-24 w-16 overflow-hidden rounded-md border border-zinc-800/80 bg-zinc-950">
+                    <% if result.cover_url.present? %>
+                      <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover" %>
+                    <% else %>
+                      <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-zinc-500">
+                        No cover
+                      </div>
+                    <% end %>
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-sm text-zinc-400">Series</p>
+                    <p class="text-lg font-semibold text-balance"><%= result.title %></p>
+                  </div>
                 </div>
                 <%= button_to "Import series",
                               source_import_path(source_slug: source_slug(@source)),

@@ -12,6 +12,7 @@ class ChaptersController < ApplicationController
                []
     end
     @file_asset = file_asset
+    @download_in_progress = @file_asset&.download_status.in?(%w[queued pending downloading])
     @reading_style = params[:reading_style].presence || @series.reading_style.presence || "left_to_right"
     @source_pages = []
     if @pages.empty?
@@ -22,7 +23,7 @@ class ChaptersController < ApplicationController
   end
 
   def enqueue_download
-    series_source = @series.series_sources.find_by(source: @source)
+    series_source = @series.series_sources.find_or_create_by!(source: @source)
     source_url = @chapter.source_url || latest_release&.source_url
 
     if source_url.blank?
@@ -33,6 +34,25 @@ class ChaptersController < ApplicationController
       ) and return
     end
 
+    release = latest_release
+    file_asset = release&.file_asset
+    if file_asset&.download_status.in?(%w[queued pending downloading])
+      redirect_to source_series_chapter_path(
+        source_slug: source_slug(@source),
+        series_slug: @series.friendly_id,
+        chapter_identifier: chapter_identifier(@chapter)
+      ) and return
+    end
+
+    release = @chapter.releases.create!(source: @source, format: "pages", source_url: source_url)
+    file_asset = release.create_file_asset!(
+      format: "pages",
+      download_status: "queued",
+      pages_downloaded: 0,
+      download_error: nil,
+      path: LibraryPathBuilder.new(series: @series, source: @source).chapter_path(@chapter)
+    )
+
     DownloadChapterJob.perform_later(
       source_url,
       source_key: @source.key,
@@ -41,7 +61,8 @@ class ChaptersController < ApplicationController
       chapter_number: @chapter.chapter_number,
       chapter_title: @chapter.title,
       language: @chapter.language,
-      group: @chapter.group
+      group: @chapter.group,
+      release_id: release.id
     )
 
     redirect_to source_series_chapter_path(

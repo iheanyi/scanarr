@@ -11,6 +11,7 @@ class DownloadChapterJob < ApplicationJob
     language: nil,
     group: nil,
     max_pages: nil,
+    release_id: nil,
     adapter: nil,
     http: nil
   )
@@ -22,32 +23,57 @@ class DownloadChapterJob < ApplicationJob
       record.base_url = adapter.config["base_url"]
     end
 
-    series = find_or_create_series(source: source, series_title: series_title, source_series_id: source_series_id)
+    if release_id.present?
+      release = Release.find(release_id)
+      chapter = release.chapter
+      series = chapter.series
+    else
+      series = find_or_create_series(source: source, series_title: series_title, source_series_id: source_series_id)
 
-    chapter = Chapter.find_or_create_by!(
-      series: series,
-      chapter_number: chapter_number,
-      language: language,
-      group: group
-    ) do |record|
-      record.title = chapter_title
-      record.source = source
-    end
-    if chapter_title && chapter.title != chapter_title
-      chapter.update!(title: chapter_title)
+      chapter = Chapter.find_or_create_by!(
+        series: series,
+        chapter_number: chapter_number,
+        language: language,
+        group: group
+      ) do |record|
+        record.title = chapter_title
+        record.source = source
+      end
+      if chapter_title && chapter.title != chapter_title
+        chapter.update!(title: chapter_title)
+      end
+
+      release = chapter.releases.create!(
+        source: source,
+        format: "pages",
+        source_url: chapter_url
+      )
     end
 
-    release = chapter.releases.create!(
-      source: source,
-      format: "pages",
-      source_url: chapter_url
-    )
-    file_asset = release.create_file_asset!(
-      format: "pages",
-      download_status: "downloading",
-      pages_downloaded: 0,
-      download_error: nil
-    )
+    series_source = SeriesSource.find_by!(series: series, source: source)
+    builder = LibraryPathBuilder.new(series: series, source: source)
+    base_path = builder.base_path
+    if base_path.present? && series_source.library_base_path != base_path
+      series_source.update!(library_base_path: base_path)
+    end
+
+    file_asset = release.file_asset
+    if file_asset
+      file_asset.update!(
+        download_status: "downloading",
+        pages_downloaded: 0,
+        download_error: nil,
+        path: file_asset.path.presence || builder.chapter_path(chapter)
+      )
+    else
+      file_asset = release.create_file_asset!(
+        format: "pages",
+        download_status: "downloading",
+        pages_downloaded: 0,
+        download_error: nil,
+        path: builder.chapter_path(chapter)
+      )
+    end
 
     downloader = ChapterDownloader.new(adapter: adapter, http: http)
 

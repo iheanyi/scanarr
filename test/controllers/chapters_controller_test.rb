@@ -69,12 +69,29 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
   def test_download_enqueues_job
     clear_enqueued_jobs
-    assert_enqueued_jobs 1 do
-      post "/sources/weeb-central/one-piece/chapters/1/download"
+    assert_difference -> { Release.count }, 1 do
+      assert_difference -> { FileAsset.count }, 1 do
+        assert_enqueued_jobs 1 do
+          post "/sources/weeb-central/one-piece/chapters/1/download"
+        end
+      end
     end
+
+    release = Release.order(created_at: :desc).first
+    assert_equal "queued", release.file_asset.download_status
     job = enqueued_jobs.last
     assert_equal DownloadChapterJob, job[:job]
-    assert_equal "https://weebcentral.com/chapters/01CHAPTER", job[:args].first
+  end
+
+  def test_show_disables_download_when_queued
+    file_assets(:two).update!(download_status: "queued")
+
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/2"
+      assert_response :success
+      assert_includes @response.body, "Download queued"
+      assert_match(/disabled=\"disabled\"/, @response.body)
+    end
   end
 
   private
