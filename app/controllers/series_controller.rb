@@ -104,6 +104,33 @@ class SeriesController < ApplicationController
     redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
   end
 
+  def remove_all_downloads
+    @series = Series.joins(:series_sources)
+                    .where(series_sources: { source_id: @source.id })
+                    .friendly
+                    .find(params[:series_slug])
+
+    chapters = @series.chapters.where(source: @source).includes(releases: :file_asset)
+    removed = 0
+
+    chapters.each do |chapter|
+      chapter.releases.each do |release|
+        file_asset = release.file_asset
+        next unless file_asset
+
+        # Purge all attached files
+        file_asset.archive.purge if file_asset.archive.attached?
+        file_asset.pages.each { |page| page.image.purge if page.image.attached? }
+        file_asset.pages.destroy_all
+        file_asset.destroy!
+        removed += 1
+      end
+    end
+
+    flash[:notice] = "Removed #{removed} download(s)"
+    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
+  end
+
   private
 
   def download_cover(series, cover_url)
