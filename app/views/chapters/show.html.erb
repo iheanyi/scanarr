@@ -103,8 +103,8 @@
 
   <% is_horizontal = @reading_style == 'left_to_right' || @reading_style == 'right_to_left' %>
   <% viewport_class = is_horizontal ? 'flex overflow-x-auto snap-x snap-mandatory w-full' : 'flex flex-col items-center gap-2' %>
-  <% page_class = is_horizontal ? 'snap-start shrink-0 w-full min-w-full flex items-center justify-center p-4 cursor-pointer' : 'w-full max-w-3xl cursor-pointer' %>
-  <% image_class = is_horizontal ? 'max-h-[calc(100vh-280px)] w-auto max-w-[95vw] object-contain rounded-md pointer-events-none' : 'w-full h-auto rounded-md pointer-events-none' %>
+  <% page_class = is_horizontal ? 'snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer' : 'w-full max-w-2xl cursor-pointer' %>
+  <% image_class = 'max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none' %>
 
   <section data-reader-target="viewport"
            class="<%= viewport_class %>"
