@@ -15,49 +15,18 @@ module Admin
                         .group(:download_status)
                         .count
 
-      # Cover stats
+      # Cover stats - show all series, not just ones with cover_url
       @series_count = Series.count
       @covers_attached = Series.joins(:cover_attachment).count
-      @covers_with_url = Series.where.not(cover_url: [ nil, "" ]).count
+      @covers_missing = @series_count - @covers_attached
     end
 
     def refresh_all_covers
-      series_with_urls = Series.where.not(cover_url: [ nil, "" ])
-      refreshed = 0
+      # Process ALL series covers in background (fetches from source if needed)
+      RefreshAllCoversJob.perform_later
 
-      series_with_urls.find_each do |series|
-        series.cover.purge if series.cover.attached?
-        download_cover(series, series.cover_url)
-        refreshed += 1
-      end
-
-      flash[:notice] = "Refreshed #{refreshed} cover(s)"
+      flash[:notice] = "Refreshing all covers in background..."
       redirect_to admin_downloads_path
-    end
-
-    private
-
-    def download_cover(series, cover_url)
-      uri = URI.parse(cover_url)
-      response = Net::HTTP.get_response(uri)
-      return unless response.is_a?(Net::HTTPSuccess)
-
-      content_type = response["content-type"]
-      extension = case content_type
-      when /jpeg|jpg/i then "jpg"
-      when /png/i then "png"
-      when /webp/i then "webp"
-      when /gif/i then "gif"
-      else "jpg"
-      end
-
-      series.cover.attach(
-        io: StringIO.new(response.body),
-        filename: "cover.#{extension}",
-        content_type: content_type
-      )
-    rescue StandardError => e
-      Rails.logger.warn "Failed to download cover for #{series.canonical_title}: #{e.message}"
     end
   end
 end
