@@ -1,4 +1,4 @@
-class Adapter
+class BaseAdapter
   attr_reader :config, :http
 
   def initialize(config:, http: HttpClient.new(config: config))
@@ -24,5 +24,5 @@ class Adapter
 end
 
 module Scrapers
-  Adapter = ::Adapter
+  BaseAdapter = ::BaseAdapter
 end

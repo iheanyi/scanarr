@@ -1,7 +1,7 @@
 require "json"
 
 module Mangadex
-  class Adapter < ::Adapter
+  class Adapter < ::BaseAdapter
     def search(query)
       response = http.get("/manga", params: { title: query, limit: 20, includes: [ "cover_art", "author" ] })
       payload = JSON.parse(response.body)
