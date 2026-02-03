@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "sources#index"
+  get "/library", to: "library#index", as: :library
   get "/search", to: "search#index", as: :search
   get "/sources/:source_slug/search", to: "sources#search", as: :source_search
   post "/sources/:source_slug/import", to: "sources#import", as: :source_import

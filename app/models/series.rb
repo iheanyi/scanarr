@@ -34,4 +34,40 @@ class Series < ApplicationRecord
       cover_url
     end
   end
+
+  # Returns download progress stats for this series
+  def download_progress
+    @download_progress ||= begin
+      stats = { total: 0, downloaded: 0, downloading: 0, queued: 0, failed: 0 }
+
+      chapters.each do |chapter|
+        stats[:total] += 1
+        file_asset = chapter.releases.first&.file_asset
+        next unless file_asset
+
+        case file_asset.download_status
+        when "complete"
+          stats[:downloaded] += 1
+        when "downloading"
+          stats[:downloading] += 1
+        when "queued"
+          stats[:queued] += 1
+        when "failed", "cancelled"
+          stats[:failed] += 1
+        end
+      end
+
+      stats
+    end
+  end
+
+  # Returns the primary source for this series (first one)
+  def primary_source
+    @primary_source ||= sources.first
+  end
+
+  # Returns the series source for the primary source
+  def primary_series_source
+    @primary_series_source ||= series_sources.first
+  end
 end
