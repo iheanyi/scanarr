@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_03_200200) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_03_220405) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_200200) do
     t.index ["mangadex_id"], name: "index_library_series_on_mangadex_id"
     t.index ["public_id"], name: "index_library_series_on_public_id", unique: true
     t.index ["slug"], name: "index_library_series_on_slug", unique: true
+  end
+
+  create_table "new_chapter_notifications", force: :cascade do |t|
+    t.bigint "chapter_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "read", default: false, null: false
+    t.bigint "user_id", null: false
+    t.index ["chapter_id"], name: "index_new_chapter_notifications_on_chapter_id"
+    t.index ["user_id", "read", "created_at"], name: "index_new_chapter_notifications_user_read_created"
+    t.index ["user_id"], name: "index_new_chapter_notifications_on_user_id"
   end
 
   create_table "pages", force: :cascade do |t|
@@ -359,6 +369,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_200200) do
     t.string "base_url"
     t.jsonb "capabilities"
     t.datetime "created_at", null: false
+    t.integer "default_priority", default: 50, null: false
     t.boolean "enabled", default: true, null: false
     t.string "key", null: false
     t.string "name"
@@ -414,6 +425,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_200200) do
   add_foreign_key "chapters", "sources"
   add_foreign_key "chapters", "volumes"
   add_foreign_key "file_assets", "releases"
+  add_foreign_key "new_chapter_notifications", "chapters"
+  add_foreign_key "new_chapter_notifications", "users"
   add_foreign_key "pages", "file_assets"
   add_foreign_key "releases", "chapters"
   add_foreign_key "releases", "sources"

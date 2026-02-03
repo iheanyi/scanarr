@@ -16,6 +16,23 @@ default: &default
     max_retries: 2
     headers:
       User-Agent: "ScanarrScraper/0.1"
+  manga_see:
+    base_url: "https://mangasee123.com"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+  asura_scans:
+    base_url: "https://asuracomic.net"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://asuracomic.net/"
 
 development:
   <<: *default

@@ -1,0 +1,50 @@
+# frozen_string_literal: true
+
+class CheckSourceForChaptersJob < ApplicationJob
+  queue_as :default
+  limits_concurrency to: 3, key: ->(series_id, _) { "check_chapters:#{series_id}" }
+
+  def perform(series_id, follow_id)
+    series = Series.find_by(id: series_id)
+    follow = UserSeriesFollow.find_by(id: follow_id)
+
+    return unless series && follow && series.source
+
+    adapter = AdapterRegistry.for(series.source)
+    source_series_id = series.series_sources.find_by(source: series.source)&.source_series_id
+
+    return unless source_series_id
+
+    chapters_data = adapter.chapters(source_series_id)
+
+    new_chapter_count = 0
+    chapters_data.each do |ch_data|
+      next if series.chapters.exists?(chapter_number: ch_data.number, language: ch_data.language || "en")
+
+      chapter = series.chapters.create!(
+        chapter_number: ch_data.number,
+        title: ch_data.title,
+        language: ch_data.language || "en",
+        group: ch_data.group,
+        source: series.source,
+        source_url: ch_data.url,
+        published_at: ch_data.published_at
+      )
+
+      NewChapterNotification.create!(
+        user: follow.user,
+        chapter: chapter
+      )
+
+      if follow.auto_download?
+        DownloadChapterJob.perform_later(chapter.id, series.source.key)
+      end
+
+      new_chapter_count += 1
+    end
+
+    Rails.logger.info "[CheckSourceForChaptersJob] Found #{new_chapter_count} new chapters for series #{series_id}"
+  rescue StandardError => e
+    Rails.logger.error "[CheckSourceForChaptersJob] Error checking series #{series_id}: #{e.message}"
+  end
+end

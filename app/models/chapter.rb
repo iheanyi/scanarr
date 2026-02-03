@@ -6,6 +6,7 @@ class Chapter < ApplicationRecord
   belongs_to :source, optional: true
   has_many :releases, dependent: :destroy
   has_many :chapter_progresses, dependent: :destroy
+  has_many :new_chapter_notifications, dependent: :destroy
 
   validates :chapter_number, presence: true
   before_validation :set_chapter_number_value

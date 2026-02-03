@@ -8,6 +8,7 @@ Rails.application.routes.draw do
 
   root "sources#index"
   get "/library", to: "library#index", as: :library
+  resources :follows, only: [:create, :update, :destroy]
   get "/search", to: "search#index", as: :search
   get "/sources/:source_slug/search", to: "sources#search", as: :source_search
   post "/sources/:source_slug/import", to: "sources#import", as: :source_import
