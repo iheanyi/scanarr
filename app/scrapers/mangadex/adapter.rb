@@ -43,11 +43,14 @@ module Mangadex
       )
     end
 
-    def chapters(series_url)
+    def chapters(series_url, language: nil)
       id = extract_manga_id(series_url)
       chapters = []
       offset = 0
       limit = 100
+
+      # Default to English, but allow override
+      languages = language ? Array(language) : [ "en" ]
 
       loop do
         response = http.get(
@@ -56,30 +59,56 @@ module Mangadex
             manga: id,
             limit: limit,
             offset: offset,
-            translatedLanguage: [ "en" ],
-            order: { chapter: "asc" }
+            translatedLanguage: languages,
+            # Include all content ratings to get all chapters
+            contentRating: %w[safe suggestive erotica pornographic],
+            # Include chapters scheduled for future publication
+            includeFuturePublishAt: 1,
+            # Include chapters that link to external sites
+            includeExternalUrl: 1,
+            order: { chapter: "asc" },
+            # Include scanlation group info
+            includes: [ "scanlation_group" ]
           }
         )
         payload = JSON.parse(response.body)
+
+        if payload["result"] == "error"
+          errors = payload["errors"]&.map { |e| e["detail"] }&.join(", ") || "Unknown error"
+          Rails.logger.error "MangaDex chapters error: #{errors}"
+          break
+        end
+
         payload.fetch("data", []).each do |item|
           attrs = item.fetch("attributes", {})
+          group_name = item.fetch("relationships", [])
+                          .find { |r| r["type"] == "scanlation_group" }
+                          &.dig("attributes", "name")
+
           chapters << ResultTypes::Chapter.new(
             id: item.fetch("id"),
             title: attrs["title"],
             number: attrs["chapter"],
             volume: attrs["volume"],
             language: attrs["translatedLanguage"],
-            group: attrs["scanlationGroup"],
+            group: group_name,
             published_at: attrs["publishAt"],
             url: "https://mangadex.org/chapter/#{item.fetch('id')}"
           )
         end
+
         total = payload.fetch("total", chapters.size)
+        Rails.logger.debug "MangaDex chapters: fetched #{chapters.size}/#{total} for manga #{id}"
         offset += limit
         break if offset >= total
       end
 
+      # Deduplicate by chapter number, keeping newest version
       chapters
+        .group_by(&:number)
+        .values
+        .map { |group| group.max_by { |c| c.published_at || "" } }
+        .sort_by { |c| c.number.to_f rescue 0 }
     end
 
     def pages(chapter_url)
