@@ -58,15 +58,36 @@ export default class extends Controller {
       return
     }
     
-    // In RTL mode, arrow keys are reversed (right goes back, left goes forward)
     const isRtl = this.isRtl()
+    const isVertical = !this.isHorizontal()
     
-    if (event.key === "ArrowRight" || event.key === "j") {
-      event.preventDefault()
-      isRtl ? this.previous() : this.next()
-    } else if (event.key === "ArrowLeft" || event.key === "k") {
-      event.preventDefault()
-      isRtl ? this.next() : this.previous()
+    // Next page keys
+    const nextKeys = isVertical 
+      ? ["ArrowDown", "j", " ", "PageDown"]  // Vertical: down arrow, j, space, page down
+      : ["ArrowRight", "j", " ", "PageDown"] // Horizontal: right arrow, j, space, page down
+    
+    // Previous page keys  
+    const prevKeys = isVertical
+      ? ["ArrowUp", "k", "PageUp"]           // Vertical: up arrow, k, page up
+      : ["ArrowLeft", "k", "PageUp"]         // Horizontal: left arrow, k, page up
+    
+    // In RTL horizontal mode, swap next/prev
+    if (isRtl && !isVertical) {
+      if (nextKeys.includes(event.key)) {
+        event.preventDefault()
+        this.previous()
+      } else if (prevKeys.includes(event.key)) {
+        event.preventDefault()
+        this.next()
+      }
+    } else {
+      if (nextKeys.includes(event.key)) {
+        event.preventDefault()
+        this.next()
+      } else if (prevKeys.includes(event.key)) {
+        event.preventDefault()
+        this.previous()
+      }
     }
   }
 
@@ -186,33 +207,62 @@ export default class extends Controller {
 
   private observePages() {
     if (this.pageTargets.length === 0) return
-    const root = this.hasViewportTarget ? this.viewportTarget : null
     
-    // Single threshold - only fire when page is majority visible
+    // For horizontal modes, observe against the scrolling viewport container
+    // For vertical modes, use browser viewport (null) since the whole page scrolls
+    const root = this.isHorizontal() && this.hasViewportTarget ? this.viewportTarget : null
+    
+    // Use lower threshold for vertical (first page that enters view) vs horizontal (centered page)
+    const threshold = this.isHorizontal() ? 0.5 : 0.3
+    
     this.observer = new IntersectionObserver(
       (entries) => {
         // Skip if we're in the middle of a programmatic scroll
         if (this.isScrolling) return
         
-        // Find the most visible page
-        let bestEntry: IntersectionObserverEntry | null = null
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            if (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio) {
-              bestEntry = entry
+        if (this.isHorizontal()) {
+          // Horizontal: find the most visible page (center)
+          let bestEntry: IntersectionObserverEntry | null = null
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              if (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio) {
+                bestEntry = entry
+              }
             }
           }
-        }
-        
-        if (!bestEntry) return
-        
-        const index = this.pageTargets.indexOf(bestEntry.target as HTMLElement)
-        if (index >= 0 && index !== this.currentIndex) {
-          this.currentIndex = index
-          this.syncState()
+          
+          if (!bestEntry) return
+          
+          const index = this.pageTargets.indexOf(bestEntry.target as HTMLElement)
+          if (index >= 0 && index !== this.currentIndex) {
+            this.currentIndex = index
+            this.syncState()
+          }
+        } else {
+          // Vertical: find the topmost visible page (first in reading order)
+          let topmostEntry: IntersectionObserverEntry | null = null
+          let topmostTop = Infinity
+          
+          for (const entry of entries) {
+            if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
+              const rect = entry.boundingClientRect
+              if (rect.top < topmostTop) {
+                topmostTop = rect.top
+                topmostEntry = entry
+              }
+            }
+          }
+          
+          if (!topmostEntry) return
+          
+          const index = this.pageTargets.indexOf(topmostEntry.target as HTMLElement)
+          if (index >= 0 && index !== this.currentIndex) {
+            this.currentIndex = index
+            this.syncState()
+          }
         }
       },
-      { root, threshold: 0.5 } // Single threshold at 50%
+      { root, threshold }
     )
 
     this.pageTargets.forEach((page) => this.observer?.observe(page))
@@ -220,8 +270,13 @@ export default class extends Controller {
 
   private syncState() {
     this.updateProgressUI()
-    this.updateURL()
     this.scheduleProgressSave()
+    // Update URL last - it can fail with credentials in URL (browser security)
+    try {
+      this.updateURL()
+    } catch {
+      // Ignore SecurityError when URL contains credentials
+    }
   }
 
   private updateProgressUI() {

@@ -89,6 +89,30 @@
         <p class="text-sm text-zinc-400">
           Showing <%= @downloads.offset_value + 1 %>-<%= [@downloads.offset_value + @downloads.length, @downloads.total_count].min %> of <%= @downloads.total_count %> downloads
         </p>
+        <div class="flex items-center gap-2">
+          <% if @stuck_count > 0 %>
+            <%= button_to admin_restart_all_stuck_downloads_path,
+                          method: :post,
+                          class: "inline-flex items-center gap-1.5 rounded-md border border-blue-500/40 px-3 py-1.5 text-sm font-medium text-blue-300 hover:bg-blue-500/10",
+                          data: { turbo_confirm: "Restart all #{@stuck_count} stuck downloads?" } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Restart Stuck (<%= @stuck_count %>)
+            <% end %>
+          <% end %>
+          <% if (@stats["failed"] || 0) > 0 %>
+            <%= button_to admin_restart_all_failed_downloads_path,
+                          method: :post,
+                          class: "inline-flex items-center gap-1.5 rounded-md border border-red-500/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10",
+                          data: { turbo_confirm: "Restart all #{@stats['failed']} failed downloads?" } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Restart Failed (<%= @stats['failed'] %>)
+            <% end %>
+          <% end %>
+        </div>
       </div>
       <div class="overflow-hidden rounded-lg border border-zinc-800/80 bg-zinc-900/40">
         <table class="w-full text-sm">
@@ -99,6 +123,7 @@
               <th class="px-4 py-3 w-48">Progress</th>
               <th class="px-4 py-3">Updated</th>
               <th class="px-4 py-3">Error</th>
+              <th class="px-4 py-3 w-24">Actions</th>
             </tr>
           </thead>
           <tbody id="downloads_list" class="divide-y divide-zinc-800/80 text-zinc-200">

@@ -1,6 +1,21 @@
 module ResultTypes
   SearchResult = Struct.new(:id, :title, :url, :cover_url, :language, :author, keyword_init: true)
 
+  # Extended result for browse listings with additional metadata
+  BrowseResult = Struct.new(
+    :id,
+    :title,
+    :url,
+    :cover_url,
+    :language,
+    :author,
+    :status,           # ongoing, completed, hiatus, cancelled
+    :last_updated,     # DateTime of last chapter/update
+    :chapter_count,    # Number of chapters (if known)
+    :description,      # Short description/synopsis
+    keyword_init: true
+  )
+
   Series = Struct.new(
     :id,
     :title,

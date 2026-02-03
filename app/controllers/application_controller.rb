@@ -1,14 +1,13 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
-  # HTTP Basic Auth - credentials from env vars with sensible defaults
   before_action :authenticate!
 
-  helper_method :current_user, :user_signed_in?, :current_notifications, :unread_notification_count
+  helper_method :current_user, :user_signed_in?, :authenticated?, :current_notifications, :unread_notification_count
 
   private
 
-  # HTTP Basic Auth credentials
+  # Auth credentials from env vars with sensible defaults
   def auth_username
     ENV.fetch("SCANARR_USERNAME", "scanarr")
   end
@@ -17,22 +16,48 @@ class ApplicationController < ActionController::Base
     ENV.fetch("SCANARR_PASSWORD", "ilovemanga")
   end
 
+  def authenticated?
+    session[:authenticated] == true
+  end
+
   def authenticate!
-    authenticate_or_request_with_http_basic("Scanarr") do |username, password|
-      ActiveSupport::SecurityUtils.secure_compare(username, auth_username) &&
-        ActiveSupport::SecurityUtils.secure_compare(password, auth_password)
+    return if authenticated?
+
+    # Fall back to HTTP Basic Auth for API clients/curl
+    if request.authorization.present?
+      if valid_http_basic_auth?
+        session[:authenticated] = true
+        return
+      else
+        request_http_basic_authentication("Scanarr")
+        return
+      end
     end
+
+    redirect_to login_path
+  end
+
+  def valid_http_basic_auth?
+    authenticate_with_http_basic { |u, p| valid_credentials?(u, p) }
+  end
+
+  def valid_credentials?(username, password)
+    return false if username.blank? || password.blank?
+
+    ActiveSupport::SecurityUtils.secure_compare(username.to_s, auth_username) &&
+      ActiveSupport::SecurityUtils.secure_compare(password.to_s, auth_password)
   end
 
   # Returns the admin user (auto-created if needed)
   def current_user
     return @current_user if defined?(@current_user)
+    return nil unless authenticated?
 
     @current_user = User.find_or_create_by!(email: "admin@scanarr.local")
   end
 
   def user_signed_in?
-    true # Always signed in after HTTP Basic Auth passes
+    authenticated?
   end
 
   def current_notifications

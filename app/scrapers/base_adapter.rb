@@ -5,6 +5,10 @@ class BaseAdapter
   class SeriesNotFoundError < ScraperError; end
   class RateLimitError < ScraperError; end
   class SourceUnavailableError < ScraperError; end
+  class BrowseNotSupportedError < ScraperError; end
+
+  # Browse sort options
+  SORT_OPTIONS = %w[latest popular alphabetical].freeze
 
   attr_reader :config, :http
 
@@ -27,6 +31,25 @@ class BaseAdapter
 
   def pages(_chapter_url)
     raise NotImplementedError, "#{self.class}#pages not implemented"
+  end
+
+  # Browse the source catalog. Optional - not all sources support this.
+  # @param sort [String] One of: latest, popular, alphabetical
+  # @param page [Integer] Page number (1-indexed)
+  # @param limit [Integer] Results per page
+  # @return [Array<ResultTypes::BrowseResult>]
+  def browse(sort: "latest", page: 1, limit: 20)
+    raise BrowseNotSupportedError, "#{self.class} does not support browsing"
+  end
+
+  # Whether this adapter supports browse functionality
+  def supports_browse?
+    false
+  end
+
+  # Available sort options for browse (can be overridden by adapters)
+  def browse_sort_options
+    SORT_OPTIONS
   end
 end
 

@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
-  # Authentication is handled by HTTP Basic Auth in ApplicationController
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+
+  # Authentication
+  get "/login", to: "sessions#new", as: :login
+  post "/login", to: "sessions#create"
+  delete "/logout", to: "sessions#destroy", as: :logout
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
@@ -52,6 +56,9 @@ Rails.application.routes.draw do
     post "scrapers/:source_id/smoke", to: "scrapers#run_smoke", as: :scraper_smoke
     get "downloads", to: "downloads#index", as: :downloads
     post "downloads/refresh_all_covers", to: "downloads#refresh_all_covers", as: :refresh_all_covers
+    post "downloads/:id/restart", to: "downloads#restart", as: :download_restart
+    post "downloads/restart_all_failed", to: "downloads#restart_all_failed", as: :restart_all_failed_downloads
+    post "downloads/restart_all_stuck", to: "downloads#restart_all_stuck", as: :restart_all_stuck_downloads
   end
 
   # Mission Control for SolidQueue job monitoring

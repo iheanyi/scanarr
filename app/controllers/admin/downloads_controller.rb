@@ -36,6 +36,11 @@ module Admin
       # Cancelled count shown separately
       @cancelled_count = FileAsset.where(download_status: "cancelled").count
 
+      # Stuck count (downloading for 10+ minutes)
+      @stuck_count = FileAsset.where(download_status: "downloading")
+                              .where("updated_at < ?", 10.minutes.ago)
+                              .count
+
       # Cover stats - show all series, not just ones with cover_url
       @series_count = Series.count
       @covers_attached = Series.joins(:cover_attachment).count
@@ -47,6 +52,73 @@ module Admin
       RefreshAllCoversJob.perform_later
 
       flash[:notice] = "Refreshing all covers in background..."
+      redirect_to admin_downloads_path
+    end
+
+    def restart
+      @download = FileAsset.find(params[:id])
+
+      if @download.download_status.in?(%w[failed downloading cancelled])
+        @download.update!(
+          download_status: "queued",
+          download_error: nil,
+          pages_downloaded: 0
+        )
+
+        # Re-queue the download job
+        DownloadChapterJob.perform_later(@download.release_id)
+
+        flash[:notice] = "Download restarted successfully"
+      else
+        flash[:alert] = "Can only restart failed, stuck, or cancelled downloads"
+      end
+
+      redirect_to admin_downloads_path(status: params[:status])
+    end
+
+    def restart_all_failed
+      failed_downloads = FileAsset.where(download_status: "failed")
+      count = failed_downloads.count
+
+      if count > 0
+        failed_downloads.find_each do |download|
+          download.update!(
+            download_status: "queued",
+            download_error: nil,
+            pages_downloaded: 0
+          )
+          DownloadChapterJob.perform_later(download.release_id)
+        end
+
+        flash[:notice] = "Restarted #{count} failed download#{'s' if count != 1}"
+      else
+        flash[:alert] = "No failed downloads to restart"
+      end
+
+      redirect_to admin_downloads_path
+    end
+
+    def restart_all_stuck
+      # Stuck = downloading for more than 10 minutes with no progress
+      stuck_downloads = FileAsset.where(download_status: "downloading")
+                                 .where("updated_at < ?", 10.minutes.ago)
+      count = stuck_downloads.count
+
+      if count > 0
+        stuck_downloads.find_each do |download|
+          download.update!(
+            download_status: "queued",
+            download_error: nil,
+            pages_downloaded: 0
+          )
+          DownloadChapterJob.perform_later(download.release_id)
+        end
+
+        flash[:notice] = "Restarted #{count} stuck download#{'s' if count != 1}"
+      else
+        flash[:alert] = "No stuck downloads to restart"
+      end
+
       redirect_to admin_downloads_path
     end
   end
