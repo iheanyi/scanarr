@@ -12,3 +12,6 @@ application.register("reader", ReaderController)
 
 import LoadingButtonController from "./loading_button_controller"
 application.register("loading-button", LoadingButtonController)
+
+import DropdownController from "./dropdown_controller"
+application.register("dropdown", DropdownController)

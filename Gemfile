@@ -80,6 +80,6 @@ gem "devise"
 
 gem "kaminari", "~> 1.2"
 
-gem "bullet", "~> 8.1", groups: [:development, :test]
+gem "bullet", "~> 8.1", groups: [ :development, :test ]
 
 gem "mission_control-jobs", "~> 1.1"

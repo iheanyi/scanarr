@@ -44,6 +44,11 @@ class SeriesController < ApplicationController
     if current_user
       @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
                                               .index_by(&:chapter_id)
+
+      # Load follow data for current user
+      if @series.library_series
+        @user_follow = current_user.user_series_follows.find_by(library_series: @series.library_series)
+      end
     else
       @chapter_progress_map = {}
     end

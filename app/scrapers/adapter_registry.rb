@@ -7,7 +7,8 @@ class AdapterRegistry
     "mangadex" => -> { Mangadex::Adapter },
     "weeb_central" => -> { WeebCentral::Adapter },
     "manga_see" => -> { MangaSee::Adapter },
-    "asura_scans" => -> { AsuraScans::Adapter }
+    "asura_scans" => -> { AsuraScans::Adapter },
+    "manga_pill" => -> { MangaPill::Adapter }
   }.freeze
 
   class << self

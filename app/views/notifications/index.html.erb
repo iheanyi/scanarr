@@ -1,0 +1,67 @@
+<div class="space-y-6">
+  <header class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold">Notifications</h1>
+    <% if @notifications.any? { |n| !n.read? } %>
+      <%= button_to mark_all_read_notifications_path, method: :post, class: "inline-flex items-center gap-2 rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/10" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        Mark all as read
+      <% end %>
+    <% end %>
+  </header>
+
+  <% if @notifications.any? %>
+    <ul class="divide-y divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/50">
+      <% @notifications.each do |notification| %>
+        <li class="flex items-center gap-4 px-4 py-3 <%= notification.read? ? 'opacity-60' : '' %>">
+          <% if notification.chapter.series.cover_image_url.present? %>
+            <div class="h-12 w-9 shrink-0 overflow-hidden rounded border border-zinc-700">
+              <%= image_tag notification.chapter.series.cover_image_url, alt: "", class: "h-full w-full object-cover" %>
+            </div>
+          <% else %>
+            <div class="flex h-12 w-9 shrink-0 items-center justify-center rounded border border-zinc-700 bg-zinc-800">
+              <span class="text-xs text-zinc-500">?</span>
+            </div>
+          <% end %>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-zinc-100 truncate"><%= notification.chapter.series.canonical_title %></p>
+            <p class="text-sm text-zinc-400">
+              Chapter <%= notification.chapter.chapter_number %>
+              <% if notification.chapter.title.present? %>
+                - <%= notification.chapter.title %>
+              <% end %>
+            </p>
+            <p class="text-xs text-zinc-500"><%= time_ago_in_words(notification.created_at) %> ago</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <% source = notification.chapter.series.sources.first %>
+            <% if source %>
+              <%= link_to source_series_chapter_path(source_slug: source.key.to_s.tr("_", "-"), series_slug: notification.chapter.series.to_param, chapter_identifier: notification.chapter.public_id), class: "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:text-zinc-100 hover:border-zinc-500" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Read
+              <% end %>
+            <% end %>
+            <% unless notification.read? %>
+              <%= button_to mark_read_notification_path(notification), method: :post, class: "inline-flex items-center rounded-md border border-zinc-700 p-1 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="rounded-lg border border-dashed border-zinc-800 bg-zinc-900/40 p-8 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+      <p class="mt-4 text-zinc-400">No notifications yet</p>
+      <p class="mt-1 text-sm text-zinc-500">Follow some series to get notified when new chapters are available</p>
+    </div>
+  <% end %>
+</div>

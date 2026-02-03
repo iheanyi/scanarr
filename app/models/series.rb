@@ -78,6 +78,32 @@ class Series < ApplicationRecord
     @primary_series_source ||= series_sources.order(:id).first
   end
 
+  # Calculates and updates the quality score for this series
+  # Based on: chapter count, chapter completeness, and source reliability
+  def calculate_quality_score
+    chapter_score = chapters.count * 10
+    gap_penalty = calculate_chapter_gaps * -5
+    reliability = primary_source&.reliability_score.to_f * 20
+
+    new_score = [chapter_score + gap_penalty + reliability, 0].max
+    update!(quality_score: new_score.round(2))
+    new_score
+  end
+
+  # Ensures this series is linked to a LibrarySeries, creating one if needed
+  def ensure_library_series!
+    return library_series if library_series.present?
+
+    # Try to find existing LibrarySeries by title
+    ls = LibrarySeries.find_or_create_by!(canonical_title: canonical_title) do |record|
+      record.cover_url = cover_url
+      record.status = status_to_enum
+    end
+
+    update!(library_series: ls)
+    ls
+  end
+
   # Override to_param for pretty URLs: /public_id-slug
   def to_param
     "#{public_id}-#{slug}"
@@ -121,5 +147,35 @@ class Series < ApplicationRecord
     end
 
     self.slug = candidate
+  end
+
+  # Count gaps in chapter numbering (e.g., missing chapters between 1 and 10)
+  def calculate_chapter_gaps
+    numbers = chapters.pluck(:chapter_number_value).compact.sort
+    return 0 if numbers.length < 2
+
+    gaps = 0
+    numbers.each_cons(2) do |a, b|
+      # Count significant gaps (more than 1.5 chapters apart)
+      gap = b - a
+      gaps += 1 if gap > 1.5
+    end
+    gaps
+  end
+
+  # Convert string status to LibrarySeries enum value
+  def status_to_enum
+    case status&.downcase
+    when "ongoing", "publishing"
+      :ongoing
+    when "completed", "finished"
+      :completed
+    when "hiatus"
+      :hiatus
+    when "cancelled", "canceled"
+      :cancelled
+    else
+      :ongoing
+    end
   end
 end
