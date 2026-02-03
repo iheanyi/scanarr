@@ -86,9 +86,23 @@ module Mangadex
       id = extract_chapter_id(chapter_url)
       response = http.get("/at-home/server/#{id}")
       payload = JSON.parse(response.body)
-      base = payload.fetch("baseUrl")
-      hash = payload.fetch("chapter").fetch("hash")
-      files = payload.fetch("chapter").fetch("data")
+
+      # Handle API errors
+      if payload["result"] == "error"
+        errors = payload["errors"]&.map { |e| e["detail"] }&.join(", ") || "Unknown error"
+        raise "MangaDex API error: #{errors}"
+      end
+
+      base = payload["baseUrl"]
+      chapter_data = payload["chapter"]
+
+      if base.nil? || chapter_data.nil?
+        Rails.logger.error "MangaDex unexpected response for chapter #{id}: #{payload.inspect}"
+        raise "MangaDex API returned unexpected response structure"
+      end
+
+      hash = chapter_data.fetch("hash")
+      files = chapter_data.fetch("data")
 
       files.map.with_index do |filename, idx|
         ResultTypes::Page.new(index: idx + 1, url: "#{base}/data/#{hash}/#{filename}", mime_type: nil)
