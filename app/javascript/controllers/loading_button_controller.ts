@@ -11,7 +11,7 @@ export default class extends Controller {
   submit() {
     this.buttonTarget.disabled = true;
     this.buttonTarget.classList.add("opacity-75", "cursor-wait");
-    this.textTarget.textContent = "Queueing...";
+    this.textTarget.textContent = "Queuing...";
     this.spinnerTarget.classList.remove("hidden");
     this.iconTarget.classList.add("hidden");
   }

@@ -8,7 +8,7 @@ module Admin
                             .order(updated_at: :desc)
 
       @downloads = @downloads.where(download_status: params[:status]) if params[:status].present?
-      @downloads = @downloads.limit(100)
+      @downloads = @downloads.page(params[:page]).per(25)
 
       # Stats for summary cards
       @stats = FileAsset.where.not(download_status: "pending")

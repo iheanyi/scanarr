@@ -70,11 +70,16 @@
       <% end %>
     </div>
 
-    <% if @downloads.empty? %>
+    <% if @downloads.empty? || @downloads.total_count == 0 %>
       <div class="rounded-lg border border-dashed border-zinc-800/80 bg-zinc-900/40 p-6 text-center">
         <p class="text-zinc-400">No downloads yet.</p>
       </div>
     <% else %>
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm text-zinc-400">
+          Showing <%= @downloads.offset_value + 1 %>-<%= [@downloads.offset_value + @downloads.length, @downloads.total_count].min %> of <%= @downloads.total_count %> downloads
+        </p>
+      </div>
       <div class="overflow-hidden rounded-lg border border-zinc-800/80 bg-zinc-900/40">
         <table class="w-full text-sm">
           <thead class="bg-zinc-900/60 text-left text-zinc-400">
@@ -133,6 +138,30 @@
           </tbody>
         </table>
       </div>
+
+      <% if @downloads.total_pages > 1 %>
+        <nav class="mt-4 flex items-center justify-center gap-1">
+          <% if @downloads.first_page? %>
+            <span class="px-3 py-2 text-sm text-zinc-600 cursor-not-allowed">Previous</span>
+          <% else %>
+            <%= link_to "Previous", url_for(page: @downloads.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-300 hover:text-white rounded-md hover:bg-zinc-800" %>
+          <% end %>
+
+          <% @downloads.page_range.each do |page_num| %>
+            <% if page_num == @downloads.current_page %>
+              <span class="px-3 py-2 text-sm font-semibold text-emerald-400 bg-emerald-500/10 rounded-md"><%= page_num %></span>
+            <% else %>
+              <%= link_to page_num, url_for(page: page_num, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800" %>
+            <% end %>
+          <% end %>
+
+          <% if @downloads.last_page? %>
+            <span class="px-3 py-2 text-sm text-zinc-600 cursor-not-allowed">Next</span>
+          <% else %>
+            <%= link_to "Next", url_for(page: @downloads.next_page, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-300 hover:text-white rounded-md hover:bg-zinc-800" %>
+          <% end %>
+        </nav>
+      <% end %>
     <% end %>
   </section>
 </main>

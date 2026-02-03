@@ -56,19 +56,19 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Download All"
   end
 
-  def test_download_all_enqueues_jobs
+  def test_download_all_enqueues_job
     # Use chapter two which has "pending" status in fixtures
     chapter = chapters(:two)
     chapter.update!(source_url: "https://example.com/chapter/2")
     # Remove existing file_asset to test fresh download
     chapter.releases.each { |r| r.file_asset&.destroy }
 
-    assert_enqueued_with(job: DownloadChapterJob) do
+    assert_enqueued_with(job: DownloadAllJob) do
       post "/sources/weeb-central/one-piece/download_all"
     end
     assert_redirected_to "/sources/weeb-central/one-piece"
     follow_redirect!
-    assert_includes @response.body, "Queued"
+    assert_includes @response.body, "Queuing"
   end
 
   def test_download_all_skips_already_complete_chapters
