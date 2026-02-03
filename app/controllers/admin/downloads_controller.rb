@@ -4,16 +4,25 @@ module Admin
       @statuses = %w[queued downloading complete failed]
 
       @downloads = FileAsset.includes(release: { chapter: :series })
-                            .where.not(download_status: "pending")
+                            .where.not(download_status: %w[pending cancelled])
                             .order(updated_at: :desc)
 
-      @downloads = @downloads.where(download_status: params[:status]) if params[:status].present?
+      # Allow filtering by specific status, including cancelled if explicitly requested
+      if params[:status].present?
+        @downloads = FileAsset.includes(release: { chapter: :series })
+                              .where(download_status: params[:status])
+                              .order(updated_at: :desc)
+      end
+
       @downloads = @downloads.page(params[:page]).per(25)
 
-      # Stats for summary cards
-      @stats = FileAsset.where.not(download_status: "pending")
+      # Stats for summary cards (exclude pending and cancelled from main stats)
+      @stats = FileAsset.where.not(download_status: %w[pending cancelled])
                         .group(:download_status)
                         .count
+
+      # Cancelled count shown separately
+      @cancelled_count = FileAsset.where(download_status: "cancelled").count
 
       # Cover stats - show all series, not just ones with cover_url
       @series_count = Series.count
