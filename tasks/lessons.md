@@ -6,6 +6,8 @@
 - 2026-02-03: CSS selector `doc.at_css("img")` gets FIRST image on page. Use specific selectors like `img[alt$=" cover"]` for targeted elements.
 - 2026-02-03: SSL certificate issues with CDNs - add retry logic with `VERIFY_NONE` fallback for cover downloads.
 - 2026-02-03: Add `jobs: bin/jobs` to Procfile.dev for hot-reloading background workers.
+- 2026-02-03: Rails defaults `queue_adapter` to `:async` in development - set to `:solid_queue` in development.rb to use SolidQueue tables (required for Mission Control visibility).
+- 2026-02-03: Mission Control for SolidQueue: install gem, mount at `/admin/jobs`, set `MissionControl::Jobs.http_basic_auth_enabled = false` in initializer for dev.
 - 2026-02-02: Avoid assuming third-party extension bridges (e.g., Mihon). Confirm the source integration approach early and default to first-party scraper framework unless the user explicitly wants an extension ecosystem.
 - 2026-02-02: Zeitwerk autoloading expects constants that match file paths; align scraper class/module names with app/scrapers paths to avoid NameError. Also convert Nokogiri NodeSet to arrays before using Array methods like concat.
 - 2026-02-02: Don't miss basic Rails conventions. Before running tests, sanity-check Zeitwerk naming (file paths ↔ constants) and avoid obvious autoload pitfalls.
