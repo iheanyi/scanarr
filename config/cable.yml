@@ -1,10 +1,14 @@
-# SolidCable configuration - database-backed Action Cable adapter
+# SolidCable configuration
 # See: https://github.com/rails/solid_cable
+#
+# Development uses single database approach (solid_cable_messages in main DB)
+# Production uses separate cable database for better performance
 
 development:
   adapter: solid_cable
   polling_interval: 0.1.seconds
   message_retention: 1.hour
+  silence_polling: true
 
 test:
   adapter: test
