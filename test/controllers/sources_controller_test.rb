@@ -30,7 +30,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes @response.body, "Weeb Central"
     assert_includes @response.body, "/sources/weeb-central"
-    assert_includes @response.body, "tailwind-"
+    assert_includes @response.body, "application-" # CSS asset
   end
 
   def test_search_shows_results

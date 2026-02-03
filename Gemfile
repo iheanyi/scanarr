@@ -68,7 +68,6 @@ gem "friendly_id", "~> 5.6"
 
 gem "rubyzip", "~> 3.2"
 
-gem "tailwindcss-rails", "~> 4.4"
 
 gem "propshaft", "~> 1.3"
 
