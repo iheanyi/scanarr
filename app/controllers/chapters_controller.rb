@@ -1,5 +1,5 @@
 class ChaptersController < ApplicationController
-  before_action :load_context, only: %i[show enqueue_download update_progress remove_download]
+  before_action :load_context, only: %i[show enqueue_download update_progress remove_download cancel_download]
   before_action :authenticate_user!, only: %i[update_progress]
 
   helper_method :source_slug, :chapter_identifier
@@ -90,6 +90,29 @@ class ChaptersController < ApplicationController
       flash[:notice] = "Download removed for Chapter #{@chapter.chapter_number}"
     else
       flash[:alert] = "No download found to remove"
+    end
+
+    redirect_to source_series_path(
+      source_slug: source_slug(@source),
+      series_slug: @series.friendly_id
+    )
+  end
+
+  def cancel_download
+    release = latest_release
+    file_asset = release&.file_asset
+
+    if file_asset&.download_status.in?(%w[queued pending])
+      # Cancel the queued job by removing the file_asset
+      file_asset.pages.destroy_all
+      file_asset.destroy!
+      flash[:notice] = "Download cancelled for Chapter #{@chapter.chapter_number}"
+    elsif file_asset&.download_status == "downloading"
+      # Mark as failed so it can be restarted
+      file_asset.update!(download_status: "failed", download_error: "Cancelled by user")
+      flash[:notice] = "Download cancelled for Chapter #{@chapter.chapter_number}"
+    else
+      flash[:alert] = "No queued download to cancel"
     end
 
     redirect_to source_series_path(

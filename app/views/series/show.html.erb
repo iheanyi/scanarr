@@ -5,12 +5,22 @@
         <% if @series.cover_image_url.present? %>
           <%= image_tag @series.cover_image_url, alt: "#{@series.canonical_title} cover", class: "h-full w-full object-cover" %>
         <% else %>
-          <div class="flex h-full w-full items-center justify-center text-xs uppercase text-zinc-500">
-            No cover
+          <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
+            <span class="text-xs uppercase text-zinc-500">No cover</span>
+            <% if @series.cover_url.present? %>
+              <%= button_to source_series_refresh_cover_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+                            method: :post,
+                            class: "inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700 px-2 py-1 text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-700" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Fetch
+              <% end %>
+            <% end %>
           </div>
         <% end %>
       </div>
-      <% if @series.cover_url.present? %>
+      <% if @series.cover_url.present? && @series.cover_image_url.present? %>
         <%= button_to source_series_refresh_cover_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
                       method: :post,
                       class: "absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center rounded-md bg-zinc-900/90 border border-zinc-700 px-2 py-1 text-xs font-medium text-zinc-300 hover:text-white" do %>
@@ -177,24 +187,33 @@
                     Remove
                   <% end %>
                 <% end %>
-                <% if chapter.source_url.present? %>
-                  <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>
-                  <% is_complete = file_asset&.download_status == "complete" %>
-                  <% button_class = if download_in_progress
-                                      "inline-flex items-center rounded-md border border-zinc-700/70 px-3 py-1.5 text-sm font-semibold text-zinc-400 cursor-not-allowed"
-                                    else
-                                      "inline-flex items-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300"
-                                    end %>
-                  <%= button_to is_complete ? "Re-download" : "Download",
-                                source_series_chapter_download_path(
+                <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
+                  <%= button_to source_series_chapter_cancel_download_path(
                                   source_slug: @source.key.to_s.tr("_", "-"),
                                   series_slug: @series.friendly_id,
                                   chapter_identifier: chapter.chapter_number
                                 ),
                                 method: :post,
-                                class: button_class,
-                                disabled: download_in_progress,
-                                aria: { disabled: download_in_progress } %>
+                                class: "inline-flex items-center rounded-md border border-amber-500/40 px-3 py-1.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/10" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Cancel
+                  <% end %>
+                <% end %>
+                <% if chapter.source_url.present? %>
+                  <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>
+                  <% is_complete = file_asset&.download_status == "complete" %>
+                  <% unless download_in_progress %>
+                    <%= button_to is_complete ? "Re-download" : "Download",
+                                  source_series_chapter_download_path(
+                                    source_slug: @source.key.to_s.tr("_", "-"),
+                                    series_slug: @series.friendly_id,
+                                    chapter_identifier: chapter.chapter_number
+                                  ),
+                                  method: :post,
+                                  class: "inline-flex items-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300" %>
+                  <% end %>
                 <% end %>
               </div>
             </div>

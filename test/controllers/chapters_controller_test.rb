@@ -217,6 +217,32 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Download removed"
   end
 
+  def test_cancel_download_cancels_queued_download
+    chapter = chapters(:two)
+    release = releases(:two)
+    file_asset = file_assets(:two)
+    file_asset.update!(download_status: "queued")
+
+    post "/sources/weeb-central/one-piece/chapters/#{chapter.chapter_number}/cancel_download"
+
+    assert_redirected_to "/sources/weeb-central/one-piece"
+    assert_not FileAsset.exists?(file_asset.id)
+  end
+
+  def test_cancel_download_marks_downloading_as_failed
+    chapter = chapters(:two)
+    release = releases(:two)
+    file_asset = file_assets(:two)
+    file_asset.update!(download_status: "downloading")
+
+    post "/sources/weeb-central/one-piece/chapters/#{chapter.chapter_number}/cancel_download"
+
+    assert_redirected_to "/sources/weeb-central/one-piece"
+    file_asset.reload
+    assert_equal "failed", file_asset.download_status
+    assert_equal "Cancelled by user", file_asset.download_error
+  end
+
   private
 
   def with_adapter(adapter)

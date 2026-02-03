@@ -27,9 +27,14 @@ Rails.application.routes.draw do
          to: "chapters#remove_download",
          as: :source_series_chapter_remove_download
 
+  post "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/cancel_download",
+       to: "chapters#cancel_download",
+       as: :source_series_chapter_cancel_download
+
   namespace :admin do
     get "scrapers", to: "scrapers#index", as: :scrapers
     post "scrapers/:source_id/smoke", to: "scrapers#run_smoke", as: :scraper_smoke
     get "downloads", to: "downloads#index", as: :downloads
+    post "downloads/refresh_all_covers", to: "downloads#refresh_all_covers", as: :refresh_all_covers
   end
 end
