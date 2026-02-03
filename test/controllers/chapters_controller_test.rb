@@ -138,6 +138,50 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_renders_lightbox_toggle
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1"
+      assert_response :success
+      assert_includes @response.body, "data-action=\"click->reader#toggleLightbox\""
+    end
+  end
+
+  def test_show_renders_lightbox_overlay
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1"
+      assert_response :success
+      assert_includes @response.body, "data-reader-target=\"lightbox\""
+      assert_includes @response.body, "data-reader-target=\"lightboxImage\""
+    end
+  end
+
+  def test_show_renders_lightbox_inside_reader_controller
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1"
+      assert_response :success
+      main = @response.body[/<main[^>]*data-controller="reader".*?<\/main>/m]
+      assert main, "Expected reader controller markup to be present"
+      assert_includes main, "data-reader-target=\"lightbox\""
+    end
+  end
+
+  def test_show_caps_reader_image_size
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1"
+      assert_response :success
+      assert_includes @response.body, "max-w-[95vw]"
+      assert_includes @response.body, "max-h-[calc(100vh-280px)]"
+    end
+  end
+
+  def test_show_prefers_page_param_for_initial_page
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1", params: { page: 2 }
+      assert_response :success
+      assert_includes @response.body, "Page 2 / 2"
+    end
+  end
+
   def test_show_disables_download_when_queued
     file_assets(:two).update!(download_status: "queued")
 

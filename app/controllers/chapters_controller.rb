@@ -21,6 +21,7 @@ class ChaptersController < ApplicationController
       source_url = @chapter.source_url || @release&.source_url
       @source_pages = adapter_for(@source).pages(source_url) if source_url.present?
     end
+    set_initial_page_index
     set_navigation
   end
 
@@ -143,6 +144,25 @@ class ChaptersController < ApplicationController
 
     @previous_chapter = ordered[index - 1] if index.positive?
     @next_chapter = ordered[index + 1] if index < ordered.length - 1
+  end
+
+  def set_initial_page_index
+    page_count = @pages.any? ? @pages.length : @source_pages.length
+    page_param = params[:page].present? ? params[:page].to_i : nil
+
+    if page_param && page_param > 0
+      @initial_page_index = page_param
+    elsif @chapter_progress&.page_index
+      @initial_page_index = @chapter_progress.page_index
+    else
+      @initial_page_index = page_count.positive? ? 1 : 0
+    end
+
+    if page_count.positive?
+      @initial_page_index = [[@initial_page_index, page_count].min, 1].max
+    else
+      @initial_page_index = 0
+    end
   end
 
   def chapter_identifier(chapter)
