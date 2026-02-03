@@ -31,7 +31,9 @@ module WeebCentral
       response = http.get(url)
       doc = Nokogiri::HTML(response.body)
       title = doc.at_css("h1")&.text&.strip
-      cover = doc.at_css("img")&.[]("src") || doc.at_css("img")&.[]("data-src")
+      # Look for the cover image specifically (has "cover" in alt text and 400x600 dimensions)
+      cover_img = doc.at_css('img[alt$=" cover"]') || doc.at_css('img[width="400"]')
+      cover = cover_img&.[]("src") || cover_img&.[]("data-src")
       author = extract_labeled_text(doc, "Author")
       artist = extract_labeled_text(doc, "Artist")
       ResultTypes::Series.new(
