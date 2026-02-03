@@ -9,3 +9,6 @@ application.register("hello", HelloController)
 
 import ReaderController from "./reader_controller"
 application.register("reader", ReaderController)
+
+import LoadingButtonController from "./loading_button_controller"
+application.register("loading-button", LoadingButtonController)
