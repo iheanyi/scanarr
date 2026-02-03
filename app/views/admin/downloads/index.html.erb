@@ -147,7 +147,11 @@
             <%= link_to "Previous", url_for(page: @downloads.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-300 hover:text-white rounded-md hover:bg-zinc-800" %>
           <% end %>
 
-          <% @downloads.page_range.each do |page_num| %>
+          <%# Show up to 7 page numbers centered around current page %>
+          <% window = 3 %>
+          <% start_page = [@downloads.current_page - window, 1].max %>
+          <% end_page = [@downloads.current_page + window, @downloads.total_pages].min %>
+          <% (start_page..end_page).each do |page_num| %>
             <% if page_num == @downloads.current_page %>
               <span class="px-3 py-2 text-sm font-semibold text-emerald-400 bg-emerald-500/10 rounded-md"><%= page_num %></span>
             <% else %>
