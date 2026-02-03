@@ -13,3 +13,10 @@ two:
   public_id: releasepub002
   source: one
   source_url: https://weebcentral.com/chapters/02CHAPTER
+
+three:
+  chapter: one
+  format: pages
+  public_id: releasepub003
+  source: one
+  source_url: https://weebcentral.com/chapters/03CHAPTER

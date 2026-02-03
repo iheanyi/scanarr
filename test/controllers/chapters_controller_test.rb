@@ -169,8 +169,8 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/one-piece/chapters/1"
       assert_response :success
-      assert_includes @response.body, "max-w-[95vw]"
-      assert_includes @response.body, "max-h-[calc(100vh-280px)]"
+      assert_includes @response.body, "max-w-2xl"
+      assert_includes @response.body, "max-h-[75vh]"
     end
   end
 

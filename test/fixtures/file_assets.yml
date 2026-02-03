@@ -15,3 +15,12 @@ two:
   download_status: pending
   pages_expected:
   pages_downloaded: 0
+
+three:
+  release: three
+  format: pages
+  public_id: fileasset003
+  download_status: failed
+  pages_expected: 3
+  pages_downloaded: 1
+  download_error: "RuntimeError: Timeout"
