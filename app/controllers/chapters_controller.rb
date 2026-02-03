@@ -70,6 +70,9 @@ class ChaptersController < ApplicationController
       path: LibraryPathBuilder.new(series: @series, source: @source).chapter_path(@chapter)
     )
 
+    # Broadcast new download to admin page
+    broadcast_admin_download(file_asset)
+
     DownloadChapterJob.perform_later(
       source_url,
       source_key: @source.key,
@@ -252,5 +255,16 @@ class ChaptersController < ApplicationController
 
   def source_slug(source)
     source.key.to_s.tr("_", "-")
+  end
+
+  def broadcast_admin_download(file_asset)
+    Turbo::StreamsChannel.broadcast_prepend_to(
+      "admin_downloads",
+      target: "downloads_list",
+      partial: "admin/downloads/download_row",
+      locals: { download: file_asset }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "ChaptersController: Failed to broadcast admin download: #{e.message}"
   end
 end

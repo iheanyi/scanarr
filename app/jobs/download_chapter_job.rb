@@ -139,7 +139,7 @@ class DownloadChapterJob < ApplicationJob
 
     @file_asset = @release.file_asset
     if @file_asset
-      # Resume from existing state - don't reset if already downloading
+      # Resume from existing state or transition from queued to downloading
       unless @file_asset.download_status == "downloading"
         @file_asset.update!(
           download_status: "downloading",
@@ -157,7 +157,9 @@ class DownloadChapterJob < ApplicationJob
       )
     end
 
+    # Broadcast status change (queued -> downloading)
     broadcast_chapter_update(@chapter, @source)
+    broadcast_admin_download_update
   end
 
   def fetch_pages
@@ -211,8 +213,11 @@ class DownloadChapterJob < ApplicationJob
 
       @file_asset.update!(pages_downloaded: position)
 
-      # Broadcast progress every 5 pages
-      broadcast_chapter_update(@chapter, @source) if (position % 5).zero?
+      # Broadcast to admin downloads on every page for real-time progress
+      broadcast_admin_download_update
+
+      # Broadcast to series page every 3 pages (less noisy)
+      broadcast_chapter_update(@chapter, @source) if (position % 3).zero?
 
       # Checkpoint after each page - allows job to be interrupted and resumed
       step.advance! from: position

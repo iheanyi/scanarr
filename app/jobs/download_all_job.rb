@@ -32,6 +32,17 @@ class DownloadAllJob < ApplicationJob
         next
       end
 
+      # Create file_asset with "queued" status immediately so UI shows it
+      file_asset = release.file_asset || release.create_file_asset!(
+        format: "pages",
+        download_status: "queued",
+        pages_downloaded: 0
+      )
+
+      # Broadcast immediately so UI updates
+      broadcast_chapter_update(chapter, source, series)
+      broadcast_admin_download_update(file_asset)
+
       DownloadChapterJob.perform_later(
         chapter.source_url,
         source_key: source.key,
@@ -46,5 +57,30 @@ class DownloadAllJob < ApplicationJob
     end
 
     Rails.logger.info "DownloadAllJob: Enqueued #{enqueued} chapter downloads for #{series.canonical_title}"
+  end
+
+  private
+
+  def broadcast_chapter_update(chapter, source, series)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [series, :downloads],
+      target: ActionView::RecordIdentifier.dom_id(chapter),
+      partial: "series/chapter_row",
+      locals: { chapter: chapter.reload, source: source, series: series, progress: nil }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "DownloadAllJob: Failed to broadcast chapter update: #{e.message}"
+  end
+
+  def broadcast_admin_download_update(file_asset)
+    # Prepend new download to the admin downloads table
+    Turbo::StreamsChannel.broadcast_prepend_to(
+      "admin_downloads",
+      target: "downloads_list",
+      partial: "admin/downloads/download_row",
+      locals: { download: file_asset }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "DownloadAllJob: Failed to broadcast admin download: #{e.message}"
   end
 end
