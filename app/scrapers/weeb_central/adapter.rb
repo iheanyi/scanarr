@@ -27,7 +27,7 @@ module WeebCentral
     end
 
     def series(id_or_url)
-      url = normalize_url(id_or_url)
+      url = series_url_from_id(id_or_url)
       response = http.get(url)
       doc = Nokogiri::HTML(response.body)
       title = doc.at_css("h1")&.text&.strip
@@ -50,7 +50,7 @@ module WeebCentral
     end
 
     def chapters(series_url)
-      url = normalize_url(series_url)
+      url = series_url_from_id(series_url)
       response = http.get(url)
       doc = Nokogiri::HTML(response.body)
       chapter_nodes = collect_chapter_nodes(doc).to_a
@@ -95,6 +95,15 @@ module WeebCentral
     end
 
     private
+
+    def series_url_from_id(id_or_url)
+      # Handle full URLs
+      return id_or_url if id_or_url.to_s.start_with?("http")
+      return normalize_url(id_or_url) if id_or_url.to_s.include?("/")
+
+      # Build URL from just an ID - WeebCentral redirects /series/{id} to the full slug URL
+      normalize_url("/series/#{id_or_url}")
+    end
 
     def normalize_url(path_or_url)
       return path_or_url if path_or_url.to_s.start_with?("http")

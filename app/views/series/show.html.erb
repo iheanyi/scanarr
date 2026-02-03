@@ -44,6 +44,9 @@
         <% end %>
       </div>
       <h1 class="text-3xl font-semibold text-balance"><%= @series.canonical_title %></h1>
+      <% if @series.localized_title.present? %>
+        <p class="text-lg text-zinc-400"><%= @series.localized_title %></p>
+      <% end %>
       <% if @series.display_author.present? %>
         <p class="text-sm text-zinc-300">by <%= @series.display_author %></p>
       <% end %>

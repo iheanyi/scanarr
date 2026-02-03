@@ -43,6 +43,13 @@ class SeriesImporter
     updates[:author_name] = author_name if author_name.present? && series.author_name != author_name
     updates[:artist_name] = artist_name if artist_name.present? && series.artist_name != artist_name
     updates[:cover_url] = series_result.cover_url if series_result.cover_url.present? && series.cover_url != series_result.cover_url
+
+    # Store alternative titles and try to detect localized (JP/KR/CN) title
+    alt_titles = Array(series_result.alt_titles).compact
+    updates[:alt_titles] = alt_titles if alt_titles.any?
+    localized = detect_localized_title(alt_titles)
+    updates[:localized_title] = localized if localized.present? && series.localized_title != localized
+
     series.update!(updates)
 
     # Download and attach cover image if URL changed or no cover attached
@@ -115,5 +122,18 @@ class SeriesImporter
     rescue StandardError => e
       Rails.logger.warn "Failed to download cover for #{series.canonical_title}: #{e.message}"
     end
+  end
+
+  # Detect a localized title (Japanese, Korean, or Chinese) from alt_titles
+  # These typically contain CJK characters
+  def detect_localized_title(alt_titles)
+    # CJK Unicode ranges:
+    # Japanese Hiragana: \u3040-\u309F
+    # Japanese Katakana: \u30A0-\u30FF
+    # CJK Unified Ideographs (Chinese/Japanese/Korean): \u4E00-\u9FFF
+    # Korean Hangul: \uAC00-\uD7AF
+    cjk_pattern = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/
+
+    alt_titles.find { |title| title.match?(cjk_pattern) }
   end
 end
