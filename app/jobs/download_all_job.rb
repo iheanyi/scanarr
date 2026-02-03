@@ -20,9 +20,7 @@ class DownloadAllJob < ApplicationJob
       next if file_asset&.download_status.in?(%w[queued pending downloading complete])
 
       # Create or find release
-      release = chapter.releases.find_or_create_by!(source: source) do |r|
-        r.version = "v1"
-      end
+      release = chapter.releases.find_or_create_by!(source: source)
 
       # Skip if this release already has a complete/in-progress download
       if release.file_asset&.download_status.in?(%w[queued pending downloading complete])
