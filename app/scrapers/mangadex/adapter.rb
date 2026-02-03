@@ -21,16 +21,18 @@ module Mangadex
 
     def series(id_or_url)
       id = extract_manga_id(id_or_url)
-      response = http.get("/manga/#{id}", params: { includes: [ "cover_art" ] })
+      response = http.get("/manga/#{id}", params: { includes: [ "cover_art", "author", "artist" ] })
       item = JSON.parse(response.body).fetch("data")
       attrs = item.fetch("attributes", {})
+      authors = relationship_names(item, "author")
+      artists = relationship_names(item, "artist")
       ResultTypes::Series.new(
         id: item.fetch("id"),
         title: pick_title(attrs.fetch("title", {})),
         alt_titles: attrs.fetch("altTitles", []).map { |t| t.values.first }.compact,
         description: pick_title(attrs.fetch("description", {})),
-        author: nil,
-        artist: nil,
+        author: authors.first,
+        artist: artists.first,
         status: attrs["status"],
         tags: attrs.fetch("tags", []).map { |tag| pick_title(tag.fetch("attributes", {}).fetch("name", {})) }.compact,
         series_type: type_from_language(attrs["originalLanguage"]),
@@ -119,6 +121,13 @@ module Mangadex
       return nil if filename.nil?
 
       "https://uploads.mangadex.org/covers/#{item.fetch('id')}/#{filename}"
+    end
+
+    def relationship_names(item, type)
+      item.fetch("relationships", [])
+          .select { |rel| rel["type"] == type }
+          .map { |rel| rel.dig("attributes", "name") }
+          .compact
     end
 
     def type_from_language(lang)

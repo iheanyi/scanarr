@@ -10,4 +10,8 @@ class Series < ApplicationRecord
   has_many :sources, through: :series_sources
 
   validates :canonical_title, presence: true
+
+  def display_author
+    author_name.presence || artist_name.presence
+  end
 end

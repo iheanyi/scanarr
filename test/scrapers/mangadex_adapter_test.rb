@@ -66,6 +66,8 @@ class MangadexAdapterTest < ActiveSupport::TestCase
     assert_equal "Naruto", series.title
     assert_includes series.tags, "Action"
     assert_equal "manga", series.series_type
+    assert_equal "Masashi Kishimoto", series.author
+    assert_equal "Masashi Kishimoto", series.artist
   end
 
   def test_chapters_returns_list
@@ -114,7 +116,9 @@ class MangadexAdapterTest < ActiveSupport::TestCase
           ]
         },
         "relationships" => [
-          { "type" => "cover_art", "attributes" => { "fileName" => "cover.jpg" } }
+          { "type" => "cover_art", "attributes" => { "fileName" => "cover.jpg" } },
+          { "type" => "author", "attributes" => { "name" => "Masashi Kishimoto" } },
+          { "type" => "artist", "attributes" => { "name" => "Masashi Kishimoto" } }
         ]
       }
     }.to_json

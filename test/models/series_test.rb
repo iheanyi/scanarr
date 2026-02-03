@@ -32,4 +32,19 @@ class SeriesTest < ActiveSupport::TestCase
     assert_equal [ "Action", "Shonen" ], series.raw_tags
     assert_equal [ "manga", "shonen" ], series.normalized_categories
   end
+
+  def test_display_author_prefers_author_then_artist
+    series = Series.create!(
+      canonical_title: "One Piece",
+      author_name: "Eiichiro Oda",
+      artist_name: "Eiichiro Oda"
+    )
+    assert_equal "Eiichiro Oda", series.display_author
+
+    series.update!(author_name: nil, artist_name: "Another Artist")
+    assert_equal "Another Artist", series.display_author
+
+    series.update!(artist_name: nil)
+    assert_nil series.display_author
+  end
 end

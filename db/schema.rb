@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_02_163000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_02_212000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,6 +133,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_02_163000) do
   end
 
   create_table "series", force: :cascade do |t|
+    t.string "artist_name"
+    t.string "author_name"
     t.string "canonical_title", null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
@@ -156,6 +158,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_02_163000) do
   create_table "series_sources", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "last_checked_at"
+    t.string "library_base_path"
     t.bigint "series_id", null: false
     t.bigint "source_id", null: false
     t.string "source_series_id"
