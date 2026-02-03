@@ -13,7 +13,17 @@ class Series < ApplicationRecord
   validates :canonical_title, presence: true
 
   def display_author
-    author_name.presence || artist_name.presence
+    return nil if author_name.blank? && artist_name.blank?
+
+    # If same person or only one is set, show just that name
+    if author_name.blank?
+      artist_name
+    elsif artist_name.blank? || author_name == artist_name
+      author_name
+    else
+      # Different author and artist - show both
+      "#{author_name} (Art: #{artist_name})"
+    end
   end
 
   # Returns the cover image URL - prefers local attachment, falls back to remote URL
