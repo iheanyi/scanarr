@@ -45,6 +45,9 @@ class SeriesImporter
     updates[:cover_url] = series_result.cover_url if series_result.cover_url.present? && series.cover_url != series_result.cover_url
     series.update!(updates)
 
+    # Download and attach cover image if URL changed or no cover attached
+    download_cover(series, series_result.cover_url)
+
     base_path = LibraryPathBuilder.new(series: series, source: @source).base_path
     if base_path.present? && series_source.library_base_path != base_path
       series_source.update!(library_base_path: base_path)
@@ -81,5 +84,36 @@ class SeriesImporter
     end
 
     series
+  end
+
+  private
+
+  def download_cover(series, cover_url)
+    return if cover_url.blank?
+    return if series.cover.attached? && series.cover_url == cover_url
+
+    begin
+      uri = URI.parse(cover_url)
+      response = Net::HTTP.get_response(uri)
+      return unless response.is_a?(Net::HTTPSuccess)
+
+      content_type = response["content-type"]
+      extension = case content_type
+                  when /jpeg|jpg/i then "jpg"
+                  when /png/i then "png"
+                  when /webp/i then "webp"
+                  when /gif/i then "gif"
+                  else "jpg"
+                  end
+
+      filename = "cover.#{extension}"
+      series.cover.attach(
+        io: StringIO.new(response.body),
+        filename: filename,
+        content_type: content_type
+      )
+    rescue StandardError => e
+      Rails.logger.warn "Failed to download cover for #{series.canonical_title}: #{e.message}"
+    end
   end
 end
