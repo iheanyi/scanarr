@@ -13,6 +13,8 @@ Rails.application.routes.draw do
   get "/sources/:source_slug", to: "series#index", as: :source_series_index
   get "/sources/:source_slug/:series_slug", to: "series#show", as: :source_series
   patch "/sources/:source_slug/:series_slug", to: "series#update", as: :source_series_update
+  post "/sources/:source_slug/:series_slug/download_all", to: "series#download_all", as: :source_series_download_all
+  post "/sources/:source_slug/:series_slug/refresh_cover", to: "series#refresh_cover", as: :source_series_refresh_cover
   get "/chapters/:public_id", to: "chapters#redirect", as: :chapter_public
   get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier", to: "chapters#show", as: :source_series_chapter
   patch "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/progress",

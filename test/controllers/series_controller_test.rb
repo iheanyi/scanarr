@@ -49,4 +49,45 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes @response.body, "In progress"
   end
+
+  def test_show_displays_download_all_button
+    get "/sources/weeb-central/one-piece"
+    assert_response :success
+    assert_includes @response.body, "Download All"
+  end
+
+  def test_download_all_enqueues_jobs
+    # Use chapter two which has "pending" status in fixtures
+    chapter = chapters(:two)
+    chapter.update!(source_url: "https://example.com/chapter/2")
+    # Remove existing file_asset to test fresh download
+    chapter.releases.each { |r| r.file_asset&.destroy }
+
+    assert_enqueued_with(job: DownloadChapterJob) do
+      post "/sources/weeb-central/one-piece/download_all"
+    end
+    assert_redirected_to "/sources/weeb-central/one-piece"
+    follow_redirect!
+    assert_includes @response.body, "Queued"
+  end
+
+  def test_download_all_skips_already_complete_chapters
+    chapter = chapters(:one)
+    chapter.update!(source_url: "https://example.com/chapter/1")
+    release = chapter.releases.create!(source: sources(:one), format: "pages", source_url: chapter.source_url)
+    release.create_file_asset!(format: "pages", download_status: "complete")
+
+    assert_no_enqueued_jobs(only: DownloadChapterJob) do
+      post "/sources/weeb-central/one-piece/download_all"
+    end
+    assert_redirected_to "/sources/weeb-central/one-piece"
+  end
+
+  def test_refresh_cover_redirects
+    series = series(:one)
+    series.update!(cover_url: "https://example.com/cover.jpg")
+
+    post "/sources/weeb-central/one-piece/refresh_cover"
+    assert_redirected_to "/sources/weeb-central/one-piece"
+  end
 end
