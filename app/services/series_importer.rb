@@ -26,7 +26,8 @@ class SeriesImporter
     series ||= Series.create!(
       canonical_title: series_result.title,
       author_name: author_name,
-      artist_name: artist_name
+      artist_name: artist_name,
+      cover_url: series_result.cover_url
     )
 
     series_source = SeriesSource.find_or_create_by!(series: series, source: @source)
@@ -41,6 +42,7 @@ class SeriesImporter
     }
     updates[:author_name] = author_name if author_name.present? && series.author_name != author_name
     updates[:artist_name] = artist_name if artist_name.present? && series.artist_name != artist_name
+    updates[:cover_url] = series_result.cover_url if series_result.cover_url.present? && series.cover_url != series_result.cover_url
     series.update!(updates)
 
     base_path = LibraryPathBuilder.new(series: series, source: @source).base_path
