@@ -60,6 +60,8 @@ class WeebCentralAdapterTest < ActiveSupport::TestCase
     series = @adapter.series("#{@base_url}/series/01ABCDEF1234567890/foo-series")
     assert_equal "Foo Series", series.title
     assert_equal "A description of the series.", series.description
+    assert_equal "Eiichiro Oda", series.author
+    assert_equal "Eiichiro Oda", series.artist
   end
 
   def test_chapters_handles_show_more

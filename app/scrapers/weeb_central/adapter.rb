@@ -32,13 +32,15 @@ module WeebCentral
       doc = Nokogiri::HTML(response.body)
       title = doc.at_css("h1")&.text&.strip
       cover = doc.at_css("img")&.[]("src") || doc.at_css("img")&.[]("data-src")
+      author = extract_labeled_text(doc, "Author")
+      artist = extract_labeled_text(doc, "Artist")
       ResultTypes::Series.new(
         id: extract_series_id(url),
         title: title,
         alt_titles: [],
         description: doc.at_css("p")&.text&.strip,
-        author: nil,
-        artist: nil,
+        author: author,
+        artist: artist,
         status: nil,
         tags: [],
         series_type: "manga",
@@ -120,6 +122,21 @@ module WeebCentral
       end
 
       doc.css(PAGE_IMAGE_SELECTOR).map { |img| img["data-src"] || img["src"] }.compact
+    end
+
+    def extract_labeled_text(doc, label)
+      target = label.to_s.strip.downcase
+
+      dt = doc.css("dt").find { |node| node.text.to_s.strip.downcase == target }
+      return dt.next_element&.text&.strip if dt&.next_element
+
+      th = doc.css("th").find { |node| node.text.to_s.strip.downcase == target }
+      return th.next_element&.text&.strip if th&.next_element
+
+      label_node = doc.css("span, strong, b").find { |node| node.text.to_s.strip.downcase == target }
+      return label_node.next_element&.text&.strip if label_node&.next_element
+
+      nil
     end
 
     def extract_series_id(url)
