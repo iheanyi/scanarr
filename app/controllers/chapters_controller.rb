@@ -102,17 +102,22 @@ class ChaptersController < ApplicationController
     release = latest_release
     file_asset = release&.file_asset
 
-    if file_asset&.download_status.in?(%w[queued pending])
-      # Cancel the queued job by removing the file_asset
+    if file_asset&.download_status.in?(%w[queued pending downloading])
+      # Purge any partially downloaded files
+      file_asset.archive.purge if file_asset.archive.attached?
+      file_asset.pages.each { |page| page.image.purge if page.image.attached? }
       file_asset.pages.destroy_all
-      file_asset.destroy!
-      flash[:notice] = "Download cancelled for Chapter #{@chapter.chapter_number}"
-    elsif file_asset&.download_status == "downloading"
-      # Mark as failed so it can be restarted
-      file_asset.update!(download_status: "failed", download_error: "Cancelled by user")
+
+      # Reset status to cancelled
+      file_asset.update!(
+        download_status: "cancelled",
+        pages_downloaded: 0,
+        pages_expected: nil,
+        download_error: "Cancelled by user"
+      )
       flash[:notice] = "Download cancelled for Chapter #{@chapter.chapter_number}"
     else
-      flash[:alert] = "No queued download to cancel"
+      flash[:alert] = "No active download to cancel"
     end
 
     redirect_to source_series_path(

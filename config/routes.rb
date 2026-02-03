@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   post "/sources/:source_slug/:series_slug/download_all", to: "series#download_all", as: :source_series_download_all
   post "/sources/:source_slug/:series_slug/refresh_cover", to: "series#refresh_cover", as: :source_series_refresh_cover
   delete "/sources/:source_slug/:series_slug/remove_all_downloads", to: "series#remove_all_downloads", as: :source_series_remove_all_downloads
+  post "/sources/:source_slug/:series_slug/cancel_all_downloads", to: "series#cancel_all_downloads", as: :source_series_cancel_all_downloads
   post "/sources/:source_slug/:series_slug/refresh_metadata", to: "series#refresh_metadata", as: :source_series_refresh_metadata
   get "/chapters/:public_id", to: "chapters#redirect", as: :chapter_public
   get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier", to: "chapters#show", as: :source_series_chapter

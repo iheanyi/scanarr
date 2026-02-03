@@ -96,6 +96,41 @@ class SeriesController < ApplicationController
     redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
   end
 
+  def cancel_all_downloads
+    @series = Series.joins(:series_sources)
+                    .where(series_sources: { source_id: @source.id })
+                    .friendly
+                    .find(params[:series_slug])
+
+    chapters = @series.chapters.where(source: @source).includes(releases: { file_asset: :pages })
+    cancelled = 0
+
+    chapters.each do |chapter|
+      chapter.releases.each do |release|
+        file_asset = release.file_asset
+        next unless file_asset
+        next unless file_asset.download_status.in?(%w[queued pending downloading])
+
+        # Purge any partially downloaded files
+        file_asset.archive.purge if file_asset.archive.attached?
+        file_asset.pages.each { |page| page.image.purge if page.image.attached? }
+        file_asset.pages.destroy_all
+
+        # Reset status
+        file_asset.update!(
+          download_status: "cancelled",
+          pages_downloaded: 0,
+          pages_expected: nil,
+          download_error: nil
+        )
+        cancelled += 1
+      end
+    end
+
+    flash[:notice] = "Cancelled #{cancelled} download(s)"
+    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
+  end
+
   def refresh_metadata
     @series = Series.joins(:series_sources)
                     .where(series_sources: { source_id: @source.id })

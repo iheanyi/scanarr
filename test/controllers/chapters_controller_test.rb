@@ -226,21 +226,25 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     post "/sources/weeb-central/one-piece/chapters/#{chapter.chapter_number}/cancel_download"
 
     assert_redirected_to "/sources/weeb-central/one-piece"
-    assert_not FileAsset.exists?(file_asset.id)
+    file_asset.reload
+    assert_equal "cancelled", file_asset.download_status
+    assert_equal "Cancelled by user", file_asset.download_error
   end
 
-  def test_cancel_download_marks_downloading_as_failed
+  def test_cancel_download_cancels_downloading
     chapter = chapters(:two)
     release = releases(:two)
     file_asset = file_assets(:two)
-    file_asset.update!(download_status: "downloading")
+    file_asset.update!(download_status: "downloading", pages_downloaded: 5, pages_expected: 10)
 
     post "/sources/weeb-central/one-piece/chapters/#{chapter.chapter_number}/cancel_download"
 
     assert_redirected_to "/sources/weeb-central/one-piece"
     file_asset.reload
-    assert_equal "failed", file_asset.download_status
+    assert_equal "cancelled", file_asset.download_status
     assert_equal "Cancelled by user", file_asset.download_error
+    assert_equal 0, file_asset.pages_downloaded
+    assert_nil file_asset.pages_expected
   end
 
   private

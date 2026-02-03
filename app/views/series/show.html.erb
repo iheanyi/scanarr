@@ -81,7 +81,20 @@
       <% if @chapters.any? %>
         <% downloadable_count = @chapters.count { |c| c.source_url.present? && !c.releases.max_by(&:created_at)&.file_asset&.download_status.in?(%w[queued pending downloading complete]) } %>
         <% downloaded_count = @chapters.count { |c| c.releases.max_by(&:created_at)&.file_asset&.download_status == "complete" } %>
+        <% in_progress_count = @chapters.count { |c| c.releases.max_by(&:created_at)&.file_asset&.download_status.in?(%w[queued pending downloading]) } %>
         <div class="flex items-center gap-2">
+          <% if in_progress_count > 0 %>
+            <%= button_to source_series_cancel_all_downloads_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+                          method: :post,
+                          class: "inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 px-3 py-1.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/10",
+                          data: { turbo_confirm: "Cancel all #{in_progress_count} in-progress download(s)?" } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancel All
+              <span class="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs"><%= in_progress_count %></span>
+            <% end %>
+          <% end %>
           <% if downloaded_count > 0 %>
             <%= button_to source_series_remove_all_downloads_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
                           method: :delete,
