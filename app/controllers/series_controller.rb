@@ -131,6 +131,31 @@ class SeriesController < ApplicationController
     redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
   end
 
+  def refresh_metadata
+    @series = Series.joins(:series_sources)
+                    .where(series_sources: { source_id: @source.id })
+                    .friendly
+                    .find(params[:series_slug])
+
+    series_source = @series.series_sources.find_by(source: @source)
+    unless series_source&.source_series_id.present?
+      flash[:alert] = "No source URL available to refresh metadata"
+      redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
+      return
+    end
+
+    # Re-import to update metadata including cover_url
+    adapter = adapter_for(@source)
+    importer = SeriesImporter.new(source: @source, adapter: adapter)
+    importer.import!(series_source.source_series_id)
+
+    flash[:notice] = "Metadata refreshed successfully"
+    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
+  rescue StandardError => e
+    flash[:alert] = "Failed to refresh metadata: #{e.message}"
+    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id)
+  end
+
   private
 
   def download_cover(series, cover_url)
@@ -158,6 +183,17 @@ class SeriesController < ApplicationController
 
   def series_params
     params.require(:series).permit(:reading_style)
+  end
+
+  def adapter_for(source)
+    case source.key.to_s
+    when "weeb_central"
+      WeebCentral::Adapter.new(config: Rails.configuration.scraper_sources.fetch("weeb_central", {}))
+    when "mangadex"
+      Mangadex::Adapter.new(config: Rails.configuration.scraper_sources.fetch("mangadex", {}))
+    else
+      raise ArgumentError, "Unknown source key #{source.key.inspect}"
+    end
   end
 
   def set_source
