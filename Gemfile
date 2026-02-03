@@ -75,3 +75,5 @@ gem "propshaft", "~> 1.3"
 gem "devise"
 
 gem "kaminari", "~> 1.2"
+
+gem "bullet", "~> 8.1", groups: [:development, :test]

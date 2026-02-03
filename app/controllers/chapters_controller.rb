@@ -94,9 +94,9 @@ class ChaptersController < ApplicationController
     file_asset = release&.file_asset
 
     if file_asset
-      # Purge all attached files
+      # Purge all attached files (eager load to avoid N+1)
       file_asset.archive.purge if file_asset.archive.attached?
-      file_asset.pages.each do |page|
+      file_asset.pages.includes(image_attachment: :blob).each do |page|
         page.image.purge if page.image.attached?
       end
       file_asset.pages.destroy_all

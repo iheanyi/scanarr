@@ -21,6 +21,29 @@ class SeriesController < ApplicationController
                          :chapter_number,
                          :id
                        )
+
+    # Pre-compute latest release and stats to avoid N+1 in views
+    @latest_release_map = {}
+    @chapters.each do |chapter|
+      @latest_release_map[chapter.id] = chapter.releases.max_by(&:created_at)
+    end
+
+    # Pre-compute chapter stats
+    @downloadable_count = 0
+    @downloaded_count = 0
+    @in_progress_count = 0
+    @chapters.each do |chapter|
+      release = @latest_release_map[chapter.id]
+      status = release&.file_asset&.download_status
+      if status == "complete"
+        @downloaded_count += 1
+      elsif status.in?(%w[queued pending downloading])
+        @in_progress_count += 1
+      elsif chapter.source_url.present?
+        @downloadable_count += 1
+      end
+    end
+
     if current_user
       @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
                                               .index_by(&:chapter_id)

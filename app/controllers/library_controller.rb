@@ -1,28 +1,45 @@
 class LibraryController < ApplicationController
   def index
-    @series = Series.includes(:cover_attachment, :chapters, :sources)
-                    .order(canonical_title: :asc)
+    # Eager load full chain to avoid N+1 queries
+    @series = Series.includes(
+      :cover_attachment,
+      :sources,
+      :series_sources,
+      chapters: { releases: :file_asset }
+    ).order(canonical_title: :asc)
 
-    # Filter by status
+    # Search by title (SQL)
+    if params[:q].present?
+      query = "%#{params[:q]}%"
+      @series = @series.where(
+        "LOWER(canonical_title) LIKE LOWER(:q) OR LOWER(localized_title) LIKE LOWER(:q)",
+        q: query
+      )
+    end
+
+    # Load into memory for status filtering (uses preloaded data)
+    @series = @series.to_a
+
+    # Filter by status using preloaded associations
     case params[:status]
     when "downloaded"
-      @series = @series.select { |s| s.download_progress[:downloaded] > 0 && s.download_progress[:downloaded] == s.download_progress[:total] }
+      @series = @series.select do |s|
+        progress = s.download_progress
+        progress[:downloaded] > 0 && progress[:downloaded] == progress[:total]
+      end
     when "in_progress"
-      @series = @series.select { |s| s.download_progress[:downloading] > 0 || (s.download_progress[:downloaded] > 0 && s.download_progress[:downloaded] < s.download_progress[:total]) }
+      @series = @series.select do |s|
+        progress = s.download_progress
+        progress[:downloading] > 0 || (progress[:downloaded] > 0 && progress[:downloaded] < progress[:total])
+      end
     when "not_downloaded"
-      @series = @series.select { |s| s.download_progress[:downloaded] == 0 && s.download_progress[:downloading] == 0 }
+      @series = @series.select do |s|
+        progress = s.download_progress
+        progress[:downloaded] == 0 && progress[:downloading] == 0
+      end
     end
 
-    # Search by title
-    if params[:q].present?
-      query = params[:q].downcase
-      @series = @series.select { |s| s.canonical_title.downcase.include?(query) || s.localized_title&.downcase&.include?(query) }
-    end
-
-    # Convert to array if still a relation (for non-filtered case)
-    @series = @series.to_a if @series.respond_to?(:to_a) && !@series.is_a?(Array)
-
-    # Stats
+    # Stats (single queries, no N+1)
     @total_series = Series.count
     @total_chapters = Chapter.count
     @downloaded_chapters = FileAsset.where(download_status: "complete").count

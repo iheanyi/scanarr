@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_03_184201) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,6 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_184201) do
     t.index ["series_id"], name: "index_chapters_on_series_id"
     t.index ["source_id", "source_url"], name: "index_chapters_on_source_id_and_source_url"
     t.index ["source_id"], name: "index_chapters_on_source_id"
+    t.index ["source_url"], name: "index_chapters_on_source_url", where: "(source_url IS NOT NULL)"
     t.index ["volume_id"], name: "index_chapters_on_volume_id"
   end
 
@@ -95,10 +96,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_184201) do
     t.bigint "release_id", null: false
     t.string "storage_id"
     t.datetime "updated_at", null: false
+    t.index ["download_status", "updated_at"], name: "index_file_assets_on_status_and_updated_at"
     t.index ["download_status"], name: "index_file_assets_on_download_status"
     t.index ["public_id"], name: "index_file_assets_on_public_id", unique: true
     t.index ["release_id", "checksum"], name: "index_file_assets_on_release_id_and_checksum"
     t.index ["release_id"], name: "index_file_assets_on_release_id"
+    t.index ["updated_at"], name: "index_file_assets_on_updated_at"
   end
 
   create_table "pages", force: :cascade do |t|
@@ -125,10 +128,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_184201) do
     t.string "source_url"
     t.datetime "updated_at", null: false
     t.index ["chapter_id"], name: "index_releases_on_chapter_id"
+    t.index ["created_at"], name: "index_releases_on_created_at"
     t.index ["deleted_at"], name: "index_releases_on_deleted_at"
     t.index ["public_id"], name: "index_releases_on_public_id", unique: true
     t.index ["source_id", "published_at"], name: "index_releases_on_source_id_and_published_at"
     t.index ["source_id"], name: "index_releases_on_source_id"
+    t.index ["source_url"], name: "index_releases_on_source_url", where: "(source_url IS NOT NULL)"
   end
 
   create_table "scraper_runs", force: :cascade do |t|
@@ -183,6 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_184201) do
     t.index ["series_id", "source_id"], name: "index_series_sources_on_series_id_and_source_id", unique: true
     t.index ["series_id"], name: "index_series_sources_on_series_id"
     t.index ["source_id"], name: "index_series_sources_on_source_id"
+    t.index ["source_series_id"], name: "index_series_sources_on_source_series_id"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
