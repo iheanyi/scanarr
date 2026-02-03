@@ -8,6 +8,7 @@ Rails.application.routes.draw do
 
   root "sources#index"
   get "/library", to: "library#index", as: :library
+  get "/calendar", to: "calendar#index", as: :calendar
   resources :follows, only: [:create, :update, :destroy]
 
   # Notifications
