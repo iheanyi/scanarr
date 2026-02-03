@@ -41,4 +41,7 @@ Rails.application.routes.draw do
     get "downloads", to: "downloads#index", as: :downloads
     post "downloads/refresh_all_covers", to: "downloads#refresh_all_covers", as: :refresh_all_covers
   end
+
+  # Mission Control for SolidQueue job monitoring
+  mount MissionControl::Jobs::Engine, at: "/admin/jobs"
 end
