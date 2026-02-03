@@ -2,6 +2,9 @@
   <header class="space-y-2">
     <p class="text-sm text-zinc-400"><%= @source.name || @source.key %></p>
     <h1 class="text-3xl font-semibold text-balance"><%= @series.canonical_title %></h1>
+    <% if @series.display_author.present? %>
+      <p class="text-sm text-zinc-300">by <%= @series.display_author %></p>
+    <% end %>
     <p class="text-zinc-400 text-pretty">Choose a chapter to read or download.</p>
     <div class="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
       <span class="text-xs uppercase text-zinc-500">Reading style</span>
