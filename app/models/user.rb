@@ -6,4 +6,7 @@ class User < ApplicationRecord
          :confirmable
 
   has_many :chapter_progresses, dependent: :destroy
+  has_many :user_series_follows, dependent: :destroy
+  has_many :followed_library_series, through: :user_series_follows, source: :library_series
 end
+

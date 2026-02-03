@@ -45,7 +45,9 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   def test_import_creates_series
     with_adapter(FakeAdapter.new) do
       post "/sources/weeb-central/import", params: { series_url: "https://weebcentral.com/series/OP" }
-      assert_redirected_to "/sources/weeb-central/one-piece"
+      # Find the newly created series to get its public_id-slug format
+      series = Series.find_by(canonical_title: "One Piece")
+      assert_redirected_to "/sources/weeb-central/#{series.to_param}"
     end
   end
 

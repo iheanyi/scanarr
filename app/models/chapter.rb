@@ -1,5 +1,5 @@
 class Chapter < ApplicationRecord
-  include PublicIdGenerator
+  include HasPublicId
 
   belongs_to :series
   belongs_to :volume, optional: true
@@ -9,10 +9,6 @@ class Chapter < ApplicationRecord
 
   validates :chapter_number, presence: true
   before_validation :set_chapter_number_value
-
-  def to_param
-    public_id
-  end
 
   private
 

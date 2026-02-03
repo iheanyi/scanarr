@@ -15,16 +15,21 @@ class SourcesController < ApplicationController
   def import
     series_url = params[:series_url].to_s
     if series_url.blank?
-      redirect_to source_search_path(source_slug: source_slug(@source)) and return
+      redirect_to source_search_path(source_slug: source_slug(@source)), alert: "No series URL provided" and return
     end
 
     importer = SeriesImporter.new(source: @source, adapter: adapter_for(@source))
     series = importer.import!(series_url)
+    chapter_count = series.chapters.where(source: @source).count
 
+    flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}"
     redirect_to source_series_path(
       source_slug: source_slug(@source),
-      series_slug: series.friendly_id
+      series_slug: series.to_param
     )
+  rescue BaseAdapter::ScraperError, StandardError => e
+    Rails.logger.error "Import failed for #{series_url}: #{e.class} - #{e.message}"
+    redirect_to search_path(q: params[:q]), alert: "Import failed: #{e.message}"
   end
 
   private

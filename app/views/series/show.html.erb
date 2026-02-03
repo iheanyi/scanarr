@@ -8,7 +8,7 @@
           <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
             <span class="text-xs uppercase text-zinc-500">No cover</span>
             <% if @series.cover_url.present? %>
-              <%= button_to source_series_refresh_cover_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+              <%= button_to source_series_refresh_cover_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                             method: :post,
                             class: "inline-flex items-center rounded-md bg-zinc-800 border border-zinc-700 px-2 py-1 text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-700" do %>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -21,7 +21,7 @@
         <% end %>
       </div>
       <% if @series.cover_url.present? && @series.cover_image_url.present? %>
-        <%= button_to source_series_refresh_cover_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+        <%= button_to source_series_refresh_cover_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                       method: :post,
                       class: "absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center rounded-md bg-zinc-900/90 border border-zinc-700 px-2 py-1 text-xs font-medium text-zinc-300 hover:text-white" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -34,7 +34,7 @@
     <div class="space-y-2 flex-1">
       <div class="flex items-center gap-2">
         <p class="text-sm text-zinc-400"><%= @source.name || @source.key %></p>
-        <%= button_to source_series_refresh_metadata_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+        <%= button_to source_series_refresh_metadata_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                       method: :post,
                       class: "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-500" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -54,7 +54,7 @@
       <div class="flex flex-wrap items-center gap-2 text-sm text-zinc-300">
         <span class="text-xs uppercase text-zinc-500">Reading style</span>
         <%= form_with model: @series,
-                      url: source_series_update_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+                      url: source_series_update_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                       method: :patch,
                       local: true do |form| %>
           <%= form.select :reading_style,
@@ -81,7 +81,7 @@
       <% if @chapters.any? %>
         <div class="flex items-center gap-2">
           <% if @in_progress_count > 0 %>
-            <%= button_to source_series_cancel_all_downloads_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+            <%= button_to source_series_cancel_all_downloads_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                           method: :post,
                           class: "inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 px-3 py-1.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/10",
                           data: { turbo_confirm: "Cancel all #{@in_progress_count} in-progress download(s)?" } do %>
@@ -93,7 +93,7 @@
             <% end %>
           <% end %>
           <% if @downloaded_count > 0 %>
-            <%= button_to source_series_remove_all_downloads_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+            <%= button_to source_series_remove_all_downloads_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                           method: :delete,
                           class: "inline-flex items-center gap-1.5 rounded-md border border-rose-500/40 px-3 py-1.5 text-sm font-semibold text-rose-300 hover:bg-rose-500/10",
                           data: { turbo_confirm: "Remove all #{@downloaded_count} downloaded chapter(s)? This cannot be undone." } do %>
@@ -105,7 +105,7 @@
             <% end %>
           <% end %>
           <div data-controller="loading-button">
-            <%= form_with url: source_series_download_all_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.friendly_id),
+            <%= form_with url: source_series_download_all_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param),
                           method: :post,
                           data: { action: "submit->loading-button#submit" } do %>
               <button type="submit"

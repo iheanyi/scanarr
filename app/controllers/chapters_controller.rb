@@ -46,7 +46,7 @@ class ChaptersController < ApplicationController
     if source_url.blank?
       redirect_to source_series_chapter_path(
         source_slug: source_slug(@source),
-        series_slug: @series.friendly_id,
+        series_slug: @series.to_param,
         chapter_identifier: chapter_identifier(@chapter)
       ) and return
     end
@@ -56,7 +56,7 @@ class ChaptersController < ApplicationController
     if file_asset&.download_status.in?(%w[queued pending downloading])
       redirect_to source_series_chapter_path(
         source_slug: source_slug(@source),
-        series_slug: @series.friendly_id,
+        series_slug: @series.to_param,
         chapter_identifier: chapter_identifier(@chapter)
       ) and return
     end
@@ -87,7 +87,7 @@ class ChaptersController < ApplicationController
 
     redirect_to source_series_chapter_path(
       source_slug: source_slug(@source),
-      series_slug: @series.friendly_id,
+      series_slug: @series.to_param,
       chapter_identifier: chapter_identifier(@chapter)
     )
   end
@@ -111,7 +111,7 @@ class ChaptersController < ApplicationController
 
     redirect_to source_series_path(
       source_slug: source_slug(@source),
-      series_slug: @series.friendly_id
+      series_slug: @series.to_param
     )
   end
 
@@ -139,7 +139,7 @@ class ChaptersController < ApplicationController
 
     redirect_to source_series_path(
       source_slug: source_slug(@source),
-      series_slug: @series.friendly_id
+      series_slug: @series.to_param
     )
   end
 
@@ -173,7 +173,7 @@ class ChaptersController < ApplicationController
     identifier = chapter.chapter_number.presence || chapter.public_id
     redirect_to source_series_chapter_path(
       source_slug: source_slug(source),
-      series_slug: series.friendly_id,
+      series_slug: series.to_param,
       chapter_identifier: identifier
     )
   end
@@ -184,8 +184,7 @@ class ChaptersController < ApplicationController
     @source = find_source
     @series = Series.joins(:series_sources)
                     .where(series_sources: { source_id: @source.id })
-                    .friendly
-                    .find(params[:series_slug])
+                    .find_by_param!(params[:series_slug])
 
     identifier = params[:chapter_identifier].to_s
     chapter_scope = @series.chapters.where(source: @source)

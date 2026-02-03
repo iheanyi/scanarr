@@ -10,7 +10,7 @@
       data-reader-style-value="<%= @reading_style %>"
       data-reader-page-count-value="<%= page_count %>"
       data-reader-initial-page-index-value="<%= initial_page_index %>"
-      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.friendly_id, chapter_identifier: chapter_identifier(@chapter)) : '' %>"
+      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)) : '' %>"
       class="space-y-6">
   <header class="space-y-2">
     <p class="text-sm text-zinc-400"><%= @series.canonical_title %></p>
@@ -42,7 +42,7 @@
       <%= link_to "Previous Chapter",
                   source_series_chapter_path(
                     source_slug: source_slug(@source),
-                    series_slug: @series.friendly_id,
+                    series_slug: @series.to_param,
                     chapter_identifier: chapter_identifier(@previous_chapter)
                   ),
                   class: "inline-flex items-center rounded-md border border-zinc-800 px-3 py-1.5 text-sm font-semibold text-zinc-200" %>
@@ -51,7 +51,7 @@
       <%= link_to "Next Chapter",
                   source_series_chapter_path(
                     source_slug: source_slug(@source),
-                    series_slug: @series.friendly_id,
+                    series_slug: @series.to_param,
                     chapter_identifier: chapter_identifier(@next_chapter)
                   ),
                   class: "inline-flex items-center rounded-md border border-zinc-800 px-3 py-1.5 text-sm font-semibold text-zinc-200" %>
@@ -70,7 +70,7 @@
       <%= button_to download_label,
                     source_series_chapter_download_path(
                       source_slug: source_slug(@source),
-                      series_slug: @series.friendly_id,
+                      series_slug: @series.to_param,
                       chapter_identifier: chapter_identifier(@chapter)
                     ),
                     method: :post,
@@ -80,7 +80,7 @@
     <% end %>
     <%= form_with url: source_series_chapter_path(
                     source_slug: source_slug(@source),
-                    series_slug: @series.friendly_id,
+                    series_slug: @series.to_param,
                     chapter_identifier: chapter_identifier(@chapter)
                   ),
                   method: :get,
@@ -139,10 +139,10 @@
         <p class="text-sm text-rose-200/80 text-pretty"><%= @source_error %></p>
         <div class="flex gap-2">
           <%= link_to "Back to series",
-                      source_series_path(source_slug: source_slug(@source), series_slug: @series.friendly_id),
+                      source_series_path(source_slug: source_slug(@source), series_slug: @series.to_param),
                       class: "inline-flex items-center rounded-md border border-rose-500/30 px-3 py-1.5 text-sm font-medium text-rose-300 hover:bg-rose-500/10" %>
           <%= link_to "Try again",
-                      source_series_chapter_path(source_slug: source_slug(@source), series_slug: @series.friendly_id, chapter_identifier: chapter_identifier(@chapter)),
+                      source_series_chapter_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)),
                       class: "inline-flex items-center rounded-md bg-rose-500/20 px-3 py-1.5 text-sm font-medium text-rose-200 hover:bg-rose-500/30" %>
         </div>
       </div>

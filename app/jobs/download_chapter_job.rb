@@ -116,10 +116,14 @@ class DownloadChapterJob < ApplicationJob
       ) do |record|
         record.title = @chapter_title
         record.source = @source
+        record.source_url = @chapter_url
       end
-      if @chapter_title && @chapter.title != @chapter_title
-        @chapter.update!(title: @chapter_title)
-      end
+
+      # Update existing chapter with title/source_url if not already set
+      updates = {}
+      updates[:title] = @chapter_title if @chapter_title && @chapter.title != @chapter_title
+      updates[:source_url] = @chapter_url if @chapter_url.present? && @chapter.source_url.blank?
+      @chapter.update!(updates) if updates.any?
 
       @release = @chapter.releases.create!(
         source: @source,
@@ -197,11 +201,11 @@ class DownloadChapterJob < ApplicationJob
 
       content_type = response_content_type(response)
       extension = case content_type
-                  when /png/i then "png"
-                  when /webp/i then "webp"
-                  when /gif/i then "gif"
-                  else "jpg"
-                  end
+      when /png/i then "png"
+      when /webp/i then "webp"
+      when /gif/i then "gif"
+      else "jpg"
+      end
 
       # Use find_or_create_by! to handle race conditions
       page = existing_page || @file_asset.pages.find_or_create_by!(position: position)
@@ -249,7 +253,7 @@ class DownloadChapterJob < ApplicationJob
     series = chapter.series
     # Broadcast to series page
     Turbo::StreamsChannel.broadcast_replace_to(
-      [series, :downloads],
+      [ series, :downloads ],
       target: ActionView::RecordIdentifier.dom_id(chapter),
       partial: "series/chapter_row",
       locals: { chapter: chapter.reload, source: source, series: series, progress: nil }

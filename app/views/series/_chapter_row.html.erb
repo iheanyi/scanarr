@@ -8,7 +8,7 @@
         <%= link_to "Chapter #{chapter.chapter_number}",
                     source_series_chapter_path(
                       source_slug: source.key.to_s.tr("_", "-"),
-                      series_slug: series.friendly_id,
+                      series_slug: series.to_param,
                       chapter_identifier: chapter.chapter_number
                     ),
                     class: "text-base font-semibold text-emerald-300" %>
@@ -75,7 +75,7 @@
       <% if file_asset&.download_status == "complete" %>
         <%= button_to source_series_chapter_remove_download_path(
                         source_slug: source.key.to_s.tr("_", "-"),
-                        series_slug: series.friendly_id,
+                        series_slug: series.to_param,
                         chapter_identifier: chapter.chapter_number
                       ),
                       method: :delete,
@@ -90,7 +90,7 @@
       <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
         <%= button_to source_series_chapter_cancel_download_path(
                         source_slug: source.key.to_s.tr("_", "-"),
-                        series_slug: series.friendly_id,
+                        series_slug: series.to_param,
                         chapter_identifier: chapter.chapter_number
                       ),
                       method: :post,
@@ -108,7 +108,7 @@
           <%= button_to is_complete ? "Re-download" : "Download",
                         source_series_chapter_download_path(
                           source_slug: source.key.to_s.tr("_", "-"),
-                          series_slug: series.friendly_id,
+                          series_slug: series.to_param,
                           chapter_identifier: chapter.chapter_number
                         ),
                         method: :post,

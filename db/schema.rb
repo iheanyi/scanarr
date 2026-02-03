@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_03_200200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
     t.index ["updated_at"], name: "index_file_assets_on_updated_at"
   end
 
+  create_table "library_series", force: :cascade do |t|
+    t.integer "anilist_id"
+    t.string "canonical_title", null: false
+    t.string "cover_url"
+    t.datetime "created_at", null: false
+    t.integer "mal_id"
+    t.uuid "mangadex_id"
+    t.string "public_id", null: false
+    t.string "slug", null: false
+    t.integer "status", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["anilist_id"], name: "index_library_series_on_anilist_id"
+    t.index ["mal_id"], name: "index_library_series_on_mal_id"
+    t.index ["mangadex_id"], name: "index_library_series_on_mangadex_id"
+    t.index ["public_id"], name: "index_library_series_on_public_id", unique: true
+    t.index ["slug"], name: "index_library_series_on_slug", unique: true
+  end
+
   create_table "pages", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "file_asset_id", null: false
@@ -160,10 +178,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.string "language_policy"
+    t.bigint "library_series_id"
     t.string "localized_title"
     t.string "metadata_source_id"
     t.jsonb "normalized_categories", default: [], null: false
     t.string "public_id", null: false
+    t.decimal "quality_score", precision: 8, scale: 2
     t.jsonb "raw_tags", default: [], null: false
     t.string "reading_style"
     t.string "series_type"
@@ -172,6 +192,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
     t.datetime "updated_at", null: false
     t.index ["canonical_title"], name: "index_series_on_canonical_title"
     t.index ["deleted_at"], name: "index_series_on_deleted_at"
+    t.index ["library_series_id"], name: "index_series_on_library_series_id"
     t.index ["public_id"], name: "index_series_on_public_id", unique: true
     t.index ["reading_style"], name: "index_series_on_reading_style"
     t.index ["slug"], name: "index_series_on_slug", unique: true
@@ -346,6 +367,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
     t.index ["key"], name: "index_sources_on_key", unique: true
   end
 
+  create_table "user_series_follows", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "download_policy", default: 0, null: false
+    t.bigint "library_series_id", null: false
+    t.jsonb "source_priority", default: []
+    t.bigint "user_id", null: false
+    t.index ["library_series_id"], name: "index_user_series_follows_on_library_series_id"
+    t.index ["user_id", "library_series_id"], name: "index_user_series_follows_on_user_id_and_library_series_id", unique: true
+    t.index ["user_id"], name: "index_user_series_follows_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
@@ -386,6 +418,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
   add_foreign_key "releases", "chapters"
   add_foreign_key "releases", "sources"
   add_foreign_key "scraper_runs", "sources"
+  add_foreign_key "series", "library_series"
   add_foreign_key "series_sources", "series"
   add_foreign_key "series_sources", "sources"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -394,5 +427,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_03_192501) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_series_follows", "library_series"
+  add_foreign_key "user_series_follows", "users"
   add_foreign_key "volumes", "series"
 end

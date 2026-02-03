@@ -10,7 +10,7 @@
       <% @series.each do |series| %>
         <%= link_to source_series_path(
                       source_slug: @source.key.to_s.tr("_", "-"),
-                      series_slug: series.friendly_id
+                      series_slug: series.to_param
                     ),
                     class: "group rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4 hover:border-emerald-500/40 transition-colors" do %>
           <div class="flex gap-4">
