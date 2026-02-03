@@ -2,7 +2,7 @@ require "test_helper"
 
 class WeebCentralPaginationTest < ActiveSupport::TestCase
   def test_chapters_fetches_full_naruto_list
-    VCR.use_cassette("weeb_central_naruto_chapters", record: :once) do
+    VCR.use_cassette("weeb_central_naruto_chapters", record: :new_episodes) do
       config = Rails.configuration.scraper_sources.fetch("weeb_central", {})
       adapter = WeebCentral::Adapter.new(config: config)
 

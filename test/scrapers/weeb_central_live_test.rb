@@ -2,7 +2,7 @@ require "test_helper"
 
 class WeebCentralLiveTest < ActiveSupport::TestCase
   def test_live_flow_records_with_vcr
-    VCR.use_cassette("weeb_central_live", record: :once) do
+    VCR.use_cassette("weeb_central_live", record: :new_episodes) do
       config = Rails.configuration.scraper_sources.fetch("weeb_central", {})
       adapter = WeebCentral::Adapter.new(config: config)
 

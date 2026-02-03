@@ -4,7 +4,7 @@ require "set"
 module WeebCentral
   class Adapter < ::Adapter
     SERIES_LINK_SELECTOR = "a[href*='/series/']"
-    CHAPTER_LINK_SELECTOR = "#chapter-list a[href*='/chapters/']"
+    CHAPTER_LINK_SELECTOR = "a[href*='/chapters/']"
     PAGE_IMAGE_SELECTOR = "img"
 
     def search(query)
