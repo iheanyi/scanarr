@@ -1,5 +1,5 @@
 module ResultTypes
-  SearchResult = Struct.new(:id, :title, :url, :cover_url, :language, keyword_init: true)
+  SearchResult = Struct.new(:id, :title, :url, :cover_url, :language, :author, keyword_init: true)
 
   Series = Struct.new(
     :id,

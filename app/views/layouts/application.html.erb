@@ -15,13 +15,8 @@
           <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
           <nav class="flex items-center gap-4 text-sm text-zinc-300">
             <%= link_to "Sources", root_path, class: "hover:text-zinc-100" %>
-            <% if defined?(@source) && @source.present? %>
-              <%= link_to "Search",
-                          source_search_path(source_slug: @source.key.to_s.tr("_", "-")),
-                          class: "hover:text-zinc-100" %>
-            <% else %>
-              <span class="cursor-not-allowed text-zinc-600">Search</span>
-            <% end %>
+            <%= link_to "Search", search_path, class: "hover:text-zinc-100" %>
+            <%= link_to "Downloads", admin_downloads_path, class: "hover:text-zinc-100" %>
             <%= link_to "Admin", admin_scrapers_path, class: "hover:text-zinc-100" %>
           </nav>
         </div>

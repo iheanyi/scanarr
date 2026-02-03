@@ -3,18 +3,20 @@ require "json"
 module Mangadex
   class Adapter < ::Adapter
     def search(query)
-      response = http.get("/manga", params: { title: query, limit: 20, includes: [ "cover_art" ] })
+      response = http.get("/manga", params: { title: query, limit: 20, includes: [ "cover_art", "author" ] })
       payload = JSON.parse(response.body)
       payload.fetch("data", []).map do |item|
         attrs = item.fetch("attributes", {})
         title = pick_title(attrs.fetch("title", {}))
         cover = cover_url(item)
+        authors = relationship_names(item, "author")
         ResultTypes::SearchResult.new(
           id: item.fetch("id"),
           title: title,
           url: "https://mangadex.org/title/#{item.fetch('id')}",
           cover_url: cover,
-          language: attrs["originalLanguage"]
+          language: attrs["originalLanguage"],
+          author: authors.first
         )
       end
     end

@@ -1,0 +1,87 @@
+<main class="space-y-6">
+  <header class="space-y-2">
+    <h1 class="text-3xl font-semibold text-balance">Search</h1>
+    <p class="text-zinc-400 text-pretty">Search across multiple sources and import series into your library.</p>
+  </header>
+
+  <section class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+    <%= form_with url: search_path, method: :get, local: true do |form| %>
+      <div class="space-y-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="flex-1 space-y-1">
+            <%= form.label :q, "Series title", class: "text-sm text-zinc-300" %>
+            <%= form.text_field :q,
+                                value: @query,
+                                placeholder: "One Piece",
+                                autofocus: true,
+                                class: "w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600" %>
+          </div>
+          <%= form.submit "Search",
+                          class: "inline-flex items-center justify-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
+        </div>
+
+        <div class="space-y-2">
+          <p class="text-xs uppercase text-zinc-500">Sources</p>
+          <div class="flex flex-wrap gap-3">
+            <% @sources.each do |source| %>
+              <label class="inline-flex items-center gap-2 cursor-pointer">
+                <%= check_box_tag "sources[]",
+                                  source.id,
+                                  @selected_source_ids.include?(source.id.to_s),
+                                  class: "rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-950" %>
+                <span class="text-sm text-zinc-300"><%= source.name || source.key %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <% if @query.present? %>
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold text-balance">Results (<%= @results.size %>)</h2>
+      <% if @results.any? %>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <% @results.each do |item| %>
+            <% source = item[:source] %>
+            <% result = item[:result] %>
+            <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4 flex flex-col">
+              <div class="flex gap-4 flex-1">
+                <div class="h-32 w-24 shrink-0 overflow-hidden rounded-md border border-zinc-800/80 bg-zinc-950">
+                  <% if result.cover_url.present? %>
+                    <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover", loading: "lazy" %>
+                  <% else %>
+                    <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-zinc-500">
+                      No cover
+                    </div>
+                  <% end %>
+                </div>
+                <div class="flex flex-col min-w-0 flex-1">
+                  <span class="inline-flex items-center rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400 w-fit mb-1">
+                    <%= source.name || source.key %>
+                  </span>
+                  <p class="font-semibold text-balance line-clamp-2"><%= result.title %></p>
+                  <% if result.respond_to?(:author) && result.author.present? %>
+                    <p class="text-sm text-zinc-400 mt-1">by <%= result.author %></p>
+                  <% end %>
+                </div>
+              </div>
+              <div class="mt-3 pt-3 border-t border-zinc-800/80">
+                <%= button_to "Import",
+                              source_import_path(source_slug: source_slug(source)),
+                              method: :post,
+                              params: { series_url: result.url },
+                              class: "w-full inline-flex items-center justify-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/10" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="rounded-lg border border-dashed border-zinc-800/80 bg-zinc-900/40 p-6 text-center">
+          <p class="text-zinc-400">No results found for "<%= @query %>".</p>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+</main>

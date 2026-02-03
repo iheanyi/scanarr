@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "sources#index"
+  get "/search", to: "search#index", as: :search
   get "/sources/:source_slug/search", to: "sources#search", as: :source_search
   post "/sources/:source_slug/import", to: "sources#import", as: :source_import
   get "/sources/:source_slug", to: "series#index", as: :source_series_index
@@ -24,5 +25,6 @@ Rails.application.routes.draw do
   namespace :admin do
     get "scrapers", to: "scrapers#index", as: :scrapers
     post "scrapers/:source_id/smoke", to: "scrapers#run_smoke", as: :scraper_smoke
+    get "downloads", to: "downloads#index", as: :downloads
   end
 end
