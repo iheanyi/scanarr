@@ -264,11 +264,17 @@ class DownloadChapterJob < ApplicationJob
   def broadcast_admin_download_update
     return unless @file_asset
 
+    file_asset = @file_asset.reload
+    target_id = ActionView::RecordIdentifier.dom_id(file_asset)
+
+    # Broadcast update - uses "refresh" action which will:
+    # - Replace if element exists
+    # - Be ignored if element doesn't exist (user will see it on next page load)
     Turbo::StreamsChannel.broadcast_replace_to(
       "admin_downloads",
-      target: ActionView::RecordIdentifier.dom_id(@file_asset),
+      target: target_id,
       partial: "admin/downloads/download_row",
-      locals: { download: @file_asset.reload }
+      locals: { download: file_asset }
     )
   rescue StandardError => e
     Rails.logger.warn "Failed to broadcast admin download update: #{e.message}"
