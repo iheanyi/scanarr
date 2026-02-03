@@ -1,4 +1,11 @@
 class BaseAdapter
+  # Custom error classes for scraper operations
+  class ScraperError < StandardError; end
+  class ChapterNotFoundError < ScraperError; end
+  class SeriesNotFoundError < ScraperError; end
+  class RateLimitError < ScraperError; end
+  class SourceUnavailableError < ScraperError; end
+
   attr_reader :config, :http
 
   def initialize(config:, http: HttpClient.new(config: config))

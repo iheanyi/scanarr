@@ -17,9 +17,23 @@ class ChaptersController < ApplicationController
     @chapter_progress = current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil
     @reading_style = params[:reading_style].presence || @series.reading_style.presence || "left_to_right"
     @source_pages = []
+    @source_error = nil
     if @pages.empty?
       source_url = @chapter.source_url || @release&.source_url
-      @source_pages = adapter_for(@source).pages(source_url) if source_url.present?
+      if source_url.present?
+        begin
+          @source_pages = adapter_for(@source).pages(source_url)
+        rescue BaseAdapter::ChapterNotFoundError => e
+          @source_error = "This chapter is no longer available on the source. It may have been removed or replaced."
+          Rails.logger.warn "Chapter not found: #{@chapter.id} - #{e.message}"
+        rescue BaseAdapter::RateLimitError => e
+          @source_error = "The source is rate limiting requests. Please try again in a few minutes."
+          Rails.logger.warn "Rate limited: #{@chapter.id} - #{e.message}"
+        rescue BaseAdapter::SourceUnavailableError, BaseAdapter::ScraperError => e
+          @source_error = "Unable to load pages from source: #{e.message}"
+          Rails.logger.error "Scraper error for chapter #{@chapter.id}: #{e.class} - #{e.message}"
+        end
+      end
     end
     set_initial_page_index
     set_navigation

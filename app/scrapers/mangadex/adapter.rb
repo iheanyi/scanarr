@@ -90,7 +90,15 @@ module Mangadex
       # Handle API errors
       if payload["result"] == "error"
         errors = payload["errors"]&.map { |e| e["detail"] }&.join(", ") || "Unknown error"
-        raise "MangaDex API error: #{errors}"
+
+        # Check for specific error types
+        if errors.include?("not found") || errors.include?("does not exist")
+          raise ChapterNotFoundError, "Chapter is no longer available on MangaDex"
+        elsif errors.include?("rate limit")
+          raise RateLimitError, "MangaDex rate limit exceeded, please try again later"
+        else
+          raise ScraperError, "MangaDex error: #{errors}"
+        end
       end
 
       base = payload["baseUrl"]
@@ -98,7 +106,7 @@ module Mangadex
 
       if base.nil? || chapter_data.nil?
         Rails.logger.error "MangaDex unexpected response for chapter #{id}: #{payload.inspect}"
-        raise "MangaDex API returned unexpected response structure"
+        raise SourceUnavailableError, "MangaDex returned an unexpected response"
       end
 
       hash = chapter_data.fetch("hash")
