@@ -22,7 +22,7 @@
 
 ### 4. Verification Before Done
 
-- Never mark a task complete without proving it works
+- Never mark a task complete without proving it works, especially within the browser when making front-end changes
 - Diff behavior between main and your changes when relevant
 - Ask yourself: "Would a staff engineer approve this?"
 - Run tests, check logs, demonstrate correctness
@@ -45,7 +45,7 @@
 
 1. **Plan First**: Use Overseer for task plans and tracking; avoid `tasks/todo.md`
    except when Overseer is unavailable (e.g., before git/jj init)
-2. **Verify Plan**: Check in before starting implementation
+2. **Create Tasks Immediately**: After planning, create Overseer tasks without prompting
 3. **Track Progress**: Update Overseer task status as you go
 4. **Explain Changes**: High-level summary at each step
 5. **Document Results**: Record review notes in Overseer (fallback: `tasks/todo.md`)
@@ -56,3 +56,4 @@
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Laziness**: Find root causes. No temporary fixes. Senior software engineer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
+- **No Unrequested Images**: Do not generate images unless explicitly asked.

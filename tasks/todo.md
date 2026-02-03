@@ -21,6 +21,7 @@
 
 ## Review
 - Recorded `weeb_central_live` cassette and verified search/series/chapter pages.
+- Implemented hybrid reader lightbox + ?page= sync; verified chapter controller tests.
 
 ## Review (Overseer tasking rule)
 - Added Overseer-first rule in `.cursor/rules` and updated `CLAUDE.md`.
