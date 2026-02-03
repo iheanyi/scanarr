@@ -75,17 +75,24 @@ class DownloadChapterJob < ApplicationJob
       )
     end
 
+    # Broadcast: download started
+    broadcast_chapter_update(chapter, source)
+
     downloader = ChapterDownloader.new(adapter: adapter, http: http)
 
     Dir.mktmpdir("scanarr-chapter-") do |dir|
       files = downloader.download(chapter_url, output_dir: dir, max_pages: max_pages)
       file_asset.update!(pages_expected: files.size)
+      broadcast_chapter_update(chapter, source)
+
       files.each_with_index do |path, idx|
         page = file_asset.pages.create!(position: idx + 1)
         File.open(path, "rb") do |io|
           page.image.attach(io: io, filename: File.basename(path))
         end
         file_asset.update!(pages_downloaded: idx + 1)
+        # Broadcast progress every 5 pages to avoid flooding
+        broadcast_chapter_update(chapter, source) if ((idx + 1) % 5).zero? || idx == files.size - 1
       end
     end
 
@@ -97,13 +104,30 @@ class DownloadChapterJob < ApplicationJob
     file_asset.archive.purge if file_asset.archive.attached?
     ChapterPackager.new(file_asset).package!
 
+    # Broadcast: download complete
+    broadcast_chapter_update(chapter, source)
+
     release
   rescue StandardError => error
     file_asset&.update!(download_status: "failed", download_error: "#{error.class}: #{error.message}")
+    # Broadcast: download failed
+    broadcast_chapter_update(chapter, source) if chapter
     raise
   end
 
   private
+
+  def broadcast_chapter_update(chapter, source)
+    series = chapter.series
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [series, :downloads],
+      target: ActionView::RecordIdentifier.dom_id(chapter),
+      partial: "series/chapter_row",
+      locals: { chapter: chapter.reload, source: source, series: series, progress: nil }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "Failed to broadcast chapter update: #{e.message}"
+  end
 
   def adapter_for(source_key)
     case source_key.to_s

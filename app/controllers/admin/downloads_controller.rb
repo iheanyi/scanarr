@@ -18,11 +18,11 @@ module Admin
       # Cover stats
       @series_count = Series.count
       @covers_attached = Series.joins(:cover_attachment).count
-      @covers_with_url = Series.where.not(cover_url: [nil, ""]).count
+      @covers_with_url = Series.where.not(cover_url: [ nil, "" ]).count
     end
 
     def refresh_all_covers
-      series_with_urls = Series.where.not(cover_url: [nil, ""])
+      series_with_urls = Series.where.not(cover_url: [ nil, "" ])
       refreshed = 0
 
       series_with_urls.find_each do |series|
@@ -44,12 +44,12 @@ module Admin
 
       content_type = response["content-type"]
       extension = case content_type
-                  when /jpeg|jpg/i then "jpg"
-                  when /png/i then "png"
-                  when /webp/i then "webp"
-                  when /gif/i then "gif"
-                  else "jpg"
-                  end
+      when /jpeg|jpg/i then "jpg"
+      when /png/i then "png"
+      when /webp/i then "webp"
+      when /gif/i then "gif"
+      else "jpg"
+      end
 
       series.cover.attach(
         io: StringIO.new(response.body),

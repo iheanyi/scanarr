@@ -205,7 +205,7 @@ class ChaptersController < ApplicationController
     end
 
     if page_count.positive?
-      @initial_page_index = [[@initial_page_index, page_count].min, 1].max
+      @initial_page_index = [ [ @initial_page_index, page_count ].min, 1 ].max
     else
       @initial_page_index = 0
     end
