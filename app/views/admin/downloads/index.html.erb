@@ -36,8 +36,7 @@
         </p>
       </div>
       <% if @covers_with_url > 0 %>
-        <%= button_to "Refresh All Covers",
-                      admin_refresh_all_covers_path,
+        <%= button_to admin_refresh_all_covers_path,
                       method: :post,
                       class: "inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/10",
                       data: { turbo_confirm: "Refresh all #{@covers_with_url} covers from source? This may take a while." } do %>
