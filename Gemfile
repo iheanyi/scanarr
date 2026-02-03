@@ -42,8 +42,7 @@ gem "faraday-retry"
 # gem "rack-cors"
 
 group :development do
-  # Preview emails in browser instead of sending
-  gem "letter_opener"
+  # No dev-only gems currently
 end
 
 group :development, :test do
@@ -75,8 +74,6 @@ gem "rubyzip", "~> 3.2"
 
 
 gem "propshaft", "~> 1.3"
-
-gem "devise"
 
 gem "kaminari", "~> 1.2"
 

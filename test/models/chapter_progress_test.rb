@@ -9,7 +9,7 @@ class ChapterProgressTest < ActiveSupport::TestCase
   end
 
   def test_enforces_unique_user_chapter
-    user = User.create!(email: "reader@example.com", password: "password123", password_confirmation: "password123")
+    user = User.create!(email: "reader@example.com")
     chapter = chapters(:one)
 
     ChapterProgress.create!(
@@ -34,7 +34,7 @@ class ChapterProgressTest < ActiveSupport::TestCase
   end
 
   def test_requires_page_fields
-    user = User.create!(email: "reader2@example.com", password: "password123", password_confirmation: "password123")
+    user = User.create!(email: "reader2@example.com")
     chapter = chapters(:one)
 
     progress = ChapterProgress.new(user: user, chapter: chapter, status: "in_progress", progressed_at: Time.current)

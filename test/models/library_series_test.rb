@@ -56,12 +56,7 @@ class LibrarySeriesTest < ActiveSupport::TestCase
 
   def test_has_many_followers_through_user_series_follows
     library_series = LibrarySeries.create!(canonical_title: "One Piece")
-    user = User.create!(
-      email: "test@example.com",
-      password: "password123",
-      password_confirmation: "password123",
-      confirmed_at: Time.current
-    )
+    user = User.create!(email: "test@example.com")
 
     UserSeriesFollow.create!(user: user, library_series: library_series)
 

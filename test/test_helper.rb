@@ -22,3 +22,38 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
   end
 end
+
+module ActionDispatch
+  class IntegrationTest
+    # HTTP Basic Auth helper for tests
+    def http_basic_auth_header(username = "scanarr", password = "ilovemanga")
+      { "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(username, password) }
+    end
+
+    # Override request methods to automatically include auth
+    def get(path, **options)
+      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
+      super
+    end
+
+    def post(path, **options)
+      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
+      super
+    end
+
+    def patch(path, **options)
+      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
+      super
+    end
+
+    def delete(path, **options)
+      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
+      super
+    end
+
+    def follow_redirect!(**options)
+      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
+      super
+    end
+  end
+end

@@ -2,7 +2,7 @@ require "test_helper"
 
 class ChaptersControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
-  include Devise::Test::IntegrationHelpers
+
   class FakeAdapter
     def pages(_url)
       []
@@ -88,18 +88,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_equal DownloadChapterJob, job[:job]
   end
 
-  def test_update_progress_requires_authentication
-    patch "/sources/weeb-central/#{series_url}/chapters/1/progress",
-          params: { page_index: 1, page_count: 5 },
-          headers: { "ACCEPT" => "application/json" }
-
-    assert_response :unauthorized
-    assert_includes @response.body, "sign in"
-  end
-
   def test_update_progress_creates_progress
-    sign_in users(:one)
-
     assert_difference -> { ChapterProgress.count }, 1 do
       patch "/sources/weeb-central/#{series_url}/chapters/1/progress",
             params: { page_index: 2, page_count: 5 },
@@ -124,9 +113,10 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_uses_saved_progress_for_initial_page
-    user = users(:one)
+    # Auto-create admin user for progress tracking
+    admin = User.find_or_create_by!(email: "admin@scanarr.local")
     ChapterProgress.create!(
-      user: user,
+      user: admin,
       chapter: chapters(:one),
       page_index: 2,
       page_count: 2,
@@ -134,7 +124,6 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       progressed_at: Time.current
     )
 
-    sign_in user
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
       assert_response :success

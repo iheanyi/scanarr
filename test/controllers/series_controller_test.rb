@@ -1,8 +1,6 @@
 require "test_helper"
 
 class SeriesControllerTest < ActionDispatch::IntegrationTest
-  include Devise::Test::IntegrationHelpers
-
   def series_url(series)
     "#{series.public_id}-#{series.slug}"
   end
@@ -40,11 +38,12 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_renders_progress_pill_for_signed_in_user
-    user = users(:one)
+    # Auto-create admin user for progress tracking
+    admin = User.find_or_create_by!(email: "admin@scanarr.local")
     series = series(:one)
     chapter = chapters(:one)
     ChapterProgress.create!(
-      user: user,
+      user: admin,
       chapter: chapter,
       page_index: 1,
       page_count: 2,
@@ -52,7 +51,6 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
       progressed_at: Time.current
     )
 
-    sign_in user
     get "/sources/weeb-central/#{series_url(series)}"
     assert_response :success
     assert_includes @response.body, "In progress"

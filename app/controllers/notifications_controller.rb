@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class NotificationsController < ApplicationController
-  before_action :authenticate_user!
+  # Authentication handled by ApplicationController
 
   def index
     @notifications = current_user.new_chapter_notifications

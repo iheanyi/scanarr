@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FollowsController < ApplicationController
-  before_action :authenticate_user!
+  # Authentication handled by ApplicationController
   before_action :set_library_series, only: [:create]
   before_action :set_follow, only: [:update, :destroy]
 
