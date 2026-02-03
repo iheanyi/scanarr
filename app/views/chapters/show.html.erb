@@ -1,9 +1,32 @@
-<main data-controller="reader" data-reader-style-value="<%= @reading_style %>" class="space-y-6">
+<% page_count = @pages.any? ? @pages.length : @source_pages.length %>
+<% initial_page_index = @chapter_progress&.page_index || (page_count.positive? ? 1 : 0) %>
+<% initial_page_index = page_count.positive? ? [initial_page_index, page_count].min : 0 %>
+<% progress_percent = page_count.positive? ? ((initial_page_index.to_f / page_count) * 100.0) : 0 %>
+<main data-controller="reader"
+      data-reader-style-value="<%= @reading_style %>"
+      data-reader-page-count-value="<%= page_count %>"
+      data-reader-initial-page-index-value="<%= initial_page_index %>"
+      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.friendly_id, chapter_identifier: chapter_identifier(@chapter)) : '' %>"
+      class="space-y-6">
   <header class="space-y-2">
     <p class="text-sm text-zinc-400"><%= @series.canonical_title %></p>
     <h1 class="text-3xl font-semibold text-balance">Chapter <%= @chapter.chapter_number %></h1>
     <p class="text-zinc-400 text-pretty"><%= @chapter.title %></p>
   </header>
+
+  <% if page_count.positive? %>
+    <div class="sticky top-4 z-2 rounded-lg border border-zinc-800/80 bg-zinc-950/90 p-3 backdrop-blur">
+      <div class="flex items-center justify-between text-xs text-zinc-300">
+        <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
+        <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
+      </div>
+      <div class="mt-2 h-1 w-full rounded-full bg-zinc-800">
+        <div data-reader-target="progressBar"
+             class="h-1 rounded-full bg-emerald-500 transition-all"
+             style="width: <%= progress_percent %>%"></div>
+      </div>
+    </div>
+  <% end %>
 
   <nav class="flex flex-wrap items-center gap-2">
     <% if @previous_chapter %>
@@ -69,7 +92,9 @@
     <% end %>
   </nav>
 
-  <section class="<%= @reading_style == 'left_to_right' || @reading_style == 'right_to_left' ? 'flex overflow-x-auto gap-4 snap-x snap-mandatory' : 'space-y-6' %>" <%= @reading_style == 'right_to_left' ? 'dir="rtl"' : '' %>>
+  <section data-reader-target="viewport"
+           class="<%= @reading_style == 'left_to_right' || @reading_style == 'right_to_left' ? 'flex overflow-x-auto gap-4 snap-x snap-mandatory' : 'space-y-6' %>"
+           <%= @reading_style == 'right_to_left' ? 'dir="rtl"' : '' %>>
     <% if @file_asset&.download_status.present? %>
       <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4 text-sm text-zinc-300">
         <% if @file_asset.download_status == "downloading" && @file_asset.pages_expected.present? %>

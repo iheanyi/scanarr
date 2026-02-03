@@ -21,6 +21,12 @@ class SeriesController < ApplicationController
                          :chapter_number,
                          :id
                        )
+    if current_user
+      @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
+                                              .index_by(&:chapter_id)
+    else
+      @chapter_progress_map = {}
+    end
   end
 
   def update

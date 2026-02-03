@@ -42,6 +42,27 @@
                                 chapter_identifier: chapter.chapter_number
                               ),
                               class: "text-base font-semibold text-emerald-300" %>
+                  <% if current_user %>
+                    <% progress = @chapter_progress_map[chapter.id] %>
+                    <% progress_label = if progress&.status == "completed"
+                                          "Completed"
+                                        elsif progress
+                                          "In progress"
+                                        else
+                                          "Not started"
+                                        end %>
+                    <% progress_classes = case progress_label
+                                         when "Completed"
+                                           "bg-emerald-500/10 text-emerald-200 border-emerald-500/30"
+                                         when "In progress"
+                                           "bg-amber-500/10 text-amber-200 border-amber-500/30"
+                                         else
+                                           "bg-zinc-800/60 text-zinc-200 border-zinc-700"
+                                         end %>
+                    <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold <%= progress_classes %>">
+                      <%= progress_label %>
+                    </span>
+                  <% end %>
                   <% latest_release = chapter.releases.max_by(&:created_at) %>
                   <% file_asset = latest_release&.file_asset %>
                   <% if file_asset&.download_status.present? %>

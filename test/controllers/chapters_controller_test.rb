@@ -2,6 +2,7 @@ require "test_helper"
 
 class ChaptersControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
+  include Devise::Test::IntegrationHelpers
   class FakeAdapter
     def pages(_url)
       []
@@ -81,6 +82,60 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "queued", release.file_asset.download_status
     job = enqueued_jobs.last
     assert_equal DownloadChapterJob, job[:job]
+  end
+
+  def test_update_progress_requires_authentication
+    patch "/sources/weeb-central/one-piece/chapters/1/progress",
+          params: { page_index: 1, page_count: 5 },
+          headers: { "ACCEPT" => "application/json" }
+
+    assert_response :unauthorized
+    assert_includes @response.body, "sign in"
+  end
+
+  def test_update_progress_creates_progress
+    sign_in users(:one)
+
+    assert_difference -> { ChapterProgress.count }, 1 do
+      patch "/sources/weeb-central/one-piece/chapters/1/progress",
+            params: { page_index: 2, page_count: 5 },
+            headers: { "ACCEPT" => "application/json" }
+    end
+
+    progress = ChapterProgress.order(created_at: :desc).first
+    assert_equal 2, progress.page_index
+    assert_equal 5, progress.page_count
+    assert_equal "in_progress", progress.status
+    assert progress.progressed_at.present?
+    assert_response :success
+  end
+
+  def test_show_renders_progress_bar
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1"
+      assert_response :success
+      assert_includes @response.body, "data-reader-target=\"progressText\""
+      assert_includes @response.body, "data-reader-target=\"progressBar\""
+    end
+  end
+
+  def test_show_uses_saved_progress_for_initial_page
+    user = users(:one)
+    ChapterProgress.create!(
+      user: user,
+      chapter: chapters(:one),
+      page_index: 2,
+      page_count: 2,
+      status: "completed",
+      progressed_at: Time.current
+    )
+
+    sign_in user
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/one-piece/chapters/1"
+      assert_response :success
+      assert_includes @response.body, "Page 2 / 2"
+    end
   end
 
   def test_show_disables_download_when_queued

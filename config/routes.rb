@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  devise_for :users
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -13,6 +14,9 @@ Rails.application.routes.draw do
   patch "/sources/:source_slug/:series_slug", to: "series#update", as: :source_series_update
   get "/chapters/:public_id", to: "chapters#redirect", as: :chapter_public
   get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier", to: "chapters#show", as: :source_series_chapter
+  patch "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/progress",
+        to: "chapters#update_progress",
+        as: :source_series_chapter_progress
   post "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/download",
        to: "chapters#enqueue_download",
        as: :source_series_chapter_download

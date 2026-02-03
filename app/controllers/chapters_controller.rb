@@ -1,5 +1,6 @@
 class ChaptersController < ApplicationController
-  before_action :load_context, only: %i[show enqueue_download]
+  before_action :load_context, only: %i[show enqueue_download update_progress]
+  before_action :authenticate_user!, only: %i[update_progress]
 
   helper_method :source_slug, :chapter_identifier
 
@@ -13,6 +14,7 @@ class ChaptersController < ApplicationController
     end
     @file_asset = file_asset
     @download_in_progress = @file_asset&.download_status.in?(%w[queued pending downloading])
+    @chapter_progress = current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil
     @reading_style = params[:reading_style].presence || @series.reading_style.presence || "left_to_right"
     @source_pages = []
     if @pages.empty?
@@ -70,6 +72,27 @@ class ChaptersController < ApplicationController
       series_slug: @series.friendly_id,
       chapter_identifier: chapter_identifier(@chapter)
     )
+  end
+
+  def update_progress
+    page_index = params[:page_index].to_i
+    page_count = params[:page_count].to_i
+    status = page_index >= page_count ? "completed" : "in_progress"
+
+    progress = ChapterProgress.find_or_initialize_by(user: current_user, chapter: @chapter)
+    progress.assign_attributes(
+      page_index: page_index,
+      page_count: page_count,
+      status: status,
+      progressed_at: Time.current
+    )
+    progress.save!
+
+    render json: {
+      status: progress.status,
+      page_index: progress.page_index,
+      page_count: progress.page_count
+    }
   end
 
   def redirect
