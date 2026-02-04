@@ -1,0 +1,12 @@
+<label class="<%= wrapper_classes %>">
+  <%= @form.check_box @method, input_options, @on_value, @off_value %>
+  <span class="<%= cn(track_classes, checked_track_classes) %>">
+    <span class="<%= cn(knob_classes, checked_knob_classes) %>"></span>
+  </span>
+  <span class="space-y-1">
+    <span class="block text-sm text-zinc-300"><%= @label %></span>
+    <% if @description.present? %>
+      <span class="block text-xs text-zinc-500 text-pretty"><%= @description %></span>
+    <% end %>
+  </span>
+</label>
