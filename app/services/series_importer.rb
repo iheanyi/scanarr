@@ -27,7 +27,8 @@ class SeriesImporter
       canonical_title: series_result.title,
       author_name: author_name,
       artist_name: artist_name,
-      cover_url: series_result.cover_url
+      cover_url: series_result.cover_url,
+      description: series_result.description
     )
 
     series_source = SeriesSource.find_or_create_by!(series: series, source: @source)
@@ -40,6 +41,9 @@ class SeriesImporter
       normalized_categories: normalized.fetch(:categories, []),
       reading_style: normalized.fetch(:reading_style, "left_to_right")
     }
+    if series_result.description.present? && series.description != series_result.description
+      updates[:description] = series_result.description
+    end
     updates[:author_name] = author_name if author_name.present? && series.author_name != author_name
     updates[:artist_name] = artist_name if artist_name.present? && series.artist_name != artist_name
     updates[:cover_url] = series_result.cover_url if series_result.cover_url.present? && series.cover_url != series_result.cover_url
