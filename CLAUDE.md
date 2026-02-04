@@ -196,7 +196,7 @@ Test requests auto-include Basic Auth via test_helper.rb overrides.
 
 Uses `rubocop-rails-omakase` with additional extensions:
 - `rubocop-performance` - Performance optimization checks
-- `rubocop-minitest` - Minitest best practices
+- `rubocop-minitest` - Minitest best practices (relaxed max assertions: 20)
 
 Key style rules:
 
