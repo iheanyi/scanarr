@@ -2,13 +2,20 @@
   "name": "app",
   "private": true,
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "esbuild": "^0.27.2",
     "esbuild-postcss": "^0.0.4",
-    "typescript": "^5.9.3"
+    "jsdom": "^28.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "scripts": {
     "build": "node esbuild.config.mjs",
-    "build:watch": "node esbuild.config.mjs --watch"
+    "build:watch": "node esbuild.config.mjs --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
