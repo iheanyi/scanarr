@@ -45,11 +45,11 @@ linters:
   CommentSyntax:
     enabled: true
 
-  # Disallow inline styles (use Tailwind classes instead)
+  # Disallow javascript_tag helper usage
   NoJavascriptTagHelper:
     enabled: true
 
-  # Checks for proper HTML attribute quoting
+  # Require autocomplete attribute on input elements
   RequireInputAutocomplete:
     enabled: false  # Not all inputs need autocomplete
 
