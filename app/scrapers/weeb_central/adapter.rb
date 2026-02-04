@@ -74,6 +74,8 @@ module WeebCentral
       cover = cover_img&.[]("src") || cover_img&.[]("data-src")
       author = extract_labeled_text(doc, "Author")
       artist = extract_labeled_text(doc, "Artist")
+      status = extract_labeled_text(doc, "Status")
+      tags = extract_tags(doc)
       ResultTypes::Series.new(
         id: extract_series_id(url),
         title: title,
@@ -81,9 +83,9 @@ module WeebCentral
         description: doc.at_css("p")&.text&.strip,
         author: author,
         artist: artist,
-        status: nil,
-        tags: [],
-        series_type: "manga",
+        status: normalize_status(status),
+        tags: tags,
+        series_type: detect_series_type(tags),
         cover_url: cover,
         url: url
       )
@@ -93,7 +95,7 @@ module WeebCentral
       url = series_url_from_id(series_url)
       response = http.get(url)
       doc = Nokogiri::HTML(response.body)
-      chapter_nodes = collect_chapter_nodes(doc).to_a
+      chapter_rows = collect_chapter_rows(doc).to_a
       seen_next_urls = Set.new
       max_pages = config.fetch("max_chapter_pages", nil)
 
@@ -102,13 +104,18 @@ module WeebCentral
         seen_next_urls << next_url
         fragment = http.get(next_url)
         fragment_doc = Nokogiri::HTML(fragment.body)
-        chapter_nodes.concat(collect_chapter_nodes(fragment_doc).to_a)
+        chapter_rows.concat(collect_chapter_rows(fragment_doc).to_a)
         next_url = next_chapter_page(fragment_doc)
       end
 
-      chapter_nodes.map.with_index do |node, idx|
-        chapter_url = normalize_url(node["href"])
-        title = clean_chapter_title(node.text)
+      chapter_rows.map.with_index do |row, idx|
+        link = row.at_css(CHAPTER_LINK_SELECTOR)
+        next unless link
+
+        chapter_url = normalize_url(link["href"])
+        title = clean_chapter_title(link.text)
+        published_at = extract_chapter_date(row)
+
         ResultTypes::Chapter.new(
           id: extract_chapter_id(chapter_url) || "chapter-#{idx}",
           title: title,
@@ -116,10 +123,10 @@ module WeebCentral
           volume: nil,
           language: nil,
           group: nil,
-          published_at: nil,
+          published_at: published_at,
           url: chapter_url
         )
-      end
+      end.compact
     end
 
     def pages(chapter_url)
@@ -150,6 +157,11 @@ module WeebCentral
 
       base = config.fetch("base_url")
       URI.join(base, path_or_url.to_s).to_s
+    end
+
+    def collect_chapter_rows(doc)
+      # Chapter rows are parent containers that include both link and time element
+      doc.css("#chapter-list > div").select { |div| div.at_css(CHAPTER_LINK_SELECTOR) }
     end
 
     def collect_chapter_nodes(doc)
@@ -303,6 +315,45 @@ module WeebCentral
       return nil if author_links.empty?
 
       author_links.map { |a| a.text.strip }.join(", ")
+    end
+
+    def extract_tags(doc)
+      # Tags are in links with href containing "included_tag="
+      doc.css('a[href*="included_tag="]').map { |a| a.text.strip }.uniq
+    end
+
+    def extract_chapter_date(row)
+      time_el = row.at_css("time[datetime]")
+      return nil unless time_el
+
+      datetime = time_el["datetime"]
+      return nil if datetime.blank?
+
+      Time.parse(datetime)
+    rescue ArgumentError
+      nil
+    end
+
+    def normalize_status(status)
+      case status&.downcase
+      when /ongoing/, /releasing/, /publishing/
+        "ongoing"
+      when /complete/, /finished/
+        "completed"
+      when /hiatus/
+        "hiatus"
+      when /cancel/, /dropped/
+        "cancelled"
+      end
+    end
+
+    def detect_series_type(tags)
+      tags_lower = tags.map(&:downcase)
+      return "manhwa" if tags_lower.any? { |t| t.include?("manhwa") || t.include?("korean") }
+      return "manhua" if tags_lower.any? { |t| t.include?("manhua") || t.include?("chinese") }
+      return "manga" if tags_lower.any? { |t| t.include?("manga") || t.include?("japanese") }
+
+      "manga" # default
     end
   end
 end
