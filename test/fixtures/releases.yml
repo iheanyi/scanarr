@@ -15,8 +15,8 @@ two:
   source_url: https://weebcentral.com/chapters/02CHAPTER
 
 three:
-  chapter: one
+  chapter: three
   format: pages
   public_id: releasepub003
-  source: one
-  source_url: https://weebcentral.com/chapters/03CHAPTER
+  source: two
+  source_url: https://example.com/chapters/03CHAPTER

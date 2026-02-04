@@ -1,5 +1,9 @@
 # Lessons
 
+- 2026-02-04: CI Brakeman: Don't use `--ensure-latest` flag - causes exit code 5 when newer version exists. Remove from bin/brakeman.
+- 2026-02-04: Test fixtures: When multiple fixtures share same foreign key (e.g., two releases for same chapter), `order(created_at: :desc).first` picks based on fixture load order. Fix by ensuring fixtures use different relationships or cleaning up in test setup.
+- 2026-02-04: rubocop-rails-omakase requires spaces inside array brackets: `[ "a", "b" ]` not `["a", "b"]`.
+- 2026-02-04: Use `gh run view <id> --log-failed` to inspect CI failure logs from terminal.
 - 2026-02-03: `button_to` with a block: URL is first argument, NOT text. Block provides button content.
 - 2026-02-03: Kaminari doesn't have `page_range` method - calculate window manually with `(start_page..end_page)`.
 - 2026-02-03: Always read library docs (via Context7 MCP) before using unfamiliar APIs - don't guess.

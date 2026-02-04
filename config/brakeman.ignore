@@ -1,0 +1,10 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "5836076a07e13c782235c0d9f3b0b620728e157dbe08c5cb80c0b0d51b8784f1",
+      "note": "Intentional SSL fallback for CDNs with certificate issues. Only used for non-sensitive cover image downloads after initial secure attempt fails."
+    }
+  ],
+  "updated": "2026-02-04",
+  "brakeman_version": "8.0.1"
+}
