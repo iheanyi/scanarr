@@ -1,6 +1,8 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "view_component/test_helpers"
+require "components/component_test_case"
 require "vcr"
 require "webmock/minitest"
 
