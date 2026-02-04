@@ -15,6 +15,7 @@
   --color-muted: var(--ds-muted);
   --color-muted-2: var(--ds-muted-2);
   --color-accent: var(--ds-accent);
+  --color-accent-foreground: var(--ds-accent-foreground);
   --color-accent-strong: var(--ds-accent-strong);
   --color-accent-soft: var(--ds-accent-soft);
   --color-accent-ghost: var(--ds-accent-ghost);
@@ -43,6 +44,7 @@
   --ds-muted: #9aa6b8;
   --ds-muted-2: #7d899d;
   --ds-accent: #5fd3b7;
+  --ds-accent-foreground: #0a1a15;
   --ds-accent-strong: #76e3c8;
   --ds-accent-soft: rgba(95, 211, 183, 0.24);
   --ds-accent-ghost: rgba(95, 211, 183, 0.12);

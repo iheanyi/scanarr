@@ -1,27 +1,27 @@
 <main class="space-y-6">
-  <nav class="flex items-center gap-2 text-sm text-zinc-400" aria-label="Breadcrumb">
-    <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-zinc-200" %>
-    <span class="text-zinc-600">/</span>
-    <span class="text-zinc-300">Preview</span>
+  <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
+    <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground" %>
+    <span class="text-muted-2">/</span>
+    <span class="text-foreground">Preview</span>
   </nav>
 
   <% if @error.present? %>
-    <div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+    <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
       <%= @error %>
     </div>
     <div class="pt-4">
       <%= link_to "Back to Browse", source_browse_path(source_slug: source_slug(@source)),
-                  class: "inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-zinc-200" %>
+                  class: "inline-flex items-center gap-2 text-sm text-muted hover:text-foreground" %>
     </div>
   <% elsif @series %>
     <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
       <%# Cover and quick actions %>
       <div class="space-y-4">
-        <div class="aspect-[2/3] overflow-hidden rounded-lg border border-zinc-800/80 bg-zinc-950">
+        <div class="aspect-[2/3] overflow-hidden rounded-lg border border-border bg-background">
           <% if @series.cover_url.present? %>
             <%= image_tag @series.cover_url, alt: "#{@series.title} cover", class: "h-full w-full object-cover" %>
           <% else %>
-            <div class="flex h-full w-full items-center justify-center text-sm uppercase text-zinc-600">
+            <div class="flex h-full w-full items-center justify-center text-sm uppercase text-muted-2">
               No cover
             </div>
           <% end %>
@@ -31,10 +31,10 @@
                       source_import_path(source_slug: source_slug(@source)),
                       method: :post,
                       params: { series_url: @series_url },
-                      class: "w-full rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400" %>
+                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90" %>
 
         <%= link_to @series.url, target: "_blank", rel: "noopener",
-                    class: "flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 px-4 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800" do %>
+                    class: "flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-surface-2" do %>
           View on <%= @source.name %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -48,39 +48,39 @@
           <h1 class="text-3xl font-semibold text-balance"><%= @series.title %></h1>
 
           <% if @series.alt_titles.present? && @series.alt_titles.any? %>
-            <p class="text-sm text-zinc-500">
+            <p class="text-sm text-muted-2">
               Also known as: <%= @series.alt_titles.first(3).join(", ") %>
               <% if @series.alt_titles.size > 3 %>
-                <span class="text-zinc-600">+<%= @series.alt_titles.size - 3 %> more</span>
+                <span class="text-muted-2">+<%= @series.alt_titles.size - 3 %> more</span>
               <% end %>
             </p>
           <% end %>
 
           <div class="flex flex-wrap items-center gap-3 text-sm">
             <% if @series.author.present? %>
-              <span class="text-zinc-400">
-                <span class="text-zinc-500">Author:</span> <%= @series.author %>
+              <span class="text-muted">
+                <span class="text-muted-2">Author:</span> <%= @series.author %>
               </span>
             <% end %>
             <% if @series.artist.present? && @series.artist != @series.author %>
-              <span class="text-zinc-400">
-                <span class="text-zinc-500">Artist:</span> <%= @series.artist %>
+              <span class="text-muted">
+                <span class="text-muted-2">Artist:</span> <%= @series.artist %>
               </span>
             <% end %>
             <% if @series.status.present? %>
               <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium
                 <%= case @series.status.to_s.downcase
-                    when 'ongoing' then 'bg-blue-500/20 text-blue-300'
-                    when 'completed' then 'bg-emerald-500/20 text-emerald-300'
-                    when 'hiatus' then 'bg-amber-500/20 text-amber-300'
-                    when 'cancelled' then 'bg-red-500/20 text-red-300'
-                    else 'bg-zinc-500/20 text-zinc-300'
+                    when 'ongoing' then 'bg-info-soft text-info'
+                    when 'completed' then 'bg-success-soft text-success'
+                    when 'hiatus' then 'bg-warning-soft text-warning'
+                    when 'cancelled' then 'bg-danger-soft text-danger'
+                    else 'bg-surface-2 text-foreground'
                     end %>">
                 <%= @series.status.to_s.titleize %>
               </span>
             <% end %>
             <% if @series.series_type.present? %>
-              <span class="inline-flex rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">
+              <span class="inline-flex rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-foreground">
                 <%= @series.series_type.to_s.titleize %>
               </span>
             <% end %>
@@ -90,12 +90,12 @@
         <% if @series.tags.present? && @series.tags.any? %>
           <div class="flex flex-wrap gap-2">
             <% @series.tags.first(15).each do |tag| %>
-              <span class="rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400">
+              <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted">
                 <%= tag %>
               </span>
             <% end %>
             <% if @series.tags.size > 15 %>
-              <span class="rounded-full border border-zinc-800 px-2.5 py-1 text-xs text-zinc-600">
+              <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-2">
                 +<%= @series.tags.size - 15 %> more
               </span>
             <% end %>
@@ -103,34 +103,34 @@
         <% end %>
 
         <% if @series.description.present? %>
-          <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
-            <h2 class="mb-2 text-sm font-semibold text-zinc-400">Synopsis</h2>
-            <div class="prose prose-sm prose-invert max-w-none text-zinc-300 leading-relaxed">
+          <div class="rounded-lg border border-border bg-surface p-4">
+            <h2 class="mb-2 text-sm font-semibold text-muted">Synopsis</h2>
+            <div class="prose prose-sm prose-invert max-w-none text-foreground leading-relaxed">
               <%= simple_format(@series.description, class: "space-y-2") %>
             </div>
           </div>
         <% end %>
 
         <% if @chapters.any? %>
-          <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
-            <h2 class="mb-3 text-sm font-semibold text-zinc-400">
+          <div class="rounded-lg border border-border bg-surface p-4">
+            <h2 class="mb-3 text-sm font-semibold text-muted">
               Recent Chapters
-              <span class="font-normal text-zinc-600">(preview)</span>
+              <span class="font-normal text-muted-2">(preview)</span>
             </h2>
-            <ul class="divide-y divide-zinc-800/50">
+            <ul class="divide-y divide-border">
               <% @chapters.each do |chapter| %>
                 <li class="py-2 first:pt-0 last:pb-0">
                   <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">
-                      <p class="text-sm text-zinc-200 truncate">
+                      <p class="text-sm text-foreground truncate">
                         <span class="font-medium">Ch. <%= chapter.number %></span>
                         <% if chapter.title.present? %>
-                          <span class="text-zinc-500">-</span>
-                          <span class="text-zinc-400"><%= chapter.title %></span>
+                          <span class="text-muted-2">-</span>
+                          <span class="text-muted"><%= chapter.title %></span>
                         <% end %>
                       </p>
                       <% if chapter.group.present? || chapter.published_at.present? %>
-                        <p class="text-xs text-zinc-600">
+                        <p class="text-xs text-muted-2">
                           <% if chapter.group.present? %><%= chapter.group %><% end %>
                           <% if chapter.group.present? && chapter.published_at.present? %> · <% end %>
                           <% if chapter.published_at.present? %><%= time_ago_in_words(chapter.published_at) %> ago<% end %>
@@ -138,14 +138,14 @@
                       <% end %>
                     </div>
                     <% if chapter.volume.present? %>
-                      <span class="text-xs text-zinc-600">Vol. <%= chapter.volume %></span>
+                      <span class="text-xs text-muted-2">Vol. <%= chapter.volume %></span>
                     <% end %>
                   </div>
                 </li>
               <% end %>
             </ul>
             <% if @chapters.size >= 10 %>
-              <p class="mt-3 text-xs text-zinc-600 text-center">
+              <p class="mt-3 text-xs text-muted-2 text-center">
                 Import to see all chapters
               </p>
             <% end %>

@@ -15,7 +15,7 @@ module UI
 
     def select_attributes
       classes = cn(
-        "block w-full appearance-none rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 pr-9 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none",
+        "block w-full appearance-none rounded-md border border-border bg-surface-2 px-3 py-2 pr-9 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30",
         system_arguments[:class]
       )
       data = system_arguments.fetch(:data, {})

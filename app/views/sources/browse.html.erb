@@ -1,26 +1,26 @@
 <main class="space-y-6">
   <header class="space-y-2">
-    <p class="text-sm text-zinc-400"><%= @source.name || @source.key %></p>
+    <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
     <h1 class="text-3xl font-semibold text-balance">Browse</h1>
-    <p class="text-zinc-400 text-pretty">Discover new series from this source.</p>
+    <p class="text-muted text-pretty">Discover new series from this source.</p>
   </header>
 
   <% if @error.present? %>
-    <div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+    <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
       <%= @error %>
     </div>
   <% else %>
-    <section class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+    <section class="rounded-lg border border-border bg-surface p-4">
       <%= form_with url: source_browse_path(source_slug: source_slug(@source)), method: :get, local: true, class: "flex flex-wrap items-end gap-3" do |form| %>
-        <div class="space-y-1">
-          <%= form.label :sort, "Sort by", class: "text-sm text-zinc-300" %>
-          <%= form.select :sort,
-                          @sort_options.map { |s| [s.titleize, s] },
-                          { selected: @sort },
-                          class: "rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100" %>
-        </div>
+        <%= render UI::SelectComponent.new(
+          form: form,
+          method: :sort,
+          options: @sort_options.map { |s| [s.titleize, s] },
+          selected: @sort,
+          label: "Sort by"
+        ) %>
         <%= form.submit "Apply",
-                        class: "inline-flex items-center justify-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
+                        class: "inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
       <% end %>
     </section>
 
@@ -28,22 +28,22 @@
       <div class="flex items-center justify-between">
         <h2 class="text-xl font-semibold text-balance">
           <%= @sort.titleize %> Series
-          <span class="text-zinc-500 font-normal">(<%= @results.size %>)</span>
+          <span class="text-muted-2 font-normal">(<%= @results.size %>)</span>
         </h2>
         <div class="flex items-center gap-2">
           <% if @page > 1 %>
             <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page - 1),
-                        class: "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-800" do %>
+                        class: "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" do %>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
               Previous
             <% end %>
           <% end %>
-          <span class="text-sm text-zinc-500">Page <%= @page %></span>
+          <span class="text-sm text-muted-2">Page <%= @page %></span>
           <% if @results.size >= 24 %>
             <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1),
-                        class: "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 hover:bg-zinc-800" do %>
+                        class: "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" do %>
               Next
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -56,33 +56,33 @@
       <% if @results.any? %>
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           <% @results.each do |result| %>
-            <div class="group relative overflow-hidden rounded-lg border border-zinc-800/80 bg-zinc-900/40">
-              <div class="aspect-[2/3] overflow-hidden bg-zinc-950">
+            <div class="group relative overflow-hidden rounded-lg border border-border bg-surface">
+              <div class="aspect-[2/3] overflow-hidden bg-background">
                 <% if result.cover_url.present? %>
                   <%= image_tag result.cover_url,
                                 alt: "#{result.title} cover",
                                 class: "h-full w-full object-cover transition-transform group-hover:scale-105",
                                 loading: "lazy" %>
                 <% else %>
-                  <div class="flex h-full w-full items-center justify-center text-xs uppercase text-zinc-600">
+                  <div class="flex h-full w-full items-center justify-center text-xs uppercase text-muted-2">
                     No cover
                   </div>
                 <% end %>
               </div>
               <div class="p-2">
-                <p class="text-sm font-medium text-zinc-200 line-clamp-2" title="<%= result.title %>">
+                <p class="text-sm font-medium text-foreground line-clamp-2" title="<%= result.title %>">
                   <%= result.title %>
                 </p>
                 <% if result.respond_to?(:author) && result.author.present? %>
-                  <p class="mt-0.5 text-xs text-zinc-500 truncate"><%= result.author %></p>
+                  <p class="mt-0.5 text-xs text-muted-2 truncate"><%= result.author %></p>
                 <% end %>
                 <% if result.respond_to?(:status) && result.status.present? %>
                   <span class="mt-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium
                     <%= case result.status.to_s.downcase
-                        when 'ongoing' then 'bg-blue-500/20 text-blue-300'
-                        when 'completed' then 'bg-emerald-500/20 text-emerald-300'
-                        when 'hiatus' then 'bg-amber-500/20 text-amber-300'
-                        else 'bg-zinc-500/20 text-zinc-300'
+                        when 'ongoing' then 'bg-info-soft text-info'
+                        when 'completed' then 'bg-success-soft text-success'
+                        when 'hiatus' then 'bg-warning-soft text-warning'
+                        else 'bg-surface-2 text-foreground'
                         end %>">
                     <%= result.status.titleize %>
                   </span>
@@ -90,23 +90,23 @@
               </div>
 
               <%# Hover overlay with description and actions %>
-              <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+              <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background via-background/80 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
                 <div class="max-h-[60%] overflow-hidden p-3 space-y-2">
                   <% if result.respond_to?(:description) && result.description.present? %>
-                    <p class="text-xs text-zinc-300 line-clamp-4 leading-relaxed">
+                    <p class="text-xs text-foreground line-clamp-4 leading-relaxed">
                       <%= truncate(result.description, length: 200) %>
                     </p>
                   <% end %>
                   <div class="flex gap-2">
                     <%= link_to source_preview_path(source_slug: source_slug(@source), series_url: result.url),
-                                class: "flex-1 rounded-md border border-zinc-600 px-2 py-1.5 text-center text-xs font-medium text-zinc-200 hover:bg-zinc-800" do %>
+                                class: "flex-1 rounded-md border border-border px-2 py-1.5 text-center text-xs font-medium text-foreground hover:bg-surface-2" do %>
                       Details
                     <% end %>
                     <%= button_to "Import",
                                   source_import_path(source_slug: source_slug(@source)),
                                   method: :post,
                                   params: { series_url: result.url },
-                                  class: "flex-1 rounded-md bg-emerald-500 px-2 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400" %>
+                                  class: "flex-1 rounded-md bg-accent px-2 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/90" %>
                   </div>
                 </div>
               </div>
@@ -119,17 +119,17 @@
           <div class="flex items-center justify-center gap-2 pt-4">
             <% if @page > 1 %>
               <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page - 1),
-                          class: "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800" do %>
+                          class: "inline-flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-surface-2" do %>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
                 Previous
               <% end %>
             <% end %>
-            <span class="px-3 py-2 text-sm text-zinc-400">Page <%= @page %></span>
+            <span class="px-3 py-2 text-sm text-muted">Page <%= @page %></span>
             <% if @results.size >= 24 %>
               <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1),
-                          class: "inline-flex items-center gap-1 rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800" do %>
+                          class: "inline-flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-surface-2" do %>
                 Next
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -139,8 +139,8 @@
           </div>
         <% end %>
       <% else %>
-        <div class="rounded-lg border border-dashed border-zinc-800 p-8 text-center">
-          <p class="text-zinc-400">No series found.</p>
+        <div class="rounded-lg border border-dashed border-border p-8 text-center">
+          <p class="text-muted">No series found.</p>
         </div>
       <% end %>
     </section>

@@ -1,20 +1,37 @@
-<% nav_link_class = lambda do |path|
-     base = "rounded-md px-3 py-2 transition"
-     active = "bg-surface-2 text-foreground"
+<% nav_link_attributes = lambda do |path|
+     base = "rounded-md px-3 py-2 transition-colors"
+     active = "bg-surface-2 text-foreground font-semibold"
      inactive = "text-muted hover:text-foreground hover:bg-surface-2/60"
-     "#{base} #{current_page?(path) ? active : inactive}"
+     is_active = current_page?(path)
+
+     {
+       class: "#{base} #{is_active ? active : inactive}",
+       aria: (is_active ? { current: "page" } : nil),
+       data: { action: "click->drawer#close" }
+     }.compact
    end %>
 
 <div class="flex h-full flex-col gap-6">
-  <nav class="flex flex-col gap-1 text-sm text-muted" data-sidebar-nav="true">
-    <%= link_to "Library", library_path, class: nav_link_class.call(library_path) %>
-    <%= link_to "Calendar", calendar_path, class: nav_link_class.call(calendar_path) %>
-    <%= link_to "Sources", root_path, class: nav_link_class.call(root_path) %>
-    <%= link_to "Search", search_path, class: nav_link_class.call(search_path) %>
-    <%= link_to "Downloads", admin_downloads_path, class: nav_link_class.call(admin_downloads_path) %>
-    <%= link_to "Jobs", "/admin/jobs", class: nav_link_class.call("/admin/jobs") %>
-    <%= link_to "Admin", admin_scrapers_path, class: nav_link_class.call(admin_scrapers_path) %>
-    <%= link_to "Design System", design_system_path, class: nav_link_class.call(design_system_path) %>
+  <nav class="flex flex-col gap-6 text-sm text-muted" data-sidebar-nav="true">
+    <div class="space-y-2">
+      <span class="text-xs uppercase text-muted-2">Browse</span>
+      <div class="flex flex-col gap-1">
+        <%= link_to "Library", library_path, nav_link_attributes.call(library_path) %>
+        <%= link_to "Calendar", calendar_path, nav_link_attributes.call(calendar_path) %>
+        <%= link_to "Sources", root_path, nav_link_attributes.call(root_path) %>
+        <%= link_to "Search", search_path, nav_link_attributes.call(search_path) %>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <span class="text-xs uppercase text-muted-2">Admin</span>
+      <div class="flex flex-col gap-1">
+        <%= link_to "Downloads", admin_downloads_path, nav_link_attributes.call(admin_downloads_path) %>
+        <%= link_to "Jobs", "/admin/jobs", nav_link_attributes.call("/admin/jobs") %>
+        <%= link_to "Admin", admin_scrapers_path, nav_link_attributes.call(admin_scrapers_path) %>
+        <%= link_to "Design System", design_system_path, nav_link_attributes.call(design_system_path) %>
+      </div>
+    </div>
   </nav>
 
   <% if user_signed_in? %>
@@ -29,7 +46,7 @@
           </svg>
           <span>Notifications</span>
           <% if unread_notification_count > 0 %>
-            <span class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-background">
+            <span class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground">
               <%= unread_notification_count > 9 ? "9+" : unread_notification_count %>
             </span>
           <% end %>

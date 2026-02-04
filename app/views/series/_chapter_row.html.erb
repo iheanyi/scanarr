@@ -1,7 +1,7 @@
 <%# locals: (chapter:, source:, series:, progress: nil) %>
 <% latest_release = chapter.releases.max_by(&:created_at) %>
 <% file_asset = latest_release&.file_asset %>
-<li id="<%= dom_id(chapter) %>" class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+<li id="<%= dom_id(chapter) %>" class="rounded-lg border border-border/80 bg-surface/40 p-4">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
       <div class="flex flex-wrap items-center gap-2">
@@ -11,7 +11,7 @@
                       series_slug: series.to_param,
                       chapter_identifier: chapter.chapter_number
                     ),
-                    class: "text-base font-semibold text-emerald-300" %>
+                    class: "text-base font-semibold text-accent" %>
         <% if progress.present? %>
           <% progress_label = if progress.status == "completed"
                                 "Completed"
@@ -20,7 +20,7 @@
                               end %>
           <% progress_classes = case progress_label
                                when "Completed"
-                                 "bg-emerald-500/10 text-emerald-200 border-emerald-500/30"
+                                 "bg-accent-soft text-accent border-accent/30"
                                else
                                  "bg-amber-500/10 text-amber-200 border-amber-500/30"
                                end %>
@@ -41,13 +41,13 @@
                      end %>
           <% label_classes = case file_asset.download_status
                              when "downloading"
-                               "bg-emerald-500/10 text-emerald-200 border-emerald-500/30"
+                               "bg-accent-soft text-accent border-accent/30"
                              when "failed"
                                "bg-rose-500/10 text-rose-200 border-rose-500/30"
                              when "complete"
                                "bg-sky-500/10 text-sky-200 border-sky-500/30"
                              else
-                               "bg-zinc-800/60 text-zinc-200 border-zinc-700"
+                               "bg-surface-2/60 text-foreground border-border"
                              end %>
           <span id="<%= dom_id(chapter, :status) %>" class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold <%= label_classes %>">
             <%= label %>
@@ -55,10 +55,10 @@
         <% end %>
       </div>
       <% if chapter.meaningful_title? %>
-        <p class="text-sm text-zinc-400 text-pretty"><%= chapter.title %></p>
+        <p class="text-sm text-muted text-pretty"><%= chapter.title %></p>
       <% end %>
       <% if file_asset&.download_status.present? %>
-        <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-zinc-500">
+        <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-muted-2">
           <% if file_asset.download_status == "downloading" && file_asset.pages_expected.present? %>
             Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
           <% elsif file_asset.download_status == "failed" %>
@@ -112,7 +112,7 @@
                           chapter_identifier: chapter.chapter_number
                         ),
                         method: :post,
-                        class: "inline-flex items-center rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300" %>
+                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent" %>
         <% end %>
       <% end %>
     </div>
