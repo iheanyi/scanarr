@@ -2,7 +2,7 @@
 
 module UI
   class AutoSelectComponent < BaseComponent
-    def initialize(form:, method:, options:, selected: nil, include_blank: nil, label: nil, hint: nil, **system_arguments)
+    def initialize(form:, method:, options:, selected: nil, include_blank: nil, label: nil, hint: nil, size: :md, full_width: true, **system_arguments)
       super(**system_arguments)
       @form = form
       @method = method
@@ -11,6 +11,8 @@ module UI
       @include_blank = include_blank
       @label = label
       @hint = hint
+      @size = size
+      @full_width = full_width
     end
 
     def select_arguments
