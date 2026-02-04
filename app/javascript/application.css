@@ -7,6 +7,15 @@
 
 @theme {
   /* ═══════════════════════════════════════════════════════════════════════════
+   * TYPOGRAPHY - Font stacks
+   *
+   * Geist Sans: Modern typeface designed for dark interfaces
+   * Falls back to Inter, then system fonts for performance
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ═══════════════════════════════════════════════════════════════════════════
    * SURFACES - Background layers
    * ═══════════════════════════════════════════════════════════════════════════ */
   --color-background: var(--ds-bg);
