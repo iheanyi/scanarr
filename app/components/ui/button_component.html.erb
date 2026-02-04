@@ -1,0 +1,7 @@
+<% if link? %>
+  <%= link_to @href, **button_attributes do %>
+    <%= @label.presence || content %>
+  <% end %>
+<% else %>
+  <%= content_tag(:button, (@label.presence || content), type: @type, **button_attributes) %>
+<% end %>
