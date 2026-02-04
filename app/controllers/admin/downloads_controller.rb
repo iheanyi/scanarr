@@ -65,8 +65,7 @@ module Admin
           pages_downloaded: 0
         )
 
-        # Re-queue the download job
-        DownloadChapterJob.perform_later(@download.release_id)
+        enqueue_download_job(@download)
 
         flash[:notice] = "Download restarted successfully"
       else
@@ -77,7 +76,7 @@ module Admin
     end
 
     def restart_all_failed
-      failed_downloads = FileAsset.where(download_status: "failed")
+      failed_downloads = FileAsset.where(download_status: "failed").includes(release: { chapter: :series })
       count = failed_downloads.count
 
       if count > 0
@@ -87,7 +86,7 @@ module Admin
             download_error: nil,
             pages_downloaded: 0
           )
-          DownloadChapterJob.perform_later(download.release_id)
+          enqueue_download_job(download)
         end
 
         flash[:notice] = "Restarted #{count} failed download#{'s' if count != 1}"
@@ -102,6 +101,7 @@ module Admin
       # Stuck = downloading for more than 10 minutes with no progress
       stuck_downloads = FileAsset.where(download_status: "downloading")
                                  .where("updated_at < ?", 10.minutes.ago)
+                                 .includes(release: { chapter: :series })
       count = stuck_downloads.count
 
       if count > 0
@@ -111,7 +111,7 @@ module Admin
             download_error: nil,
             pages_downloaded: 0
           )
-          DownloadChapterJob.perform_later(download.release_id)
+          enqueue_download_job(download)
         end
 
         flash[:notice] = "Restarted #{count} stuck download#{'s' if count != 1}"
@@ -120,6 +120,31 @@ module Admin
       end
 
       redirect_to admin_downloads_path
+    end
+
+    private
+
+    def enqueue_download_job(file_asset)
+      release = file_asset.release
+      chapter = release&.chapter
+      series = chapter&.series
+      source = release&.source || chapter&.source
+
+      return unless chapter && series && source && chapter.source_url.present?
+
+      series_source = series.series_sources.find_by(source: source)
+
+      DownloadChapterJob.perform_later(
+        chapter.source_url,
+        source_key: source.key,
+        series_title: series.canonical_title,
+        source_series_id: series_source&.source_series_id,
+        chapter_number: chapter.chapter_number,
+        chapter_title: chapter.title,
+        language: chapter.language,
+        group: chapter.group,
+        release_id: release.id
+      )
     end
   end
 end

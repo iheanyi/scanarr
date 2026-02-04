@@ -2,16 +2,18 @@
 
 class CheckSourceForChaptersJob < ApplicationJob
   queue_as :default
-  limits_concurrency to: 3, key: ->(series_id, _) { "check_chapters:#{series_id}" }
+  limits_concurrency to: 3, key: ->(series_id, _, _) { "check_chapters:#{series_id}" }
 
-  def perform(series_id, follow_id)
+  def perform(series_id, follow_id, source_id = nil)
     series = Series.find_by(id: series_id)
     follow = UserSeriesFollow.find_by(id: follow_id)
+    source = source_id ? Source.find_by(id: source_id) : series&.primary_source
 
-    return unless series && follow && series.source
+    return unless series && follow && source
 
-    adapter = AdapterRegistry.for(series.source)
-    source_series_id = series.series_sources.find_by(source: series.source)&.source_series_id
+    adapter = AdapterRegistry.for(source)
+    series_source = series.series_sources.find_by(source: source)
+    source_series_id = series_source&.source_series_id
 
     return unless source_series_id
 
@@ -26,7 +28,7 @@ class CheckSourceForChaptersJob < ApplicationJob
         title: ch_data.title,
         language: ch_data.language || "en",
         group: ch_data.group,
-        source: series.source,
+        source: source,
         source_url: ch_data.url,
         published_at: ch_data.published_at
       )
@@ -37,10 +39,9 @@ class CheckSourceForChaptersJob < ApplicationJob
       )
 
       if follow.auto_download? && chapter.source_url.present?
-        series_source = series.series_sources.find_by(source: series.source)
         DownloadChapterJob.perform_later(
           chapter.source_url,
-          source_key: series.source.key,
+          source_key: source.key,
           series_title: series.canonical_title,
           source_series_id: series_source&.source_series_id,
           chapter_number: chapter.chapter_number,
