@@ -15,3 +15,9 @@ application.register("loading-button", LoadingButtonController)
 
 import DropdownController from "./dropdown_controller"
 application.register("dropdown", DropdownController)
+
+import ToggleButtonController from "./toggle_button_controller"
+application.register("toggle-button", ToggleButtonController)
+
+import AutoSubmitController from "./auto_submit_controller"
+application.register("auto-submit", AutoSubmitController)
