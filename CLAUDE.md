@@ -23,6 +23,7 @@
 ### 4. Verification Before Done
 
 - Never mark a task complete without proving it works, especially within the browser when making front-end changes.
+- When running locally, always use `bin/dev` (not `bin/rails s`) so assets are built.
 - Diff behavior between main and your changes when relevant
 - Ask yourself: "Would a staff engineer approve this?"
 - Run tests, check logs, demonstrate correctness

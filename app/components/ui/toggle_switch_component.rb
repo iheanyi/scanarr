@@ -19,11 +19,7 @@ module UI
     end
 
     def track_classes
-      "relative inline-flex h-6 w-11 items-center rounded-full border border-border bg-surface-2 transition-colors"
-    end
-
-    def knob_classes
-      "inline-block h-4 w-4 translate-x-1 rounded-full bg-foreground/80 transition-transform"
+      "relative inline-flex h-6 w-11 items-center rounded-full border border-border bg-surface-2 transition-colors after:absolute after:left-1 after:h-4 after:w-4 after:rounded-full after:bg-foreground/80 after:transition-transform"
     end
 
     def input_classes
@@ -31,11 +27,7 @@ module UI
     end
 
     def checked_track_classes
-      "peer-checked:border-accent/50 peer-checked:bg-accent-ghost"
-    end
-
-    def checked_knob_classes
-      "peer-checked:translate-x-6 peer-checked:bg-accent-strong"
+      "peer-checked:border-accent/50 peer-checked:bg-accent-ghost peer-checked:after:translate-x-5 peer-checked:after:bg-accent-strong"
     end
 
     def input_data
