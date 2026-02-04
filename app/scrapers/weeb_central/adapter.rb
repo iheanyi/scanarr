@@ -109,7 +109,9 @@ module WeebCentral
       end
 
       chapter_rows.map.with_index do |row, idx|
+        # Handle both structured rows (containing a link) and direct link elements
         link = row.at_css(CHAPTER_LINK_SELECTOR)
+        link = row if link.nil? && row.name == "a" && row["href"]&.include?("/chapters/")
         next unless link
 
         chapter_url = normalize_url(link["href"])
@@ -160,8 +162,28 @@ module WeebCentral
     end
 
     def collect_chapter_rows(doc)
-      # Chapter rows are parent containers that include both link and time element
-      doc.css("#chapter-list > div").select { |div| div.at_css(CHAPTER_LINK_SELECTOR) }
+      # Strategy 1: Look for #chapter-list with structured div rows (full page)
+      chapter_list = doc.at_css("#chapter-list")
+      if chapter_list
+        rows = chapter_list.css("> div").select { |div| div.at_css(CHAPTER_LINK_SELECTOR) }
+        return rows if rows.any?
+      end
+
+      # Strategy 2: Find div elements that each contain exactly one chapter link
+      # This handles structured HTMX fragments
+      all_divs_with_links = doc.css("div").select { |div| div.at_css(CHAPTER_LINK_SELECTOR) }
+      single_link_divs = all_divs_with_links.select { |div| div.css(CHAPTER_LINK_SELECTOR).count == 1 }
+
+      # Filter to "leaf" divs - those without child divs also containing chapter links
+      leaf_divs = single_link_divs.reject do |div|
+        div.css("> div").any? { |child| child.at_css(CHAPTER_LINK_SELECTOR) }
+      end
+
+      return leaf_divs if leaf_divs.any?
+
+      # Strategy 3: Return chapter links directly when no structured rows exist
+      # The processing code handles both row containers and direct link elements
+      doc.css(CHAPTER_LINK_SELECTOR)
     end
 
     def collect_chapter_nodes(doc)
