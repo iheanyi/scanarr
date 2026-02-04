@@ -6,6 +6,8 @@
 module AsuraScans
   class Adapter < ::BaseAdapter
     BASE_URL = "https://asuracomic.net"
+    # Regex pattern for chapter numbers (integers or decimals like 123.5)
+    CHAPTER_NUMBER_PATTERN = '(\d+(?:\.\d+)?)'
 
     def search(query)
       # AsuraScans search via query param
@@ -23,12 +25,12 @@ module AsuraScans
 
         # Ensure proper URL construction
         full_url = if href.start_with?("http")
-                     href
-                   elsif href.start_with?("/")
-                     "#{BASE_URL}#{href}"
-                   else
-                     "#{BASE_URL}/#{href}"
-                   end
+          href
+        elsif href.start_with?("/")
+          "#{BASE_URL}#{href}"
+        else
+          "#{BASE_URL}/#{href}"
+        end
 
         ResultTypes::SearchResult.new(
           id: href.split("/").last,
@@ -99,8 +101,8 @@ module AsuraScans
         href = "/#{href}" unless href.start_with?("/") || href.start_with?("http")
         full_url = href.start_with?("http") ? href : "#{BASE_URL}#{href}"
 
-        # Extract chapter number from URL (format: .../chapter/123)
-        chapter_num = href[/\/chapter\/(\d+)/, 1] || extract_chapter_number(link.text)
+        # Extract chapter number from URL (format: .../chapter/123 or .../chapter/123.5)
+        chapter_num = href[/\/chapter\/#{CHAPTER_NUMBER_PATTERN}/, 1] || extract_chapter_number(link.text)
         full_text = link.text.strip
 
         # Extract title (before the date) and published_at (the date part)
@@ -186,7 +188,7 @@ module AsuraScans
 
     def extract_chapter_number(text)
       return nil unless text
-      match = text.match(/chapter[- ]?(\d+(?:\.\d+)?)/i)
+      match = text.match(/chapter[- ]?#{CHAPTER_NUMBER_PATTERN}/i)
       match[1] if match
     end
 
@@ -209,9 +211,9 @@ module AsuraScans
         date_str = match[1]
         title = text.sub(date_pattern, "").strip
         published_at = parse_date(date_str)
-        [title, published_at]
+        [ title, published_at ]
       else
-        [text, nil]
+        [ text, nil ]
       end
     end
 

@@ -66,12 +66,12 @@ class RefreshAllCoversJob < ApplicationJob
 
     content_type = response["content-type"]
     extension = case content_type
-                when /jpeg|jpg/i then "jpg"
-                when /png/i then "png"
-                when /webp/i then "webp"
-                when /gif/i then "gif"
-                else "jpg"
-                end
+    when /jpeg|jpg/i then "jpg"
+    when /png/i then "png"
+    when /webp/i then "webp"
+    when /gif/i then "gif"
+    else "jpg"
+    end
 
     series.cover.attach(
       io: StringIO.new(response.body),
@@ -99,12 +99,12 @@ class RefreshAllCoversJob < ApplicationJob
 
     content_type = response["content-type"]
     extension = case content_type
-                when /jpeg|jpg/i then "jpg"
-                when /png/i then "png"
-                when /webp/i then "webp"
-                when /gif/i then "gif"
-                else "jpg"
-                end
+    when /jpeg|jpg/i then "jpg"
+    when /png/i then "png"
+    when /webp/i then "webp"
+    when /gif/i then "gif"
+    else "jpg"
+    end
 
     series.cover.attach(
       io: StringIO.new(response.body),
