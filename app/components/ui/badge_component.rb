@@ -23,13 +23,17 @@ module UI
     def variant_classes
       case @variant.to_sym
       when :success
-        "bg-emerald-500/15 text-emerald-300"
+        "bg-success-soft text-success"
       when :warning
-        "bg-amber-500/15 text-amber-300"
-      when :danger
-        "bg-rose-500/15 text-rose-300"
+        "bg-warning-soft text-warning"
+      when :danger, :error
+        "bg-error-soft text-error"
+      when :info
+        "bg-info-soft text-info"
+      when :accent
+        "bg-accent-soft text-accent"
       else
-        "bg-zinc-800 text-zinc-200"
+        "bg-surface-2 text-secondary"
       end
     end
   end
