@@ -6,6 +6,8 @@
 module AsuraScans
   class Adapter < ::BaseAdapter
     BASE_URL = "https://asuracomic.net"
+    # Regex pattern for chapter numbers (integers or decimals like 123.5)
+    CHAPTER_NUMBER_PATTERN = '(\d+(?:\.\d+)?)'
 
     def search(query)
       # AsuraScans search via query param
@@ -100,7 +102,7 @@ module AsuraScans
         full_url = href.start_with?("http") ? href : "#{BASE_URL}#{href}"
 
         # Extract chapter number from URL (format: .../chapter/123 or .../chapter/123.5)
-        chapter_num = href[/\/chapter\/(\d+(?:\.\d+)?)/, 1] || extract_chapter_number(link.text)
+        chapter_num = href[/\/chapter\/#{CHAPTER_NUMBER_PATTERN}/, 1] || extract_chapter_number(link.text)
         full_text = link.text.strip
 
         # Extract title (before the date) and published_at (the date part)
@@ -186,7 +188,7 @@ module AsuraScans
 
     def extract_chapter_number(text)
       return nil unless text
-      match = text.match(/chapter[- ]?(\d+(?:\.\d+)?)/i)
+      match = text.match(/chapter[- ]?#{CHAPTER_NUMBER_PATTERN}/i)
       match[1] if match
     end
 
