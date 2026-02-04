@@ -6,19 +6,47 @@
 @source "./**/*.{js,ts,tsx}";
 
 @theme {
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * SURFACES - Background layers
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-background: var(--ds-bg);
   --color-surface: var(--ds-surface);
   --color-surface-2: var(--ds-surface-2);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * BORDERS - Dividers and outlines
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-border: var(--ds-border);
   --color-border-soft: var(--ds-border-soft);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * TEXT HIERARCHY - Use these for content text
+   *
+   * text-primary   → Headings, titles, important body text
+   * text-secondary → Labels, descriptions, supporting content
+   * text-tertiary  → Hints, timestamps, metadata, placeholders
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --color-primary: var(--ds-text);
+  --color-secondary: var(--ds-muted);
+  --color-tertiary: var(--ds-muted-2);
+
+  /* Legacy aliases (prefer text-primary/secondary/tertiary for new code) */
   --color-foreground: var(--ds-text);
   --color-muted: var(--ds-muted);
   --color-muted-2: var(--ds-muted-2);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * ACCENT - Primary actions, links, success states
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-accent: var(--ds-accent);
   --color-accent-foreground: var(--ds-accent-foreground);
   --color-accent-strong: var(--ds-accent-strong);
   --color-accent-soft: var(--ds-accent-soft);
   --color-accent-ghost: var(--ds-accent-ghost);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * SEMANTIC - Status colors
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-warm: var(--ds-warm);
   --color-warm-soft: var(--ds-warm-soft);
   --color-danger: var(--ds-danger);
