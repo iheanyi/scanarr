@@ -12,5 +12,9 @@ module UI
     def merge_classes(*classes)
       classes.flatten.compact.reject(&:empty?).join(" ")
     end
+
+    def cn(*classes)
+      merge_classes(*classes)
+    end
   end
 end

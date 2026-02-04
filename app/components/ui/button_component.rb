@@ -15,7 +15,7 @@ module UI
     end
 
     def button_classes
-      merge_classes(base_classes, variant_classes, size_classes, system_arguments[:class])
+      cn(base_classes, variant_classes, size_classes, system_arguments[:class])
     end
 
     def button_attributes

@@ -11,7 +11,7 @@ module UI
     end
 
     def badge_classes
-      merge_classes(base_classes, variant_classes, system_arguments[:class])
+      cn(base_classes, variant_classes, system_arguments[:class])
     end
 
     private
