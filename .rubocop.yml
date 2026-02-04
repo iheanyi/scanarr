@@ -43,3 +43,6 @@ Minitest/AssertPredicate:
 
 Minitest/AssertOperator:
   Enabled: false  # Style preference
+
+Minitest/AssertEmptyLiteral:
+  Enabled: false  # Style preference
