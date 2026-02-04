@@ -35,7 +35,7 @@ class SearchController < ApplicationController
   end
 
   def source_slug(source)
-    source.key.to_s.tr("_", "-")
+    source.slug
   end
   helper_method :source_slug
 end

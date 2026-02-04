@@ -57,7 +57,7 @@ class SeriesController < ApplicationController
   def update
     @series = find_series_by_param!
     @series.update!(series_params)
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
   def download_all
@@ -67,7 +67,7 @@ class SeriesController < ApplicationController
     DownloadAllJob.perform_later(@series.id, @source.id)
 
     flash[:notice] = "Queuing downloads in background..."
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
   def refresh_cover
@@ -82,7 +82,7 @@ class SeriesController < ApplicationController
       flash[:alert] = "No cover URL available to refresh"
     end
 
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
   def remove_all_downloads
@@ -106,7 +106,7 @@ class SeriesController < ApplicationController
     end
 
     flash[:notice] = "Removed #{removed} download(s)"
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
   def cancel_all_downloads
@@ -116,7 +116,7 @@ class SeriesController < ApplicationController
     CancelAllDownloadsJob.perform_later(@series.id, @source.id)
 
     flash[:notice] = "Cancelling downloads in background..."
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
   def refresh_metadata
@@ -125,7 +125,7 @@ class SeriesController < ApplicationController
     series_source = @series.series_sources.find_by(source: @source)
     unless series_source&.source_series_id.present?
       flash[:alert] = "No source URL available to refresh metadata"
-      redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+      redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
       return
     end
 
@@ -135,10 +135,10 @@ class SeriesController < ApplicationController
     importer.import!(series_source.source_series_id)
 
     flash[:notice] = "Metadata refreshed successfully"
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   rescue StandardError => e
     flash[:alert] = "Failed to refresh metadata: #{e.message}"
-    redirect_to source_series_path(source_slug: @source.key.to_s.tr("_", "-"), series_slug: @series.to_param)
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
   private
@@ -175,8 +175,7 @@ class SeriesController < ApplicationController
   end
 
   def set_source
-    key = params[:source_slug].to_s.tr("-", "_")
-    @source = Source.find_by!(key: key)
+    @source = Source.find_by!(slug: params[:source_slug])
   end
 
   def find_series_by_param!

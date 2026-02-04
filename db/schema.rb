@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_04_195608) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,14 +71,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "volume_id"
+    t.index ["language"], name: "index_chapters_on_language"
     t.index ["public_id"], name: "index_chapters_on_public_id", unique: true
+    t.index ["published_at"], name: "index_chapters_on_published_at"
     t.index ["series_id", "chapter_number", "language", "group"], name: "idx_on_series_id_chapter_number_language_group_a553be271a", unique: true
     t.index ["series_id", "chapter_number"], name: "index_chapters_on_series_id_and_chapter_number"
+    t.index ["series_id", "created_at"], name: "index_chapters_on_series_id_and_created_at"
+    t.index ["series_id", "source_id", "chapter_number"], name: "index_chapters_on_series_source_chapter_number"
     t.index ["series_id", "source_id", "chapter_number_value"], name: "index_chapters_on_series_source_number_value"
+    t.index ["series_id", "source_id"], name: "index_chapters_on_series_id_and_source_id"
     t.index ["series_id"], name: "index_chapters_on_series_id"
     t.index ["source_id", "source_url"], name: "index_chapters_on_source_id_and_source_url"
     t.index ["source_id"], name: "index_chapters_on_source_id"
-    t.index ["source_url"], name: "index_chapters_on_source_url", where: "(source_url IS NOT NULL)"
+    t.index ["source_url"], name: "index_chapters_on_source_url"
     t.index ["volume_id"], name: "index_chapters_on_volume_id"
   end
 
@@ -101,6 +106,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.index ["public_id"], name: "index_file_assets_on_public_id", unique: true
     t.index ["release_id", "checksum"], name: "index_file_assets_on_release_id_and_checksum"
     t.index ["release_id"], name: "index_file_assets_on_release_id"
+    t.index ["storage_id"], name: "index_file_assets_on_storage_id"
     t.index ["updated_at"], name: "index_file_assets_on_updated_at"
   end
 
@@ -116,10 +122,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.integer "status", default: 0
     t.datetime "updated_at", null: false
     t.index ["anilist_id"], name: "index_library_series_on_anilist_id"
+    t.index ["canonical_title"], name: "index_library_series_on_canonical_title"
     t.index ["mal_id"], name: "index_library_series_on_mal_id"
     t.index ["mangadex_id"], name: "index_library_series_on_mangadex_id"
     t.index ["public_id"], name: "index_library_series_on_public_id", unique: true
     t.index ["slug"], name: "index_library_series_on_slug", unique: true
+    t.index ["status"], name: "index_library_series_on_status"
   end
 
   create_table "new_chapter_notifications", force: :cascade do |t|
@@ -128,6 +136,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.boolean "read", default: false, null: false
     t.bigint "user_id", null: false
     t.index ["chapter_id"], name: "index_new_chapter_notifications_on_chapter_id"
+    t.index ["user_id", "created_at"], name: "index_new_chapter_notifications_on_user_id_and_created_at"
     t.index ["user_id", "read", "created_at"], name: "index_new_chapter_notifications_user_read_created"
     t.index ["user_id"], name: "index_new_chapter_notifications_on_user_id"
   end
@@ -155,13 +164,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.bigint "source_id"
     t.string "source_url"
     t.datetime "updated_at", null: false
+    t.index ["chapter_id", "source_id", "created_at"], name: "index_releases_on_chapter_source_created"
+    t.index ["chapter_id", "source_id"], name: "index_releases_on_chapter_id_and_source_id"
     t.index ["chapter_id"], name: "index_releases_on_chapter_id"
     t.index ["created_at"], name: "index_releases_on_created_at"
     t.index ["deleted_at"], name: "index_releases_on_deleted_at"
     t.index ["public_id"], name: "index_releases_on_public_id", unique: true
     t.index ["source_id", "published_at"], name: "index_releases_on_source_id_and_published_at"
     t.index ["source_id"], name: "index_releases_on_source_id"
-    t.index ["source_url"], name: "index_releases_on_source_url", where: "(source_url IS NOT NULL)"
+    t.index ["source_url"], name: "index_releases_on_source_url"
   end
 
   create_table "scraper_runs", force: :cascade do |t|
@@ -174,7 +185,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.jsonb "stats_json"
     t.string "status", null: false
     t.datetime "updated_at", null: false
+    t.index ["run_type"], name: "index_scraper_runs_on_run_type"
     t.index ["source_id", "created_at"], name: "index_scraper_runs_on_source_id_and_created_at"
+    t.index ["source_id", "status", "created_at"], name: "index_scraper_runs_on_source_status_created"
     t.index ["source_id"], name: "index_scraper_runs_on_source_id"
     t.index ["status"], name: "index_scraper_runs_on_status"
   end
@@ -201,12 +214,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.string "slug", null: false
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["artist_name"], name: "index_series_on_artist_name"
+    t.index ["author_name"], name: "index_series_on_author_name"
     t.index ["canonical_title"], name: "index_series_on_canonical_title"
     t.index ["deleted_at"], name: "index_series_on_deleted_at"
     t.index ["library_series_id"], name: "index_series_on_library_series_id"
     t.index ["public_id"], name: "index_series_on_public_id", unique: true
     t.index ["reading_style"], name: "index_series_on_reading_style"
     t.index ["slug"], name: "index_series_on_slug", unique: true
+    t.index ["status"], name: "index_series_on_status"
   end
 
   create_table "series_sources", force: :cascade do |t|
@@ -219,6 +235,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.datetime "updated_at", null: false
     t.index ["series_id", "source_id"], name: "index_series_sources_on_series_id_and_source_id", unique: true
     t.index ["series_id"], name: "index_series_sources_on_series_id"
+    t.index ["source_id", "source_series_id"], name: "index_series_sources_on_source_id_and_source_series_id"
     t.index ["source_id"], name: "index_series_sources_on_source_id"
     t.index ["source_series_id"], name: "index_series_sources_on_source_series_id"
   end
@@ -374,9 +391,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.boolean "enabled", default: true, null: false
     t.string "key", null: false
     t.string "name"
+    t.string "slug", null: false
     t.string "source_type"
     t.datetime "updated_at", null: false
+    t.index ["enabled", "name"], name: "index_sources_on_enabled_and_name"
+    t.index ["enabled"], name: "index_sources_on_enabled"
     t.index ["key"], name: "index_sources_on_key", unique: true
+    t.index ["name"], name: "index_sources_on_name"
+    t.index ["slug"], name: "index_sources_on_slug", unique: true
   end
 
   create_table "user_series_follows", force: :cascade do |t|
@@ -385,6 +407,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_150000) do
     t.bigint "library_series_id", null: false
     t.jsonb "source_priority", default: []
     t.bigint "user_id", null: false
+    t.index ["download_policy"], name: "index_user_series_follows_on_download_policy"
     t.index ["library_series_id"], name: "index_user_series_follows_on_library_series_id"
     t.index ["user_id", "library_series_id"], name: "index_user_series_follows_on_user_id_and_library_series_id", unique: true
     t.index ["user_id"], name: "index_user_series_follows_on_user_id"

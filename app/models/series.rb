@@ -70,13 +70,23 @@ class Series < ApplicationRecord
   end
 
   # Returns the primary source for this series (first added)
+  # Uses preloaded data when available to avoid N+1 queries
   def primary_source
-    @primary_source ||= sources.order(:id).first
+    @primary_source ||= if sources.loaded?
+      sources.min_by(&:id)
+    else
+      sources.order(:id).first
+    end
   end
 
   # Returns the series source for the primary source
+  # Uses preloaded data when available to avoid N+1 queries
   def primary_series_source
-    @primary_series_source ||= series_sources.order(:id).first
+    @primary_series_source ||= if series_sources.loaded?
+      series_sources.min_by(&:id)
+    else
+      series_sources.order(:id).first
+    end
   end
 
   # Calculates and updates the quality score for this series

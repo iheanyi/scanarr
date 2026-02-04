@@ -242,8 +242,7 @@ class ChaptersController < ApplicationController
   end
 
   def find_source
-    key = params[:source_slug].to_s.tr("-", "_")
-    Source.find_by!(key: key)
+    Source.find_by!(slug: params[:source_slug])
   end
 
   def adapter_for(source)
@@ -251,7 +250,7 @@ class ChaptersController < ApplicationController
   end
 
   def source_slug(source)
-    source.key.to_s.tr("_", "-")
+    source.slug
   end
 
   def broadcast_admin_download(file_asset)

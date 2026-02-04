@@ -1,7 +1,7 @@
 module Admin
   class ScrapersController < ApplicationController
     def index
-      @sources = Source.order(:key)
+      @sources = Source.order(:name)
       @statuses = ScraperRun::STATUSES
       @run_types = ScraperRun.distinct.order(:run_type).pluck(:run_type)
 

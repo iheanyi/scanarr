@@ -9,7 +9,7 @@
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <% @series.each do |series| %>
         <%= link_to source_series_path(
-                      source_slug: @source.key.to_s.tr("_", "-"),
+                      source_slug: @source.slug,
                       series_slug: series.to_param
                     ),
                     class: "group rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4 hover:border-emerald-500/40 transition-colors" do %>
@@ -39,7 +39,7 @@
       <p class="text-zinc-400 text-pretty">No series imported yet.</p>
       <div class="mt-4">
         <%= link_to "Search this source",
-                    source_search_path(source_slug: @source.key.to_s.tr("_", "-")),
+                    source_search_path(source_slug: @source.slug),
                     class: "inline-flex items-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
       </div>
     </section>

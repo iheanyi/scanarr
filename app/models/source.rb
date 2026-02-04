@@ -6,11 +6,9 @@ class Source < ApplicationRecord
   has_many :scraper_runs, dependent: :destroy
 
   validates :key, presence: true, uniqueness: true
+  validates :slug, presence: true, uniqueness: true
 
-  # Returns a URL-friendly slug derived from the key
-  def slug
-    key.to_s.tr("_", "-")
-  end
+  before_validation :generate_slug_from_key
 
   # Calculate reliability score based on recent scraper run success rate
   # Returns a decimal between 0.0 and 1.0
@@ -22,5 +20,11 @@ class Source < ApplicationRecord
     total = recent_runs.count
 
     (successful.to_f / total).round(2)
+  end
+
+  private
+
+  def generate_slug_from_key
+    self.slug = key.to_s.tr("_", "-") if key.present? && (slug.blank? || key_changed?)
   end
 end

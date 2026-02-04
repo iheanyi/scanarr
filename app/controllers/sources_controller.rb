@@ -4,7 +4,7 @@ class SourcesController < ApplicationController
   helper_method :source_slug
 
   def index
-    @sources = Source.where(enabled: true).order(:key)
+    @sources = Source.where(enabled: true).order(:name)
   end
 
   def browse
@@ -105,11 +105,10 @@ class SourcesController < ApplicationController
   private
 
   def set_source
-    key = params[:source_slug].to_s.tr("-", "_")
-    @source = Source.find_by!(key: key)
+    @source = Source.find_by!(slug: params[:source_slug])
   end
 
   def source_slug(source)
-    source.key.to_s.tr("_", "-")
+    source.slug
   end
 end
