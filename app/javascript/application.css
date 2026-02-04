@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+@theme {
+  --color-background: var(--ds-bg);
+  --color-surface: var(--ds-surface);
+  --color-surface-2: var(--ds-surface-2);
+  --color-border: var(--ds-border);
+  --color-border-soft: var(--ds-border-soft);
+  --color-foreground: var(--ds-text);
+  --color-muted: var(--ds-muted);
+  --color-muted-2: var(--ds-muted-2);
+  --color-accent: var(--ds-accent);
+  --color-accent-strong: var(--ds-accent-strong);
+  --color-accent-soft: var(--ds-accent-soft);
+  --color-accent-ghost: var(--ds-accent-ghost);
+  --color-warm: var(--ds-warm);
+  --color-warm-soft: var(--ds-warm-soft);
+  --color-danger: var(--ds-danger);
+  --color-danger-soft: var(--ds-danger-soft);
+}
+
+:root {
+  color-scheme: dark;
+  --ds-bg: #0b0f14;
+  --ds-surface: #131a24;
+  --ds-surface-2: #1a2331;
+  --ds-border: #2c3849;
+  --ds-border-soft: #364458;
+  --ds-text: #e6edf7;
+  --ds-muted: #9aa6b8;
+  --ds-muted-2: #7d899d;
+  --ds-accent: #5fd3b7;
+  --ds-accent-strong: #76e3c8;
+  --ds-accent-soft: rgba(95, 211, 183, 0.24);
+  --ds-accent-ghost: rgba(95, 211, 183, 0.12);
+  --ds-warm: #f2b067;
+  --ds-warm-soft: rgba(242, 176, 103, 0.22);
+  --ds-danger: #f07b86;
+  --ds-danger-soft: rgba(240, 123, 134, 0.22);
+  --ds-glow-1: rgba(26, 44, 54, 0.65);
+  --ds-glow-2: rgba(12, 18, 26, 0.6);
+  --ds-grid: rgba(92, 104, 118, 0.18);
+}
+
+@layer components {
+  .ds-radial-1 {
+    background-image: radial-gradient(60rem 38rem at 20% -10%, var(--ds-glow-1), transparent);
+  }
+
+  .ds-radial-2 {
+    background-image: radial-gradient(50rem 32rem at 90% 10%, var(--ds-glow-2), transparent);
+  }
+
+  .ds-grid {
+    background-image: linear-gradient(to right, var(--ds-grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ds-grid) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+}
