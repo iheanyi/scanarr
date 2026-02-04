@@ -1,12 +1,13 @@
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
-require:
+plugins:
   - rubocop-performance
   - rubocop-minitest
 
 # Exclude auto-generated files
 AllCops:
+  NewCops: enable
   Exclude:
     - "db/schema.rb"
     - "db/cache_schema.rb"
@@ -28,11 +29,3 @@ Layout/EmptyLinesAroundClassBody:
 
 Layout/EmptyLinesAroundBlockBody:
   Enabled: false
-
-# Performance cops - all enabled by default
-Performance:
-  Enabled: true
-
-# Minitest cops for test files
-Minitest:
-  Enabled: true
