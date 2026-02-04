@@ -15,7 +15,7 @@ two:
   source_url: https://weebcentral.com/chapters/02CHAPTER
 
 three:
-  chapter: two
+  chapter: three
   format: pages
   public_id: releasepub003
   source: one

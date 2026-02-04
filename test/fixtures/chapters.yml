@@ -17,3 +17,12 @@ two:
   public_id: chapterpub002
   source: one
   source_url: https://weebcentral.com/chapters/02CHAPTER
+
+three:
+  series: one
+  chapter_number: "3"
+  chapter_number_value: 3
+  title: Chapter 3
+  public_id: chapterpub003
+  source: one
+  source_url: https://weebcentral.com/chapters/03CHAPTER
