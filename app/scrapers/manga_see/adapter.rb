@@ -159,16 +159,6 @@ module MangaSee
       items.find { |item| item.text.include?(label) }&.css("a")&.map(&:text)&.join(", ")
     end
 
-    def normalize_status(status)
-      case status&.downcase
-      when /ongoing/, /releasing/ then "ongoing"
-      when /complete/, /finished/ then "completed"
-      when /hiatus/ then "hiatus"
-      when /cancel/ then "cancelled"
-      else "ongoing"
-      end
-    end
-
     # MangaSee chapter number encoding:
     # "100100" = Chapter 1
     # "100150" = Chapter 1.5

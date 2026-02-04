@@ -190,16 +190,6 @@ module AsuraScans
       match[1] if match
     end
 
-    def normalize_status(status)
-      case status&.downcase
-      when /ongoing/, /releasing/ then "ongoing"
-      when /complete/, /finished/ then "completed"
-      when /hiatus/ then "hiatus"
-      when /cancel/, /dropped/ then "cancelled"
-      else "ongoing"
-      end
-    end
-
     def extract_tags(doc)
       # Genre buttons are in a flex container with gap-3 class
       genre_container = doc.at_css(".flex.flex-row.flex-wrap.gap-3")

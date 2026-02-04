@@ -406,15 +406,6 @@ module MangaPill
       end
     end
 
-    def normalize_status(status)
-      case status&.downcase
-      when /ongoing/, /publishing/ then "ongoing"
-      when /complete/, /finished/ then "completed"
-      when /hiatus/ then "hiatus"
-      when /cancel/, /dropped/ then "cancelled"
-      else "ongoing"
-      end
-    end
   end
 end
 

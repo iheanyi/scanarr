@@ -334,21 +334,6 @@ module WeebCentral
       nil
     end
 
-    def normalize_status(status)
-      case status&.downcase
-      when /ongoing/, /releasing/, /publishing/
-        "ongoing"
-      when /complete/, /finished/
-        "completed"
-      when /hiatus/
-        "hiatus"
-      when /cancel/, /dropped/
-        "cancelled"
-      else
-        "ongoing"
-      end
-    end
-
     def detect_series_type(tags)
       tags_lower = tags.map(&:downcase)
       return "manhwa" if tags_lower.any? { |t| t.include?("manhwa") || t.include?("korean") }

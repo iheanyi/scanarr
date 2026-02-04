@@ -51,6 +51,24 @@ class BaseAdapter
   def browse_sort_options
     SORT_OPTIONS
   end
+
+  # Normalize status strings from various sources to standard values.
+  # Returns: "ongoing", "completed", "hiatus", "cancelled"
+  # Defaults to "ongoing" for unrecognized values.
+  def normalize_status(status)
+    case status&.downcase
+    when /ongoing/, /releasing/, /publishing/
+      "ongoing"
+    when /complete/, /finished/
+      "completed"
+    when /hiatus/
+      "hiatus"
+    when /cancel/, /dropped/
+      "cancelled"
+    else
+      "ongoing"
+    end
+  end
 end
 
 module Scrapers
