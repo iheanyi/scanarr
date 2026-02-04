@@ -1,3 +1,75 @@
-storage/
-.overseer/tasks.db
+# See https://help.github.com/articles/ignoring-files for more about ignoring files.
+
+# Ignore bundler config.
+/.bundle
+
+# Ignore all environment files
+.env*
+!.env.example
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory.
+/tmp/pids/*
+!/tmp/pids/.keep
+
+# Ignore storage (for Active Storage uploads, etc.)
+/storage/*
+!/storage/.keep
+
+# Ignore master key for decrypting credentials and more.
+/config/master.key
+/config/credentials/*.key
+
+# Ignore node_modules
+/node_modules
+
+# Ignore yarn files
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
+
+# Ignore assets builds (regenerated on deploy)
+/app/assets/builds/*
+!/app/assets/builds/.keep
+
+# Ignore uploaded files in development.
+/storage/*
+!/storage/.keep
+
+# Ignore public uploads
+/public/uploads
+
+# Ignore coverage reports
+/coverage/
+
+# Ignore byebug history
+.byebug_history
+
+# Ignore IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Kamal secrets (if you add real values - the template is fine)
+# .kamal/secrets  # Uncomment if you add real secrets
+
+# Ignore Overmind/Foreman
+.overmind.sock
+.foreman
+
+# Overseer task management
 .overseer/
+
+# Bootsnap cache
+/tmp/cache/bootsnap*
