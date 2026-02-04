@@ -22,6 +22,14 @@
   --color-warm-soft: var(--ds-warm-soft);
   --color-danger: var(--ds-danger);
   --color-danger-soft: var(--ds-danger-soft);
+  --color-success: var(--ds-success);
+  --color-success-soft: var(--ds-success-soft);
+  --color-warning: var(--ds-warning);
+  --color-warning-soft: var(--ds-warning-soft);
+  --color-error: var(--ds-error);
+  --color-error-soft: var(--ds-error-soft);
+  --color-info: var(--ds-info);
+  --color-info-soft: var(--ds-info-soft);
 }
 
 :root {
@@ -42,6 +50,14 @@
   --ds-warm-soft: rgba(242, 176, 103, 0.22);
   --ds-danger: #f07b86;
   --ds-danger-soft: rgba(240, 123, 134, 0.22);
+  --ds-success: #6fe3b5;
+  --ds-success-soft: rgba(111, 227, 181, 0.22);
+  --ds-warning: #f2c16b;
+  --ds-warning-soft: rgba(242, 193, 107, 0.22);
+  --ds-error: #f0646f;
+  --ds-error-soft: rgba(240, 100, 111, 0.22);
+  --ds-info: #6fb6ff;
+  --ds-info-soft: rgba(111, 182, 255, 0.22);
   --ds-glow-1: rgba(26, 44, 54, 0.65);
   --ds-glow-2: rgba(12, 18, 26, 0.6);
   --ds-grid: rgba(92, 104, 118, 0.18);

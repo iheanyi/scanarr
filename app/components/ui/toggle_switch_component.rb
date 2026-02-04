@@ -19,15 +19,28 @@ module UI
     end
 
     def track_classes
-      "relative inline-flex h-6 w-11 items-center rounded-full border border-border bg-surface-2 transition-colors after:absolute after:left-1 after:h-4 after:w-4 after:rounded-full after:bg-foreground/80 after:transition-transform after:content-['']"
+      cn(
+        "group relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border bg-surface-2 p-0.5",
+        "ring-1 ring-inset ring-border/40 transition-colors duration-200 ease-in-out",
+        "focus-within:outline focus-within:outline-2 focus-within:outline-accent focus-within:outline-offset-2",
+        "has-[input:checked]:border-accent/60 has-[input:checked]:bg-accent-ghost"
+      )
+    end
+
+    def knob_classes
+      cn(
+        "size-5 rounded-full bg-foreground shadow-sm ring-1 ring-border/30",
+        "transition-transform duration-200 ease-in-out",
+        "group-has-[input:checked]:translate-x-5 group-has-[input:checked]:bg-accent-strong"
+      )
     end
 
     def input_classes
-      "peer sr-only"
+      "absolute inset-0 size-full appearance-none focus:outline-none"
     end
 
     def checked_track_classes
-      "peer-checked:border-accent/50 peer-checked:bg-accent-ghost peer-checked:after:translate-x-5 peer-checked:after:bg-accent-strong"
+      nil
     end
 
     def input_data
