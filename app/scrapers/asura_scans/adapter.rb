@@ -25,12 +25,12 @@ module AsuraScans
 
         # Ensure proper URL construction
         full_url = if href.start_with?("http")
-                     href
-                   elsif href.start_with?("/")
-                     "#{BASE_URL}#{href}"
-                   else
-                     "#{BASE_URL}/#{href}"
-                   end
+          href
+        elsif href.start_with?("/")
+          "#{BASE_URL}#{href}"
+        else
+          "#{BASE_URL}/#{href}"
+        end
 
         ResultTypes::SearchResult.new(
           id: href.split("/").last,
@@ -221,9 +221,9 @@ module AsuraScans
         date_str = match[1]
         title = text.sub(date_pattern, "").strip
         published_at = parse_date(date_str)
-        [title, published_at]
+        [ title, published_at ]
       else
-        [text, nil]
+        [ text, nil ]
       end
     end
 

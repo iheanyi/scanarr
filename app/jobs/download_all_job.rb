@@ -63,7 +63,7 @@ class DownloadAllJob < ApplicationJob
 
   def broadcast_chapter_update(chapter, source, series)
     Turbo::StreamsChannel.broadcast_replace_to(
-      [series, :downloads],
+      [ series, :downloads ],
       target: ActionView::RecordIdentifier.dom_id(chapter),
       partial: "series/chapter_row",
       locals: { chapter: chapter.reload, source: source, series: series, progress: nil }

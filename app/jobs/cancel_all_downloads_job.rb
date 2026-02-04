@@ -53,7 +53,7 @@ class CancelAllDownloadsJob < ApplicationJob
     source = chapter.source
 
     Turbo::StreamsChannel.broadcast_replace_to(
-      [series, :downloads],
+      [ series, :downloads ],
       target: ActionView::RecordIdentifier.dom_id(chapter),
       partial: "series/chapter_row",
       locals: {

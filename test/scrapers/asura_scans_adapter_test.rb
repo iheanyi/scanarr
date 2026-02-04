@@ -100,7 +100,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
       { url: "/chapter/123", text: "Chapter 123", expected: "123" },
       { url: "/chapter/123.5", text: "Chapter 123.5", expected: "123.5" },
       { url: "/chapter/0.5", text: "Chapter 0.5", expected: "0.5" },
-      { url: "/chapter/99.99", text: "Chapter 99.99", expected: "99.99" },
+      { url: "/chapter/99.99", text: "Chapter 99.99", expected: "99.99" }
     ]
     
     test_cases.each do |tc|
