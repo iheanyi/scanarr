@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage"]
-  static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String }
+  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "nextChapterOverlay", "nextChapterCountdown"]
+  static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
   declare readonly pageTargets: HTMLElement[]
   declare readonly viewportTarget: HTMLElement
   declare readonly hasViewportTarget: boolean
@@ -16,11 +16,18 @@ export default class extends Controller {
   declare readonly lightboxImageTarget: HTMLImageElement
   declare readonly hasLightboxTarget: boolean
   declare readonly hasLightboxImageTarget: boolean
+  declare readonly nextChapterOverlayTarget: HTMLElement
+  declare readonly nextChapterCountdownTarget: HTMLElement
+  declare readonly hasNextChapterOverlayTarget: boolean
+  declare readonly hasNextChapterCountdownTarget: boolean
   declare readonly styleValue: string
   declare readonly pageCountValue: number
   declare readonly initialPageIndexValue: number
   declare readonly progressUrlValue: string
   declare readonly hasProgressUrlValue: boolean
+  declare readonly nextChapterUrlValue: string
+  declare readonly nextChapterTitleValue: string
+  declare readonly hasNextChapterUrlValue: boolean
 
   private currentIndex = 0
   private observer?: IntersectionObserver
@@ -28,6 +35,8 @@ export default class extends Controller {
   private lightboxOpen = false
   private pendingProgressSave?: ReturnType<typeof setTimeout>
   private isScrolling = false // Lock to prevent observer interference during programmatic scroll
+  private nextChapterCountdownInterval?: ReturnType<typeof setInterval>
+  private nextChapterCountdownValue = 5
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -47,6 +56,7 @@ export default class extends Controller {
     window.removeEventListener("keydown", this.handleKeydown)
     this.observer?.disconnect()
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
+    this.clearNextChapterCountdown()
   }
 
   private handleKeydown(event: KeyboardEvent) {
@@ -271,6 +281,7 @@ export default class extends Controller {
   private syncState() {
     this.updateProgressUI()
     this.scheduleProgressSave()
+    this.checkEndOfChapter()
     // Update URL last - it can fail with credentials in URL (browser security)
     try {
       this.updateURL()
@@ -360,5 +371,79 @@ export default class extends Controller {
     }).catch((error) => {
       console.warn("Failed to save reading progress:", error)
     })
+  }
+
+  // Check if we're on the last page and should show next chapter prompt
+  private checkEndOfChapter() {
+    if (!this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
+    
+    const isLastPage = this.currentIndex === this.pageTargets.length - 1
+    
+    if (isLastPage) {
+      this.showNextChapterOverlay()
+    } else {
+      this.hideNextChapterOverlay()
+    }
+  }
+
+  private showNextChapterOverlay() {
+    if (!this.hasNextChapterOverlayTarget) return
+    
+    this.nextChapterOverlayTarget.classList.remove("hidden")
+    this.nextChapterOverlayTarget.classList.add("flex")
+    
+    // Start countdown for auto-navigation
+    this.startNextChapterCountdown()
+  }
+
+  private hideNextChapterOverlay() {
+    if (!this.hasNextChapterOverlayTarget) return
+    
+    this.nextChapterOverlayTarget.classList.add("hidden")
+    this.nextChapterOverlayTarget.classList.remove("flex")
+    
+    this.clearNextChapterCountdown()
+  }
+
+  private startNextChapterCountdown() {
+    this.clearNextChapterCountdown()
+    this.nextChapterCountdownValue = 5
+    this.updateCountdownDisplay()
+    
+    this.nextChapterCountdownInterval = setInterval(() => {
+      this.nextChapterCountdownValue--
+      this.updateCountdownDisplay()
+      
+      if (this.nextChapterCountdownValue <= 0) {
+        this.goToNextChapter()
+      }
+    }, 1000)
+  }
+
+  private clearNextChapterCountdown() {
+    if (this.nextChapterCountdownInterval) {
+      clearInterval(this.nextChapterCountdownInterval)
+      this.nextChapterCountdownInterval = undefined
+    }
+  }
+
+  private updateCountdownDisplay() {
+    if (!this.hasNextChapterCountdownTarget) return
+    this.nextChapterCountdownTarget.textContent = this.nextChapterCountdownValue.toString()
+  }
+
+  // Action: manually go to next chapter
+  goToNextChapter(event?: Event) {
+    event?.preventDefault()
+    if (!this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
+    
+    this.clearNextChapterCountdown()
+    window.location.href = this.nextChapterUrlValue
+  }
+
+  // Action: cancel auto-navigation and stay on current chapter
+  cancelNextChapter(event?: Event) {
+    event?.preventDefault()
+    this.hideNextChapterOverlay()
   }
 }

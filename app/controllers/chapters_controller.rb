@@ -16,6 +16,11 @@ class ChaptersController < ApplicationController
     @download_in_progress = @file_asset&.download_status.in?(%w[queued pending downloading])
     @chapter_progress = current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil
     @reading_style = params[:reading_style].presence || @series.reading_style.presence || "left_to_right"
+
+    # Persist reading style preference to series if changed
+    if params[:reading_style].present? && @series.reading_style != params[:reading_style]
+      @series.update(reading_style: params[:reading_style])
+    end
     @source_pages = []
     @source_error = nil
     if @pages.empty?

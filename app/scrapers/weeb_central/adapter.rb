@@ -7,6 +7,44 @@ module WeebCentral
     CHAPTER_LINK_SELECTOR = "a[href*='/chapters/']"
     PAGE_IMAGE_SELECTOR = "img"
 
+    # Maps our standard sort options to WeebCentral's sort values
+    SORT_MAP = {
+      "latest" => "Latest Updates",
+      "popular" => "Popularity",
+      "alphabetical" => "Alphabet",
+      "subscribers" => "Subscribers",
+      "recently_added" => "Recently Added",
+      "best_match" => "Best Match"
+    }.freeze
+
+    def supports_browse?
+      true
+    end
+
+    def browse_sort_options
+      SORT_MAP.keys
+    end
+
+    def browse(sort: "latest", page: 1, limit: 20)
+      weeb_sort = SORT_MAP.fetch(sort.to_s, "Latest Updates")
+      offset = (page - 1) * limit
+
+      response = http.get(
+        "/search/data",
+        params: {
+          sort: weeb_sort,
+          order: "Descending",
+          limit: limit,
+          offset: offset,
+          display_mode: "Full Display"
+        },
+        headers: { "HX-Request" => "true" }
+      )
+
+      doc = Nokogiri::HTML(response.body)
+      parse_browse_results(doc)
+    end
+
     def search(query)
       response = http.post("/search/simple", params: { location: "main" }, body: { text: query })
       doc = Nokogiri::HTML(response.body)
@@ -186,6 +224,85 @@ module WeebCentral
           true
         end
       end
+    end
+
+    def parse_browse_results(doc)
+      # Each result is in an article element with bg-base-300 class
+      articles = doc.css("article.bg-base-300")
+
+      articles.filter_map do |article|
+        parse_browse_article(article)
+      end
+    end
+
+    def parse_browse_article(article)
+      # Find the series link - there are multiple, pick the one with the title
+      title_link = article.at_css("section.hidden a[href*='/series/']")
+      return nil unless title_link
+
+      url = normalize_url(title_link["href"])
+      title = title_link.text.strip
+
+      # Get cover image from the picture element
+      cover = extract_cover_from_article(article)
+
+      # Extract metadata from the article's detail section
+      detail_section = article.at_css("section.hidden.lg\\:block")
+      metadata = extract_browse_metadata(detail_section)
+
+      ResultTypes::BrowseResult.new(
+        id: extract_series_id(url),
+        title: title,
+        url: url,
+        cover_url: cover,
+        language: nil,
+        author: metadata[:author],
+        status: metadata[:status],
+        last_updated: nil, # Not available in browse results
+        chapter_count: nil, # Not available in browse results
+        description: nil # Not available in browse results
+      )
+    end
+
+    def extract_cover_from_article(article)
+      # Try to find cover from picture source or img
+      picture = article.at_css("picture")
+      if picture
+        source = picture.at_css("source[srcset]")
+        return source["srcset"] if source
+      end
+
+      img = article.at_css('img[alt$=" cover"]') || article.at_css("img")
+      img&.[]("src") || img&.[]("data-src")
+    end
+
+    def extract_browse_metadata(section)
+      return {} unless section
+
+      {
+        status: extract_text_after_label(section, "Status"),
+        author: extract_author_from_section(section)
+      }
+    end
+
+    def extract_text_after_label(section, label)
+      strong = section.css("strong").find { |s| s.text.strip.downcase.start_with?(label.downcase) }
+      return nil unless strong
+
+      # The value is in a sibling span
+      span = strong.parent&.at_css("span:not(.tooltip)")
+      span&.text&.strip
+    end
+
+    def extract_author_from_section(section)
+      # Authors are in links after "Author(s):"
+      author_div = section.css("div").find { |d| d.at_css("strong")&.text&.include?("Author") }
+      return nil unless author_div
+
+      author_links = author_div.css("a")
+      return nil if author_links.empty?
+
+      author_links.map { |a| a.text.strip }.join(", ")
     end
   end
 end

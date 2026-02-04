@@ -54,7 +54,7 @@
           </span>
         <% end %>
       </div>
-      <% if chapter.title.present? %>
+      <% if chapter.meaningful_title? %>
         <p class="text-sm text-zinc-400 text-pretty"><%= chapter.title %></p>
       <% end %>
       <% if file_asset&.download_status.present? %>

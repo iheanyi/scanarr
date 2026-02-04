@@ -1,10 +1,63 @@
 class SourcesController < ApplicationController
-  before_action :set_source, only: %i[search import]
+  before_action :set_source, only: %i[search browse preview import]
 
   helper_method :source_slug
 
   def index
     @sources = Source.where(enabled: true).order(:key)
+  end
+
+  def browse
+    @sort = params[:sort].presence || "latest"
+    @page = (params[:page].presence || 1).to_i
+    @results = []
+    @error = nil
+
+    unless AdapterRegistry.registered?(@source.key)
+      @error = "This source doesn't have an adapter yet"
+      return
+    end
+
+    adapter = AdapterRegistry.for(@source)
+
+    unless adapter.supports_browse?
+      @error = "This source doesn't support browsing yet"
+      return
+    end
+
+    @sort_options = adapter.browse_sort_options
+    @results = adapter.browse(sort: @sort, page: @page, limit: 24)
+  rescue BaseAdapter::BrowseNotSupportedError => e
+    @error = e.message
+  rescue StandardError => e
+    @error = "Browse failed: #{e.message}"
+    Rails.logger.warn "Browse failed for #{@source.key}: #{e.class} - #{e.message}"
+  end
+
+  def preview
+    @series_url = params[:series_url].to_s
+    @series = nil
+    @chapters = []
+    @error = nil
+
+    if @series_url.blank?
+      @error = "No series URL provided"
+      return
+    end
+
+    unless AdapterRegistry.registered?(@source.key)
+      @error = "This source doesn't have an adapter yet"
+      return
+    end
+
+    adapter = AdapterRegistry.for(@source)
+    @series = adapter.series(@series_url)
+    @chapters = adapter.chapters(@series_url).first(10) # Preview first 10 chapters
+  rescue BaseAdapter::SeriesNotFoundError => e
+    @error = "Series not found: #{e.message}"
+  rescue StandardError => e
+    @error = "Failed to load series: #{e.message}"
+    Rails.logger.warn "Preview failed for #{@source.key}: #{e.class} - #{e.message}"
   end
 
   def search

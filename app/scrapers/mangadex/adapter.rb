@@ -21,6 +21,51 @@ module Mangadex
       end
     end
 
+    def supports_browse?
+      true
+    end
+
+    def browse(sort: "latest", page: 1, limit: 20)
+      order = case sort
+      when "popular"
+        { followedCount: "desc" }
+      when "alphabetical"
+        { title: "asc" }
+      else # "latest"
+        { latestUploadedChapter: "desc" }
+      end
+
+      offset = (page - 1) * limit
+
+      response = http.get("/manga", params: {
+        order: order,
+        limit: limit,
+        offset: offset,
+        includes: [ "cover_art", "author" ]
+      })
+
+      payload = JSON.parse(response.body)
+      payload.fetch("data", []).map do |item|
+        attrs = item.fetch("attributes", {})
+        title = pick_title(attrs.fetch("title", {}))
+        cover = cover_url(item)
+        authors = relationship_names(item, "author")
+
+        ResultTypes::BrowseResult.new(
+          id: item.fetch("id"),
+          title: title,
+          url: "https://mangadex.org/title/#{item.fetch('id')}",
+          cover_url: cover,
+          language: attrs["originalLanguage"],
+          author: authors.first,
+          status: attrs["status"],
+          last_updated: attrs["updatedAt"],
+          chapter_count: nil,
+          description: pick_title(attrs.fetch("description", {}))
+        )
+      end
+    end
+
     def series(id_or_url)
       id = extract_manga_id(id_or_url)
       response = http.get("/manga/#{id}", params: { includes: [ "cover_art", "author", "artist" ] })

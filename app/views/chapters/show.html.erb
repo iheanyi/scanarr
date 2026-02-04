@@ -9,11 +9,17 @@
 <% is_horizontal = @reading_style == 'left_to_right' || @reading_style == 'right_to_left' %>
 <% is_rtl = @reading_style == 'right_to_left' %>
 <% is_long_strip = @reading_style == 'long_strip' %>
+<% next_chapter_url = @next_chapter ? source_series_chapter_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@next_chapter)) : nil %>
+<% next_chapter_title = @next_chapter ? "Chapter #{@next_chapter.chapter_number}" : nil %>
 <main data-controller="reader"
       data-reader-style-value="<%= @reading_style %>"
       data-reader-page-count-value="<%= page_count %>"
       data-reader-initial-page-index-value="<%= initial_page_index %>"
       data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)) : '' %>"
+      <% if next_chapter_url %>
+      data-reader-next-chapter-url-value="<%= next_chapter_url %>"
+      data-reader-next-chapter-title-value="<%= next_chapter_title %>"
+      <% end %>
       class="space-y-6">
   <%# Breadcrumbs %>
   <nav class="flex items-center gap-2 text-sm text-zinc-400" aria-label="Breadcrumb">
@@ -41,7 +47,7 @@
     </div>
     <div class="border-t border-zinc-800/50 pt-3">
       <h2 class="text-xl font-medium text-zinc-100">Chapter <%= @chapter.chapter_number %></h2>
-      <% if @chapter.title.present? %>
+      <% if @chapter.meaningful_title? %>
         <p class="text-zinc-400 text-pretty"><%= @chapter.title %></p>
       <% end %>
     </div>
@@ -115,7 +121,8 @@
                     chapter_identifier: chapter_identifier(@chapter)
                   ),
                   method: :get,
-                  local: true do |form| %>
+                  local: true,
+                  id: "reading-style-form" do |form| %>
       <%= form.select :reading_style,
                       options_for_select(
                         [
@@ -127,8 +134,8 @@
                         @reading_style
                       ),
                       {},
-                      class: "rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-100" %>
-      <%= form.submit "Apply", class: "ml-2 rounded-md border border-zinc-800 px-2 py-1 text-xs font-semibold text-zinc-300" %>
+                      class: "rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-xs text-zinc-100",
+                      onchange: "this.form.submit()" %>
     <% end %>
   </nav>
 
@@ -242,4 +249,49 @@
          class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
          alt="Reader page" />
   </div>
+
+  <%# Next Chapter overlay - shows when reaching end of chapter %>
+  <% if @next_chapter %>
+    <div data-reader-target="nextChapterOverlay"
+         class="fixed inset-0 z-40 hidden items-center justify-center bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-zinc-950/80 p-6">
+      <div class="max-w-md w-full space-y-6 text-center">
+        <div class="space-y-2">
+          <p class="text-sm text-zinc-500 uppercase tracking-wider">End of Chapter</p>
+          <h2 class="text-2xl font-semibold text-zinc-100">Continue Reading?</h2>
+        </div>
+
+        <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/60 p-4 space-y-2">
+          <p class="text-sm text-zinc-500">Up next</p>
+          <p class="text-lg font-medium text-zinc-200">
+            Chapter <%= @next_chapter.chapter_number %>
+            <% if @next_chapter.meaningful_title? %>
+              <span class="block text-sm text-zinc-400 mt-1"><%= @next_chapter.title %></span>
+            <% end %>
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <button type="button"
+                  data-action="click->reader#goToNextChapter"
+                  class="w-full rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors">
+            <span>Continue to Next Chapter</span>
+            <span class="ml-2 inline-flex items-center justify-center rounded-full bg-emerald-600/50 px-2 py-0.5 text-xs">
+              <span data-reader-target="nextChapterCountdown">5</span>s
+            </span>
+          </button>
+
+          <button type="button"
+                  data-action="click->reader#cancelNextChapter"
+                  class="w-full rounded-lg border border-zinc-700 px-6 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800 transition-colors">
+            Stay on this chapter
+          </button>
+
+          <%= link_to source_series_path(source_slug: source_slug(@source), series_slug: @series.to_param),
+                      class: "inline-block text-sm text-zinc-500 hover:text-zinc-300 transition-colors" do %>
+            Back to series
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </main>

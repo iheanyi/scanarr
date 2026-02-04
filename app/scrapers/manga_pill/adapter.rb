@@ -2,9 +2,47 @@
 
 # MangaPill adapter
 # Reference: https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangapill
+#
+# Browse limitations:
+# - No pagination support (homepage only shows ~40 latest, ~10 trending)
+# - Only "latest" and "popular" sort options (no alphabetical)
+# - The `page` and `limit` parameters are ignored due to homepage constraints
 module MangaPill
   class Adapter < ::BaseAdapter
     BASE_URL = "https://mangapill.com"
+
+    # MangaPill supports browse via homepage scraping
+    def supports_browse?
+      true
+    end
+
+    # Available sort options (no alphabetical - not supported by source)
+    def browse_sort_options
+      %w[latest popular]
+    end
+
+    # Browse the homepage for latest updates or trending manga
+    # Note: Pagination is not supported - MangaPill homepage is a single page
+    # @param sort [String] "latest" for new chapters, "popular" for trending
+    # @param page [Integer] Ignored (no pagination support)
+    # @param limit [Integer] Ignored (returns all available from homepage)
+    # @return [Array<ResultTypes::BrowseResult>]
+    def browse(sort: "latest", page: 1, limit: 20)
+      response = http.get(BASE_URL)
+      return [] unless response.status == 200
+
+      doc = Nokogiri::HTML(response.body)
+
+      case sort.to_s.downcase
+      when "popular"
+        parse_trending_manga(doc)
+      else # "latest" is default
+        parse_latest_chapters(doc)
+      end
+    rescue StandardError => e
+      Rails.logger.error "[MangaPill] Browse error: #{e.message}"
+      []
+    end
 
     def search(query)
       # MangaPill uses a simple search query param
@@ -159,6 +197,148 @@ module MangaPill
     end
 
     private
+
+    # Parse "New Chapters" section from homepage
+    # Structure: Each card has chapter link, cover image, and manga link with title
+    # Card structure:
+    #   a[href*='/chapters/'] > figure > img (cover)
+    #   a[href*='/chapters/'] > div (chapter number like #55)
+    #   a[href^='/manga/'] > div.line-clamp-2.font-bold (title)
+    def parse_latest_chapters(doc)
+      results = []
+      seen_ids = Set.new
+
+      # Find the "New Chapters" grid - it's nested inside .grid > div
+      # The actual cards are in a nested grid
+      chapter_cards = doc.css("a[href*='/chapters/']")
+
+      chapter_cards.each do |chapter_link|
+        # Find the parent card container
+        card = chapter_link.parent
+        next unless card
+
+        # Find the manga link in the same card
+        manga_link = card.css("a[href^='/manga/']").first
+        next unless manga_link
+
+        href = manga_link["href"]
+        manga_id = extract_manga_id(href)
+        next unless manga_id
+        next if seen_ids.include?(manga_id) # Deduplicate
+
+        seen_ids << manga_id
+
+        # Cover image is in the chapter link's figure
+        img = chapter_link.css("img").first || card.css("img").first
+
+        # Title is in the manga link, specifically in div.line-clamp-2 or div.font-bold
+        title_el = manga_link.css("div.line-clamp-2").first || manga_link.css("div").first
+        title = title_el&.text&.strip
+
+        next unless title.present?
+
+        # Extract chapter number from chapter link
+        chapter_num = extract_chapter_number(chapter_link["href"]) || extract_chapter_number(chapter_link.text)
+
+        results << ResultTypes::BrowseResult.new(
+          id: manga_id,
+          title: title,
+          url: "#{BASE_URL}#{href}",
+          cover_url: img&.[]("data-src") || img&.[]("src"),
+          language: "en",
+          author: nil,
+          status: nil,
+          last_updated: nil,
+          chapter_count: chapter_num&.to_i,
+          description: nil
+        )
+      end
+
+      results
+    end
+
+    # Parse "Trending Mangas" section from homepage
+    # Structure: Cards with cover, title, and metadata tags (type, year, status)
+    # Card structure:
+    #   a[href^='/manga/'] > figure > img (cover)
+    #   a[href^='/manga/'] > div.line-clamp-2 (title)
+    #   div.flex-wrap with tags showing type/year/status
+    def parse_trending_manga(doc)
+      results = []
+      seen_ids = Set.new
+
+      # Find the "Trending Mangas" heading and navigate to its grid container
+      trending_heading = doc.css("h4").find { |h| h.text.downcase.include?("trending") }
+      return results unless trending_heading
+
+      # The grid is a sibling in the grandparent container
+      # Navigate: heading -> parent div -> parent div -> find the grid with manga cards
+      grandparent = trending_heading.parent&.parent
+      return results unless grandparent
+
+      # The trending grid has class pattern like "grid ... grid-cols-2"
+      trending_grid = grandparent.css("div.grid").find do |grid|
+        grid["class"]&.include?("grid-cols") && grid.css("a[href^='/manga/']").any?
+      end
+      return results unless trending_grid
+
+      # Get direct children of the grid (the card containers)
+      trending_grid.children.select(&:element?).each do |card|
+        manga_link = card.css("a[href^='/manga/']").first
+        next unless manga_link
+
+        href = manga_link["href"]
+        manga_id = extract_manga_id(href)
+        next unless manga_id
+        next if seen_ids.include?(manga_id)
+
+        seen_ids << manga_id
+
+        # Cover image is in the link's figure
+        img = manga_link.css("img").first || card.css("img").first
+
+        # Title is in div.line-clamp-2 or div.font-black inside the link
+        title_el = manga_link.css("div.line-clamp-2").first ||
+                   manga_link.css("div.font-black").first ||
+                   card.css("div.line-clamp-2").first
+        title = title_el&.text&.strip
+
+        next unless title.present?
+
+        # Extract status from the tags (look for publishing/finished/etc)
+        status = nil
+        card.css("div.bg-card").each do |tag|
+          tag_text = tag.text.strip.downcase
+          if %w[publishing finished hiatus discontinued].include?(tag_text)
+            status = normalize_status(tag_text)
+            break
+          end
+        end
+
+        results << ResultTypes::BrowseResult.new(
+          id: manga_id,
+          title: title,
+          url: "#{BASE_URL}#{href}",
+          cover_url: img&.[]("data-src") || img&.[]("src"),
+          language: "en",
+          author: nil,
+          status: status,
+          last_updated: nil,
+          chapter_count: nil,
+          description: nil
+        )
+      end
+
+      results
+    end
+
+    # Extract manga ID from URL path like "/manga/123/series-name"
+    def extract_manga_id(path)
+      return nil unless path
+      # URL format: /manga/123/series-name -> extract "123/series-name"
+      match = path.match(%r{/manga/(.+)})
+      match ? match[1] : nil
+    end
 
     def normalize_url(id_or_url)
       if id_or_url.start_with?("http")

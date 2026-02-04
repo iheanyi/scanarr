@@ -11,6 +11,19 @@ class Chapter < ApplicationRecord
   validates :chapter_number, presence: true
   before_validation :set_chapter_number_value
 
+  # Returns true if the title is meaningful (not just "Chapter X")
+  def meaningful_title?
+    return false if title.blank?
+
+    # Title is not meaningful if it just matches "Chapter X" pattern
+    !title.strip.match?(/\Achapter\s*#{Regexp.escape(chapter_number.to_s)}\z/i)
+  end
+
+  # Returns the title only if it's meaningful, otherwise nil
+  def display_title
+    meaningful_title? ? title : nil
+  end
+
   private
 
   def set_chapter_number_value
