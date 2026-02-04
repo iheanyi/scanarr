@@ -52,7 +52,8 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.handleKeydown)
   }
 
-  toggle() {
+  toggle(event: Event) {
+    event.stopPropagation()
     if (this.openValue) {
       this.close()
     } else {

@@ -213,26 +213,42 @@
                 <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Spacing</h3>
                 <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">4px base</span>
               </div>
-              <div class="space-y-3 p-6">
-                <div class="flex items-center gap-3">
-                  <div class="w-1 h-4 bg-accent rounded-sm"></div>
-                  <code class="text-xs text-tertiary">spacing-1</code>
-                  <span class="text-xs text-secondary">4px</span>
+              <div class="space-y-4 p-6">
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-1 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-1</code>
+                  <span class="text-xs text-tertiary">4px</span>
                 </div>
-                <div class="flex items-center gap-3">
-                  <div class="w-2 h-4 bg-accent rounded-sm"></div>
-                  <code class="text-xs text-tertiary">spacing-2</code>
-                  <span class="text-xs text-secondary">8px</span>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-2 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-2</code>
+                  <span class="text-xs text-tertiary">8px</span>
                 </div>
-                <div class="flex items-center gap-3">
-                  <div class="w-4 h-4 bg-accent rounded-sm"></div>
-                  <code class="text-xs text-tertiary">spacing-4</code>
-                  <span class="text-xs text-secondary">16px</span>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-4 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-4</code>
+                  <span class="text-xs text-tertiary">16px</span>
                 </div>
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-4 bg-accent rounded-sm"></div>
-                  <code class="text-xs text-tertiary">spacing-8</code>
-                  <span class="text-xs text-secondary">32px</span>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-8 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-8</code>
+                  <span class="text-xs text-tertiary">32px</span>
                 </div>
               </div>
             </div>
@@ -518,60 +534,60 @@
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Interaction</span>
           </div>
           <p class="text-sm text-secondary">Common interaction patterns beyond individual components.</p>
-          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-ghost">
-                  <%= icon "menu", class: "size-4 text-accent" %>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "menu", class: "h-[18px] w-[18px] text-accent" %>
                 </div>
                 <h3 class="text-sm font-semibold text-primary">Navigation</h3>
               </div>
-              <p class="text-xs text-secondary">Sidebar with sections, breadcrumbs for depth, tabs for views.</p>
+              <p class="text-xs text-secondary leading-relaxed">Sidebar with sections, breadcrumbs for depth, tabs for views.</p>
             </div>
-            <div class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-ghost">
-                  <%= icon "layout-dashboard", class: "size-4 text-accent" %>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "layout-dashboard", class: "h-[18px] w-[18px] text-accent" %>
                 </div>
                 <h3 class="text-sm font-semibold text-primary">Data Display</h3>
               </div>
-              <p class="text-xs text-secondary">Cards for items, lists for chapters, grids for libraries.</p>
+              <p class="text-xs text-secondary leading-relaxed">Cards for items, lists for chapters, grids for libraries.</p>
             </div>
-            <div class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-ghost">
-                  <%= icon "loader", class: "size-4 text-accent" %>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "loader", class: "h-[18px] w-[18px] text-accent" %>
                 </div>
                 <h3 class="text-sm font-semibold text-primary">Loading States</h3>
               </div>
-              <p class="text-xs text-secondary">Skeleton screens, spinners for actions, progress for downloads.</p>
+              <p class="text-xs text-secondary leading-relaxed">Skeleton screens, spinners for actions, progress for downloads.</p>
             </div>
-            <div class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-ghost">
-                  <%= icon "inbox", class: "size-4 text-accent" %>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "inbox", class: "h-[18px] w-[18px] text-accent" %>
                 </div>
                 <h3 class="text-sm font-semibold text-primary">Empty States</h3>
               </div>
-              <p class="text-xs text-secondary">Helpful messages with clear next actions when no content.</p>
+              <p class="text-xs text-secondary leading-relaxed">Helpful messages with clear next actions when no content.</p>
             </div>
-            <div class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-ghost">
-                  <%= icon "circle-check", class: "size-4 text-accent" %>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "circle-check", class: "h-[18px] w-[18px] text-accent" %>
                 </div>
                 <h3 class="text-sm font-semibold text-primary">Feedback</h3>
               </div>
-              <p class="text-xs text-secondary">Toast notifications, inline validation, status badges.</p>
+              <p class="text-xs text-secondary leading-relaxed">Toast notifications, inline validation, status badges.</p>
             </div>
-            <div class="rounded-2xl border border-border bg-surface p-5">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-ghost">
-                  <%= icon "layers", class: "size-4 text-accent" %>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "layers", class: "h-[18px] w-[18px] text-accent" %>
                 </div>
                 <h3 class="text-sm font-semibold text-primary">Overlays</h3>
               </div>
-              <p class="text-xs text-secondary">Modals for focus, dialogs for confirmation, popovers for context.</p>
+              <p class="text-xs text-secondary leading-relaxed">Modals for focus, dialogs for confirmation, popovers for context.</p>
             </div>
           </div>
         </section>
