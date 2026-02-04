@@ -209,20 +209,64 @@
             <div class="overflow-hidden rounded-2xl border border-border bg-surface">
               <div class="flex items-center justify-between border-b border-border px-5 py-3">
                 <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Spacing</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Scale</span>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">4px base</span>
+              </div>
+              <div class="space-y-3 p-6">
+                <div class="flex items-center gap-3">
+                  <div class="w-1 h-4 bg-accent rounded-sm"></div>
+                  <code class="text-xs text-tertiary">spacing-1</code>
+                  <span class="text-xs text-secondary">4px</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-2 h-4 bg-accent rounded-sm"></div>
+                  <code class="text-xs text-tertiary">spacing-2</code>
+                  <span class="text-xs text-secondary">8px</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-4 h-4 bg-accent rounded-sm"></div>
+                  <code class="text-xs text-tertiary">spacing-4</code>
+                  <span class="text-xs text-secondary">16px</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-4 bg-accent rounded-sm"></div>
+                  <code class="text-xs text-tertiary">spacing-8</code>
+                  <span class="text-xs text-secondary">32px</span>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+              <div class="flex items-center justify-between border-b border-border px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Elevation</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Shadows</span>
               </div>
               <div class="space-y-4 p-6">
-                <div class="flex items-center justify-between gap-4">
-                  <div class="h-2 flex-1 rounded-full bg-border"></div>
-                  <p class="text-sm text-muted">2 / 4 / 6</p>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-md bg-surface-2 shadow-sm"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-sm</code>
+                    <p class="text-xs text-secondary">Buttons, inputs</p>
+                  </div>
                 </div>
-                <div class="flex items-center justify-between gap-4">
-                  <div class="h-2 flex-1 rounded-full bg-border"></div>
-                  <p class="text-sm text-muted">8 / 10 / 12</p>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-md bg-surface-2 shadow-md"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-md</code>
+                    <p class="text-xs text-secondary">Cards, dropdowns</p>
+                  </div>
                 </div>
-                <div class="flex items-center justify-between gap-4">
-                  <div class="h-2 flex-1 rounded-full bg-border"></div>
-                  <p class="text-sm text-muted">16 / 20 / 24</p>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-lg bg-surface-2 shadow-lg"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-lg</code>
+                    <p class="text-xs text-secondary">Modals, dialogs</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-lg bg-surface-2 shadow-glow"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-glow</code>
+                    <p class="text-xs text-secondary">Accent emphasis</p>
+                  </div>
                 </div>
               </div>
             </div>
