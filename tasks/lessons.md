@@ -13,4 +13,6 @@
 - 2026-02-02: Don't miss basic Rails conventions. Before running tests, sanity-check Zeitwerk naming (file paths ↔ constants) and avoid obvious autoload pitfalls.
 - 2026-02-02: Don't ship download artifacts without anchoring them to core domain models. Define Series/Chapter (and Release/FileAsset as needed) before persisting downloaded content.
 - 2026-02-02: Verify git repo state with `git status -sb` before claiming no repo. When using Overseer, use the local DB path
+- 2026-02-02: If the user expects live visibility, do work on `main` (or merge immediately). Avoid keeping changes only in worktrees unless explicitly requested.
+- 2026-02-02: When a user specifies design inspiration, follow it exactly; do not substitute sources.
 - 2026-02-01: Avoid unnecessary tool calls; never generate images unless explicitly requested.

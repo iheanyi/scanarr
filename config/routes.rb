@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy", as: :logout
 
+  get "/design-system", to: "design_system#show", as: :design_system
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
@@ -13,10 +15,10 @@ Rails.application.routes.draw do
   root "sources#index"
   get "/library", to: "library#index", as: :library
   get "/calendar", to: "calendar#index", as: :calendar
-  resources :follows, only: [:create, :update, :destroy]
+  resources :follows, only: [ :create, :update, :destroy ]
 
   # Notifications
-  resources :notifications, only: [:index] do
+  resources :notifications, only: [ :index ] do
     member do
       post :mark_read
     end
@@ -65,4 +67,5 @@ Rails.application.routes.draw do
 
   # Mission Control for SolidQueue job monitoring
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"
+
 end

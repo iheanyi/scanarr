@@ -21,6 +21,7 @@
             <%= link_to "Downloads", admin_downloads_path, class: "hover:text-zinc-100" %>
             <%= link_to "Jobs", "/admin/jobs", class: "hover:text-zinc-100" %>
             <%= link_to "Admin", admin_scrapers_path, class: "hover:text-zinc-100" %>
+            <%= link_to "Design System", design_system_path, class: "hover:text-zinc-100" %>
             <% if user_signed_in? %>
               <div class="relative" data-controller="dropdown">
                 <button type="button" data-action="click->dropdown#toggle" class="relative flex items-center gap-1 hover:text-zinc-100">

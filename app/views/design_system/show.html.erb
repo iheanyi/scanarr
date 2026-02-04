@@ -1,0 +1,320 @@
+<div id="design-system" class="relative overflow-hidden rounded-[32px] bg-[color:var(--ds-bg)] p-6 text-[color:var(--ds-text)]" style="--ds-bg:#0b0f12; --ds-surface:#12171c; --ds-surface-2:#171e24; --ds-border:#262d36; --ds-border-soft:#313a45; --ds-text:#e6ebf1; --ds-muted:#9aa5b3; --ds-muted-2:#7f8a98; --ds-accent:#5c9f97; --ds-accent-strong:#6fb4ac; --ds-accent-soft:rgba(92,159,151,0.2); --ds-accent-ghost:rgba(92,159,151,0.08); --ds-warm:#d3a36d; --ds-warm-soft:rgba(211,163,109,0.2); --ds-danger:#c77c7c; --ds-danger-soft:rgba(199,124,124,0.2);">
+  <div class="pointer-events-none absolute inset-0">
+    <div class="absolute inset-0 bg-[radial-gradient(60rem_38rem_at_20%_-10%,rgba(20,30,36,0.75),transparent)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(50rem_32rem_at_90%_10%,rgba(12,18,24,0.6),transparent)]"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(92,104,118,0.14)_1px,transparent_1px),linear-gradient(to_bottom,rgba(92,104,118,0.14)_1px,transparent_1px)] bg-[size:80px_80px] opacity-25"></div>
+  </div>
+
+  <div class="relative space-y-12">
+    <div class="rounded-3xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6 shadow-[0_0_0_1px_rgba(8,10,12,0.7)] backdrop-blur">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.35em] text-[color:var(--ds-muted-2)]">Scanarr Design System</p>
+          <h1 class="mt-3 text-4xl font-semibold tracking-tight text-[color:var(--ds-text)]">Design language for scanners and readers.</h1>
+          <p class="mt-3 max-w-2xl text-sm text-[color:var(--ds-muted)]">
+            A restrained system inspired by Geist and SpineFind. Built for clarity, speed, and a calm reading
+            experience across every surface in Scanarr.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-1.5 text-[11px] text-[color:var(--ds-muted)]">
+            <span class="rounded-full border border-[color:var(--ds-border)] bg-[color:var(--ds-surface-2)] px-2.5 py-1 leading-4">Neutral-first</span>
+            <span class="rounded-full border border-[color:var(--ds-border)] bg-[color:var(--ds-surface-2)] px-2.5 py-1 leading-4">Quiet motion</span>
+            <span class="rounded-full border border-[color:var(--ds-border)] bg-[color:var(--ds-surface-2)] px-2.5 py-1 leading-4">Readable hierarchy</span>
+          </div>
+        </div>
+        <div class="min-w-[220px] space-y-3 text-xs text-[color:var(--ds-muted)]">
+          <div class="flex items-center justify-between rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface-2)] px-4 py-3">
+            <span class="uppercase tracking-[0.25em] text-[color:var(--ds-muted-2)]">Status</span>
+            <span class="text-[color:var(--ds-text)]">v0.1</span>
+          </div>
+          <div class="flex items-center justify-between rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface-2)] px-4 py-3">
+            <span class="uppercase tracking-[0.25em] text-[color:var(--ds-muted-2)]">Updated</span>
+            <span class="text-[color:var(--ds-text)]">Feb 2026</span>
+          </div>
+          <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface-2)] px-4 py-3 text-[color:var(--ds-muted)]">
+            Public reference for UI standards and component behavior.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:hidden">
+      <div class="flex flex-wrap gap-2 text-xs text-[color:var(--ds-muted)]">
+        <a href="#overview" class="rounded-full border border-[color:var(--ds-border)] px-3 py-1 hover:text-[color:var(--ds-text)]">Overview</a>
+        <a href="#tokens" class="rounded-full border border-[color:var(--ds-border)] px-3 py-1 hover:text-[color:var(--ds-text)]">Tokens</a>
+        <a href="#components" class="rounded-full border border-[color:var(--ds-border)] px-3 py-1 hover:text-[color:var(--ds-text)]">Components</a>
+        <a href="#guidelines" class="rounded-full border border-[color:var(--ds-border)] px-3 py-1 hover:text-[color:var(--ds-text)]">Guidelines</a>
+        <a href="#roadmap" class="rounded-full border border-[color:var(--ds-border)] px-3 py-1 hover:text-[color:var(--ds-text)]">Roadmap</a>
+      </div>
+    </div>
+
+    <div class="grid gap-12 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside class="hidden lg:block">
+        <div class="sticky top-24 space-y-4 text-sm text-[color:var(--ds-muted)]">
+          <p class="text-xs uppercase tracking-[0.28em] text-[color:var(--ds-muted-2)]">Sections</p>
+          <nav class="flex flex-col gap-2 border-l border-[color:var(--ds-border)] pl-4">
+            <a href="#overview" class="hover:text-[color:var(--ds-text)]">Overview</a>
+            <a href="#tokens" class="hover:text-[color:var(--ds-text)]">Tokens</a>
+            <a href="#components" class="hover:text-[color:var(--ds-text)]">Components</a>
+            <a href="#guidelines" class="hover:text-[color:var(--ds-text)]">Guidelines</a>
+            <a href="#roadmap" class="hover:text-[color:var(--ds-text)]">Roadmap</a>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="space-y-16">
+        <section id="overview" class="scroll-mt-24 space-y-6 border-t border-[color:var(--ds-border)] pt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-[color:var(--ds-text)]">Overview</h2>
+            <span class="text-xs uppercase tracking-[0.3em] text-[color:var(--ds-muted-2)]">Principles</span>
+          </div>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <p class="text-xs uppercase tracking-[0.28em] text-[color:var(--ds-muted-2)]">01</p>
+              <h3 class="mt-3 text-sm font-semibold text-[color:var(--ds-text)]">Minimal color</h3>
+              <p class="mt-2 text-sm text-[color:var(--ds-muted)]">Neutral surfaces first. Emerald is reserved for primary actions and success.</p>
+            </div>
+            <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <p class="text-xs uppercase tracking-[0.28em] text-[color:var(--ds-muted-2)]">02</p>
+              <h3 class="mt-3 text-sm font-semibold text-[color:var(--ds-text)]">Generous whitespace</h3>
+              <p class="mt-2 text-sm text-[color:var(--ds-muted)]">Interfaces should breathe. Density is an intentional, context-specific choice.</p>
+            </div>
+            <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <p class="text-xs uppercase tracking-[0.28em] text-[color:var(--ds-muted-2)]">03</p>
+              <h3 class="mt-3 text-sm font-semibold text-[color:var(--ds-text)]">Subtle interactions</h3>
+              <p class="mt-2 text-sm text-[color:var(--ds-muted)]">Motion is quiet and purposeful. Focus on feedback, not spectacle.</p>
+            </div>
+            <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <p class="text-xs uppercase tracking-[0.28em] text-[color:var(--ds-muted-2)]">04</p>
+              <h3 class="mt-3 text-sm font-semibold text-[color:var(--ds-text)]">Clear hierarchy</h3>
+              <p class="mt-2 text-sm text-[color:var(--ds-muted)]">Type and spacing do the heavy lifting. Color is supporting cast.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="tokens" class="scroll-mt-24 space-y-6 border-t border-[color:var(--ds-border)] pt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-[color:var(--ds-text)]">Tokens</h2>
+            <span class="text-xs uppercase tracking-[0.3em] text-[color:var(--ds-muted-2)]">Color / Type / Space</span>
+          </div>
+          <div class="grid gap-8 lg:grid-cols-2">
+            <div class="overflow-hidden rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)]">
+              <div class="flex items-center justify-between border-b border-[color:var(--ds-border)] px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--ds-text)]">Color</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-[color:var(--ds-muted-2)]">Palette</span>
+              </div>
+              <div class="grid gap-4 p-6 sm:grid-cols-2">
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-xl border border-[color:var(--ds-border)] bg-[color:var(--ds-bg)]"></div>
+                  <div>
+                    <p class="text-sm text-[color:var(--ds-text)]">Base</p>
+                    <p class="text-xs text-[color:var(--ds-muted-2)]">#0b0f12</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)]"></div>
+                  <div>
+                    <p class="text-sm text-[color:var(--ds-text)]">Surface</p>
+                    <p class="text-xs text-[color:var(--ds-muted-2)]">#12171c</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-xl border border-[color:var(--ds-border-soft)] bg-[color:var(--ds-border)]"></div>
+                  <div>
+                    <p class="text-sm text-[color:var(--ds-text)]">Border</p>
+                    <p class="text-xs text-[color:var(--ds-muted-2)]">#262d36</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-xl bg-[color:var(--ds-accent-strong)]"></div>
+                  <div>
+                    <p class="text-sm text-[color:var(--ds-text)]">Accent</p>
+                    <p class="text-xs text-[color:var(--ds-muted-2)]">#5c9f97</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)]">
+              <div class="flex items-center justify-between border-b border-[color:var(--ds-border)] px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--ds-text)]">Typography</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-[color:var(--ds-muted-2)]">Scale</span>
+              </div>
+              <div class="space-y-3 p-6">
+                <p class="text-3xl font-semibold text-[color:var(--ds-text)]">Heading XL</p>
+                <p class="text-xl font-medium text-[color:var(--ds-text)]">Heading L</p>
+                <p class="text-base text-[color:var(--ds-text)]">Body text for reading and metadata.</p>
+                <p class="text-sm text-[color:var(--ds-muted)]">Secondary text for hints and labels.</p>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)]">
+              <div class="flex items-center justify-between border-b border-[color:var(--ds-border)] px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--ds-text)]">Spacing</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-[color:var(--ds-muted-2)]">Scale</span>
+              </div>
+              <div class="space-y-4 p-6">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="h-2 flex-1 rounded-full bg-[color:var(--ds-border)]"></div>
+                  <p class="text-sm text-[color:var(--ds-muted)]">2 / 4 / 6</p>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                  <div class="h-2 flex-1 rounded-full bg-[color:var(--ds-border)]"></div>
+                  <p class="text-sm text-[color:var(--ds-muted)]">8 / 10 / 12</p>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                  <div class="h-2 flex-1 rounded-full bg-[color:var(--ds-border)]"></div>
+                  <p class="text-sm text-[color:var(--ds-muted)]">16 / 20 / 24</p>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)]">
+              <div class="flex items-center justify-between border-b border-[color:var(--ds-border)] px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--ds-text)]">Radius</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-[color:var(--ds-muted-2)]">Shapes</span>
+              </div>
+              <div class="flex items-center gap-4 p-6">
+                <div class="h-10 w-10 rounded-md border border-[color:var(--ds-border-soft)]"></div>
+                <div class="h-10 w-10 rounded-xl border border-[color:var(--ds-border-soft)]"></div>
+                <div class="h-10 w-10 rounded-2xl border border-[color:var(--ds-border-soft)]"></div>
+                <div class="h-10 w-10 rounded-full border border-[color:var(--ds-border-soft)]"></div>
+              </div>
+              <p class="px-6 pb-6 pt-1 text-xs text-[color:var(--ds-muted)]">Use rounded-2xl for cards, rounded-md for inputs, rounded-full for pills.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="components" class="scroll-mt-24 space-y-6 border-t border-zinc-800/70 pt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-zinc-100">Components</h2>
+            <span class="text-xs uppercase tracking-[0.3em] text-zinc-500">Preview</span>
+          </div>
+          <div class="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p class="text-xs uppercase tracking-[0.28em] text-zinc-500">Buttons</p>
+                  <h3 class="mt-2 text-sm font-semibold text-zinc-100">Action hierarchy</h3>
+                  <p class="mt-2 text-sm text-zinc-400">Primary, secondary, ghost, and danger variants for clear intent.</p>
+                </div>
+                <span class="rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-400">UI::Button</span>
+              </div>
+              <div class="mt-5 flex flex-wrap items-center gap-3">
+                <button class="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-emerald-400">Primary</button>
+                <button class="rounded-md bg-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-700">Secondary</button>
+                <button class="rounded-md border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-zinc-800/60">Ghost</button>
+                <button class="rounded-md bg-rose-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-rose-400">Danger</button>
+              </div>
+              <pre class="mt-5 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-400"><code>&lt;button class="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold"&gt;Primary&lt;/button&gt;</code></pre>
+            </div>
+            <div class="space-y-6">
+              <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-zinc-100">Badges</h3>
+                  <span class="text-xs text-zinc-500">UI::Badge</span>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <span class="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-200">Default</span>
+                  <span class="rounded-full bg-emerald-500/15 px-3 py-1 text-xs text-emerald-300">Success</span>
+                  <span class="rounded-full bg-amber-500/15 px-3 py-1 text-xs text-amber-300">Warning</span>
+                  <span class="rounded-full bg-rose-500/15 px-3 py-1 text-xs text-rose-300">Danger</span>
+                </div>
+              </div>
+              <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-zinc-100">Inputs</h3>
+                  <span class="text-xs text-zinc-500">UI::Input</span>
+                </div>
+                <div class="mt-3 space-y-3">
+                  <input type="text" placeholder="Search series" class="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none" />
+                  <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-2 text-sm text-zinc-300">
+                      <input type="checkbox" class="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500" />
+                      Auto-download
+                    </label>
+                    <span class="text-xs text-zinc-500">Auto-applies</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="guidelines" class="scroll-mt-24 space-y-6 border-t border-zinc-800/70 pt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-zinc-100">Guidelines</h2>
+            <span class="text-xs uppercase tracking-[0.3em] text-zinc-500">Usage</span>
+          </div>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <h3 class="text-sm font-semibold text-zinc-100">Do</h3>
+              <ul class="mt-3 space-y-2 text-sm text-zinc-400">
+                <li>Use emerald for the single primary action.</li>
+                <li>Prefer concise labels with direct verbs.</li>
+                <li>Keep secondary actions visually quiet.</li>
+                <li>Use whitespace to separate content clusters.</li>
+              </ul>
+            </div>
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <h3 class="text-sm font-semibold text-zinc-100">Don't</h3>
+              <ul class="mt-3 space-y-2 text-sm text-zinc-400">
+                <li>Stack multiple bright buttons in one row.</li>
+                <li>Use borders where spacing solves the layout.</li>
+                <li>Introduce motion without meaning.</li>
+                <li>Over-label; let hierarchy do the work.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+            <h3 class="text-sm font-semibold text-zinc-100">Accessibility</h3>
+            <p class="mt-2 text-sm text-zinc-400">
+              Maintain 4.5:1 contrast for body text, preserve focus rings, and ensure hover states never carry meaning alone.
+            </p>
+          </div>
+        </section>
+
+        <section id="roadmap" class="scroll-mt-24 space-y-6 border-t border-zinc-800/70 pt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-zinc-100">Roadmap</h2>
+            <span class="text-xs uppercase tracking-[0.3em] text-zinc-500">Phases</span>
+          </div>
+          <div class="space-y-4">
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm text-zinc-100">Phase 0 - Foundation setup + design system page</p>
+                  <p class="mt-2 text-xs text-zinc-500">Base layout, public docs, and early component scaffolding.</p>
+                </div>
+                <span class="rounded-full bg-emerald-500/15 px-3 py-1 text-xs text-emerald-300">In progress</span>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm text-zinc-100">Phase 1 - Icon + tokens + base component</p>
+                  <p class="mt-2 text-xs text-zinc-500">Build the primitives that everything composes from.</p>
+                </div>
+                <span class="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">Queued</span>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm text-zinc-100">Phase 2 - Buttons, badge, spinner, toggle</p>
+                  <p class="mt-2 text-xs text-zinc-500">Action surfaces and quick status markers.</p>
+                </div>
+                <span class="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">Queued</span>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-sm text-zinc-100">Phase 3-6 - Forms, feedback, layout, series refactor</p>
+                  <p class="mt-2 text-xs text-zinc-500">Full coverage across inputs, feedback, and product surfaces.</p>
+                </div>
+                <span class="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">Queued</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
