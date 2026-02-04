@@ -161,7 +161,7 @@ module WeebCentral
 
     def collect_chapter_rows(doc)
       # Chapter rows are parent containers that include both link and time element
-      doc.css("#chapter-list > div").select { |div| div.at_css(CHAPTER_LINK_SELECTOR) }
+      doc.css(CHAPTER_LINK_SELECTOR).map { |link| link.ancestors("div").first }.compact.uniq
     end
 
     def collect_chapter_nodes(doc)
@@ -344,6 +344,8 @@ module WeebCentral
         "hiatus"
       when /cancel/, /dropped/
         "cancelled"
+      else
+        "ongoing"
       end
     end
 

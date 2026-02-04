@@ -100,7 +100,7 @@ module AsuraScans
         full_url = href.start_with?("http") ? href : "#{BASE_URL}#{href}"
 
         # Extract chapter number from URL (format: .../chapter/123)
-        chapter_num = href[/\/chapter\/(\d+)/, 1] || extract_chapter_number(link.text)
+        chapter_num = href[/\/chapter\/(\d+(?:\.\d+)?)/, 1] || extract_chapter_number(link.text)
         full_text = link.text.strip
 
         # Extract title (before the date) and published_at (the date part)
