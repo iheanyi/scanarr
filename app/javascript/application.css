@@ -104,6 +104,13 @@
   --spacing-24: 96px;
 
   /* ═══════════════════════════════════════════════════════════════════════════
+   * FORM SPACING - Consistent gaps for form elements
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --spacing-form-label: 12px;    /* Gap between label and input */
+  --spacing-form-hint: 6px;      /* Gap between input and hint/error */
+  --spacing-form-group: 24px;    /* Gap between form groups */
+
+  /* ═══════════════════════════════════════════════════════════════════════════
    * RADIUS - Border radius scale
    *
    * radius-sm  → Subtle rounding (badges, small elements)
@@ -189,5 +196,25 @@
     background-image: linear-gradient(to right, var(--ds-grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--ds-grid) 1px, transparent 1px);
     background-size: 80px 80px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * FORM BASE STYLES - Consistent spacing for all form elements
+ * ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  /* Labels above inputs */
+  label {
+    display: block;
+    margin-bottom: var(--spacing-form-label);
+  }
+
+  /* Inline labels (checkboxes, radios) don't need bottom margin */
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
   }
 }
