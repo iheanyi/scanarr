@@ -3,11 +3,13 @@
 one:
   key: weeb_central
   name: Weeb Central
+  slug: weeb-central
   base_url: https://weebcentral.com
   enabled: true
 
 two:
   key: example_source
   name: Example Source
+  slug: example-source
   base_url: https://example.com
   enabled: false

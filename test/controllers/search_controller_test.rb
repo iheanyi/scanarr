@@ -20,6 +20,14 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Search"
   end
 
+  def test_index_renders_sidebar_navigation
+    get search_path
+    assert_response :success
+    assert_includes @response.body, 'data-sidebar-nav="true"'
+    assert_includes @response.body, 'data-controller="drawer"'
+    assert_includes @response.body, "<dialog"
+  end
+
   def test_index_without_query_shows_no_results
     get search_path
     assert_response :success

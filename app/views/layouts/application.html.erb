@@ -9,90 +9,64 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
   <body class="min-h-dvh bg-background text-foreground text-pretty">
-    <div class="min-h-dvh">
-      <header class="border-b border-border">
-        <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-          <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
-          <nav class="flex items-center gap-4 text-sm text-muted">
-            <%= link_to "Library", library_path, class: "hover:text-foreground" %>
-            <%= link_to "Calendar", calendar_path, class: "hover:text-foreground" %>
-            <%= link_to "Sources", root_path, class: "hover:text-foreground" %>
-            <%= link_to "Search", search_path, class: "hover:text-foreground" %>
-            <%= link_to "Downloads", admin_downloads_path, class: "hover:text-foreground" %>
-            <%= link_to "Jobs", "/admin/jobs", class: "hover:text-foreground" %>
-            <%= link_to "Admin", admin_scrapers_path, class: "hover:text-foreground" %>
-            <%= link_to "Design System", design_system_path, class: "hover:text-foreground" %>
-            <% if user_signed_in? %>
-              <div class="relative" data-controller="dropdown">
-                <button type="button" data-action="click->dropdown#toggle" class="relative flex items-center gap-1 hover:text-foreground">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <% if unread_notification_count > 0 %>
-                    <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white"><%= unread_notification_count > 9 ? "9+" : unread_notification_count %></span>
-                  <% end %>
-                </button>
-                <div data-dropdown-target="menu" class="hidden absolute right-0 top-full mt-2 w-80 rounded-lg border border-border bg-surface shadow-xl z-50">
-                  <div class="flex items-center justify-between border-b border-border px-4 py-2">
-                    <span class="text-sm font-semibold text-foreground">Notifications</span>
-                    <% if unread_notification_count > 0 %>
-                      <%= button_to mark_all_read_notifications_path, method: :post, class: "text-xs text-success hover:text-success" do %>
-                        Mark all read
-                      <% end %>
-                    <% end %>
-                  </div>
-                  <div class="max-h-80 overflow-y-auto">
-                    <% if current_notifications.any? %>
-                      <% current_notifications.each do |notification| %>
-                        <div class="flex items-start gap-3 border-b border-border/50 px-4 py-3 hover:bg-surface-2/60">
-                          <div class="flex-1 min-w-0">
-                            <p class="text-sm text-foreground truncate"><%= notification.chapter.series.canonical_title %></p>
-                            <p class="text-xs text-muted">Chapter <%= notification.chapter.chapter_number %></p>
-                          </div>
-                          <%= button_to mark_read_notification_path(notification), method: :post, class: "shrink-0 text-muted hover:text-foreground" do %>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                          <% end %>
-                        </div>
-                      <% end %>
-                    <% else %>
-                      <div class="px-4 py-6 text-center text-sm text-muted">
-                        No new notifications
-                      </div>
-                    <% end %>
-                  </div>
-                  <div class="border-t border-border px-4 py-2">
-                    <%= link_to "View all", notifications_path, class: "text-xs text-muted hover:text-foreground" %>
-                  </div>
-                </div>
-              </div>
-              <%= button_to logout_path, method: :delete, class: "hover:text-foreground", title: "Logout" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              <% end %>
-            <% end %>
-          </nav>
-        </div>
+    <div data-controller="drawer" class="min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+      <header class="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-foreground hover:bg-surface-2/80"
+                data-action="click->drawer#open"
+                aria-label="Open navigation">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
       </header>
-      <% if flash[:notice].present? || flash[:alert].present? %>
-        <div class="mx-auto w-full max-w-6xl px-4 pt-4">
-          <% if flash[:notice].present? %>
-            <div class="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-              <%= flash[:notice] %>
-            </div>
-          <% end %>
-          <% if flash[:alert].present? %>
-            <div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-              <%= flash[:alert] %>
-            </div>
-          <% end %>
+
+      <aside class="hidden border-r border-border bg-surface px-4 py-6 lg:flex lg:min-h-dvh lg:flex-col">
+        <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance text-foreground" %>
+        <div class="mt-6 flex-1">
+          <%= render "shared/sidebar_nav" %>
         </div>
-      <% end %>
-      <main class="mx-auto w-full max-w-6xl px-4 py-8">
-      <%= yield %>
-      </main>
+      </aside>
+
+      <div class="min-h-dvh">
+        <% if flash[:notice].present? || flash[:alert].present? %>
+          <div class="mx-auto w-full max-w-6xl px-4 pt-4">
+            <% if flash[:notice].present? %>
+              <div class="rounded-lg border border-success-soft bg-success-soft px-4 py-3 text-sm text-success">
+                <%= flash[:notice] %>
+              </div>
+            <% end %>
+            <% if flash[:alert].present? %>
+              <div class="rounded-lg border border-danger-soft bg-danger-soft px-4 py-3 text-sm text-danger">
+                <%= flash[:alert] %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <main class="mx-auto w-full max-w-6xl px-4 py-8">
+          <%= yield %>
+        </main>
+      </div>
+
+      <dialog data-drawer-target="dialog"
+              data-action="click->drawer#closeOnBackdrop"
+              class="m-0 h-dvh w-80 max-w-full border-r border-border bg-surface p-4 text-foreground backdrop:bg-background/80">
+        <div class="flex items-center justify-between">
+          <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
+          <button type="button"
+                  class="inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-foreground hover:bg-surface-2/80"
+                  data-action="drawer#close"
+                  aria-label="Close navigation">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="mt-6 h-full pb-6">
+          <%= render "shared/sidebar_nav" %>
+        </div>
+      </dialog>
     </div>
   </body>
 </html>

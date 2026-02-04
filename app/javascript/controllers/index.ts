@@ -24,3 +24,6 @@ application.register("auto-submit", AutoSubmitController)
 
 import MultiSelectController from "./multi_select_controller"
 application.register("multi-select", MultiSelectController)
+
+import DrawerController from "./drawer_controller"
+application.register("drawer", DrawerController)
