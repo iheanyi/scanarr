@@ -50,9 +50,9 @@ class UserSeriesFollowTest < ActiveSupport::TestCase
     follow = UserSeriesFollow.create!(
       user: @user,
       library_series: @library_series,
-      source_priority: ["mangadex", "comick", "mangasee"]
+      source_priority: %w[mangadex comick mangasee]
     )
 
-    assert_equal ["mangadex", "comick", "mangasee"], follow.source_priority
+    assert_equal %w[mangadex comick mangasee], follow.source_priority
   end
 end

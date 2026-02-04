@@ -16,8 +16,8 @@ class UI::SelectComponentTest < ComponentTestCase
         form: form,
         method: :reading_style,
         options: [
-          ["Left to Right", "left_to_right"],
-          ["Right to Left", "right_to_left"]
+          [ "Left to Right", "left_to_right" ],
+          [ "Right to Left", "right_to_left" ]
         ],
         selected: series.reading_style,
         label: "Reading style"

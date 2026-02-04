@@ -67,5 +67,4 @@ Rails.application.routes.draw do
 
   # Mission Control for SolidQueue job monitoring
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"
-
 end

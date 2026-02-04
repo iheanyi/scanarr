@@ -7,10 +7,10 @@ class UI::MultiSelectComponentTest < ComponentTestCase
         name: "sources",
         label: "Sources",
         options: [
-          ["MangaDex", "1"],
-          ["WeebCentral", "2"]
+          [ "MangaDex", "1" ],
+          [ "WeebCentral", "2" ]
         ],
-        selected: ["1"]
+        selected: [ "1" ]
       )
     )
 
