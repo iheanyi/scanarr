@@ -344,6 +344,8 @@ module WeebCentral
         "hiatus"
       when /cancel/, /dropped/
         "cancelled"
+      else
+        "ongoing"
       end
     end
 
