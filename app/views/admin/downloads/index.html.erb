@@ -2,35 +2,35 @@
   <%= turbo_stream_from "admin_downloads" %>
 
   <header class="space-y-2">
-    <p class="text-sm text-zinc-400">Admin</p>
+    <p class="text-sm text-muted">Admin</p>
     <h1 class="text-3xl font-semibold text-balance">Download Queue</h1>
-    <p class="text-zinc-400 text-pretty">Monitor download progress and view recent downloads.</p>
+    <p class="text-muted text-pretty">Monitor download progress and view recent downloads.</p>
   </header>
 
   <section id="download_stats" class="grid gap-4 md:grid-cols-4">
-    <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
-      <p class="text-xs uppercase text-zinc-500">Queued</p>
-      <p class="text-2xl font-semibold text-amber-400"><%= @stats["queued"] || 0 %></p>
+    <div class="rounded-lg border border-border bg-surface p-4">
+      <p class="text-xs uppercase text-muted-2">Queued</p>
+      <p class="text-2xl font-semibold text-warning"><%= @stats["queued"] || 0 %></p>
     </div>
-    <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
-      <p class="text-xs uppercase text-zinc-500">Downloading</p>
-      <p class="text-2xl font-semibold text-blue-400"><%= @stats["downloading"] || 0 %></p>
+    <div class="rounded-lg border border-border bg-surface p-4">
+      <p class="text-xs uppercase text-muted-2">Downloading</p>
+      <p class="text-2xl font-semibold text-info"><%= @stats["downloading"] || 0 %></p>
     </div>
-    <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
-      <p class="text-xs uppercase text-zinc-500">Complete</p>
-      <p class="text-2xl font-semibold text-emerald-400"><%= @stats["complete"] || 0 %></p>
+    <div class="rounded-lg border border-border bg-surface p-4">
+      <p class="text-xs uppercase text-muted-2">Complete</p>
+      <p class="text-2xl font-semibold text-accent"><%= @stats["complete"] || 0 %></p>
     </div>
-    <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
-      <p class="text-xs uppercase text-zinc-500">Failed</p>
-      <p class="text-2xl font-semibold text-red-400"><%= @stats["failed"] || 0 %></p>
+    <div class="rounded-lg border border-border bg-surface p-4">
+      <p class="text-xs uppercase text-muted-2">Failed</p>
+      <p class="text-2xl font-semibold text-danger"><%= @stats["failed"] || 0 %></p>
     </div>
   </section>
 
-  <section class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+  <section class="rounded-lg border border-border bg-surface p-4">
     <div class="flex items-center justify-between">
       <div>
         <h3 class="text-sm font-semibold">Cover Images</h3>
-        <p class="text-xs text-zinc-500 mt-1">
+        <p class="text-xs text-muted-2 mt-1">
           <%= @covers_attached %>/<%= @series_count %> stored locally
           <% if @covers_missing > 0 %>
             · <%= @covers_missing %> missing
@@ -40,7 +40,7 @@
       <% if @series_count > 0 %>
         <%= button_to admin_refresh_all_covers_path,
                       method: :post,
-                      class: "inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/10",
+                      class: "inline-flex items-center gap-1.5 rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
                       data: { turbo_confirm: "Refresh all #{@series_count} covers from source? This fetches fresh cover URLs and downloads them." } do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -53,47 +53,48 @@
 
   <section class="space-y-4">
     <h2 class="text-xl font-semibold text-balance">Downloads</h2>
-    <div class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+    <div class="rounded-lg border border-border bg-surface p-4">
       <%= form_with url: admin_downloads_path, method: :get, local: true do |form| %>
         <div class="flex flex-wrap items-end gap-3">
-          <div class="space-y-1">
-            <%= form.label :status, "Status", class: "text-xs uppercase text-zinc-500" %>
-            <%= form.select :status,
-                            options_for_select(@statuses + ["cancelled"], params[:status]),
-                            { include_blank: "Any status" },
-                            class: "w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100" %>
-          </div>
+          <%= render UI::SelectComponent.new(
+            form: form,
+            method: :status,
+            options: @statuses + ["cancelled"],
+            selected: params[:status],
+            include_blank: "Any status",
+            label: "Status"
+          ) %>
           <div>
             <%= form.submit "Filter",
-                            class: "inline-flex items-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
+                            class: "inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
           </div>
           <% if params[:status].present? %>
-            <%= link_to "Clear filter", admin_downloads_path, class: "text-sm text-zinc-400 hover:text-zinc-200" %>
+            <%= link_to "Clear filter", admin_downloads_path, class: "text-sm text-muted hover:text-foreground" %>
           <% end %>
         </div>
       <% end %>
       <% if @cancelled_count > 0 && params[:status] != "cancelled" %>
-        <p class="mt-3 text-xs text-zinc-500">
+        <p class="mt-3 text-xs text-muted-2">
           <%= @cancelled_count %> cancelled download<%= @cancelled_count == 1 ? '' : 's' %> hidden.
-          <%= link_to "View cancelled", admin_downloads_path(status: "cancelled"), class: "text-zinc-400 hover:text-zinc-200 underline" %>
+          <%= link_to "View cancelled", admin_downloads_path(status: "cancelled"), class: "text-muted hover:text-foreground underline" %>
         </p>
       <% end %>
     </div>
 
     <% if @downloads.empty? || @downloads.total_count == 0 %>
-      <div class="rounded-lg border border-dashed border-zinc-800/80 bg-zinc-900/40 p-6 text-center">
-        <p class="text-zinc-400">No downloads yet.</p>
+      <div class="rounded-lg border border-dashed border-border bg-surface p-6 text-center">
+        <p class="text-muted">No downloads yet.</p>
       </div>
     <% else %>
       <div class="flex items-center justify-between mb-3">
-        <p class="text-sm text-zinc-400">
+        <p class="text-sm text-muted">
           Showing <%= @downloads.offset_value + 1 %>-<%= [@downloads.offset_value + @downloads.length, @downloads.total_count].min %> of <%= @downloads.total_count %> downloads
         </p>
         <div class="flex items-center gap-2">
           <% if @stuck_count > 0 %>
             <%= button_to admin_restart_all_stuck_downloads_path,
                           method: :post,
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-blue-500/40 px-3 py-1.5 text-sm font-medium text-blue-300 hover:bg-blue-500/10",
+                          class: "inline-flex items-center gap-1.5 rounded-md border border-info/40 px-3 py-1.5 text-sm font-medium text-info hover:bg-info-soft",
                           data: { turbo_confirm: "Restart all #{@stuck_count} stuck downloads?" } do %>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -104,7 +105,7 @@
           <% if (@stats["failed"] || 0) > 0 %>
             <%= button_to admin_restart_all_failed_downloads_path,
                           method: :post,
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-red-500/40 px-3 py-1.5 text-sm font-medium text-red-300 hover:bg-red-500/10",
+                          class: "inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger-soft",
                           data: { turbo_confirm: "Restart all #{@stats['failed']} failed downloads?" } do %>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -114,9 +115,9 @@
           <% end %>
         </div>
       </div>
-      <div class="overflow-hidden rounded-lg border border-zinc-800/80 bg-zinc-900/40">
+      <div class="overflow-hidden rounded-lg border border-border bg-surface">
         <table class="w-full text-sm">
-          <thead class="bg-zinc-900/60 text-left text-zinc-400">
+          <thead class="bg-surface-2 text-left text-muted">
             <tr>
               <th class="px-4 py-3">Series / Chapter</th>
               <th class="px-4 py-3">Status</th>
@@ -126,7 +127,7 @@
               <th class="px-4 py-3 w-24">Actions</th>
             </tr>
           </thead>
-          <tbody id="downloads_list" class="divide-y divide-zinc-800/80 text-zinc-200">
+          <tbody id="downloads_list" class="divide-y divide-border text-foreground">
             <% @downloads.each do |download| %>
               <%= render "admin/downloads/download_row", download: download %>
             <% end %>
@@ -137,9 +138,9 @@
       <% if @downloads.total_pages > 1 %>
         <nav class="mt-4 flex items-center justify-center gap-1">
           <% if @downloads.first_page? %>
-            <span class="px-3 py-2 text-sm text-zinc-600 cursor-not-allowed">Previous</span>
+            <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
           <% else %>
-            <%= link_to "Previous", url_for(page: @downloads.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-300 hover:text-white rounded-md hover:bg-zinc-800" %>
+            <%= link_to "Previous", url_for(page: @downloads.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
           <% end %>
 
           <%# Show up to 7 page numbers centered around current page %>
@@ -148,16 +149,16 @@
           <% end_page = [@downloads.current_page + window, @downloads.total_pages].min %>
           <% (start_page..end_page).each do |page_num| %>
             <% if page_num == @downloads.current_page %>
-              <span class="px-3 py-2 text-sm font-semibold text-emerald-400 bg-emerald-500/10 rounded-md"><%= page_num %></span>
+              <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
             <% else %>
-              <%= link_to page_num, url_for(page: page_num, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800" %>
+              <%= link_to page_num, url_for(page: page_num, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
             <% end %>
           <% end %>
 
           <% if @downloads.last_page? %>
-            <span class="px-3 py-2 text-sm text-zinc-600 cursor-not-allowed">Next</span>
+            <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
           <% else %>
-            <%= link_to "Next", url_for(page: @downloads.next_page, status: params[:status]), class: "px-3 py-2 text-sm text-zinc-300 hover:text-white rounded-md hover:bg-zinc-800" %>
+            <%= link_to "Next", url_for(page: @downloads.next_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
           <% end %>
         </nav>
       <% end %>

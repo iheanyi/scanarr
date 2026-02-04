@@ -6,18 +6,62 @@
 @source "./**/*.{js,ts,tsx}";
 
 @theme {
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * TYPOGRAPHY - Font stacks
+   *
+   * Geist Sans: Modern typeface designed for dark interfaces
+   * Falls back to Inter, then system fonts for performance
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * SURFACES - Background layers
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-background: var(--ds-bg);
   --color-surface: var(--ds-surface);
   --color-surface-2: var(--ds-surface-2);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * BORDERS - Dividers and outlines
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-border: var(--ds-border);
   --color-border-soft: var(--ds-border-soft);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * TEXT HIERARCHY - Use these for content text
+   *
+   * text-primary   → Headings, titles, important body text
+   * text-secondary → Labels, descriptions, supporting content
+   * text-tertiary  → Hints, timestamps, metadata, placeholders
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --color-primary: var(--ds-text);
+  --color-secondary: var(--ds-muted);
+  --color-tertiary: var(--ds-muted-2);
+
+  /* Legacy aliases (prefer text-primary/secondary/tertiary for new code) */
   --color-foreground: var(--ds-text);
   --color-muted: var(--ds-muted);
   --color-muted-2: var(--ds-muted-2);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * ACCENT - Primary actions, links, success states
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-accent: var(--ds-accent);
+  --color-accent-foreground: var(--ds-accent-foreground);
   --color-accent-strong: var(--ds-accent-strong);
   --color-accent-soft: var(--ds-accent-soft);
   --color-accent-ghost: var(--ds-accent-ghost);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * INTERACTIVE STATES - Focus rings and hover feedback
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --color-focus: var(--ds-focus);
+  --color-ring: var(--ds-ring);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * SEMANTIC - Status colors
+   * ═══════════════════════════════════════════════════════════════════════════ */
   --color-warm: var(--ds-warm);
   --color-warm-soft: var(--ds-warm-soft);
   --color-danger: var(--ds-danger);
@@ -30,22 +74,98 @@
   --color-error-soft: var(--ds-error-soft);
   --color-info: var(--ds-info);
   --color-info-soft: var(--ds-info-soft);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * ELEVATION - Shadows for depth and hierarchy
+   *
+   * shadow-sm  → Subtle lift (buttons, inputs)
+   * shadow-md  → Cards, dropdowns
+   * shadow-lg  → Modals, dialogs, popovers
+   * shadow-xl  → High-emphasis overlays
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --shadow-sm: var(--ds-shadow-sm);
+  --shadow-md: var(--ds-shadow-md);
+  --shadow-lg: var(--ds-shadow-lg);
+  --shadow-xl: var(--ds-shadow-xl);
+  --shadow-glow: var(--ds-shadow-glow);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * SPACING - 4px base unit scale
+   *
+   * Use multiples of 4 for consistency: 4, 8, 12, 16, 20, 24, 32, 40, 48...
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --spacing-px: 1px;
+  --spacing-0: 0px;
+  --spacing-0_5: 2px;
+  --spacing-1: 4px;
+  --spacing-1_5: 6px;
+  --spacing-2: 8px;
+  --spacing-2_5: 10px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * FORM SPACING - Consistent gaps for form elements
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --spacing-form-label: 12px;    /* Gap between label and input */
+  --spacing-form-hint: 6px;      /* Gap between input and hint/error */
+  --spacing-form-group: 24px;    /* Gap between form groups */
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * RADIUS - Border radius scale
+   *
+   * radius-sm  → Subtle rounding (badges, small elements)
+   * radius-md  → Inputs, buttons
+   * radius-lg  → Cards
+   * radius-xl  → Large cards, modals
+   * radius-full → Pills, avatars
+   * ═══════════════════════════════════════════════════════════════════════════ */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
 }
 
 :root {
   color-scheme: dark;
+
+  /* Surfaces */
   --ds-bg: #0b0f14;
   --ds-surface: #131a24;
   --ds-surface-2: #1a2331;
+
+  /* Borders */
   --ds-border: #2c3849;
   --ds-border-soft: #364458;
+
+  /* Text */
   --ds-text: #e6edf7;
   --ds-muted: #9aa6b8;
   --ds-muted-2: #7d899d;
+
+  /* Accent */
   --ds-accent: #5fd3b7;
+  --ds-accent-foreground: #0a1a15;
   --ds-accent-strong: #76e3c8;
   --ds-accent-soft: rgba(95, 211, 183, 0.24);
   --ds-accent-ghost: rgba(95, 211, 183, 0.12);
+
+  /* Interactive states */
+  --ds-focus: rgba(95, 211, 183, 0.5);
+  --ds-ring: rgba(95, 211, 183, 0.3);
+
+  /* Semantic colors */
   --ds-warm: #f2b067;
   --ds-warm-soft: rgba(242, 176, 103, 0.22);
   --ds-danger: #f07b86;
@@ -58,6 +178,15 @@
   --ds-error-soft: rgba(240, 100, 111, 0.22);
   --ds-info: #6fb6ff;
   --ds-info-soft: rgba(111, 182, 255, 0.22);
+
+  /* Elevation (shadows) - using dark mode appropriate values */
+  --ds-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --ds-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --ds-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --ds-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --ds-shadow-glow: 0 0 20px rgba(95, 211, 183, 0.2);
+
+  /* Decorative */
   --ds-glow-1: rgba(26, 44, 54, 0.65);
   --ds-glow-2: rgba(12, 18, 26, 0.6);
   --ds-grid: rgba(92, 104, 118, 0.18);
@@ -76,5 +205,25 @@
     background-image: linear-gradient(to right, var(--ds-grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--ds-grid) 1px, transparent 1px);
     background-size: 80px 80px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * FORM BASE STYLES - Consistent spacing for all form elements
+ * ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  /* Labels above inputs */
+  label {
+    display: block;
+    margin-bottom: var(--spacing-form-label);
+  }
+
+  /* Inline labels (checkboxes, radios) don't need bottom margin */
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
   }
 }

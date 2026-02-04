@@ -1,0 +1,19 @@
+<div class="<%= container_classes %>">
+  <% if icon? %>
+    <div class="<%= icon_wrapper_classes %>">
+      <%= icon %>
+    </div>
+  <% end %>
+
+  <h3 class="<%= title_classes %>"><%= title %></h3>
+
+  <% if description.present? %>
+    <p class="<%= description_classes %>"><%= description %></p>
+  <% end %>
+
+  <% if action? %>
+    <div class="<%= action_wrapper_classes %>">
+      <%= action %>
+    </div>
+  <% end %>
+</div>

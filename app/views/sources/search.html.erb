@@ -1,29 +1,29 @@
 <main class="space-y-6">
   <header class="space-y-2">
-    <p class="text-sm text-zinc-400"><%= @source.name || @source.key %></p>
+    <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
     <h1 class="text-3xl font-semibold text-balance">Search</h1>
-    <p class="text-zinc-400 text-pretty">Search the source and import a series into your library.</p>
+    <p class="text-muted text-pretty">Search the source and import a series into your library.</p>
   </header>
 
-  <section class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+  <section class="rounded-lg border border-border bg-surface p-4">
     <%= form_with url: source_search_path(source_slug: source_slug(@source)), method: :get, local: true do |form| %>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div class="flex-1 space-y-1">
-          <%= form.label :q, "Series title", class: "text-sm text-zinc-300" %>
+          <%= form.label :q, "Series title", class: "text-sm text-foreground" %>
           <%= form.text_field :q,
                               value: @query,
                               placeholder: "One Piece",
-                              class: "w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600" %>
+                              class: "w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-2" %>
         </div>
         <%= form.submit "Search",
-                        class: "inline-flex items-center justify-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
+                        class: "inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
       </div>
     <% end %>
   </section>
 
   <% if @query.present? %>
     <% if @error.present? %>
-      <div class="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+      <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
         <%= @error %>
       </div>
     <% end %>
@@ -33,20 +33,20 @@
       <% if @results.any? %>
         <ul class="space-y-3">
           <% @results.each do |result| %>
-            <li class="rounded-lg border border-zinc-800/80 bg-zinc-900/40 p-4">
+            <li class="rounded-lg border border-border bg-surface p-4">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-4">
-                  <div class="h-24 w-16 overflow-hidden rounded-md border border-zinc-800/80 bg-zinc-950">
+                  <div class="h-24 w-16 overflow-hidden rounded-md border border-border bg-background">
                     <% if result.cover_url.present? %>
                       <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover" %>
                     <% else %>
-                      <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-zinc-500">
+                      <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-muted-2">
                         No cover
                       </div>
                     <% end %>
                   </div>
                   <div class="space-y-1">
-                    <p class="text-sm text-zinc-400">Series</p>
+                    <p class="text-sm text-muted">Series</p>
                     <p class="text-lg font-semibold text-balance"><%= result.title %></p>
                   </div>
                 </div>
@@ -54,13 +54,13 @@
                               source_import_path(source_slug: source_slug(@source)),
                               method: :post,
                               params: { series_url: result.url },
-                              class: "inline-flex items-center rounded-md border border-emerald-500/40 px-4 py-2 text-sm font-semibold text-emerald-300" %>
+                              class: "inline-flex items-center rounded-md border border-accent/40 px-4 py-2 text-sm font-semibold text-accent" %>
               </div>
             </li>
           <% end %>
         </ul>
       <% else %>
-        <p class="text-sm text-zinc-400 text-pretty">No results.</p>
+        <p class="text-sm text-muted text-pretty">No results.</p>
       <% end %>
     </section>
   <% end %>

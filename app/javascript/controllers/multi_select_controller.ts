@@ -52,7 +52,8 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.handleKeydown)
   }
 
-  toggle() {
+  toggle(event: Event) {
+    event.stopPropagation()
     if (this.openValue) {
       this.close()
     } else {
@@ -143,15 +144,15 @@ export default class extends Controller {
     visible.forEach((checkbox) => {
       const label = checkbox.dataset.label || checkbox.value
       const chip = document.createElement("span")
-      chip.className = "inline-flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-300"
+      chip.className = "inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-2.5 py-1 text-xs font-medium text-foreground"
 
       const text = document.createElement("span")
       text.textContent = label
 
-      const remove = document.createElement("span")
-      remove.className = "inline-flex h-4 w-4 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-      remove.textContent = "x"
-      remove.setAttribute("role", "button")
+      const remove = document.createElement("button")
+      remove.type = "button"
+      remove.className = "inline-flex h-4 w-4 items-center justify-center rounded text-muted hover:bg-surface hover:text-foreground transition-colors"
+      remove.innerHTML = `<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`
       remove.setAttribute("aria-label", `Remove ${label}`)
       remove.setAttribute("data-action", "click->multi-select#remove")
       remove.dataset.value = checkbox.value
@@ -163,7 +164,7 @@ export default class extends Controller {
 
     if (overflow > 0) {
       const chip = document.createElement("span")
-      chip.className = "rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-500"
+      chip.className = "rounded-md border border-border bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted"
       chip.textContent = `+${overflow}`
       this.chipsTarget.appendChild(chip)
     }

@@ -438,7 +438,12 @@ export default class extends Controller {
     if (!this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
     
     this.clearNextChapterCountdown()
-    window.location.href = this.nextChapterUrlValue
+    
+    // Navigate to next chapter without any query parameters
+    // This ensures we start at page 1 of the new chapter
+    const url = new URL(this.nextChapterUrlValue, window.location.origin)
+    url.search = '' // Clear any query parameters (like page number)
+    window.location.href = url.toString()
   }
 
   // Action: cancel auto-navigation and stay on current chapter

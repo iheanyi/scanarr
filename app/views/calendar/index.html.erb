@@ -4,37 +4,29 @@
 
     <div class="flex gap-4">
       <!-- View Type Toggle -->
-      <div class="flex rounded-lg overflow-hidden border border-gray-700">
+      <div class="flex rounded-lg overflow-hidden border border-border">
         <% %w[week month recent].each do |view| %>
           <%= link_to view.titleize,
                 calendar_path(view: view, source: @source_filter),
-                class: "px-4 py-2 text-sm #{@view_type == view ? 'bg-blue-600 text-white' : 'bg-gray-800 hover:bg-gray-700'}" %>
+                class: "px-4 py-2 text-sm #{@view_type == view ? 'bg-accent text-accent-foreground' : 'bg-surface-2 hover:bg-surface'}" %>
         <% end %>
       </div>
 
       <!-- Source Filter -->
-      <select onchange="window.location.href = this.value"
-              class="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm">
-        <option value="<%= calendar_path(view: @view_type) %>"
-                <%= 'selected' if @source_filter.blank? %>>
-          All Sources
-        </option>
-        <% @sources.each do |source| %>
-          <option value="<%= calendar_path(view: @view_type, source: source.slug) %>"
-                  <%= 'selected' if @source_filter == source.slug %>>
-            <%= source.name %>
-          </option>
-        <% end %>
-      </select>
+      <%= render UI::RedirectSelectComponent.new(
+        options: [["All Sources", calendar_path(view: @view_type)]] +
+                 @sources.map { |s| [s.name, calendar_path(view: @view_type, source: s.slug)] },
+        selected: @source_filter.present? ? calendar_path(view: @view_type, source: @source_filter) : calendar_path(view: @view_type)
+      ) %>
     </div>
   </div>
 
   <% if @chapters_by_date.empty? %>
-    <div class="text-center py-12 text-gray-400">
+    <div class="text-center py-12 text-muted">
       <p class="text-lg mb-2">No new chapters in this period</p>
       <p class="text-sm">
         <% if current_user.user_series_follows.empty? %>
-          <%= link_to "Follow some series", library_path, class: "text-blue-400 hover:underline" %>
+          <%= link_to "Follow some series", library_path, class: "text-accent hover:underline" %>
           to see releases here.
         <% else %>
           Check back later for new releases from your followed series.
@@ -47,27 +39,27 @@
         <% chapters = @chapters_by_date[date] || [] %>
         <% next if chapters.empty? %>
 
-        <div class="bg-gray-800 rounded-lg overflow-hidden">
-          <div class="px-4 py-3 bg-gray-700 border-b border-gray-600">
+        <div class="bg-surface-2 rounded-lg overflow-hidden">
+          <div class="px-4 py-3 bg-surface border-b border-border">
             <h2 class="font-semibold">
               <%= date.strftime("%A, %B %d, %Y") %>
               <% if date == Date.current %>
-                <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded ml-2">Today</span>
+                <span class="text-xs bg-accent text-accent-foreground px-2 py-1 rounded ml-2">Today</span>
               <% end %>
             </h2>
           </div>
 
-          <div class="divide-y divide-gray-700">
+          <div class="divide-y divide-border">
             <% chapters.each do |chapter| %>
-              <div class="px-4 py-3 flex items-center justify-between hover:bg-gray-750">
+              <div class="px-4 py-3 flex items-center justify-between hover:bg-surface">
                 <div class="flex items-center gap-4">
                   <% if chapter.series.cover_url.present? %>
                     <img src="<%= chapter.series.cover_url %>"
                          alt="<%= chapter.series.canonical_title %>"
                          class="w-12 h-16 object-cover rounded">
                   <% else %>
-                    <div class="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
-                      <span class="text-gray-500 text-xs">No cover</span>
+                    <div class="w-12 h-16 bg-surface rounded flex items-center justify-center">
+                      <span class="text-muted-2 text-xs">No cover</span>
                     </div>
                   <% end %>
 
@@ -75,17 +67,17 @@
                     <h3 class="font-medium">
                       <%= link_to chapter.series.canonical_title,
                                   source_series_path(chapter.source.slug, chapter.series.to_param),
-                                  class: "hover:text-blue-400" %>
+                                  class: "hover:text-accent" %>
                     </h3>
-                    <p class="text-sm text-gray-400">
+                    <p class="text-sm text-muted">
                       <%= link_to "Chapter #{chapter.chapter_number}",
                                   source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number),
-                                  class: "hover:text-blue-400" %>
+                                  class: "hover:text-accent" %>
                       <% if chapter.title.present? && chapter.title != "Chapter #{chapter.chapter_number}" %>
                         - <%= chapter.title %>
                       <% end %>
                     </p>
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-muted-2">
                       <%= chapter.source.name %> &middot; <%= chapter.created_at.strftime("%l:%M %p") %>
                     </p>
                   </div>
@@ -94,7 +86,7 @@
                 <div class="flex gap-2">
                   <%= link_to "Read",
                               source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number),
-                              class: "px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm" %>
+                              class: "px-3 py-1 bg-accent hover:bg-accent/80 rounded text-sm text-accent-foreground" %>
                 </div>
               </div>
             <% end %>

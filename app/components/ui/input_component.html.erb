@@ -1,0 +1,24 @@
+<div>
+  <% if label.present? %>
+    <label class="text-sm font-medium text-primary">
+      <%= label %>
+      <% if required %>
+        <span class="text-error">*</span>
+      <% end %>
+    </label>
+  <% end %>
+
+  <% if use_form_helper? %>
+    <%= form.text_field(method, **input_attributes) %>
+  <% else %>
+    <input <%= tag.attributes(input_attributes) %>>
+  <% end %>
+
+  <% if hint.present? && error.blank? %>
+    <p class="mt-1.5 text-xs text-tertiary"><%= hint %></p>
+  <% end %>
+
+  <% if error.present? %>
+    <p class="mt-1.5 text-xs text-error"><%= error %></p>
+  <% end %>
+</div>

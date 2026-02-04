@@ -7,51 +7,51 @@
   <td class="px-4 py-3">
     <% if series && chapter %>
       <span class="font-semibold"><%= series.canonical_title %></span>
-      <span class="text-zinc-400">Ch. <%= chapter.chapter_number %></span>
+      <span class="text-muted">Ch. <%= chapter.chapter_number %></span>
     <% else %>
-      <span class="text-zinc-500">Unknown</span>
+      <span class="text-muted-2">Unknown</span>
     <% end %>
   </td>
   <td class="px-4 py-3">
     <% case download.download_status %>
     <% when "queued", "pending" %>
-      <span class="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">Queued</span>
+      <span class="inline-flex items-center rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">Queued</span>
     <% when "downloading" %>
-      <span class="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-300">
+      <span class="inline-flex items-center rounded-full bg-info-soft px-2 py-0.5 text-xs font-medium text-info">
         Downloading
         <% if is_stuck %>
-          <span class="ml-1 text-amber-400" title="No progress for 10+ minutes">⚠</span>
+          <span class="ml-1 text-warning" title="No progress for 10+ minutes">⚠</span>
         <% end %>
       </span>
     <% when "complete" %>
-      <span class="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">Complete</span>
+      <span class="inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">Complete</span>
     <% when "failed" %>
-      <span class="inline-flex items-center rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-300">Failed</span>
+      <span class="inline-flex items-center rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger">Failed</span>
     <% when "cancelled" %>
-      <span class="inline-flex items-center rounded-full bg-zinc-500/20 px-2 py-0.5 text-xs font-medium text-zinc-300">Cancelled</span>
+      <span class="inline-flex items-center rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted">Cancelled</span>
     <% end %>
   </td>
   <td class="px-4 py-3">
     <% if download.pages_expected.to_i > 0 %>
       <div class="flex items-center gap-2">
-        <div class="h-2 flex-1 rounded-full bg-zinc-800">
-          <div class="h-2 rounded-full <%= download.download_status == 'complete' ? 'bg-emerald-500' : 'bg-blue-500' %> transition-all" style="width: <%= progress_pct %>%"></div>
+        <div class="h-2 flex-1 rounded-full bg-surface-2">
+          <div class="h-2 rounded-full <%= download.download_status == 'complete' ? 'bg-accent' : 'bg-info' %> transition-all" style="width: <%= progress_pct %>%"></div>
         </div>
-        <span class="text-xs text-zinc-400 tabular-nums"><%= download.pages_downloaded %>/<%= download.pages_expected %></span>
+        <span class="text-xs text-muted tabular-nums"><%= download.pages_downloaded %>/<%= download.pages_expected %></span>
       </div>
     <% else %>
-      <span class="text-zinc-500">—</span>
+      <span class="text-muted-2">—</span>
     <% end %>
   </td>
-  <td class="px-4 py-3 text-zinc-400 tabular-nums"><%= download.updated_at.strftime("%Y-%m-%d %H:%M") %></td>
-  <td class="px-4 py-3 text-zinc-400 max-w-xs truncate" title="<%= download.download_error %>">
+  <td class="px-4 py-3 text-muted tabular-nums"><%= download.updated_at.strftime("%Y-%m-%d %H:%M") %></td>
+  <td class="px-4 py-3 text-muted max-w-xs truncate" title="<%= download.download_error %>">
     <%= download.download_error.present? ? truncate(download.download_error, length: 50) : "—" %>
   </td>
   <td class="px-4 py-3">
     <% if can_restart %>
       <%= button_to admin_download_restart_path(download, status: params[:status]),
                     method: :post,
-                    class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20",
+                    class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-warning hover:bg-warning-soft",
                     title: is_stuck ? "Restart stuck download" : "Restart download" do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -59,7 +59,7 @@
         Restart
       <% end %>
     <% else %>
-      <span class="text-zinc-600">—</span>
+      <span class="text-muted-2">—</span>
     <% end %>
   </td>
 </tr>

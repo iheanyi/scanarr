@@ -26,6 +26,9 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, 'data-sidebar-nav="true"'
     assert_includes @response.body, 'data-controller="drawer"'
     assert_includes @response.body, "<dialog"
+    assert_includes @response.body, 'aria-current="page"'
+    assert_includes @response.body, 'data-action="click-&gt;drawer#close"'
+    assert_includes @response.body, '>Browse<'
   end
 
   def test_index_without_query_shows_no_results

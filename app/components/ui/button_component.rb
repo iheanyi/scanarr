@@ -31,21 +31,21 @@ module UI
     private
 
     def base_classes
-      "inline-flex items-center justify-center rounded-md font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+      "inline-flex items-center justify-center rounded-md font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
     end
 
     def variant_classes
       case @variant.to_sym
       when :primary
-        "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+        "bg-accent text-accent-foreground hover:bg-accent-strong"
       when :secondary
-        "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
+        "bg-surface-2 text-primary hover:bg-surface"
       when :ghost
-        "border border-zinc-700 text-zinc-200 hover:bg-zinc-800/60"
+        "border border-border text-primary hover:bg-surface-2 hover:border-border-soft"
       when :danger
-        "bg-rose-500 text-zinc-950 hover:bg-rose-400"
+        "bg-error text-foreground hover:bg-error/90"
       else
-        "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+        "bg-accent text-accent-foreground hover:bg-accent-strong"
       end
     end
 

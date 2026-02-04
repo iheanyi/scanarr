@@ -42,6 +42,7 @@
         <a href="#overview" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Overview</a>
         <a href="#tokens" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Tokens</a>
         <a href="#components" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Components</a>
+        <a href="#patterns" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Patterns</a>
         <a href="#guidelines" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Guidelines</a>
         <a href="#roadmap" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Roadmap</a>
       </div>
@@ -55,6 +56,7 @@
             <a href="#overview" class="hover:text-foreground">Overview</a>
             <a href="#tokens" class="hover:text-foreground">Tokens</a>
             <a href="#components" class="hover:text-foreground">Components</a>
+            <a href="#patterns" class="hover:text-foreground">Patterns</a>
             <a href="#guidelines" class="hover:text-foreground">Guidelines</a>
             <a href="#roadmap" class="hover:text-foreground">Roadmap</a>
           </nav>
@@ -171,33 +173,125 @@
             </div>
             <div class="overflow-hidden rounded-2xl border border-border bg-surface">
               <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Typography</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Scale</span>
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Text Hierarchy</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Colors</span>
               </div>
-              <div class="space-y-3 p-6">
-                <p class="text-3xl font-semibold text-foreground">Heading XL</p>
-                <p class="text-xl font-medium text-foreground">Heading L</p>
-                <p class="text-base text-foreground">Body text for reading and metadata.</p>
-                <p class="text-sm text-muted">Secondary text for hints and labels.</p>
+              <div class="space-y-4 p-6">
+                <div class="space-y-1">
+                  <p class="text-lg font-medium text-primary">text-primary</p>
+                  <p class="text-xs text-tertiary">Headings, titles, important body text</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-lg font-medium text-secondary">text-secondary</p>
+                  <p class="text-xs text-tertiary">Labels, descriptions, supporting content</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-lg font-medium text-tertiary">text-tertiary</p>
+                  <p class="text-xs text-tertiary">Hints, timestamps, metadata, placeholders</p>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-lg font-medium text-accent">text-accent</p>
+                  <p class="text-xs text-tertiary">Links, primary actions, emphasis</p>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+              <div class="flex items-center justify-between border-b border-border px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Typography</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Geist</span>
+              </div>
+              <div class="space-y-4 p-6">
+                <div class="space-y-1">
+                  <p class="text-xs text-tertiary font-mono">font-sans</p>
+                  <p class="text-lg text-primary">Geist by Vercel</p>
+                  <p class="text-sm text-secondary">Modern typeface designed for dark interfaces. Excellent legibility at all sizes.</p>
+                </div>
+                <div class="border-t border-border pt-4 space-y-2">
+                  <p class="text-3xl font-semibold text-primary">Heading XL</p>
+                  <p class="text-xl font-medium text-primary">Heading L</p>
+                  <p class="text-base text-primary">Body text for reading and content.</p>
+                  <p class="text-sm text-secondary">Secondary text for labels and hints.</p>
+                  <p class="text-xs text-tertiary">Tertiary for metadata and timestamps.</p>
+                </div>
               </div>
             </div>
             <div class="overflow-hidden rounded-2xl border border-border bg-surface">
               <div class="flex items-center justify-between border-b border-border px-5 py-3">
                 <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Spacing</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Scale</span>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">4px base</span>
               </div>
               <div class="space-y-4 p-6">
-                <div class="flex items-center justify-between gap-4">
-                  <div class="h-2 flex-1 rounded-full bg-border"></div>
-                  <p class="text-sm text-muted">2 / 4 / 6</p>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-1 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-1</code>
+                  <span class="text-xs text-tertiary">4px</span>
                 </div>
-                <div class="flex items-center justify-between gap-4">
-                  <div class="h-2 flex-1 rounded-full bg-border"></div>
-                  <p class="text-sm text-muted">8 / 10 / 12</p>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-2 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-2</code>
+                  <span class="text-xs text-tertiary">8px</span>
                 </div>
-                <div class="flex items-center justify-between gap-4">
-                  <div class="h-2 flex-1 rounded-full bg-border"></div>
-                  <p class="text-sm text-muted">16 / 20 / 24</p>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-4 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-4</code>
+                  <span class="text-xs text-tertiary">16px</span>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="flex items-center">
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                    <div class="h-3 w-8 bg-accent"></div>
+                    <div class="h-6 w-6 rounded bg-surface-2"></div>
+                  </div>
+                  <code class="text-xs text-accent font-medium">spacing-8</code>
+                  <span class="text-xs text-tertiary">32px</span>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+              <div class="flex items-center justify-between border-b border-border px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Elevation</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Shadows</span>
+              </div>
+              <div class="space-y-4 p-6">
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-md bg-surface-2 shadow-sm"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-sm</code>
+                    <p class="text-xs text-secondary">Buttons, inputs</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-md bg-surface-2 shadow-md"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-md</code>
+                    <p class="text-xs text-secondary">Cards, dropdowns</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-lg bg-surface-2 shadow-lg"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-lg</code>
+                    <p class="text-xs text-secondary">Modals, dialogs</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="h-10 w-16 rounded-lg bg-surface-2 shadow-glow"></div>
+                  <div class="space-y-0.5">
+                    <code class="text-xs text-tertiary">shadow-glow</code>
+                    <p class="text-xs text-secondary">Accent emphasis</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -213,6 +307,53 @@
                 <div class="h-10 w-10 rounded-full border border-border-soft"></div>
               </div>
               <p class="px-6 pb-6 pt-1 text-xs text-muted">Use rounded-2xl for cards, rounded-md for inputs, rounded-full for pills.</p>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-border bg-surface lg:col-span-2">
+              <div class="flex items-center justify-between border-b border-border px-5 py-3">
+                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Icons</h3>
+                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Lucide</span>
+              </div>
+              <div class="p-6">
+                <p class="text-xs text-secondary mb-4">1500+ icons from Lucide. Use <code class="text-accent">icon "name"</code> helper.</p>
+                <div class="flex flex-wrap gap-3">
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "search", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "book-open", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "download", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "calendar", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "settings", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "bell", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "heart", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "star", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "circle-check", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "circle-x", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "info", class: "size-5" %>
+                  </div>
+                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
+                    <%= icon "triangle-alert", class: "size-5" %>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -233,10 +374,10 @@
                 <span class="rounded-full border border-border px-3 py-1 text-xs text-muted">UI::Button</span>
               </div>
               <div class="mt-5 flex flex-wrap items-center gap-3">
-                <button class="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-background hover:bg-accent-strong">Primary</button>
+                <button class="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong">Primary</button>
                 <button class="rounded-md bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-border">Secondary</button>
                 <button class="rounded-md border border-border-soft px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2">Ghost</button>
-                <button class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-background hover:opacity-90">Danger</button>
+                <button class="rounded-md bg-danger px-4 py-2 text-sm font-semibold text-foreground hover:opacity-90">Danger</button>
               </div>
               <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;button class="rounded-md bg-accent px-4 py-2 text-sm font-semibold"&gt;Primary&lt;/button&gt;</code></pre>
             </div>
@@ -334,6 +475,128 @@
               ) %>
             </div>
           </div>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Spinner</h3>
+                <span class="text-xs text-muted-2">UI::Spinner</span>
+              </div>
+              <p class="mt-2 text-xs text-secondary">Loading indicators with multiple sizes.</p>
+              <div class="mt-4 flex items-center gap-6">
+                <%= render UI::SpinnerComponent.new(size: :xs) %>
+                <%= render UI::SpinnerComponent.new(size: :sm) %>
+                <%= render UI::SpinnerComponent.new(size: :md) %>
+                <%= render UI::SpinnerComponent.new(size: :lg) %>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Input</h3>
+                <span class="text-xs text-muted-2">UI::Input</span>
+              </div>
+              <div class="mt-3">
+                <%= render UI::InputComponent.new(
+                  name: "search",
+                  placeholder: "Search series...",
+                  label: "Search",
+                  hint: "Type to filter results"
+                ) %>
+              </div>
+            </div>
+          </div>
+          <%= render UI::CardComponent.new(class: "mt-6") do |card| %>
+            <% card.with_header do %>
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Card</h3>
+                <span class="text-xs text-muted-2">UI::Card</span>
+              </div>
+            <% end %>
+            <p class="text-sm text-secondary">Cards support headers, footers, and configurable padding/radius. Use <code class="text-xs text-accent">interactive: true</code> for hoverable cards.</p>
+          <% end %>
+          <div class="mt-6 rounded-2xl border border-border bg-surface p-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-foreground">Empty State</h3>
+              <span class="text-xs text-muted-2">UI::EmptyState</span>
+            </div>
+            <div class="mt-4 rounded-xl border border-border-soft bg-background">
+              <%= render UI::EmptyStateComponent.new(
+                title: "No series found",
+                description: "Try adjusting your search or add a new series to get started.",
+                compact: true
+              ) do |empty| %>
+                <% empty.with_icon do %>
+                  <%= icon "book-open", class: "size-6" %>
+                <% end %>
+                <% empty.with_action do %>
+                  <%= render UI::ButtonComponent.new(label: "Add Series", variant: :primary, size: :sm) %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </section>
+
+        <section id="patterns" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-foreground">Patterns</h2>
+            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Interaction</span>
+          </div>
+          <p class="text-sm text-secondary">Common interaction patterns beyond individual components.</p>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "menu", class: "h-[18px] w-[18px] text-accent" %>
+                </div>
+                <h3 class="text-sm font-semibold text-primary">Navigation</h3>
+              </div>
+              <p class="text-xs text-secondary leading-relaxed">Sidebar with sections, breadcrumbs for depth, tabs for views.</p>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "layout-dashboard", class: "h-[18px] w-[18px] text-accent" %>
+                </div>
+                <h3 class="text-sm font-semibold text-primary">Data Display</h3>
+              </div>
+              <p class="text-xs text-secondary leading-relaxed">Cards for items, lists for chapters, grids for libraries.</p>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "loader", class: "h-[18px] w-[18px] text-accent" %>
+                </div>
+                <h3 class="text-sm font-semibold text-primary">Loading States</h3>
+              </div>
+              <p class="text-xs text-secondary leading-relaxed">Skeleton screens, spinners for actions, progress for downloads.</p>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "inbox", class: "h-[18px] w-[18px] text-accent" %>
+                </div>
+                <h3 class="text-sm font-semibold text-primary">Empty States</h3>
+              </div>
+              <p class="text-xs text-secondary leading-relaxed">Helpful messages with clear next actions when no content.</p>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "circle-check", class: "h-[18px] w-[18px] text-accent" %>
+                </div>
+                <h3 class="text-sm font-semibold text-primary">Feedback</h3>
+              </div>
+              <p class="text-xs text-secondary leading-relaxed">Toast notifications, inline validation, status badges.</p>
+            </div>
+            <div class="rounded-xl border border-border bg-surface p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
+                  <%= icon "layers", class: "h-[18px] w-[18px] text-accent" %>
+                </div>
+                <h3 class="text-sm font-semibold text-primary">Overlays</h3>
+              </div>
+              <p class="text-xs text-secondary leading-relaxed">Modals for focus, dialogs for confirmation, popovers for context.</p>
+            </div>
+          </div>
         </section>
 
         <section id="guidelines" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
@@ -362,10 +625,52 @@
             </div>
           </div>
           <div class="rounded-2xl border border-border bg-surface p-6">
-            <h3 class="text-sm font-semibold text-foreground">Accessibility</h3>
-            <p class="mt-2 text-sm text-muted">
-              Maintain 4.5:1 contrast for body text, preserve focus rings, and ensure hover states never carry meaning alone.
-            </p>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-foreground">Accessibility</h3>
+              <span class="text-xs text-tertiary">WCAG 2.1 AA</span>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
+                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
+                  </div>
+                  <div>
+                    <p class="text-sm text-primary">4.5:1 contrast for body text</p>
+                    <p class="text-xs text-tertiary">3:1 for large text (18px+ or 14px bold)</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
+                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
+                  </div>
+                  <div>
+                    <p class="text-sm text-primary">Visible focus indicators</p>
+                    <p class="text-xs text-tertiary">2px ring with accent color on all interactive elements</p>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
+                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
+                  </div>
+                  <div>
+                    <p class="text-sm text-primary">Color is not the only indicator</p>
+                    <p class="text-xs text-tertiary">Icons, text, or patterns supplement color meaning</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
+                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
+                  </div>
+                  <div>
+                    <p class="text-sm text-primary">Touch targets 44x44px minimum</p>
+                    <p class="text-xs text-tertiary">Adequate spacing between interactive elements</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
