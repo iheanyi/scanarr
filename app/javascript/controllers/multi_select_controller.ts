@@ -1,26 +1,86 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["filter", "option", "checkbox", "chips", "count"]
+  static targets = ["filter", "option", "checkbox", "chips", "count", "panel", "trigger", "empty"]
   static values = {
     allLabel: String,
-    maxChips: Number
+    maxChips: Number,
+    open: Boolean
   }
 
   declare readonly filterTarget: HTMLInputElement
+  declare readonly hasFilterTarget: boolean
   declare readonly optionTargets: HTMLElement[]
   declare readonly checkboxTargets: HTMLInputElement[]
   declare readonly chipsTarget: HTMLElement
   declare readonly countTarget: HTMLElement
+  declare readonly panelTarget: HTMLElement
+  declare readonly triggerTarget: HTMLButtonElement
+  declare readonly emptyTarget: HTMLElement
   declare readonly hasChipsTarget: boolean
   declare readonly hasCountTarget: boolean
+  declare readonly hasPanelTarget: boolean
+  declare readonly hasTriggerTarget: boolean
+  declare readonly hasEmptyTarget: boolean
   declare readonly hasAllLabelValue: boolean
   declare readonly allLabelValue: string
   declare readonly hasMaxChipsValue: boolean
   declare readonly maxChipsValue: number
+  declare openValue: boolean
+
+  private handleDocumentClick = (event: MouseEvent) => {
+    if (!this.element.contains(event.target as Node)) {
+      this.close()
+    }
+  }
+
+  private handleKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      this.close()
+    }
+  }
 
   connect() {
     this.update()
+    this.close()
+    document.addEventListener("click", this.handleDocumentClick)
+    document.addEventListener("keydown", this.handleKeydown)
+  }
+
+  disconnect() {
+    document.removeEventListener("click", this.handleDocumentClick)
+    document.removeEventListener("keydown", this.handleKeydown)
+  }
+
+  toggle() {
+    if (this.openValue) {
+      this.close()
+    } else {
+      this.open()
+    }
+  }
+
+  open() {
+    if (this.hasPanelTarget) {
+      this.panelTarget.classList.remove("hidden")
+    }
+    if (this.hasTriggerTarget) {
+      this.triggerTarget.setAttribute("aria-expanded", "true")
+    }
+    this.openValue = true
+    if (this.hasFilterTarget) {
+      this.filterTarget.focus()
+    }
+  }
+
+  close() {
+    if (this.hasPanelTarget) {
+      this.panelTarget.classList.add("hidden")
+    }
+    if (this.hasTriggerTarget) {
+      this.triggerTarget.setAttribute("aria-expanded", "false")
+    }
+    this.openValue = false
   }
 
   filter() {
@@ -36,6 +96,7 @@ export default class extends Controller {
     const selected = this.checkboxTargets.filter((checkbox) => checkbox.checked)
     this.updateCount(selected.length)
     this.updateChips(selected)
+    this.updateEmptyState(selected.length)
   }
 
   private updateCount(count: number) {
@@ -43,11 +104,18 @@ export default class extends Controller {
     const total = this.checkboxTargets.length
     const allLabel = this.hasAllLabelValue ? this.allLabelValue : "All"
 
-    if (count === 0 || count === total) {
+    if (count === 0) {
+      this.countTarget.textContent = "None selected"
+    } else if (count === total) {
       this.countTarget.textContent = allLabel
     } else {
       this.countTarget.textContent = `${count} selected`
     }
+  }
+
+  private updateEmptyState(count: number) {
+    if (!this.hasEmptyTarget) return
+    this.emptyTarget.classList.toggle("hidden", count > 0)
   }
 
   private updateChips(selected: HTMLInputElement[]) {

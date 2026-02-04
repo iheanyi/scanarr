@@ -26,8 +26,13 @@ module UI
       @options.select { |_label, value| @selected.include?(value.to_s) }
     end
 
+    def panel_id
+      "#{@name.to_s.gsub(/\[|\]/, "")}-panel"
+    end
+
     def count_label
-      return @all_label if @selected.empty? || @selected.length == @options.length
+      return "None selected" if @selected.empty?
+      return @all_label if @selected.length == @options.length
 
       "#{@selected.length} selected"
     end

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@source "../views/**/*.erb";
+@source "../components/**/*.{erb,rb}";
+@source "../helpers/**/*.rb";
+@source "./**/*.{js,ts,tsx}";
+
 @theme {
   --color-background: var(--ds-bg);
   --color-surface: var(--ds-surface);
