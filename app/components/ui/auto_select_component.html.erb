@@ -1,4 +1,10 @@
-<%= @form.select @method,
-                options_for_select(@options, @selected),
-                select_options,
-                select_attributes %>
+<%= render UI::SelectComponent.new(
+  form: @form,
+  method: @method,
+  options: @options,
+  selected: @selected,
+  include_blank: @include_blank,
+  label: @label,
+  hint: @hint,
+  **select_arguments
+) %>
