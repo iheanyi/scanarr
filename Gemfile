@@ -54,6 +54,13 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
+  # Additional RuboCop extensions
+  gem "rubocop-performance", require: false
+  gem "rubocop-minitest", require: false
+
+  # ERB template linting [https://github.com/Shopify/erb_lint]
+  gem "erb_lint", require: false
+
   # Record and replay HTTP for scraper tests
   gem "vcr"
   gem "webmock"

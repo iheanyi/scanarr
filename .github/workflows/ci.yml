@@ -47,8 +47,11 @@ jobs:
           restore-keys: |
             rubocop-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
 
-      - name: Lint code for consistent style
+      - name: Lint Ruby code for consistent style
         run: bin/rubocop -f github
+
+      - name: Lint ERB templates
+        run: bin/erblint --lint-all
 
   test:
     runs-on: ubuntu-latest

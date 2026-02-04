@@ -192,9 +192,13 @@ end
 
 Test requests auto-include Basic Auth via test_helper.rb overrides.
 
-### RuboCop Style (rubocop-rails-omakase)
+### RuboCop Style (rubocop-rails-omakase + extensions)
 
-Uses `rubocop-rails-omakase` gem with these key rules:
+Uses `rubocop-rails-omakase` with additional extensions:
+- `rubocop-performance` - Performance optimization checks
+- `rubocop-minitest` - Minitest best practices
+
+Key style rules:
 
 ```ruby
 # Array literals: spaces inside brackets
@@ -211,6 +215,22 @@ Uses `rubocop-rails-omakase` gem with these key rules:
 
 # No trailing whitespace or extra empty lines around class/block bodies
 ```
+
+### ERB Linting (erb_lint)
+
+ERB templates are linted with Shopify's erb_lint. Run manually:
+
+```bash
+bin/erblint --lint-all           # Check all ERB files
+bin/erblint app/views/series/    # Check specific directory
+bin/erblint -a                   # Auto-correct fixable issues
+```
+
+Key ERB rules:
+- Proper spacing around ERB tags (`<%= %>` not `<%=  %>`)
+- No trailing whitespace
+- Final newline at end of file
+- Self-closing tags where appropriate
 
 ### Test Fixtures Gotchas
 

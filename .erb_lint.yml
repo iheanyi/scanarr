@@ -1,0 +1,70 @@
+# ERB Lint configuration
+# https://github.com/Shopify/erb_lint
+
+glob: "app/views/**/*.{erb,html.erb}"
+
+linters:
+  # Checks for missing or extra spaces around ERB tags
+  SpaceAroundErbTag:
+    enabled: true
+
+  # Checks for unnecessary spaces inside ERB tags
+  SpaceInsideHashLiteralBraces:
+    enabled: true
+
+  # Checks for hardcoded strings that should be translated
+  HardCodedString:
+    enabled: false  # Enable when ready to add i18n
+
+  # Checks for deprecated ERB tags
+  DeprecatedClasses:
+    enabled: false
+
+  # Ensures closing tags match opening tags
+  ClosingErbTagIndent:
+    enabled: true
+
+  # Checks for extra blank lines
+  ExtraNewline:
+    enabled: true
+
+  # Checks for final newline at end of file
+  FinalNewline:
+    enabled: true
+    present: true
+
+  # Disallow trailing whitespace
+  TrailingWhitespace:
+    enabled: true
+
+  # Check for self-closing tags
+  SelfClosingTag:
+    enabled: true
+
+  # Checks for commented ERB blocks
+  CommentSyntax:
+    enabled: true
+
+  # Disallow inline styles (use Tailwind classes instead)
+  NoJavascriptTagHelper:
+    enabled: true
+
+  # Checks for proper HTML attribute quoting
+  RequireInputAutocomplete:
+    enabled: false  # Not all inputs need autocomplete
+
+  # Enable RuboCop integration for Ruby code inside ERB
+  Rubocop:
+    enabled: true
+    rubocop_config:
+      inherit_from:
+        - .rubocop.yml
+      # Disable layout cops for embedded Ruby (formatting gets complex)
+      Layout/InitialIndentation:
+        Enabled: false
+      Layout/LineLength:
+        Enabled: false
+      Layout/TrailingEmptyLines:
+        Enabled: false
+      Naming/FileName:
+        Enabled: false
