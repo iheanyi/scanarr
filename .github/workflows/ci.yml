@@ -51,8 +51,7 @@ jobs:
         run: bin/rubocop -f github
 
       - name: Lint ERB templates
-        run: bin/erblint --lint-all || echo "ERB lint found issues (non-blocking)"
-        continue-on-error: true  # TODO: Fix ERB issues and make this blocking
+        run: bin/erblint --lint-all
 
   test:
     runs-on: ubuntu-latest
