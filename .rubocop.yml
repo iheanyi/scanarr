@@ -29,3 +29,17 @@ Layout/EmptyLinesAroundClassBody:
 
 Layout/EmptyLinesAroundBlockBody:
   Enabled: false
+
+# Minitest cops - some disabled until test files are cleaned up
+# TODO: Enable these and fix violations
+Minitest/MultipleAssertions:
+  Enabled: false  # Many tests have >3 assertions
+
+Minitest/EmptyLineBeforeAssertionMethods:
+  Enabled: false  # Would require extensive test reformatting
+
+Minitest/AssertPredicate:
+  Enabled: false  # Style preference
+
+Minitest/AssertOperator:
+  Enabled: false  # Style preference
