@@ -1,3 +1,150 @@
+## Rails Project Conventions
+
+### Model Relationships
+
+Key relationship patterns - **do not confuse singular vs plural**:
+
+```
+Series
+├── has_many :sources (through :series_sources) ← PLURAL, use primary_source helper
+├── has_many :chapters
+├── belongs_to :library_series (optional)
+└── has_one_attached :cover
+
+Chapter
+├── belongs_to :series
+├── belongs_to :source (optional) ← SINGULAR, direct relationship
+├── has_many :releases
+└── source_url (string attribute)
+
+Source
+├── has_many :series (through :series_sources)
+├── has_many :chapters
+├── key (internal identifier, uses underscores: "weeb_central")
+└── slug (URL-friendly, uses hyphens: "weeb-central")
+```
+
+**Common mistakes to avoid:**
+- `series.source` ❌ → `series.primary_source` ✅
+- `source.key.tr("_", "-")` ❌ → `source.slug` ✅
+- Forgetting to pass required keywords to jobs
+
+### ViewComponent Patterns
+
+Components live in `app/components/ui/` and inherit from `UI::BaseComponent`:
+
+```ruby
+# Good: Use render with component
+<%= render UI::ButtonComponent.new(variant: :primary, size: :sm) do %>
+  Click me
+<% end %>
+
+# Components available:
+# - UI::ButtonComponent (variant: :primary/:secondary/:ghost, size: :sm/:md/:lg)
+# - UI::BadgeComponent
+# - UI::ToggleSwitchComponent (for form switches)
+# - UI::ToggleButtonComponent (for follow/unfollow)
+# - UI::SelectComponent, UI::MultiSelectComponent, UI::AutoSelectComponent
+# - UI::DropdownComponent
+```
+
+### Stimulus Controllers
+
+Controllers in `app/javascript/controllers/`. Naming: `foo_bar_controller.ts` → `data-controller="foo-bar"`
+
+```erb
+<!-- Auto-submit forms on change -->
+<%= f.select :field, options, {}, data: { controller: "auto-submit", action: "change->auto-submit#submit" } %>
+
+<!-- Loading button state -->
+<div data-controller="loading-button">
+  <button data-loading-button-target="button" data-action="click->loading-button#submit">
+    <span data-loading-button-target="text">Submit</span>
+  </button>
+</div>
+```
+
+### Tailwind Design Tokens
+
+Use semantic tokens, not raw colors:
+
+```css
+/* Backgrounds */
+bg-surface       /* card/panel backgrounds */
+bg-surface-2     /* elevated surfaces, inputs */
+bg-background    /* page background */
+
+/* Text */
+text-foreground  /* primary text */
+text-muted       /* secondary text */
+text-muted-2     /* tertiary/placeholder */
+
+/* Status colors (with -soft variants for backgrounds) */
+text-success / bg-success-soft   /* green - downloaded, complete */
+text-warning / bg-warning-soft   /* amber - in progress */
+text-danger / bg-danger-soft     /* red - errors, delete */
+text-info / bg-info-soft         /* blue - links, info */
+text-accent / bg-accent-soft     /* emerald - primary actions */
+
+/* Borders */
+border-border    /* standard borders */
+```
+
+### Hotwire/Turbo Patterns
+
+```erb
+<!-- Turbo Frame for partial page updates -->
+<%= turbo_frame_tag "filters" do %>
+  <!-- Content that updates independently -->
+<% end %>
+
+<!-- Turbo Stream for real-time updates -->
+<%= turbo_stream_from @series, :downloads %>
+
+<!-- Form with Turbo Frame target -->
+<%= form_with url: path, data: { turbo_frame: "results" } do |f| %>
+<% end %>
+
+<!-- Broadcast updates from jobs/models -->
+Turbo::StreamsChannel.broadcast_replace_to(
+  [series, :downloads],
+  target: dom_id(chapter),
+  partial: "series/chapter_row",
+  locals: { chapter: chapter, source: source, series: series }
+)
+```
+
+### Job Patterns
+
+Always pass required keywords when enqueuing jobs:
+
+```ruby
+# DownloadChapterJob requires:
+DownloadChapterJob.perform_later(
+  chapter.source_url,           # positional: chapter URL
+  source_key: source.key,       # required keyword
+  series_title: series.title,   # required keyword
+  chapter_number: chapter.number, # required keyword
+  # optional: chapter_title, language, group, release_id, source_series_id
+)
+```
+
+### Adapter Patterns
+
+Adapters in `app/scrapers/<source_name>/adapter.rb` inherit from `BaseAdapter`:
+
+```ruby
+# Must implement:
+def search(query) → Array<ResultTypes::SearchResult>
+def series(id_or_url) → ResultTypes::Series
+def chapters(series_url) → Array<ResultTypes::Chapter>
+def pages(chapter_url) → Array<ResultTypes::Page>
+
+# Optional:
+def supports_browse? → boolean
+def browse(sort:, page:, limit:) → Array<ResultTypes::BrowseResult>
+```
+
 ## Workflow Orchestration
 
 ### 1. Plan Mode Default
