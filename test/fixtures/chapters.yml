@@ -24,5 +24,5 @@ three:
   chapter_number_value: 3
   title: Chapter 3
   public_id: chapterpub003
-  source: one
-  source_url: https://weebcentral.com/chapters/03CHAPTER
+  source: two
+  source_url: https://example.com/chapters/03CHAPTER
