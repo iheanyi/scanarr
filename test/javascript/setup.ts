@@ -1,8 +1,5 @@
 import { vi, beforeEach, afterEach } from 'vitest'
 
-// Store original location
-const originalLocation = window.location
-
 // Create a mock location that works with jsdom
 beforeEach(() => {
   // Use a simpler mock approach that doesn't conflict with jsdom
