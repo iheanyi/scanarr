@@ -78,14 +78,14 @@
               data: { turbo_confirm: "Unfollow this series?" }
             ) %>
             <%= form_with model: @user_follow, url: follow_path(@user_follow), method: :patch, local: true do |f| %>
-              <%= render UI::AutoSelectComponent.new(
+              <%= render UI::ToggleSwitchComponent.new(
                 form: f,
                 method: :download_policy,
-                options: [
-                  ["Notify only", "notify_only"],
-                  ["Auto download", "auto_download"]
-                ],
-                selected: @user_follow.download_policy
+                label: "Auto-download new chapters",
+                description: "Download new chapters as soon as they appear.",
+                on_value: "auto_download",
+                off_value: "notify_only",
+                auto_submit: true
               ) %>
             <% end %>
           <% else %>

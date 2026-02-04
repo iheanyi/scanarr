@@ -20,20 +20,14 @@
                           class: "inline-flex items-center justify-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-zinc-950" %>
         </div>
 
-        <div class="space-y-2">
-          <p class="text-xs uppercase text-zinc-500">Sources</p>
-          <div class="flex flex-wrap gap-3">
-            <% @sources.each do |source| %>
-              <label class="inline-flex items-center gap-2 cursor-pointer">
-                <%= check_box_tag "sources[]",
-                                  source.id,
-                                  @selected_source_ids.include?(source.id.to_s),
-                                  class: "rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-950" %>
-                <span class="text-sm text-zinc-300"><%= source.name || source.key %></span>
-              </label>
-            <% end %>
-          </div>
-        </div>
+        <%= render UI::MultiSelectComponent.new(
+          name: "sources",
+          label: "Sources",
+          options: @sources.map { |source| [source.name || source.key, source.id.to_s] },
+          selected: @selected_source_ids,
+          filter_placeholder: "Filter sources",
+          all_label: "All sources"
+        ) %>
       </div>
     <% end %>
   </section>

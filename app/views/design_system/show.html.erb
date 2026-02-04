@@ -235,6 +235,69 @@
               </div>
             </div>
           </div>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-[color:var(--ds-text)]">Selects</h3>
+                <span class="text-xs text-[color:var(--ds-muted-2)]">UI::Select</span>
+              </div>
+              <div class="mt-3">
+                <%= form_with url: "#", method: :get, local: true do |form| %>
+                  <%= render UI::SelectComponent.new(
+                    form: form,
+                    method: :reading_style,
+                    label: "Reading style",
+                    hint: "Auto-applies on change.",
+                    options: [
+                      ["Left to Right", "left_to_right"],
+                      ["Right to Left", "right_to_left"],
+                      ["Long Strip", "long_strip"]
+                    ],
+                    selected: "left_to_right"
+                  ) %>
+                <% end %>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-[color:var(--ds-text)]">Toggles</h3>
+                <span class="text-xs text-[color:var(--ds-muted-2)]">UI::ToggleSwitch</span>
+              </div>
+              <div class="mt-3">
+                <%= form_with url: "#", method: :post, local: true do |form| %>
+                  <%= render UI::ToggleSwitchComponent.new(
+                    form: form,
+                    method: :auto_download,
+                    label: "Auto-download new chapters",
+                    description: "Instantly pulls new chapters when available.",
+                    on_value: "1",
+                    off_value: "0"
+                  ) %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-[color:var(--ds-border)] bg-[color:var(--ds-surface)] p-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-[color:var(--ds-text)]">Multi-select</h3>
+              <span class="text-xs text-[color:var(--ds-muted-2)]">UI::MultiSelect</span>
+            </div>
+            <div class="mt-3">
+              <%= render UI::MultiSelectComponent.new(
+                name: "sources",
+                label: "Sources",
+                options: [
+                  ["MangaDex", "mangadex"],
+                  ["WeebCentral", "weebcentral"],
+                  ["MangaPill", "mangapill"],
+                  ["MangaSee", "mangasee"]
+                ],
+                selected: ["mangadex", "weebcentral"],
+                filter_placeholder: "Filter sources",
+                all_label: "All sources"
+              ) %>
+            </div>
+          </div>
         </section>
 
         <section id="guidelines" class="scroll-mt-24 space-y-6 border-t border-[color:var(--ds-border)] pt-8">

@@ -1,0 +1,51 @@
+<div class="<%= wrapper_classes %>"
+     data-controller="multi-select"
+     data-multi-select-all-label-value="<%= @all_label %>"
+     data-multi-select-max-chips-value="<%= @max_chips %>">
+  <div class="flex items-center justify-between">
+    <% if @label.present? %>
+      <span class="text-sm text-zinc-300"><%= @label %></span>
+    <% end %>
+    <span class="text-xs text-zinc-500" data-multi-select-target="count"><%= count_label %></span>
+  </div>
+
+  <div>
+    <input type="text"
+           placeholder="<%= @filter_placeholder %>"
+           class="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600"
+           data-multi-select-target="filter"
+           data-action="input->multi-select#filter" />
+  </div>
+
+  <div class="flex flex-wrap gap-1.5" data-multi-select-target="chips">
+    <% selected_options.first(@max_chips).each do |label, _value| %>
+      <span class="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-300"><%= label %></span>
+    <% end %>
+    <% if selected_options.length > @max_chips %>
+      <span class="rounded-full border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-xs text-zinc-500">+<%= selected_options.length - @max_chips %></span>
+    <% end %>
+  </div>
+
+  <div class="grid gap-2 sm:grid-cols-2">
+    <% @options.each do |label, value| %>
+      <label class="flex items-center gap-2 rounded-md border border-zinc-800/80 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-300"
+             data-multi-select-target="option"
+             data-option-label="<%= label.to_s.downcase %>">
+        <%= check_box_tag checkbox_name,
+                          value,
+                          @selected.include?(value.to_s),
+                          class: "rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-950",
+                          data: {
+                            multi_select_target: "checkbox",
+                            action: "change->multi-select#update",
+                            label: label
+                          } %>
+        <span><%= label %></span>
+      </label>
+    <% end %>
+  </div>
+
+  <% if @hint.present? %>
+    <p class="text-xs text-zinc-500 text-pretty"><%= @hint %></p>
+  <% end %>
+</div>
