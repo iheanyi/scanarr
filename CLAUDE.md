@@ -145,6 +145,87 @@ def supports_browse? → boolean
 def browse(sort:, page:, limit:) → Array<ResultTypes::BrowseResult>
 ```
 
+### Extended Model Relationships (Downloads)
+
+```
+Release
+├── belongs_to :chapter
+├── belongs_to :source (optional)
+├── has_one :file_asset
+└── source_url (string)
+
+FileAsset
+├── belongs_to :release
+├── has_many :pages
+├── has_one_attached :archive
+├── download_status: queued/pending/downloading/complete/failed/cancelled
+└── pages_downloaded, pages_expected (progress tracking)
+
+Page
+├── belongs_to :file_asset
+├── has_one_attached :image
+└── position (unique per file_asset)
+```
+
+**Common query pattern:**
+```ruby
+# Get latest release for a chapter from a source
+chapter.releases.where(source: source).order(created_at: :desc).first
+```
+
+### Authentication Pattern
+
+Uses HTTP Basic Auth with auto-created admin user (not Devise sessions):
+
+```ruby
+# In ApplicationController
+def authenticate!
+  return if session[:authenticated]
+  # Falls back to HTTP Basic Auth
+end
+
+def current_user
+  return nil unless authenticated?
+  @current_user = User.find_or_create_by!(email: "admin@scanarr.local")
+end
+```
+
+Test requests auto-include Basic Auth via test_helper.rb overrides.
+
+### RuboCop Style (rubocop-rails-omakase)
+
+Uses `rubocop-rails-omakase` gem with these key rules:
+
+```ruby
+# Array literals: spaces inside brackets
+[ "item1", "item2" ]  # ✅
+["item1", "item2"]    # ❌
+
+# String arrays: prefer %w[] syntax
+%w[mangadex comick mangasee]  # ✅
+["mangadex", "comick"]        # Also acceptable with spaces
+
+# Double quotes preferred (except for strings with backslashes)
+"hello world"  # ✅
+'hello world'  # ❌ (unless contains \n, \d, etc.)
+
+# No trailing whitespace or extra empty lines around class/block bodies
+```
+
+### Test Fixtures Gotchas
+
+**Fixture ordering matters for queries with `order(:created_at)`:**
+```yaml
+# Fixtures load in alphabetical order by name
+# releases.yml: "one" loads before "three"
+# But queries like `order(created_at: :desc).first` may pick unexpected records
+```
+
+**Ensure fixtures don't conflict:**
+- Check if multiple fixtures share the same foreign keys
+- Latest release queries pick the most recently created fixture
+- Add explicit test setup to control which records are used
+
 ## Workflow Orchestration
 
 ### 1. Plan Mode Default
