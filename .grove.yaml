@@ -1,0 +1,12 @@
+name: adapter-metadata-improvements
+command: bin/dev
+env:
+  RAILS_ENV: development
+health_check:
+  path: /up
+hooks:
+  before_start:
+    - rm -f tmp/pids/*.pid
+    - bundle install
+    - yarn install
+    - bin/rails db:migrate
