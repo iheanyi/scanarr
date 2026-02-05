@@ -1,0 +1,12 @@
+[
+  {
+    "id": "0726d8",
+    "text": "Context: Create docs/plans/2026-02-01-manga-manager-design.md with outline",
+    "created_at": "2026-02-02T00:23:58.773131Z"
+  },
+  {
+    "id": "f40927",
+    "text": "Result: Updated top-level summary/assumptions with pluggable storage + stretch goals",
+    "created_at": "2026-02-02T17:37:53.997415Z"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "5206e6",
+    "text": "Context: Search + import endpoints and views",
+    "created_at": "2026-02-02T03:45:16.489522Z"
+  },
+  {
+    "id": "11321d",
+    "text": "Result: Centralized adapter lookup via AdapterRegistry, fixed config loading, added error display for failed sources, auto-link LibrarySeries on Series creation",
+    "created_at": "2026-02-03T23:21:26.922423Z"
+  }
+]

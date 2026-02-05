@@ -1,0 +1,12 @@
+[
+  {
+    "id": "b188a6",
+    "text": "Context: GET /library showing followed LibrarySeries with badges, filters",
+    "created_at": "2026-02-03T21:55:00.81818Z"
+  },
+  {
+    "id": "81d70c",
+    "text": "Result: LibraryController with auth, filters, sorting. FollowsController with Turbo Stream. 149 tests pass.",
+    "created_at": "2026-02-03T22:13:00.814149Z"
+  }
+]

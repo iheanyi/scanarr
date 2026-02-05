@@ -1,0 +1,18 @@
+{
+  "id": "phase-implement-reaperscans-adap",
+  "status": "done",
+  "description": "Phase 5: Implement ReaperScans adapter (CANCELLED - Source shut down)",
+  "priority": 4,
+  "parent_id": "scanarr-monitoring-system",
+  "blocked_by": [
+    "phase-create-adapterregistry-to",
+    "phase-create-docssources-with-ke"
+  ],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "c3256935110b",
+    "overseer_start_commit": "9033580f6317"
+  },
+  "created_at": "2026-02-03T21:55:00.883293Z",
+  "updated_at": "2026-02-03T23:00:17.590614Z"
+}

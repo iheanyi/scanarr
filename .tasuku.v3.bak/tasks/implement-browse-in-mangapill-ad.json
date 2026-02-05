@@ -1,0 +1,13 @@
+{
+  "id": "implement-browse-in-mangapill-ad",
+  "status": "ready",
+  "description": "Implement browse in MangaPill adapter - DONE",
+  "priority": 2,
+  "parent_id": "source-browse-feature-discovery",
+  "blocked_by": [
+    "add-browse-method-to-baseadapter"
+  ],
+  "owner": null,
+  "created_at": "2026-02-03T23:49:24.54557Z",
+  "updated_at": "2026-02-03T23:56:51.359379Z"
+}

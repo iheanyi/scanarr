@@ -1,0 +1,13 @@
+{
+  "id": "fix-chapter-ordering",
+  "status": "done",
+  "description": "Fix chapter ordering",
+  "priority": 2,
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "b7850035e1f6"
+  },
+  "created_at": "2026-02-02T17:29:56.445181Z",
+  "updated_at": "2026-02-02T17:32:00.738375Z"
+}

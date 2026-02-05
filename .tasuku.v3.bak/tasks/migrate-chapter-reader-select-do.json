@@ -1,0 +1,13 @@
+{
+  "id": "migrate-chapter-reader-select-do",
+  "status": "ready",
+  "description": "Migrate chapter reader select [DONE]",
+  "priority": 4,
+  "parent_id": "polish-select-boxes-standardize",
+  "blocked_by": [
+    "update-uiselectcomponent-with-de"
+  ],
+  "owner": null,
+  "created_at": "2026-02-04T21:59:20.716614Z",
+  "updated_at": "2026-02-04T22:01:47.467358Z"
+}

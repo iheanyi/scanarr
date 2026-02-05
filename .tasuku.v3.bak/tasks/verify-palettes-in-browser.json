@@ -1,0 +1,11 @@
+{
+  "id": "verify-palettes-in-browser",
+  "status": "ready",
+  "description": "Verify palettes in browser",
+  "priority": 4,
+  "parent_id": "tailwind-design-system-tokens",
+  "blocked_by": [],
+  "owner": null,
+  "created_at": "2026-02-04T18:09:48.641874Z",
+  "updated_at": "2026-02-04T18:09:48.641874Z"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "refine-sidebar-structure-and-nav",
+  "status": "done",
+  "description": "Refine sidebar structure and nav styling",
+  "priority": 2,
+  "parent_id": "sidebar-polish",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "a5d2ced86404",
+    "overseer_start_commit": "3b73d6883a9a"
+  },
+  "created_at": "2026-02-04T21:36:49.971904Z",
+  "updated_at": "2026-02-04T21:39:40.878703Z"
+}

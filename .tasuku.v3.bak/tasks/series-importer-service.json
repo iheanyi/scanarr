@@ -1,0 +1,15 @@
+{
+  "id": "series-importer-service",
+  "status": "done",
+  "description": "Series importer service",
+  "priority": 4,
+  "parent_id": "scanarr-mvp",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "698347a2f43e",
+    "overseer_start_commit": "657b7c7cdcac"
+  },
+  "created_at": "2026-02-02T03:45:16.483032Z",
+  "updated_at": "2026-02-02T18:52:33.273882Z"
+}

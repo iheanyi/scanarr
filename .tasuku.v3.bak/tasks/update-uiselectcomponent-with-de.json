@@ -1,0 +1,11 @@
+{
+  "id": "update-uiselectcomponent-with-de",
+  "status": "ready",
+  "description": "Update UI::SelectComponent with design tokens [DONE]",
+  "priority": 2,
+  "parent_id": "polish-select-boxes-standardize",
+  "blocked_by": [],
+  "owner": null,
+  "created_at": "2026-02-04T21:59:20.690909Z",
+  "updated_at": "2026-02-04T22:01:47.4662Z"
+}

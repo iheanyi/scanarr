@@ -1,0 +1,11 @@
+{
+  "id": "add-publicid-slug-columns",
+  "status": "done",
+  "description": "Add public_id + slug columns",
+  "priority": 4,
+  "parent_id": "pretty-urls-public-ids",
+  "blocked_by": [],
+  "owner": null,
+  "created_at": "2026-02-02T02:14:54.979996Z",
+  "updated_at": "2026-02-02T02:14:54.979996Z"
+}

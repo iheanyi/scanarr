@@ -1,0 +1,12 @@
+[
+  {
+    "id": "cddf07",
+    "text": "Context: Add PublicIdGenerator + SlugGenerator concerns and include in models.",
+    "created_at": "2026-02-02T02:14:54.973796Z"
+  },
+  {
+    "id": "60c789",
+    "text": "Result: Implemented with HasPublicId concern, slug generation, controller updates. 94 tests pass.",
+    "created_at": "2026-02-03T21:42:29Z"
+  }
+]

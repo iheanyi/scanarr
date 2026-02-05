@@ -1,0 +1,11 @@
+{
+  "id": "add-chapter-sourceurl-column",
+  "status": "done",
+  "description": "Add chapter source_url column",
+  "priority": 4,
+  "parent_id": "scanarr-mvp",
+  "blocked_by": [],
+  "owner": null,
+  "created_at": "2026-02-02T03:45:16.476269Z",
+  "updated_at": "2026-02-02T03:45:16.476269Z"
+}

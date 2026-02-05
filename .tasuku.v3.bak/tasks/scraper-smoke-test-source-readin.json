@@ -1,0 +1,15 @@
+{
+  "id": "scraper-smoke-test-source-readin",
+  "status": "done",
+  "description": "Scraper smoke test + source readiness",
+  "priority": 4,
+  "parent_id": "scanarr-mvp",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "657b7c7cdcac",
+    "overseer_start_commit": "657b7c7cdcac"
+  },
+  "created_at": "2026-02-02T03:34:13.515014Z",
+  "updated_at": "2026-02-02T18:52:48.663051Z"
+}

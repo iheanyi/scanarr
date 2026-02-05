@@ -1,0 +1,12 @@
+[
+  {
+    "id": "4f1542",
+    "text": "Context: Define the browse interface with options for: sort (latest, popular, alphabetical), page/offset, limit. Return BrowseResult type.",
+    "created_at": "2026-02-03T23:49:24.363931Z"
+  },
+  {
+    "id": "bf9fc6",
+    "text": "Result: Added browse method to BaseAdapter with sort/page/limit params, BrowseNotSupportedError, supports_browse? helper, and BrowseResult type.",
+    "created_at": "2026-02-03T23:49:48.492995Z"
+  }
+]

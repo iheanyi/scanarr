@@ -1,0 +1,16 @@
+{
+  "id": "source-searchimport-ui",
+  "status": "done",
+  "description": "Source search/import UI",
+  "priority": 4,
+  "parent_id": "scanarr-mvp",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_bookmark": "task/task_01KGE78SP9Z4D4E0VPG5F36NHA",
+    "overseer_commit_sha": "d284421d4870",
+    "overseer_start_commit": "1ab2ed71abb7"
+  },
+  "created_at": "2026-02-02T03:45:16.489522Z",
+  "updated_at": "2026-02-03T23:21:26.922423Z"
+}

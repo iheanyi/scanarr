@@ -1,0 +1,11 @@
+{
+  "id": "done-write-failing-activestorage",
+  "status": "done",
+  "description": "DONE: Write failing ActiveStorage download job test",
+  "priority": 4,
+  "parent_id": "done-activestoragebacked-chapter",
+  "blocked_by": [],
+  "owner": null,
+  "created_at": "2026-02-02T02:01:02.375593Z",
+  "updated_at": "2026-02-02T02:03:16.249916Z"
+}

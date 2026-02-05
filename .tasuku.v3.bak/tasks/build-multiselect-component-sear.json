@@ -1,0 +1,15 @@
+{
+  "id": "build-multiselect-component-sear",
+  "status": "done",
+  "description": "Build MultiSelect component + search filter",
+  "priority": 4,
+  "parent_id": "design-system-advanced-form-cont",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "876412e7be79",
+    "overseer_start_commit": "cfc6c8779f13"
+  },
+  "created_at": "2026-02-04T16:49:00.32212Z",
+  "updated_at": "2026-02-04T16:57:30.161572Z"
+}

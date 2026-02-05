@@ -1,0 +1,12 @@
+[
+  {
+    "id": "0da0ec",
+    "text": "Context: Add recurring job config for 30-minute polling interval",
+    "created_at": "2026-02-03T21:55:00.790331Z"
+  },
+  {
+    "id": "d1f6f8",
+    "text": "Result: Added CheckNewChaptersJob to recurring.yml for dev/prod (every 30 minutes)",
+    "created_at": "2026-02-03T23:00:01.68629Z"
+  }
+]

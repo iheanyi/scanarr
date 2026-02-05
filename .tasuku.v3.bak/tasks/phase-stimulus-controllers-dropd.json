@@ -1,0 +1,17 @@
+{
+  "id": "phase-stimulus-controllers-dropd",
+  "status": "done",
+  "description": "Phase 3: Stimulus controllers (dropdown, toggle hover)",
+  "priority": 4,
+  "parent_id": "design-system-viewcomponents-sti",
+  "blocked_by": [
+    "phase-core-components-toggle-dro"
+  ],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "17a811617581",
+    "overseer_start_commit": "dfadb1df7dc1"
+  },
+  "created_at": "2026-02-04T00:32:11.976034Z",
+  "updated_at": "2026-02-04T14:51:47.146621Z"
+}

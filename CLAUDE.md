@@ -290,15 +290,16 @@ Key ERB rules:
 - Zero context switching required from the user
 - Go fix failing CI tests without being told how
 
-## Task Management
+## Task Management (Tasuku)
 
-1. **Plan First**: Use Overseer for task plans and tracking; avoid `tasks/todo.md`
-   except when Overseer is unavailable (e.g., before git/jj init)
-2. **Create Tasks Immediately**: After planning, create Overseer tasks without prompting
-3. **Track Progress**: Update Overseer task status as you go
+1. **Plan First**: Use Tasuku (MCP) for task plans and tracking; avoid `tasks/todo.md`
+   except when Tasuku is unavailable
+2. **Create Tasks Immediately**: After planning, create Tasuku tasks with `tk_add`
+3. **Track Progress**: Use `tk_start` / `tk_done` / `tk_note` as you go
 4. **Explain Changes**: High-level summary at each step
-5. **Document Results**: Record review notes in Overseer (fallback: `tasks/todo.md`)
-6. **Capture Lessons**: Update 'tasks/lessons.md' after corrections
+5. **Document Results**: Record review notes via `tk_note` (fallback: `tasks/todo.md`)
+6. **Capture Lessons**: Use `tk_learn` for insights; update 'tasks/lessons.md' after corrections
+7. **Record Decisions**: Use `tk_decide` for architectural choices
 
 ## Core Principles
 

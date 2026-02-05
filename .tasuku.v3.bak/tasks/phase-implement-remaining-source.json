@@ -1,0 +1,17 @@
+{
+  "id": "phase-implement-remaining-source",
+  "status": "done",
+  "description": "Phase 5: Implement remaining sources (MangaLife, MangaPill, etc.)",
+  "priority": 2,
+  "parent_id": "scanarr-monitoring-system",
+  "blocked_by": [
+    "phase-implement-mangasee-adapter"
+  ],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "9033580f6317",
+    "overseer_start_commit": "9033580f6317"
+  },
+  "created_at": "2026-02-03T21:55:00.897779Z",
+  "updated_at": "2026-02-03T23:00:17.753972Z"
+}

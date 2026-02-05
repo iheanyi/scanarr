@@ -1,0 +1,13 @@
+{
+  "id": "design-system-advanced-form-cont",
+  "status": "done",
+  "description": "Design System: Advanced Form Controls",
+  "priority": 2,
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "ba9f74f42e73"
+  },
+  "created_at": "2026-02-04T16:49:00.193692Z",
+  "updated_at": "2026-02-04T17:08:32.789914Z"
+}

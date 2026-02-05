@@ -1,0 +1,15 @@
+{
+  "id": "integrations-mihon-paperback-ani",
+  "status": "done",
+  "description": "Integrations: Mihon, Paperback, AniList/MAL/Kitsu",
+  "priority": 4,
+  "parent_id": "manga-manager-spec",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "3ed770cb403d",
+    "overseer_start_commit": "344d43377e0a"
+  },
+  "created_at": "2026-02-02T00:23:58.799204Z",
+  "updated_at": "2026-02-02T17:44:13.638564Z"
+}

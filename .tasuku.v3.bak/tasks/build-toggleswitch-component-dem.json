@@ -1,0 +1,15 @@
+{
+  "id": "build-toggleswitch-component-dem",
+  "status": "done",
+  "description": "Build ToggleSwitch component + demo",
+  "priority": 4,
+  "parent_id": "design-system-advanced-form-cont",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "0135b5878232",
+    "overseer_start_commit": "cfc6c8779f13"
+  },
+  "created_at": "2026-02-04T16:49:00.202322Z",
+  "updated_at": "2026-02-04T16:50:33.402397Z"
+}

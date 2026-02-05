@@ -1,0 +1,17 @@
+{
+  "id": "phase-link-series-to-libraryseri",
+  "status": "done",
+  "description": "Phase 1: Link Series to LibrarySeries + backfill",
+  "priority": 2,
+  "parent_id": "scanarr-monitoring-system",
+  "blocked_by": [
+    "phase-create-libraryseries-users"
+  ],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "754f267abdb9",
+    "overseer_start_commit": "9033580f6317"
+  },
+  "created_at": "2026-02-03T21:55:00.660682Z",
+  "updated_at": "2026-02-03T22:02:20.092407Z"
+}

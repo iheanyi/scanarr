@@ -1,0 +1,15 @@
+{
+  "id": "phase-setup-viewcomponent-infras",
+  "status": "done",
+  "description": "Phase 0: Setup ViewComponent infrastructure",
+  "priority": 2,
+  "parent_id": "design-system-viewcomponents-sti",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "a8df7a1055d4",
+    "overseer_start_commit": "86f71a28de35"
+  },
+  "created_at": "2026-02-04T00:32:11.952583Z",
+  "updated_at": "2026-02-04T02:47:15.239971Z"
+}

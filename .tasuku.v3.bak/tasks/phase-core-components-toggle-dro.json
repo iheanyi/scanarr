@@ -1,0 +1,17 @@
+{
+  "id": "phase-core-components-toggle-dro",
+  "status": "done",
+  "description": "Phase 2: Core components (Toggle, Dropdown, AutoSelect)",
+  "priority": 4,
+  "parent_id": "design-system-viewcomponents-sti",
+  "blocked_by": [
+    "phase-core-components-button-bad"
+  ],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "76b4a1bc7b5b",
+    "overseer_start_commit": "ce41f47dc076"
+  },
+  "created_at": "2026-02-04T00:32:11.968869Z",
+  "updated_at": "2026-02-04T14:49:08.165887Z"
+}

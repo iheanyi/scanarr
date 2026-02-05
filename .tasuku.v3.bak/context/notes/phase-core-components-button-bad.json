@@ -1,0 +1,12 @@
+[
+  {
+    "id": "e7384c",
+    "text": "Context: Create IconComponent wrapper for Lucide icons with size variants. Document color tokens (emerald primary, zinc neutral, rose danger)",
+    "created_at": "2026-02-04T00:32:11.960957Z"
+  },
+  {
+    "id": "b36fe1",
+    "text": "Result: Added Button/Badge components with tests and component autoloading (ce41f47).",
+    "created_at": "2026-02-04T14:43:07.071534Z"
+  }
+]

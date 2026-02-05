@@ -1,0 +1,7 @@
+[
+  {
+    "id": "5029d6",
+    "text": "Context: Add DownloadChapterJob that writes chapter pages to local storage adapter; keep ChapterDownloader for byte writes.",
+    "created_at": "2026-02-02T01:56:54.512669Z"
+  }
+]

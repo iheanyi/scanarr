@@ -1,0 +1,10 @@
+{
+  "id": "done-activestoragebacked-chapter",
+  "status": "done",
+  "description": "DONE: ActiveStorage-backed chapter downloads",
+  "priority": 4,
+  "blocked_by": [],
+  "owner": null,
+  "created_at": "2026-02-02T02:01:02.365244Z",
+  "updated_at": "2026-02-02T02:03:16.278172Z"
+}

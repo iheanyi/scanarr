@@ -1,0 +1,13 @@
+{
+  "id": "migrate-calendar-source-filter-d",
+  "status": "ready",
+  "description": "Migrate calendar source filter [DONE]",
+  "priority": 4,
+  "parent_id": "polish-select-boxes-standardize",
+  "blocked_by": [
+    "update-uiselectcomponent-with-de"
+  ],
+  "owner": null,
+  "created_at": "2026-02-04T21:59:20.723342Z",
+  "updated_at": "2026-02-04T22:01:47.466651Z"
+}

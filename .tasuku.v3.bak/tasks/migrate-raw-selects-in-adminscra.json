@@ -1,0 +1,13 @@
+{
+  "id": "migrate-raw-selects-in-adminscra",
+  "status": "ready",
+  "description": "Migrate raw selects in admin/scrapers [DONE]",
+  "priority": 4,
+  "parent_id": "polish-select-boxes-standardize",
+  "blocked_by": [
+    "update-uiselectcomponent-with-de"
+  ],
+  "owner": null,
+  "created_at": "2026-02-04T21:59:20.710073Z",
+  "updated_at": "2026-02-04T22:01:47.466236Z"
+}

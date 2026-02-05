@@ -1,0 +1,15 @@
+{
+  "id": "build-select-component-update-au",
+  "status": "done",
+  "description": "Build Select component + update AutoSelect",
+  "priority": 4,
+  "parent_id": "design-system-advanced-form-cont",
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "c8db63beb464",
+    "overseer_start_commit": "cfc6c8779f13"
+  },
+  "created_at": "2026-02-04T16:49:00.210184Z",
+  "updated_at": "2026-02-04T16:53:43.858309Z"
+}

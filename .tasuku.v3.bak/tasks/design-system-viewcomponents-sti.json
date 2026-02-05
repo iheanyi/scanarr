@@ -1,0 +1,13 @@
+{
+  "id": "design-system-viewcomponents-sti",
+  "status": "done",
+  "description": "Design System: ViewComponents + Stimulus",
+  "priority": 2,
+  "blocked_by": [],
+  "owner": null,
+  "fields": {
+    "overseer_commit_sha": "acd5fb962766"
+  },
+  "created_at": "2026-02-04T00:32:11.943161Z",
+  "updated_at": "2026-02-04T14:59:46.75153Z"
+}
