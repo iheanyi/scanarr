@@ -8,10 +8,6 @@ linters:
   SpaceAroundErbTag:
     enabled: true
 
-  # Checks for unnecessary spaces inside ERB tags
-  SpaceInsideHashLiteralBraces:
-    enabled: true
-
   # Checks for hardcoded strings that should be translated
   HardCodedString:
     enabled: false  # Enable when ready to add i18n
