@@ -36,16 +36,28 @@
     <%= download.download_error.present? ? truncate(download.download_error, length: 50) : "—" %>
   </td>
   <td class="px-4 py-3">
-    <% if can_restart %>
-      <%= button_to admin_download_restart_path(download, status: params[:status]),
-                    method: :post,
-                    class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-warning hover:bg-warning-soft",
-                    title: is_stuck ? "Restart stuck download" : "Restart download" do %>
-        <%= icon "refresh-cw", class: "h-3.5 w-3.5" %>
-        Restart
+    <div class="flex items-center gap-1">
+      <% if can_restart %>
+        <%= button_to admin_download_restart_path(download, status: params[:status]),
+                      method: :post,
+                      class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-warning hover:bg-warning-soft",
+                      title: is_stuck ? "Restart stuck download" : "Restart download" do %>
+          <%= icon "refresh-cw", class: "h-3.5 w-3.5" %>
+          Restart
+        <% end %>
       <% end %>
-    <% else %>
-      <span class="text-muted-2">—</span>
-    <% end %>
+      <% if download.download_status.in?(%w[queued pending downloading]) %>
+        <%= button_to admin_download_cancel_path(download, status: params[:status]),
+                      method: :post,
+                      class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft",
+                      data: { turbo_confirm: "Cancel this download?" } do %>
+          <%= icon "x", class: "h-3.5 w-3.5" %>
+          Cancel
+        <% end %>
+      <% end %>
+      <% unless can_restart || download.download_status.in?(%w[queued pending downloading]) %>
+        <span class="text-muted-2">—</span>
+      <% end %>
+    </div>
   </td>
 </tr>
