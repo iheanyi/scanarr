@@ -41,9 +41,7 @@
                 data-action="click->dropdown#toggle"
                 class="relative inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-muted hover:text-foreground"
                 aria-label="Open notifications">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
+          <%= icon "bell", class: "h-4 w-4", aria: { hidden: true } %>
           <span>Notifications</span>
           <% if unread_notification_count > 0 %>
             <span class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground">
@@ -51,7 +49,7 @@
             </span>
           <% end %>
         </button>
-        <div data-dropdown-target="menu" class="hidden absolute left-0 top-full mt-2 w-80 rounded-lg border border-border bg-surface shadow-xl z-50">
+        <div data-dropdown-target="menu" class="hidden absolute left-0 bottom-full mb-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-surface shadow-xl z-50">
           <div class="flex items-center justify-between border-b border-border px-4 py-2">
             <span class="text-sm font-semibold text-foreground">Notifications</span>
             <% if unread_notification_count > 0 %>
@@ -69,9 +67,7 @@
                     <p class="text-xs text-muted">Chapter <%= notification.chapter.chapter_number %></p>
                   </div>
                   <%= button_to mark_read_notification_path(notification), method: :post, class: "shrink-0 text-muted hover:text-foreground" do %>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <%= icon "check", class: "h-4 w-4" %>
                   <% end %>
                 </div>
               <% end %>
@@ -88,9 +84,7 @@
       </div>
 
       <%= button_to logout_path, method: :delete, class: "inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-muted hover:text-foreground", title: "Logout", aria: { label: "Logout" } do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
+        <%= icon "log-out", class: "h-4 w-4", aria: { hidden: true } %>
       <% end %>
     </div>
   <% end %>

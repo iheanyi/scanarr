@@ -53,7 +53,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
 
     get "/sources/weeb-central/#{series_url(series)}"
     assert_response :success
-    assert_includes @response.body, "In progress"
+    assert_includes @response.body, "In Progress"
   end
 
   def test_show_displays_download_all_button

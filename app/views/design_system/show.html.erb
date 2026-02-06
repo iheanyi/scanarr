@@ -595,6 +595,92 @@
               ) %>
             </div>
           </div>
+          <%# === New extracted components === %>
+          <div class="rounded-2xl border border-border bg-surface p-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Layout</p>
+                <h3 class="mt-2 text-sm font-semibold text-foreground">Page Header</h3>
+                <p class="mt-2 text-sm text-muted">Consistent page headers with breadcrumb, title, description, and action slots.</p>
+              </div>
+              <span class="rounded-full border border-border px-3 py-1 text-xs text-muted">UI::PageHeader</span>
+            </div>
+            <div class="mt-5 rounded-xl border border-border-soft bg-background p-4">
+              <%= render UI::PageHeaderComponent.new(
+                title: "Browse",
+                description: "Discover new series from this source.",
+                breadcrumb_text: "MangaDex"
+              ) do |header| %>
+                <% header.with_actions do %>
+                  <%= render UI::ButtonComponent.new(label: "Refresh", variant: :ghost, size: :sm) %>
+                <% end %>
+              <% end %>
+            </div>
+            <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;%= render UI::PageHeaderComponent.new(title: "Browse", description: "...", breadcrumb_text: "MangaDex") %&gt;</code></pre>
+          </div>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Status Badge</h3>
+                <span class="text-xs text-muted-2">UI::StatusBadge</span>
+              </div>
+              <p class="mt-2 text-xs text-muted">Auto-maps status strings to semantic colors.</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <%= render UI::StatusBadgeComponent.new(status: "downloading") %>
+                <%= render UI::StatusBadgeComponent.new(status: "complete", label: "Ready") %>
+                <%= render UI::StatusBadgeComponent.new(status: "failed") %>
+                <%= render UI::StatusBadgeComponent.new(status: "queued") %>
+                <%= render UI::StatusBadgeComponent.new(status: "ongoing") %>
+                <%= render UI::StatusBadgeComponent.new(status: "completed") %>
+                <%= render UI::StatusBadgeComponent.new(status: "hiatus") %>
+                <%= render UI::StatusBadgeComponent.new(status: "cancelled") %>
+              </div>
+              <p class="mt-3 text-xs text-muted-2">With borders:</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <%= render UI::StatusBadgeComponent.new(status: "completed", bordered: true) %>
+                <%= render UI::StatusBadgeComponent.new(status: "in progress", bordered: true) %>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Series Cover</h3>
+                <span class="text-xs text-muted-2">UI::SeriesCover</span>
+              </div>
+              <p class="mt-2 text-xs text-muted">Cover image with "No cover" fallback. Multiple sizes.</p>
+              <div class="mt-4 flex items-end gap-4">
+                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover xs", size: :xs, rounded: :sm) %>
+                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover sm", size: :sm, rounded: :sm) %>
+                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover md", size: :md) %>
+                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover lg", size: :lg) %>
+              </div>
+            </div>
+          </div>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Flash Message</h3>
+                <span class="text-xs text-muted-2">UI::FlashMessage</span>
+              </div>
+              <p class="mt-2 text-xs text-muted">Consistent alerts with ARIA attributes.</p>
+              <div class="mt-4 space-y-3">
+                <%= render UI::FlashMessageComponent.new(variant: :success, message: "Series imported successfully.") %>
+                <%= render UI::FlashMessageComponent.new(variant: :danger, message: "Failed to fetch chapters.") %>
+                <%= render UI::FlashMessageComponent.new(variant: :warning, message: "Some sources are unavailable.") %>
+                <%= render UI::FlashMessageComponent.new(variant: :info, message: "New version available.") %>
+              </div>
+            </div>
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Stat Card</h3>
+                <span class="text-xs text-muted-2">UI::StatCard</span>
+              </div>
+              <p class="mt-2 text-xs text-muted">Admin stat cards with label, value, and color.</p>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <%= render UI::StatCardComponent.new(label: "Queued", value: 12, color: :warning) %>
+                <%= render UI::StatCardComponent.new(label: "Complete", value: 847, color: :accent) %>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section id="patterns" class="scroll-mt-24 space-y-6 border-t border-border pt-8">

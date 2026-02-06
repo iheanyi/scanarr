@@ -11,9 +11,7 @@
               <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
                             method: :post,
                             class: "inline-flex items-center rounded-md bg-surface-2 border border-border px-2 py-1 text-xs font-medium text-foreground hover:text-foreground hover:bg-surface" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
+                <%= icon "download", class: "h-3 w-3 mr-1" %>
                 Fetch
               <% end %>
             <% end %>
@@ -24,9 +22,7 @@
         <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
                       method: :post,
                       class: "absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center rounded-md bg-surface/90 border border-border px-2 py-1 text-xs font-medium text-foreground hover:text-accent" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <%= icon "refresh-cw", class: "h-3 w-3 mr-1" %>
           Refresh
         <% end %>
       <% end %>
@@ -37,9 +33,7 @@
         <%= button_to source_series_refresh_metadata_path(source_slug: @source.slug, series_slug: @series.to_param),
                       method: :post,
                       class: "inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted hover:text-foreground hover:border-muted" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <%= icon "refresh-cw", class: "h-3 w-3" %>
           Refresh
         <% end %>
       </div>
@@ -93,9 +87,7 @@
               <%= form_with url: follows_path, method: :post, local: true do |f| %>
                 <%= f.hidden_field :library_series_id, value: @series.library_series.id %>
                 <%= render UI::ButtonComponent.new(variant: :primary, size: :sm) do %>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
+                  <%= icon "plus", class: "h-4 w-4" %>
                   Follow
                 <% end %>
               <% end %>
@@ -138,9 +130,7 @@
                           method: :post,
                           class: "inline-flex items-center gap-1.5 rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft",
                           data: { turbo_confirm: "Cancel all #{@in_progress_count} in-progress download(s)?" } do %>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <%= icon "x", class: "h-4 w-4" %>
               Cancel All
               <span class="rounded-full bg-warning/20 px-1.5 py-0.5 text-xs"><%= @in_progress_count %></span>
             <% end %>
@@ -150,9 +140,7 @@
                           method: :delete,
                           class: "inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft",
                           data: { turbo_confirm: "Remove all #{@downloaded_count} downloaded chapter(s)? This cannot be undone." } do %>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+              <%= icon "trash-2", class: "h-4 w-4" %>
               Remove All
               <span class="rounded-full bg-danger/20 px-1.5 py-0.5 text-xs"><%= @downloaded_count %></span>
             <% end %>
@@ -169,9 +157,7 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <svg data-loading-button-target="icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
+                <%= icon "download", class: "h-4 w-4", data: { loading_button_target: "icon" } %>
                 <span data-loading-button-target="text">Download All</span>
                 <% if @downloadable_count > 0 %>
                   <span class="rounded-full bg-background/20 px-1.5 py-0.5 text-xs"><%= @downloadable_count %></span>
@@ -186,9 +172,7 @@
     <% if @chapters.any? %>
       <div class="flex items-center gap-3">
         <div class="relative flex-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <%= icon "search", class: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
           <input type="text"
                  placeholder="Filter chapters by number or title…"
                  data-chapter-filter-target="input"

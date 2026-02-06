@@ -24,9 +24,7 @@
     <%= form_with url: library_path, method: :get, class: "flex-1 max-w-xs", data: { turbo_frame: "_top" } do |f| %>
       <%= hidden_field_tag :status, params[:status] if params[:status].present? %>
       <div class="relative">
-        <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-        </svg>
+        <%= icon "search", class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
         <%= f.search_field :q,
             value: params[:q],
             placeholder: "Search library...",
@@ -37,9 +35,7 @@
 
   <% if @series.empty? %>
     <div class="rounded-lg border border-border bg-surface p-12 text-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-      </svg>
+      <%= icon "book-open", class: "mx-auto h-12 w-12 text-muted-2", stroke_width: "1.5" %>
       <p class="mt-4 text-muted">
         <% if params[:q].present? || params[:status].present? %>
           No series match your filters
@@ -68,9 +64,7 @@
               <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title, loading: "lazy" %>
             <% else %>
               <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                </svg>
+                <%= icon "book-open", class: "h-12 w-12 text-muted-2", stroke_width: "1.5" %>
               </div>
             <% end %>
 
