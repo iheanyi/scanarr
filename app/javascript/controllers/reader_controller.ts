@@ -37,6 +37,7 @@ export default class extends Controller {
   private isScrolling = false // Lock to prevent observer interference during programmatic scroll
   private nextChapterCountdownInterval?: ReturnType<typeof setInterval>
   private nextChapterCountdownValue = 5
+  private hasInteracted = false // Don't auto-advance on initial page load
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -173,6 +174,7 @@ export default class extends Controller {
   }
 
   next() {
+    this.hasInteracted = true
     const nextIndex = this.currentIndex + 1
     if (nextIndex >= this.pageTargets.length) {
       // Past last page — trigger next chapter flow
@@ -184,6 +186,7 @@ export default class extends Controller {
   }
 
   previous() {
+    this.hasInteracted = true
     this.scrollToIndex(this.currentIndex - 1)
   }
 
@@ -252,6 +255,7 @@ export default class extends Controller {
           
           const index = this.pageTargets.indexOf(bestEntry.target as HTMLElement)
           if (index >= 0 && index !== this.currentIndex) {
+            this.hasInteracted = true
             this.currentIndex = index
             this.syncState()
           }
@@ -259,7 +263,7 @@ export default class extends Controller {
           // Vertical: find the topmost visible page (first in reading order)
           let topmostEntry: IntersectionObserverEntry | null = null
           let topmostTop = Infinity
-          
+
           for (const entry of entries) {
             if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
               const rect = entry.boundingClientRect
@@ -269,11 +273,12 @@ export default class extends Controller {
               }
             }
           }
-          
+
           if (!topmostEntry) return
-          
+
           const index = this.pageTargets.indexOf(topmostEntry.target as HTMLElement)
           if (index >= 0 && index !== this.currentIndex) {
+            this.hasInteracted = true
             this.currentIndex = index
             this.syncState()
           }
@@ -381,11 +386,13 @@ export default class extends Controller {
   }
 
   // Check if we're on the last page and should show next chapter prompt
+  // Only auto-show when user has actively navigated (not on initial load from saved progress)
   private checkEndOfChapter() {
     if (!this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
-    
+    if (!this.hasInteracted) return
+
     const isLastPage = this.currentIndex === this.pageTargets.length - 1
-    
+
     if (isLastPage) {
       this.showNextChapterOverlay()
     } else {

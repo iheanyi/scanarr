@@ -259,12 +259,12 @@ class ChaptersController < ApplicationController
                      .where(source: @source)
                      .order(
                        Arel.sql("chapter_number_value ASC NULLS LAST"),
-                       Arel.sql("title ASC NULLS LAST"),
                        :chapter_number,
                        :id
                      )
                      .to_a
-    index = ordered.index(@chapter)
+                     .uniq(&:chapter_number)
+    index = ordered.index { |c| c.chapter_number == @chapter.chapter_number }
     return unless index
 
     @previous_chapter = ordered[index - 1] if index.positive?
