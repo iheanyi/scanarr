@@ -2,6 +2,6 @@
 
 one:
   canonical_title: One Piece
-  public_id: seriespub001
+  public_id: libseriespub001
   slug: one-piece
-  library_series: one
+  status: 0

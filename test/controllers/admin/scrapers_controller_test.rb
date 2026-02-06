@@ -9,8 +9,9 @@ class Admin::ScrapersControllerTest < ActionDispatch::IntegrationTest
   def test_index_filters_by_status
     get admin_scrapers_path(status: "success")
     assert_response :success
-    # Table cells have Tailwind classes, so check for status text within td
-    assert_match />success<\/td>/, @response.body
-    assert_no_match />failed<\/td>/, @response.body
+    # Status badge renders within a span; "failed" appears in the filter dropdown
+    # but should not appear as a status badge in the table body
+    assert_match /bg-success-soft text-success/, @response.body
+    assert_no_match /bg-danger-soft text-danger/, @response.body
   end
 end

@@ -1,7 +1,6 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  canonical_title: One Piece
-  public_id: seriespub001
-  slug: one-piece
+  user: one
   library_series: one
+  download_policy: 0
