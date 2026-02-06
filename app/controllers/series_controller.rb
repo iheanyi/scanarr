@@ -61,7 +61,15 @@ class SeriesController < ApplicationController
   def update
     @series = find_series_by_param!
     @series.update!(series_params)
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+
+    respond_to do |format|
+      format.html { redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param) }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.append("toast-container",
+          partial: "shared/toast",
+          locals: { message: "Reading style updated", variant: :success })
+      end
+    end
   end
 
   def download_all

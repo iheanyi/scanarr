@@ -2,8 +2,8 @@
 
 class FollowsController < ApplicationController
   # Authentication handled by ApplicationController
-  before_action :set_library_series, only: [:create]
-  before_action :set_follow, only: [:update, :destroy]
+  before_action :set_library_series, only: [ :create ]
+  before_action :set_follow, only: [ :update, :destroy ]
 
   def create
     @follow = current_user.user_series_follows.build(
@@ -12,33 +12,36 @@ class FollowsController < ApplicationController
     )
 
     if @follow.save
+      @series = @library_series.series.first
       respond_to do |format|
-        format.html { redirect_back fallback_location: library_index_path, notice: "Now following #{@library_series.canonical_title}" }
-        format.turbo_stream
+        format.html { redirect_back fallback_location: library_path, notice: "Now following #{@library_series.canonical_title}" }
+        format.turbo_stream { render turbo_stream: follow_turbo_streams(notice: "Now following #{@library_series.canonical_title}") }
       end
     else
-      redirect_back fallback_location: library_index_path, alert: "Could not follow series"
+      redirect_back fallback_location: library_path, alert: "Could not follow series"
     end
   end
 
   def update
     if @follow.update(follow_params)
+      @series = @follow.library_series.series.first
       respond_to do |format|
-        format.html { redirect_back fallback_location: library_index_path, notice: "Follow settings updated" }
-        format.turbo_stream
+        format.html { redirect_back fallback_location: library_path, notice: "Follow settings updated" }
+        format.turbo_stream { render turbo_stream: follow_turbo_streams(notice: "Follow settings updated") }
       end
     else
-      redirect_back fallback_location: library_index_path, alert: "Could not update settings"
+      redirect_back fallback_location: library_path, alert: "Could not update settings"
     end
   end
 
   def destroy
     title = @follow.library_series.canonical_title
+    @series = @follow.library_series.series.first
     @follow.destroy
 
     respond_to do |format|
-      format.html { redirect_back fallback_location: library_index_path, notice: "Unfollowed #{title}" }
-      format.turbo_stream
+      format.html { redirect_back fallback_location: library_path, notice: "Unfollowed #{title}" }
+      format.turbo_stream { render turbo_stream: follow_turbo_streams(notice: "Unfollowed #{title}") }
     end
   end
 
@@ -54,5 +57,17 @@ class FollowsController < ApplicationController
 
   def follow_params
     params.require(:user_series_follow).permit(:download_policy, source_priority: [])
+  end
+
+  def follow_turbo_streams(notice: nil)
+    user_follow = @follow&.persisted? ? @follow : nil
+    streams = []
+    streams << turbo_stream.replace("follow-controls",
+      partial: "series/follow_controls",
+      locals: { series: @series, user_follow: user_follow })
+    streams << turbo_stream.append("toast-container",
+      partial: "shared/toast",
+      locals: { message: notice, variant: :success }) if notice.present?
+    streams
   end
 end

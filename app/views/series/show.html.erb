@@ -82,59 +82,30 @@
         </div>
       <% end %>
 
-      <% if user_signed_in? %>
-        <div class="flex flex-wrap items-center gap-3 mt-3" id="follow-controls">
-          <% if @user_follow %>
-            <%= render UI::ToggleButtonComponent.new(
-              active: true,
-              active_label: "Following",
-              inactive_label: "Follow",
-              hover_label: "Unfollow",
-              form_url: follow_path(@user_follow),
-              method: :delete,
-              data: { turbo_confirm: "Unfollow this series?" }
-            ) %>
-            <%= form_with model: @user_follow, url: follow_path(@user_follow), method: :patch, local: true do |f| %>
-              <%= render UI::ToggleSwitchComponent.new(
-                form: f,
-                method: :download_policy,
-                label: "Auto-download new chapters",
-                description: "Download new chapters as soon as they appear.",
-                on_value: "auto_download",
-                off_value: "notify_only",
-                auto_submit: true
-              ) %>
-            <% end %>
-          <% else %>
-            <% if @series.library_series %>
-              <%= form_with url: follows_path, method: :post, local: true do |f| %>
-                <%= f.hidden_field :library_series_id, value: @series.library_series.id %>
-                <%= render UI::ButtonComponent.new(variant: :primary, size: :sm) do %>
-                  <%= icon "plus", class: "h-4 w-4" %>
-                  Follow
-                <% end %>
-              <% end %>
-            <% end %>
-          <% end %>
-        </div>
-      <% end %>
+      <div class="flex flex-wrap items-center gap-3 mt-4">
+        <% if user_signed_in? %>
+          <%= render "series/follow_controls", series: @series, user_follow: @user_follow %>
+        <% end %>
 
-      <div class="flex flex-wrap items-center gap-2 text-sm text-foreground">
-        <span class="text-xs uppercase text-muted-2">Reading style</span>
+        <span class="hidden sm:block h-5 w-px bg-border"></span>
+
         <%= form_with model: @series,
                       url: source_series_update_path(source_slug: @source.slug, series_slug: @series.to_param),
                       method: :patch,
-                      local: true do |form| %>
+                      class: "flex items-center gap-2" do |form| %>
+          <%= icon "book-open", class: "h-3.5 w-3.5 text-muted-2" %>
           <%= render UI::AutoSelectComponent.new(
             form: form,
             method: :reading_style,
             options: [
-              ["Left to Right", "left_to_right"],
-              ["Right to Left", "right_to_left"],
-              ["Long Strip", "long_strip"],
-              ["Webcomic", "webcomic"]
+              [ "Left to Right", "left_to_right" ],
+              [ "Right to Left", "right_to_left" ],
+              [ "Long Strip", "long_strip" ],
+              [ "Webcomic", "webcomic" ]
             ],
-            selected: @series.reading_style
+            selected: @series.reading_style || "left_to_right",
+            full_width: false,
+            size: :sm
           ) %>
         <% end %>
       </div>
@@ -143,7 +114,13 @@
 
   <section class="space-y-3" data-controller="chapter-filter">
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-balance">Chapters</h2>
+      <div class="flex items-center gap-3">
+        <h2 class="text-xl font-semibold text-balance">Chapters</h2>
+        <% if @chapter_progress_map.present? %>
+          <% read_count = @chapter_progress_map.count { |_, p| p.status == "completed" } %>
+          <span class="text-sm text-muted"><%= read_count %>/<%= @chapters.size %> read</span>
+        <% end %>
+      </div>
       <% if @chapters.any? %>
         <div class="flex items-center gap-2">
           <% if @in_progress_count > 0 %>
@@ -198,7 +175,7 @@
                  placeholder="Filter chapters by number or title…"
                  data-chapter-filter-target="input"
                  data-action="input->chapter-filter#filter"
-                 class="w-full rounded-lg border border-border bg-surface-2 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
+                 class="w-full rounded-lg border border-border bg-surface-2 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
         </div>
         <span data-chapter-filter-target="count" class="shrink-0 text-xs text-muted-2">
           <%= @chapters.size %> of <%= @chapters.size %>

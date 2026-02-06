@@ -1,0 +1,34 @@
+<%# locals: (series:, user_follow:) %>
+<div class="flex flex-wrap items-center gap-3" id="follow-controls">
+  <% if user_follow %>
+    <%= render UI::ToggleButtonComponent.new(
+      active: true,
+      active_label: "Following",
+      inactive_label: "Follow",
+      hover_label: "Unfollow",
+      form_url: follow_path(user_follow),
+      method: :delete,
+      data: { turbo_confirm: "Unfollow this series?" }
+    ) %>
+    <%= form_with model: user_follow, url: follow_path(user_follow), method: :patch do |f| %>
+      <%= render UI::ToggleSwitchComponent.new(
+        form: f,
+        method: :download_policy,
+        label: "Auto-download",
+        on_value: "auto_download",
+        off_value: "notify_only",
+        auto_submit: true
+      ) %>
+    <% end %>
+  <% else %>
+    <% if series.library_series %>
+      <%= form_with url: follows_path, method: :post do |f| %>
+        <%= f.hidden_field :library_series_id, value: series.library_series.id %>
+        <%= render UI::ButtonComponent.new(variant: :primary, size: :sm, type: :submit) do %>
+          <%= icon "plus", class: "h-4 w-4" %>
+          Follow
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

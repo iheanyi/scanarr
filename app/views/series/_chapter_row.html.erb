@@ -2,10 +2,11 @@
 <% progress = progress || chapter_progress_map&.dig(chapter.id) %>
 <% latest_release = chapter.releases.max_by(&:created_at) %>
 <% file_asset = latest_release&.file_asset %>
+<% is_read = progress&.status == "completed" %>
 <li id="<%= dom_id(chapter) %>"
     data-chapter-filter-target="item"
     data-chapter-filter-text="chapter <%= chapter.chapter_number %> <%= chapter.title %>"
-    class="rounded-lg border border-border/80 bg-surface/40 p-4">
+    class="rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/30 transition-colors <%= "opacity-60" if is_read %>">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
       <div class="flex flex-wrap items-center gap-2">
@@ -15,37 +16,32 @@
                       series_slug: series.to_param,
                       chapter_identifier: chapter.chapter_number
                     ),
-                    class: "text-base font-semibold text-accent" %>
-        <% if progress.present? %>
-          <% progress_status = progress.status == "completed" ? "completed" : "in progress" %>
-          <%= render UI::StatusBadgeComponent.new(status: progress_status, bordered: true) %>
-        <% end %>
-        <% if file_asset&.download_status.present? %>
-          <% dl_label = case file_asset.download_status
-                        when "complete" then "Ready"
-                        when "queued", "pending" then "Queued"
-                        end %>
-          <span id="<%= dom_id(chapter, :status) %>">
+                    class: "text-base font-semibold #{is_read ? "text-muted" : "text-accent"}" %>
+        <%# Single-badge priority: active download > failed > reading progress > download complete %>
+        <span id="<%= dom_id(chapter, :status) %>">
+          <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
+            <% dl_label = file_asset.download_status == "downloading" ? "Downloading" : "Queued" %>
             <%= render UI::StatusBadgeComponent.new(status: file_asset.download_status, label: dl_label, bordered: true) %>
-          </span>
-        <% end %>
+          <% elsif file_asset&.download_status == "failed" %>
+            <%= render UI::StatusBadgeComponent.new(status: "failed", label: "Failed", bordered: true) %>
+          <% elsif progress.present? %>
+            <% progress_label = progress.status == "completed" ? "Completed" : "In Progress" %>
+            <%= render UI::StatusBadgeComponent.new(status: progress.status == "completed" ? "completed" : "in progress", label: progress_label, bordered: true) %>
+          <% end %>
+        </span>
       </div>
       <% if chapter.meaningful_title? %>
         <p class="text-sm text-muted text-pretty"><%= chapter.title %></p>
       <% end %>
-      <% if file_asset&.download_status.present? %>
-        <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-muted-2">
-          <% if file_asset.download_status == "downloading" && file_asset.pages_expected.present? %>
-            Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
-          <% elsif file_asset.download_status == "failed" %>
-            Download failed<%= ": #{file_asset.download_error.truncate(50)}" if file_asset.download_error.present? %>
-          <% elsif file_asset.download_status == "complete" %>
-            Ready
-          <% else %>
-            Queued
-          <% end %>
-        </p>
-      <% end %>
+      <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-muted-2">
+        <% if file_asset&.download_status == "downloading" && file_asset.pages_expected.present? %>
+          Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
+        <% elsif file_asset&.download_status == "failed" && file_asset.download_error.present? %>
+          <%= file_asset.download_error.truncate(50) %>
+        <% elsif progress.present? %>
+          Last read <%= time_ago_in_words(progress.progressed_at) %> ago
+        <% end %>
+      </p>
     </div>
     <div class="flex items-center gap-2">
       <% if file_asset&.download_status == "complete" %>
