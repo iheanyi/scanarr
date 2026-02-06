@@ -53,7 +53,7 @@ class LibraryExportService
 
   def export_library_series
     LibrarySeries.includes(
-      series: [ :sources, :series_sources, { chapters: :volume } ]
+      series: [ :sources, :series_sources, { chapters: [ :volume, :source ] } ]
     ).map do |ls|
       {
         canonical_title: ls.canonical_title,

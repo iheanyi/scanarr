@@ -30,8 +30,8 @@ class LibraryImportService
   private
 
   def parse_data
-    raw = if @data.is_a?(String) && @data.start_with?("\x1f\x8b".b)
-      Zlib::GzipReader.new(StringIO.new(@data)).read
+    raw = if @data.is_a?(String) && @data.b.start_with?("\x1f\x8b".b)
+      Zlib::GzipReader.new(StringIO.new(@data.b)).read
     elsif @data.is_a?(String)
       @data
     else
