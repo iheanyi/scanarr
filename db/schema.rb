@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_06_200036) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_06_210215) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_200036) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "backup_records", force: :cascade do |t|
+    t.string "backup_type", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "filename", null: false
+    t.string "path"
+    t.bigint "size"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["backup_type"], name: "index_backup_records_on_backup_type"
+    t.index ["created_at"], name: "index_backup_records_on_created_at"
+    t.index ["status"], name: "index_backup_records_on_status"
   end
 
   create_table "chapter_progresses", force: :cascade do |t|

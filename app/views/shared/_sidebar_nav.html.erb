@@ -40,6 +40,10 @@
           <%= icon "history", class: "h-4 w-4 shrink-0" %>
           History
         <% end %>
+        <%= link_to export_path, nav_link_attributes.call(export_path) do %>
+          <%= icon "archive", class: "h-4 w-4 shrink-0" %>
+          Export / Import
+        <% end %>
       </div>
     </div>
 
@@ -57,6 +61,10 @@
         <%= link_to admin_scrapers_path, nav_link_attributes.call(admin_scrapers_path) do %>
           <%= icon "activity", class: "h-4 w-4 shrink-0" %>
           Scrapers
+        <% end %>
+        <%= link_to admin_backups_path, nav_link_attributes.call(admin_backups_path) do %>
+          <%= icon "hard-drive", class: "h-4 w-4 shrink-0" %>
+          Backups
         <% end %>
         <%= link_to design_system_path, nav_link_attributes.call(design_system_path) do %>
           <%= icon "layers", class: "h-4 w-4 shrink-0" %>

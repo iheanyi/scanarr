@@ -1,0 +1,93 @@
+<div class="space-y-8">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Export & Import",
+    description: "Export your library as a portable file or import from a backup."
+  ) %>
+
+  <div class="grid gap-6 md:grid-cols-2">
+    <%# Export Section %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-semibold">Export Library</h2>
+        <p class="text-sm text-muted mt-1">
+          Download your entire library as a .scanarr file. Includes series metadata,
+          reading progress, and follow settings. No downloaded files are included.
+        </p>
+      </div>
+
+      <div class="rounded-md bg-surface-2 p-4 space-y-2">
+        <h3 class="text-xs uppercase tracking-wider text-muted-2">What will be exported</h3>
+        <dl class="grid grid-cols-2 gap-2 text-sm">
+          <dt class="text-muted">Sources</dt>
+          <dd class="font-semibold"><%= @preview[:sources] %></dd>
+          <dt class="text-muted">Library Series</dt>
+          <dd class="font-semibold"><%= @preview[:library_series] %></dd>
+          <dt class="text-muted">Series</dt>
+          <dd class="font-semibold"><%= @preview[:series] %></dd>
+          <dt class="text-muted">Chapters</dt>
+          <dd class="font-semibold"><%= @preview[:chapters] %></dd>
+          <dt class="text-muted">Reading Progress</dt>
+          <dd class="font-semibold"><%= @preview[:reading_progress] %></dd>
+          <dt class="text-muted">Follows</dt>
+          <dd class="font-semibold"><%= @preview[:follows] %></dd>
+        </dl>
+      </div>
+
+      <%= button_to export_path, method: :post,
+                    class: "inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" do %>
+        <%= icon "download", class: "h-4 w-4" %>
+        Export .scanarr File
+      <% end %>
+    </section>
+
+    <%# Import Section %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-semibold">Import Library</h2>
+        <p class="text-sm text-muted mt-1">
+          Restore from a .scanarr export file. Choose how to handle conflicts
+          with existing data.
+        </p>
+      </div>
+
+      <%= form_with url: import_library_path, method: :post, multipart: true, class: "space-y-4" do |f| %>
+        <div>
+          <label for="file" class="text-sm font-medium text-foreground mb-0">Import File</label>
+          <%= f.file_field :file, accept: ".scanarr",
+                           class: "mt-2 block w-full text-sm text-muted file:mr-4 file:rounded-md file:border file:border-border file:bg-surface-2 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground hover:file:bg-surface-2/80" %>
+        </div>
+
+        <div>
+          <span class="text-sm font-medium text-foreground">Conflict Strategy</span>
+          <div class="mt-2 space-y-2">
+            <label class="flex items-center gap-2 text-sm">
+              <%= f.radio_button :strategy, "merge", checked: true, class: "accent-accent" %>
+              <span>
+                <span class="font-medium">Merge</span>
+                <span class="text-muted"> — Add new data, keep newer progress</span>
+              </span>
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <%= f.radio_button :strategy, "overwrite", class: "accent-accent" %>
+              <span>
+                <span class="font-medium">Overwrite</span>
+                <span class="text-muted"> — Replace existing data with import</span>
+              </span>
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <%= f.radio_button :strategy, "skip", class: "accent-accent" %>
+              <span>
+                <span class="font-medium">Skip</span>
+                <span class="text-muted"> — Only add new, never update existing</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <%= f.submit "Import",
+                      class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer",
+                      data: { turbo_confirm: "Import this library? A safety backup will be created automatically." } %>
+      <% end %>
+    </section>
+  </div>
+</div>

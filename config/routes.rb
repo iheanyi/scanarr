@@ -68,7 +68,19 @@ Rails.application.routes.draw do
     post "downloads/:id/cancel", to: "downloads#cancel", as: :download_cancel
     post "downloads/restart_all_failed", to: "downloads#restart_all_failed", as: :restart_all_failed_downloads
     post "downloads/restart_all_stuck", to: "downloads#restart_all_stuck", as: :restart_all_stuck_downloads
+
+    # Backups
+    get "backups", to: "backups#index", as: :backups
+    post "backups", to: "backups#create", as: :create_backup
+    get "backups/:id/download", to: "backups#download", as: :backup_download
+    delete "backups/:id", to: "backups#destroy", as: :backup
+    post "backups/:id/verify", to: "backups#verify", as: :backup_verify
   end
+
+  # Library Export/Import
+  get "/export", to: "exports#show", as: :export
+  post "/export", to: "exports#create"
+  post "/import", to: "exports#import_library", as: :import_library
 
   # Mission Control for SolidQueue job monitoring
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"

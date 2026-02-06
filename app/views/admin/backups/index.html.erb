@@ -1,0 +1,143 @@
+<div class="space-y-8">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Backups",
+    description: "Manage database backups and library exports.",
+    breadcrumb_text: "Admin"
+  ) %>
+
+  <section class="grid gap-4 md:grid-cols-4">
+    <%= render UI::StatCardComponent.new(label: "Total Backups", value: @stats[:total], color: :muted) %>
+    <%= render UI::StatCardComponent.new(label: "Complete", value: @stats[:complete], color: :accent) %>
+    <%= render UI::StatCardComponent.new(label: "Failed", value: @stats[:failed], color: :danger) %>
+    <%= render UI::StatCardComponent.new(label: "Total Size", value: ActiveSupport::NumberHelper.number_to_human_size(@stats[:total_size]), color: :info) %>
+  </section>
+
+  <section class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Actions</h2>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-lg border border-border bg-surface p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold">Database Backup</h3>
+            <p class="text-xs text-muted-2 mt-1">
+              Create a full PostgreSQL backup with metadata and configuration.
+            </p>
+          </div>
+          <%= button_to admin_create_backup_path, method: :post,
+                        class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
+                        data: { turbo_confirm: "Create a new backup? This may take a moment." } do %>
+            <%= icon "hard-drive", class: "h-4 w-4" %>
+            Backup Now
+          <% end %>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-border bg-surface p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold">Library Export</h3>
+            <p class="text-xs text-muted-2 mt-1">
+              Export your library, reading progress, and follows as a portable .scanarr file.
+            </p>
+          </div>
+          <%= link_to export_path,
+                      class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost" do %>
+            <%= icon "download", class: "h-4 w-4" %>
+            Export
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-4">
+    <h2 class="text-lg font-semibold">Backup History</h2>
+
+    <% if @backups.any? %>
+      <div class="overflow-x-auto rounded-lg border border-border">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-surface text-left text-xs uppercase tracking-wider text-muted-2">
+              <th class="px-4 py-3">Filename</th>
+              <th class="px-4 py-3">Type</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Size</th>
+              <th class="px-4 py-3">Created</th>
+              <th class="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <% @backups.each do |backup| %>
+              <tr class="hover:bg-surface-2/40">
+                <td class="px-4 py-3 font-mono text-xs"><%= backup.filename %></td>
+                <td class="px-4 py-3">
+                  <% badge_variant = case backup.backup_type
+                     when "scheduled" then :info
+                     when "manual" then :accent
+                     when "pre_restore", "pre_import" then :warning
+                     else :muted
+                     end %>
+                  <%= render UI::BadgeComponent.new(label: backup.backup_type.titleize, variant: badge_variant) %>
+                </td>
+                <td class="px-4 py-3">
+                  <% status_variant = case backup.status
+                     when "complete" then :success
+                     when "failed" then :danger
+                     else :warning
+                     end %>
+                  <%= render UI::BadgeComponent.new(label: backup.status.titleize, variant: status_variant) %>
+                  <% if backup.error_message.present? %>
+                    <p class="mt-1 text-xs text-danger truncate max-w-48" title="<%= backup.error_message %>"><%= backup.error_message %></p>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-muted"><%= backup.human_size || "—" %></td>
+                <td class="px-4 py-3 text-muted"><%= time_ago_in_words(backup.created_at) %> ago</td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-end gap-2">
+                    <% if backup.status == "complete" && backup.file_exists? %>
+                      <%= link_to admin_backup_download_path(backup),
+                                  class: "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted hover:text-foreground hover:bg-surface-2",
+                                  title: "Download" do %>
+                        <%= icon "download", class: "h-3.5 w-3.5" %>
+                      <% end %>
+                      <%= button_to admin_backup_verify_path(backup), method: :post,
+                                    class: "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted hover:text-foreground hover:bg-surface-2",
+                                    title: "Verify integrity" do %>
+                        <%= icon "check", class: "h-3.5 w-3.5" %>
+                      <% end %>
+                    <% end %>
+                    <%= button_to admin_backup_path(backup), method: :delete,
+                                  class: "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-danger hover:bg-danger-soft",
+                                  data: { turbo_confirm: "Delete this backup? This cannot be undone." },
+                                  title: "Delete" do %>
+                      <%= icon "trash-2", class: "h-3.5 w-3.5" %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <%= render UI::PaginationComponent.new(
+        collection: @backups,
+        base_path: admin_backups_path,
+        params: {}
+      ) %>
+    <% else %>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No backups yet",
+        description: "Create your first backup to protect your data.",
+        compact: true
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "hard-drive", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </section>
+</div>
