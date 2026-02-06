@@ -5,10 +5,11 @@
   ) %>
 
   <%# Stat cards %>
-  <section class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+  <section class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
     <%= render UI::StatCardComponent.new(label: "Chapters Read", value: @total_chapters_read, color: :accent) %>
-    <%= render UI::StatCardComponent.new(label: "Series In Progress", value: @series_with_progress, color: :info) %>
-    <%= render UI::StatCardComponent.new(label: "Series Followed", value: @series_followed, color: :success) %>
+    <%= render UI::StatCardComponent.new(label: "Pages Read", value: number_with_delimiter(@total_pages_read), color: :info) %>
+    <%= render UI::StatCardComponent.new(label: "Series In Progress", value: @series_with_progress, color: :success) %>
+    <%= render UI::StatCardComponent.new(label: "Series Followed", value: @series_followed, color: :muted) %>
     <%= render UI::StatCardComponent.new(label: "Chapters / Week", value: @chapters_per_week, color: :warning) %>
   </section>
 

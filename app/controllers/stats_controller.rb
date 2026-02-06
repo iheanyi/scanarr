@@ -5,6 +5,7 @@ class StatsController < ApplicationController
                                         .joins(:chapter)
                                         .distinct("chapters.series_id")
                                         .count("DISTINCT chapters.series_id")
+    @total_pages_read = current_user.chapter_progresses.where(status: "completed").sum(:page_count)
     @series_followed = current_user.user_series_follows.count
     @chapters_per_week = chapters_per_week_avg
 
