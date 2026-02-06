@@ -69,7 +69,7 @@
         <%= link_to series_path, class: "group block" do %>
           <div class="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-surface-2">
             <% if series.cover_image_url.present? %>
-              <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title %>
+              <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title, loading: "lazy" %>
             <% else %>
               <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -125,5 +125,32 @@
         <% end %>
       <% end %>
     </div>
+
+    <% if @series.respond_to?(:total_pages) && @series.total_pages > 1 %>
+      <nav class="mt-6 flex items-center justify-center gap-1">
+        <% if @series.first_page? %>
+          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
+        <% else %>
+          <%= link_to "Previous", library_path(page: @series.prev_page, status: params[:status], q: params[:q]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+        <% end %>
+
+        <% window = 3 %>
+        <% start_page = [@series.current_page - window, 1].max %>
+        <% end_page = [@series.current_page + window, @series.total_pages].min %>
+        <% (start_page..end_page).each do |page_num| %>
+          <% if page_num == @series.current_page %>
+            <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
+          <% else %>
+            <%= link_to page_num, library_path(page: page_num, status: params[:status], q: params[:q]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+          <% end %>
+        <% end %>
+
+        <% if @series.last_page? %>
+          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
+        <% else %>
+          <%= link_to "Next", library_path(page: @series.next_page, status: params[:status], q: params[:q]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+        <% end %>
+      </nav>
+    <% end %>
   <% end %>
 </div>

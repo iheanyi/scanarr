@@ -28,7 +28,7 @@ class CalendarController < ApplicationController
     end
 
     # Query chapters
-    chapters_scope = Chapter.includes(:series, :source)
+    chapters_scope = Chapter.includes(:source, series: :cover_attachment)
       .where(series_id: followed_series_ids)
       .where(created_at: @start_date.beginning_of_day..@end_date.end_of_day)
       .order(created_at: :desc)

@@ -62,7 +62,7 @@ class ApplicationController < ActionController::Base
 
   def current_notifications
     @current_notifications ||= current_user.new_chapter_notifications
-      .includes(chapter: { series: :sources })
+      .includes(chapter: :series)
       .unread
       .recent
       .order(created_at: :desc)

@@ -4,6 +4,7 @@ class SeriesController < ApplicationController
   def index
     @series = Series.joins(:series_sources)
                     .where(series_sources: { source_id: @source.id })
+                    .includes(:cover_attachment)
                     .order(:canonical_title)
   end
 
