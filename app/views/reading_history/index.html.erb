@@ -1,0 +1,115 @@
+<div class="space-y-6">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Reading History",
+    description: "Your chapter-by-chapter reading timeline."
+  ) %>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex overflow-hidden rounded-lg border border-border bg-surface-2/60 text-sm">
+      <%= link_to "All",
+          reading_history_path,
+          class: "px-3 py-1.5 transition-colors #{params[:status].blank? ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+      <%= link_to "Completed",
+          reading_history_path(status: "completed"),
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'completed' ? 'bg-success-soft text-success' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+      <%= link_to "In Progress",
+          reading_history_path(status: "in_progress"),
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'in_progress' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+    </div>
+  </div>
+
+  <% if @progresses.empty? %>
+    <%= render UI::EmptyStateComponent.new(
+      title: params[:status].present? ? "No #{params[:status].humanize.downcase} chapters" : "No reading history yet",
+      description: params[:status].present? ? nil : "Start reading chapters and your history will appear here."
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "book-open", class: "h-6 w-6" %>
+      <% end %>
+      <% if params[:status].present? %>
+        <% empty.with_action do %>
+          <%= link_to "Clear filter", reading_history_path, class: "text-sm text-info hover:text-info" %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <div class="space-y-2">
+      <% current_date = nil %>
+      <% @progresses.each do |progress| %>
+        <% date = progress.progressed_at.to_date %>
+        <% if date != current_date %>
+          <% current_date = date %>
+          <div class="<%= progress != @progresses.first ? "mt-6" : "" %>">
+            <h3 class="mb-2 text-sm font-semibold text-muted">
+              <% if date == Date.current %>
+                Today
+              <% elsif date == Date.yesterday %>
+                Yesterday
+              <% else %>
+                <%= date.strftime("%A, %B %d, %Y") %>
+              <% end %>
+            </h3>
+          </div>
+        <% end %>
+
+        <% chapter = progress.chapter %>
+        <% series = chapter&.series %>
+        <% source = chapter&.source %>
+        <% chapter_path = source && series ? source_series_chapter_path(source.slug, series.to_param, chapter.chapter_number) : "#" %>
+        <% series_path_url = source && series ? source_series_path(source.slug, series.to_param) : "#" %>
+
+        <%= link_to chapter_path, class: "group flex items-center gap-4 rounded-lg border border-border/60 bg-surface p-3 transition-colors hover:border-accent/40 hover:bg-surface-2/60" do %>
+          <%= render UI::SeriesCoverComponent.new(url: series&.cover_image_url, alt: series&.canonical_title || "", size: :sm, rounded: :sm) %>
+
+          <div class="flex-1 min-w-0">
+            <p class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">
+              <%= series&.canonical_title || "Unknown Series" %>
+            </p>
+            <p class="truncate text-xs text-muted">
+              Chapter <%= chapter.chapter_number %>
+              <% if chapter.meaningful_title? %>
+                &mdash; <%= chapter.display_title %>
+              <% end %>
+            </p>
+          </div>
+
+          <div class="hidden sm:flex items-center gap-3 shrink-0">
+            <% if progress.status == "completed" %>
+              <%= render UI::StatusBadgeComponent.new(status: "completed") %>
+            <% else %>
+              <span class="text-xs text-muted tabular-nums"><%= progress.page_index %>/<%= progress.page_count %></span>
+            <% end %>
+            <span class="text-xs text-muted-2 tabular-nums w-20 text-right"><%= progress.progressed_at.strftime("%-I:%M %p") %></span>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @progresses.total_pages > 1 %>
+      <nav class="mt-6 flex items-center justify-center gap-1">
+        <% if @progresses.first_page? %>
+          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
+        <% else %>
+          <%= link_to "Previous", reading_history_path(page: @progresses.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+        <% end %>
+
+        <% window = 3 %>
+        <% start_page = [ @progresses.current_page - window, 1 ].max %>
+        <% end_page = [ @progresses.current_page + window, @progresses.total_pages ].min %>
+        <% (start_page..end_page).each do |page_num| %>
+          <% if page_num == @progresses.current_page %>
+            <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
+          <% else %>
+            <%= link_to page_num, reading_history_path(page: page_num, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+          <% end %>
+        <% end %>
+
+        <% if @progresses.last_page? %>
+          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
+        <% else %>
+          <%= link_to "Next", reading_history_path(page: @progresses.next_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+        <% end %>
+      </nav>
+    <% end %>
+  <% end %>
+</div>

@@ -15,6 +15,8 @@ Rails.application.routes.draw do
   root "sources#index"
   get "/library", to: "library#index", as: :library
   get "/calendar", to: "calendar#index", as: :calendar
+  get "/stats", to: "stats#show", as: :stats
+  get "/history", to: "reading_history#index", as: :reading_history
   resources :follows, only: [ :create, :update, :destroy ]
 
   # Notifications
