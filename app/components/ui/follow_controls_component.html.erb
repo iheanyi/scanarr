@@ -19,14 +19,15 @@
         auto_submit: true
       ) %>
     <% end %>
-    <%= form_with model: user_follow, url: helpers.follow_path(user_follow), method: :patch do |f| %>
+    <%= form_with model: user_follow, url: helpers.follow_path(user_follow), method: :patch, class: "flex items-center gap-1.5" do |f| %>
+      <%= helpers.icon "clock", class: "h-3.5 w-3.5 text-muted-2" %>
       <%= render UI::AutoSelectComponent.new(
         form: f,
         method: :check_interval_minutes,
-        label: "Check frequency",
         options: interval_options,
         selected: user_follow.check_interval_minutes,
-        size: :sm
+        size: :sm,
+        full_width: false
       ) %>
     <% end %>
   <% else %>
