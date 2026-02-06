@@ -1,7 +1,0 @@
-[
-  {
-    "id": "cbcd3c",
-    "text": "Context: Use /manga endpoint with order params: latestUploadedChapter, followedCount, relevance. Support content rating filters.",
-    "created_at": "2026-02-03T23:49:24.371981Z"
-  }
-]

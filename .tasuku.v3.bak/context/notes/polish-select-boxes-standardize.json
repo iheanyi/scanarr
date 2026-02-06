@@ -1,7 +1,0 @@
-[
-  {
-    "id": "d7ae71",
-    "text": "Context: Standardize select component styling using design tokens (border-border, bg-surface-2, text-foreground, focus:border-accent) and normalize label typography to text-sm text-muted across views",
-    "created_at": "2026-02-04T21:59:20.667884Z"
-  }
-]
