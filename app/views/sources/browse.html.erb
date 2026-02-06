@@ -77,15 +77,7 @@
                   <p class="mt-0.5 text-xs text-muted-2 truncate"><%= result.author %></p>
                 <% end %>
                 <% if result.respond_to?(:status) && result.status.present? %>
-                  <span class="mt-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium
-                    <%= case result.status.to_s.downcase
-                        when 'ongoing' then 'bg-info-soft text-info'
-                        when 'completed' then 'bg-success-soft text-success'
-                        when 'hiatus' then 'bg-warning-soft text-warning'
-                        else 'bg-surface-2 text-foreground'
-                        end %>">
-                    <%= result.status.titleize %>
-                  </span>
+                  <%= render UI::StatusBadgeComponent.new(status: result.status, class: "mt-1") %>
                 <% end %>
               </div>
 

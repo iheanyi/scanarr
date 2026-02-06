@@ -69,16 +69,7 @@
               </span>
             <% end %>
             <% if @series.status.present? %>
-              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium
-                <%= case @series.status.to_s.downcase
-                    when 'ongoing' then 'bg-info-soft text-info'
-                    when 'completed' then 'bg-success-soft text-success'
-                    when 'hiatus' then 'bg-warning-soft text-warning'
-                    when 'cancelled' then 'bg-danger-soft text-danger'
-                    else 'bg-surface-2 text-foreground'
-                    end %>">
-                <%= @series.status.to_s.titleize %>
-              </span>
+              <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
             <% end %>
             <% if @series.series_type.present? %>
               <span class="inline-flex rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-foreground">

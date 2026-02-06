@@ -96,15 +96,7 @@
                 <td class="px-4 py-3 text-muted tabular-nums"><%= run.started_at&.strftime("%Y-%m-%d %H:%M") %></td>
                 <td class="px-4 py-3"><%= run.source.name || run.source.key %></td>
                 <td class="px-4 py-3">
-                  <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium
-                    <%= case run.status.to_s
-                        when 'success' then 'bg-success-soft text-success'
-                        when 'error', 'failed' then 'bg-danger-soft text-danger'
-                        when 'running' then 'bg-info-soft text-info'
-                        else 'bg-surface-2 text-foreground'
-                        end %>">
-                    <%= run.status %>
-                  </span>
+                  <%= render UI::StatusBadgeComponent.new(status: run.status) %>
                 </td>
                 <td class="px-4 py-3 text-muted">
                   <% if run.stats_json.present? %>

@@ -13,22 +13,10 @@
     <% end %>
   </td>
   <td class="px-4 py-3">
-    <% case download.download_status %>
-    <% when "queued", "pending" %>
-      <span class="inline-flex items-center rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning">Queued</span>
-    <% when "downloading" %>
-      <span class="inline-flex items-center rounded-full bg-info-soft px-2 py-0.5 text-xs font-medium text-info">
-        Downloading
-        <% if is_stuck %>
-          <span class="ml-1 text-warning" title="No progress for 10+ minutes">⚠</span>
-        <% end %>
-      </span>
-    <% when "complete" %>
-      <span class="inline-flex items-center rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent">Complete</span>
-    <% when "failed" %>
-      <span class="inline-flex items-center rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger">Failed</span>
-    <% when "cancelled" %>
-      <span class="inline-flex items-center rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted">Cancelled</span>
+    <% status_label = download.download_status.in?(%w[queued pending]) ? "Queued" : nil %>
+    <%= render UI::StatusBadgeComponent.new(status: download.download_status, label: status_label) %>
+    <% if download.download_status == "downloading" && is_stuck %>
+      <span class="ml-1 text-warning" title="No progress for 10+ minutes">⚠</span>
     <% end %>
   </td>
   <td class="px-4 py-3">
