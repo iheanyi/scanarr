@@ -1,0 +1,25 @@
+<%# locals: (message:, variant: :success) %>
+
+  icon_name, accent_color, accent_border = case variant.to_sym
+    when :success then [ "circle-check", "text-success", "border-l-success" ]
+    when :danger, :error then [ "circle-alert", "text-danger", "border-l-danger" ]
+    when :warning then [ "triangle-alert", "text-warning", "border-l-warning" ]
+    else [ "info", "text-info", "border-l-info" ]
+  end
+%>
+<div data-controller="toast"
+     data-toast-delay-value="4000"
+     role="status"
+     aria-live="polite"
+     class="translate-y-2 opacity-0 transition-all duration-300 ease-out
+            flex items-center gap-3 rounded-lg border border-border/80 border-l-2 <%= accent_border %>
+            bg-surface px-4 py-3 shadow-lg backdrop-blur-sm">
+  <%= icon icon_name, class: "h-4 w-4 shrink-0 #{accent_color}" %>
+  <p class="flex-1 text-sm text-foreground"><%= message %></p>
+  <button type="button"
+          data-action="toast#dismiss"
+          class="shrink-0 rounded p-0.5 text-muted-2 hover:text-foreground transition-colors"
+          aria-label="Dismiss">
+    <%= icon "x", class: "h-3.5 w-3.5" %>
+  </button>
+</div>

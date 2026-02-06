@@ -400,10 +400,10 @@
                   <span class="text-xs text-muted-2">UI::Input</span>
                 </div>
                 <div class="mt-3 space-y-3">
-                  <input type="text" placeholder="Search series" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none" />
+                  <input type="text" placeholder="Search series" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none">
                   <div class="flex items-center gap-3">
                     <label class="flex items-center gap-2 text-sm text-muted">
-                      <input type="checkbox" class="h-4 w-4 rounded border-border bg-background text-accent focus:ring-accent" />
+                      <input type="checkbox" class="h-4 w-4 rounded border-border bg-background text-accent focus:ring-accent">
                       Auto-download
                     </label>
                     <span class="text-xs text-muted-2">Auto-applies</span>
@@ -426,9 +426,9 @@
                     label: "Reading style",
                     hint: "Auto-applies on change.",
                     options: [
-                      ["Left to Right", "left_to_right"],
-                      ["Right to Left", "right_to_left"],
-                      ["Long Strip", "long_strip"]
+                      [ "Left to Right", "left_to_right" ],
+                      [ "Right to Left", "right_to_left" ],
+                      [ "Long Strip", "long_strip" ]
                     ],
                     selected: "left_to_right"
                   ) %>
@@ -464,12 +464,12 @@
                 name: "sources",
                 label: "Sources",
                 options: [
-                  ["MangaDex", "mangadex"],
-                  ["WeebCentral", "weebcentral"],
-                  ["MangaPill", "mangapill"],
-                  ["MangaSee", "mangasee"]
+                  [ "MangaDex", "mangadex" ],
+                  [ "WeebCentral", "weebcentral" ],
+                  [ "MangaPill", "mangapill" ],
+                  [ "MangaSee", "mangasee" ]
                 ],
-                selected: ["mangadex", "weebcentral"],
+                selected: [ "mangadex", "weebcentral" ],
                 filter_placeholder: "Filter sources",
                 all_label: "All sources"
               ) %>
@@ -586,9 +586,9 @@
             <div class="mt-4">
               <%= render UI::RedirectSelectComponent.new(
                 options: [
-                  ["All Sources", "#"],
-                  ["MangaDex", "#mangadex"],
-                  ["WeebCentral", "#weebcentral"]
+                  [ "All Sources", "#" ],
+                  [ "MangaDex", "#mangadex" ],
+                  [ "WeebCentral", "#weebcentral" ]
                 ],
                 selected: "#",
                 size: :sm

@@ -24,7 +24,7 @@
         <%= render UI::MultiSelectComponent.new(
           name: "sources",
           label: "Sources",
-          options: @sources.map { |source| [source.name || source.key, source.id.to_s] },
+          options: @sources.map { |source| [ source.name || source.key, source.id.to_s ] },
           selected: @selected_source_ids,
           filter_placeholder: "Filter sources",
           all_label: "All sources"
@@ -55,7 +55,7 @@
           <% @results.each do |item| %>
             <% source = item[:source] %>
             <% result = item[:result] %>
-            <div class="flex flex-col rounded-lg border border-border bg-surface p-4">
+            <div class="flex flex-col rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors">
               <div class="flex flex-1 gap-4">
                 <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "#{result.title} cover", size: :lg, class: "shrink-0") %>
                 <div class="flex min-w-0 flex-1 flex-col">

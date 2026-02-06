@@ -36,3 +36,6 @@ application.register("flash-dismiss", FlashDismissController)
 
 import TextExpandController from "./text_expand_controller"
 application.register("text-expand", TextExpandController)
+
+import ToastController from "./toast_controller"
+application.register("toast", ToastController)
