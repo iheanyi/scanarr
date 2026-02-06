@@ -206,7 +206,15 @@
       linear-gradient(to bottom, var(--ds-grid) 1px, transparent 1px);
     background-size: 80px 80px;
   }
+}
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * BULK SELECT - Checkbox visibility overrides
+ *
+ * Must be in @layer utilities to override Tailwind's opacity-0 utility.
+ * @layer components has lower priority than @layer utilities in CSS cascade.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
   /* When any checkbox is checked, keep all checkboxes visible */
   .selecting .bulk-checkbox {
     opacity: 1;
