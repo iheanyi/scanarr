@@ -1,7 +1,10 @@
 <%# locals: (chapter:, source:, series:, progress: nil) %>
 <% latest_release = chapter.releases.max_by(&:created_at) %>
 <% file_asset = latest_release&.file_asset %>
-<li id="<%= dom_id(chapter) %>" class="rounded-lg border border-border/80 bg-surface/40 p-4">
+<li id="<%= dom_id(chapter) %>"
+    data-chapter-filter-target="item"
+    data-chapter-filter-text="chapter <%= chapter.chapter_number %> <%= chapter.title %>"
+    class="rounded-lg border border-border/80 bg-surface/40 p-4">
   <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
       <div class="flex flex-wrap items-center gap-2">
@@ -112,7 +115,8 @@
                           chapter_identifier: chapter.chapter_number
                         ),
                         method: :post,
-                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent" %>
+                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent",
+                        data: { turbo_submits_with: "Queuing..." } %>
         <% end %>
       <% end %>
     </div>

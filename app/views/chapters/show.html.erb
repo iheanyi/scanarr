@@ -113,7 +113,8 @@
                     method: :post,
                     class: download_class,
                     disabled: @download_in_progress,
-                    aria: { disabled: @download_in_progress } %>
+                    aria: { disabled: @download_in_progress },
+                    data: { turbo_submits_with: "Queuing..." } %>
     <% end %>
     <%= form_with url: source_series_chapter_path(
                     source_slug: source_slug(@source),

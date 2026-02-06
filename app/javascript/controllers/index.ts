@@ -27,3 +27,6 @@ application.register("multi-select", MultiSelectController)
 
 import DrawerController from "./drawer_controller"
 application.register("drawer", DrawerController)
+
+import ChapterFilterController from "./chapter_filter_controller"
+application.register("chapter-filter", ChapterFilterController)
