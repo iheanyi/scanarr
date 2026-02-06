@@ -1,4 +1,5 @@
-<%# locals: (chapter:, source:, series:, progress: nil) %>
+<%# locals: (chapter:, source:, series:, progress: nil, chapter_progress_map: nil) %>
+<% progress = progress || chapter_progress_map&.dig(chapter.id) %>
 <% latest_release = chapter.releases.max_by(&:created_at) %>
 <% file_asset = latest_release&.file_asset %>
 <li id="<%= dom_id(chapter) %>"

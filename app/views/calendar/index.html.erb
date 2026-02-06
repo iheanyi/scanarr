@@ -1,24 +1,25 @@
-<div class="max-w-6xl mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold">Release Calendar</h1>
+<div class="space-y-6">
+  <header class="space-y-2">
+    <h1 class="text-3xl font-semibold text-balance">Release Calendar</h1>
+    <p class="text-muted text-pretty">New chapters from your followed series.</p>
+  </header>
 
-    <div class="flex gap-4">
-      <!-- View Type Toggle -->
-      <div class="flex rounded-lg overflow-hidden border border-border">
-        <% %w[week month recent].each do |view| %>
-          <%= link_to view.titleize,
-                calendar_path(view: view, source: @source_filter),
-                class: "px-4 py-2 text-sm #{@view_type == view ? 'bg-accent text-accent-foreground' : 'bg-surface-2 hover:bg-surface'}" %>
-        <% end %>
-      </div>
-
-      <!-- Source Filter -->
-      <%= render UI::RedirectSelectComponent.new(
-        options: [["All Sources", calendar_path(view: @view_type)]] +
-                 @sources.map { |s| [s.name, calendar_path(view: @view_type, source: s.slug)] },
-        selected: @source_filter.present? ? calendar_path(view: @view_type, source: @source_filter) : calendar_path(view: @view_type)
-      ) %>
+  <div class="flex flex-wrap items-center gap-4">
+    <%# View Type Toggle %>
+    <div class="flex rounded-lg overflow-hidden border border-border">
+      <% %w[week month recent].each do |view| %>
+        <%= link_to view.titleize,
+              calendar_path(view: view, source: @source_filter),
+              class: "px-4 py-2 text-sm #{@view_type == view ? 'bg-accent text-accent-foreground' : 'bg-surface-2 hover:bg-surface'}" %>
+      <% end %>
     </div>
+
+    <%# Source Filter %>
+    <%= render UI::RedirectSelectComponent.new(
+      options: [["All Sources", calendar_path(view: @view_type)]] +
+               @sources.map { |s| [s.name, calendar_path(view: @view_type, source: s.slug)] },
+      selected: @source_filter.present? ? calendar_path(view: @view_type, source: @source_filter) : calendar_path(view: @view_type)
+    ) %>
   </div>
 
   <% if @chapters_by_date.empty? %>
@@ -53,10 +54,11 @@
             <% chapters.each do |chapter| %>
               <div class="px-4 py-3 flex items-center justify-between hover:bg-surface">
                 <div class="flex items-center gap-4">
-                  <% if chapter.series.cover_url.present? %>
-                    <img src="<%= chapter.series.cover_url %>"
-                         alt="<%= chapter.series.canonical_title %>"
-                         class="w-12 h-16 object-cover rounded">
+                  <% if chapter.series.cover_image_url.present? %>
+                    <%= image_tag chapter.series.cover_image_url,
+                                 alt: chapter.series.canonical_title,
+                                 class: "w-12 h-16 object-cover rounded",
+                                 loading: "lazy" %>
                   <% else %>
                     <div class="w-12 h-16 bg-surface rounded flex items-center justify-center">
                       <span class="text-muted-2 text-xs">No cover</span>

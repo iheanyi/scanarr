@@ -1,5 +1,5 @@
 <div class="space-y-6">
-  <header class="flex gap-6">
+  <header class="flex flex-col gap-4 sm:flex-row sm:gap-6">
     <div class="relative group">
       <div class="h-48 w-36 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-background">
         <% if @series.cover_image_url.present? %>
@@ -200,9 +200,7 @@
         </span>
       </div>
       <ul class="space-y-2">
-        <% @chapters.each do |chapter| %>
-          <%= render "series/chapter_row", chapter: chapter, source: @source, series: @series, progress: @chapter_progress_map[chapter.id] %>
-        <% end %>
+        <%= render partial: "series/chapter_row", collection: @chapters, as: :chapter, locals: { source: @source, series: @series, chapter_progress_map: @chapter_progress_map } %>
       </ul>
     <% else %>
       <div class="rounded-lg border border-dashed border-border/80 bg-surface/40 p-6">
@@ -210,4 +208,4 @@
       </div>
     <% end %>
   </section>
-</main>
+</div>

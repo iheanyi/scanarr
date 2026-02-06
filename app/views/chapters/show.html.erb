@@ -222,7 +222,7 @@
       <article data-reader-target="page"
                data-action="click->reader#openLightboxForPage"
                class="<%= page_class %>">
-        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class %>
+        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class, loading: "lazy" %>
       </article>
     <% end %>
   </section>

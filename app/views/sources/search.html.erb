@@ -1,4 +1,4 @@
-<main class="space-y-6">
+<div class="space-y-6">
   <header class="space-y-2">
     <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
     <h1 class="text-3xl font-semibold text-balance">Search</h1>
@@ -38,7 +38,7 @@
                 <div class="flex items-center gap-4">
                   <div class="h-24 w-16 overflow-hidden rounded-md border border-border bg-background">
                     <% if result.cover_url.present? %>
-                      <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover" %>
+                      <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover", loading: "lazy" %>
                     <% else %>
                       <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-muted-2">
                         No cover
@@ -54,7 +54,8 @@
                               source_import_path(source_slug: source_slug(@source)),
                               method: :post,
                               params: { series_url: result.url },
-                              class: "inline-flex items-center rounded-md border border-accent/40 px-4 py-2 text-sm font-semibold text-accent" %>
+                              class: "inline-flex items-center rounded-md border border-accent/40 px-4 py-2 text-sm font-semibold text-accent",
+                              data: { turbo_submits_with: "Importing..." } %>
               </div>
             </li>
           <% end %>
@@ -64,4 +65,4 @@
       <% end %>
     </section>
   <% end %>
-</main>
+</div>

@@ -19,7 +19,7 @@
       <div class="space-y-4">
         <div class="aspect-[2/3] overflow-hidden rounded-lg border border-border bg-background">
           <% if @series.cover_url.present? %>
-            <%= image_tag @series.cover_url, alt: "#{@series.title} cover", class: "h-full w-full object-cover" %>
+            <%= image_tag @series.cover_url, alt: "#{@series.title} cover", class: "h-full w-full object-cover", loading: "lazy" %>
           <% else %>
             <div class="flex h-full w-full items-center justify-center text-sm uppercase text-muted-2">
               No cover
@@ -31,7 +31,8 @@
                       source_import_path(source_slug: source_slug(@source)),
                       method: :post,
                       params: { series_url: @series_url },
-                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" %>
+                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent-strong",
+                      data: { turbo_submits_with: "Importing..." } %>
 
         <%= link_to @series.url, target: "_blank", rel: "noopener",
                     class: "flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-surface-2" do %>

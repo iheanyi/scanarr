@@ -17,7 +17,7 @@
         <li class="flex items-center gap-4 px-4 py-3 <%= notification.read? ? 'opacity-60' : '' %>">
           <% if notification.chapter.series.cover_image_url.present? %>
             <div class="h-12 w-9 shrink-0 overflow-hidden rounded border border-border">
-              <%= image_tag notification.chapter.series.cover_image_url, alt: "", class: "h-full w-full object-cover" %>
+              <%= image_tag notification.chapter.series.cover_image_url, alt: "", class: "h-full w-full object-cover", loading: "lazy" %>
             </div>
           <% else %>
             <div class="flex h-12 w-9 shrink-0 items-center justify-center rounded border border-border bg-surface-2">
