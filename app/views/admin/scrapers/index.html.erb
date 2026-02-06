@@ -45,7 +45,7 @@
           <%= render UI::SelectComponent.new(
             form: form,
             method: :source_id,
-            options: @sources.map { |source| [source.name || source.key, source.id] },
+            options: @sources.map { |source| [ source.name || source.key, source.id ] },
             selected: params[:source_id],
             include_blank: "All sources",
             label: "Source"

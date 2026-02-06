@@ -23,7 +23,7 @@
     <% if download.pages_expected.to_i > 0 %>
       <div class="flex items-center gap-2">
         <div class="h-2 flex-1 rounded-full bg-surface-2">
-          <div class="h-2 rounded-full <%= download.download_status == 'complete' ? 'bg-accent' : 'bg-info' %> transition-all" style="width: <%= progress_pct %>%"></div>
+          <div class="h-2 rounded-full <%= download.download_status == "complete" ? "bg-accent" : "bg-info" %> transition-all" style="width: <%= progress_pct %>%"></div>
         </div>
         <span class="text-xs text-muted tabular-nums"><%= download.pages_downloaded %>/<%= download.pages_expected %></span>
       </div>
