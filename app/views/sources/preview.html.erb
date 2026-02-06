@@ -1,4 +1,4 @@
-<main class="space-y-6">
+<div class="space-y-6">
   <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
     <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground" %>
     <span class="text-muted-2">/</span>
@@ -31,7 +31,7 @@
                       source_import_path(source_slug: source_slug(@source)),
                       method: :post,
                       params: { series_url: @series_url },
-                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90" %>
+                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" %>
 
         <%= link_to @series.url, target: "_blank", rel: "noopener",
                     class: "flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-surface-2" do %>
@@ -154,4 +154,4 @@
       </div>
     </div>
   <% end %>
-</main>
+</div>
