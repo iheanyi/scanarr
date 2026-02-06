@@ -85,31 +85,10 @@
       <% end %>
     </div>
 
-    <% if @progresses.total_pages > 1 %>
-      <nav class="mt-6 flex items-center justify-center gap-1">
-        <% if @progresses.first_page? %>
-          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
-        <% else %>
-          <%= link_to "Previous", reading_history_path(page: @progresses.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-        <% end %>
-
-        <% window = 3 %>
-        <% start_page = [ @progresses.current_page - window, 1 ].max %>
-        <% end_page = [ @progresses.current_page + window, @progresses.total_pages ].min %>
-        <% (start_page..end_page).each do |page_num| %>
-          <% if page_num == @progresses.current_page %>
-            <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
-          <% else %>
-            <%= link_to page_num, reading_history_path(page: page_num, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-          <% end %>
-        <% end %>
-
-        <% if @progresses.last_page? %>
-          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
-        <% else %>
-          <%= link_to "Next", reading_history_path(page: @progresses.next_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-        <% end %>
-      </nav>
-    <% end %>
+    <%= render UI::PaginationComponent.new(
+      collection: @progresses,
+      base_path: reading_history_path,
+      params: { status: params[:status] }
+    ) %>
   <% end %>
 </div>

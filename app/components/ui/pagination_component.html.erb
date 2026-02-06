@@ -1,0 +1,21 @@
+<nav class="mt-6 flex items-center justify-center gap-1">
+  <% if @collection.first_page? %>
+    <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
+  <% else %>
+    <%= link_to "Previous", page_url(@collection.prev_page), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+  <% end %>
+
+  <% (start_page..end_page).each do |page_num| %>
+    <% if page_num == @collection.current_page %>
+      <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
+    <% else %>
+      <%= link_to page_num, page_url(page_num), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+    <% end %>
+  <% end %>
+
+  <% if @collection.last_page? %>
+    <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
+  <% else %>
+    <%= link_to "Next", page_url(@collection.next_page), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
+  <% end %>
+</nav>

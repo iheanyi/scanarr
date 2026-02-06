@@ -146,33 +146,11 @@
         </table>
       </div>
 
-      <% if @downloads.total_pages > 1 %>
-        <nav class="mt-4 flex items-center justify-center gap-1">
-          <% if @downloads.first_page? %>
-            <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
-          <% else %>
-            <%= link_to "Previous", url_for(page: @downloads.prev_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-          <% end %>
-
-          <%# Show up to 7 page numbers centered around current page %>
-          <% window = 3 %>
-          <% start_page = [ @downloads.current_page - window, 1 ].max %>
-          <% end_page = [ @downloads.current_page + window, @downloads.total_pages ].min %>
-          <% (start_page..end_page).each do |page_num| %>
-            <% if page_num == @downloads.current_page %>
-              <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
-            <% else %>
-              <%= link_to page_num, url_for(page: page_num, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-            <% end %>
-          <% end %>
-
-          <% if @downloads.last_page? %>
-            <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
-          <% else %>
-            <%= link_to "Next", url_for(page: @downloads.next_page, status: params[:status]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-          <% end %>
-        </nav>
-      <% end %>
+      <%= render UI::PaginationComponent.new(
+        collection: @downloads,
+        base_path: admin_downloads_path,
+        params: { status: params[:status] }
+      ) %>
     <% end %>
   </section>
 </div>

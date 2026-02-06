@@ -117,31 +117,10 @@
       <% end %>
     </div>
 
-    <% if @series.respond_to?(:total_pages) && @series.total_pages > 1 %>
-      <nav class="mt-6 flex items-center justify-center gap-1">
-        <% if @series.first_page? %>
-          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Previous</span>
-        <% else %>
-          <%= link_to "Previous", library_path(page: @series.prev_page, status: params[:status], q: params[:q]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-        <% end %>
-
-        <% window = 3 %>
-        <% start_page = [ @series.current_page - window, 1 ].max %>
-        <% end_page = [ @series.current_page + window, @series.total_pages ].min %>
-        <% (start_page..end_page).each do |page_num| %>
-          <% if page_num == @series.current_page %>
-            <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>
-          <% else %>
-            <%= link_to page_num, library_path(page: page_num, status: params[:status], q: params[:q]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-          <% end %>
-        <% end %>
-
-        <% if @series.last_page? %>
-          <span class="px-3 py-2 text-sm text-muted-2 cursor-not-allowed">Next</span>
-        <% else %>
-          <%= link_to "Next", library_path(page: @series.next_page, status: params[:status], q: params[:q]), class: "px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2" %>
-        <% end %>
-      </nav>
-    <% end %>
+    <%= render UI::PaginationComponent.new(
+      collection: @series,
+      base_path: library_path,
+      params: { status: params[:status], q: params[:q] }
+    ) %>
   <% end %>
 </div>
