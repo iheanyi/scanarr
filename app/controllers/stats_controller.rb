@@ -52,19 +52,19 @@ class StatsController < ApplicationController
   end
 
   def recently_read_series
-    chapter_ids = current_user.chapter_progresses
-                              .order(progressed_at: :desc)
-                              .limit(100)
-                              .pluck(:chapter_id)
+    # Get the most recent progressed_at for each series
+    recent_series = current_user.chapter_progresses
+                                .joins(:chapter)
+                                .group("chapters.series_id")
+                                .order(Arel.sql("MAX(chapter_progresses.progressed_at) DESC"))
+                                .limit(10)
+                                .pluck("chapters.series_id")
 
-    return Series.none if chapter_ids.empty?
+    return Series.none if recent_series.empty?
 
-    series_ids = Chapter.where(id: chapter_ids)
-                        .distinct
-                        .pluck(:series_id)
-
-    Series.where(id: series_ids)
+    # Preserve the recency order using PostgreSQL array_position
+    Series.where(id: recent_series)
           .includes(:cover_attachment, :sources)
-          .limit(10)
+          .order(Arel.sql("array_position(ARRAY[#{recent_series.join(',')}], series.id)"))
   end
 end

@@ -20,7 +20,7 @@
       ) %>
     <% end %>
   <% else %>
-    <% if series.library_series %>
+    <% if series&.library_series %>
       <%= form_with url: helpers.follows_path, method: :post do |f| %>
         <%= f.hidden_field :library_series_id, value: series.library_series.id %>
         <%= render UI::ButtonComponent.new(variant: :primary, size: :sm, type: :submit) do %>
