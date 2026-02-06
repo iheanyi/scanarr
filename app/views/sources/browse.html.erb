@@ -30,41 +30,37 @@
 
       <% if @results.any? %>
         <% if @page == 1 %>
-          <%# Page 1: grid + sentinel turbo frame below it %>
-          <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <%# Single grid — turbo-frames use display:contents so all items flow seamlessly %>
+          <div class="browse-grid grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             <% @results.each do |result| %>
               <%= render "browse_card", result: result %>
             <% end %>
-          </div>
-
-          <% if @results.size >= @page_size %>
-            <% next_page_url = source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1) %>
-            <%= turbo_frame_tag "browse-page-#{@page + 1}",
-                src: next_page_url,
-                loading: :lazy do %>
-              <div class="flex flex-col items-center gap-3 py-8">
-                <%= render UI::SpinnerComponent.new(size: :md) %>
-                <noscript>
-                  <%= link_to "Load more", next_page_url, class: "text-sm text-muted hover:text-foreground" %>
-                </noscript>
-              </div>
-            <% end %>
-          <% end %>
-        <% else %>
-          <%# Subsequent pages: own grid inside turbo frame, with next sentinel %>
-          <%= turbo_frame_tag "browse-page-#{@page}" do %>
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-              <% @results.each do |result| %>
-                <%= render "browse_card", result: result %>
-              <% end %>
-            </div>
 
             <% if @results.size >= @page_size %>
               <% next_page_url = source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1) %>
               <%= turbo_frame_tag "browse-page-#{@page + 1}",
-                  src: next_page_url,
-                  loading: :lazy do %>
-                <div class="flex flex-col items-center gap-3 py-8">
+                  data: { controller: "lazy-frame", lazy_frame_url_value: next_page_url } do %>
+                <div class="col-span-full flex flex-col items-center gap-3 py-8" data-lazy-frame-target="sentinel">
+                  <%= render UI::SpinnerComponent.new(size: :md) %>
+                  <noscript>
+                    <%= link_to "Load more", next_page_url, class: "text-sm text-muted hover:text-foreground" %>
+                  </noscript>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <%# Subsequent pages: items + next sentinel, wrapped in turbo-frame for replacement %>
+          <%= turbo_frame_tag "browse-page-#{@page}" do %>
+            <% @results.each do |result| %>
+              <%= render "browse_card", result: result %>
+            <% end %>
+
+            <% if @results.size >= @page_size %>
+              <% next_page_url = source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1) %>
+              <%= turbo_frame_tag "browse-page-#{@page + 1}",
+                  data: { controller: "lazy-frame", lazy_frame_url_value: next_page_url } do %>
+                <div class="col-span-full flex flex-col items-center gap-3 py-8" data-lazy-frame-target="sentinel">
                   <%= render UI::SpinnerComponent.new(size: :md) %>
                   <noscript>
                     <%= link_to "Load more", next_page_url, class: "text-sm text-muted hover:text-foreground" %>

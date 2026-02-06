@@ -227,6 +227,16 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+ * INFINITE SCROLL - turbo-frame elements become invisible to CSS layout
+ * so grid items inside them participate directly in the parent grid.
+ * Lazy loading is handled by the lazy-frame Stimulus controller which
+ * observes a child sentinel div (not the frame itself).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+.browse-grid turbo-frame {
+  display: contents;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
  * FORM BASE STYLES - Consistent spacing for all form elements
  * ═══════════════════════════════════════════════════════════════════════════ */
 @layer base {

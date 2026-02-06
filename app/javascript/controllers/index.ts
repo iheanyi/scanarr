@@ -42,3 +42,6 @@ application.register("toast", ToastController)
 
 import BulkSelectController from "./bulk_select_controller"
 application.register("bulk-select", BulkSelectController)
+
+import LazyFrameController from "./lazy_frame_controller"
+application.register("lazy-frame", LazyFrameController)
