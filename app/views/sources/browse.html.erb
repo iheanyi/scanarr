@@ -24,111 +24,55 @@
     </section>
 
     <section class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-balance">
-          <%= @sort.titleize %> Series
-          <span class="text-muted-2 font-normal">(<%= @results.size %>)</span>
-        </h2>
-        <div class="flex items-center gap-2">
-          <% if @page > 1 %>
-            <%= render UI::ButtonComponent.new(
-              variant: :ghost,
-              size: :sm,
-              href: source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page - 1)
-            ) do %>
-              <%= icon "chevron-left", class: "h-4 w-4" %>
-              Previous
-            <% end %>
-          <% end %>
-          <span class="text-sm text-muted-2">Page <%= @page %></span>
-          <% if @results.size >= 24 %>
-            <%= render UI::ButtonComponent.new(
-              variant: :ghost,
-              size: :sm,
-              href: source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1)
-            ) do %>
-              Next
-              <%= icon "chevron-right", class: "h-4 w-4" %>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
+      <h2 class="text-xl font-semibold text-balance">
+        <%= @sort.titleize %> Series
+      </h2>
 
       <% if @results.any? %>
-        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          <% @results.each do |result| %>
-            <div class="group relative overflow-hidden rounded-lg border border-border/80 bg-surface hover:border-accent/40 transition-colors focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-background">
-              <%= render UI::SeriesCoverComponent.new(
-                url: result.cover_url,
-                alt: "#{result.title} cover",
-                size: :full,
-                aspect: "2/3",
-                rounded: :none,
-                image_class: "transition-transform group-hover:scale-105",
-                class: "border-0"
-              ) %>
-              <div class="p-2">
-                <p class="text-sm font-medium text-foreground line-clamp-2" title="<%= result.title %>">
-                  <%= result.title %>
-                </p>
-                <% if result.respond_to?(:author) && result.author.present? %>
-                  <p class="mt-0.5 text-xs text-muted-2 truncate"><%= result.author %></p>
-                <% end %>
-                <% if result.respond_to?(:status) && result.status.present? %>
-                  <%= render UI::StatusBadgeComponent.new(status: result.status, class: "mt-1") %>
-                <% end %>
-              </div>
+        <%# Infinite scroll grid — turbo-frame uses display:contents so items flow in the grid %>
+        <div class="browse-grid grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <% if @page == 1 %>
+            <%# First page renders items directly in the grid %>
+            <% @results.each do |result| %>
+              <%= render "browse_card", result: result %>
+            <% end %>
 
-              <%# Overlay — visible on hover AND focus-within for keyboard/mobile accessibility %>
-              <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background via-background/80 to-transparent opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                <div class="max-h-[60%] overflow-hidden p-3 space-y-2">
-                  <% if result.respond_to?(:description) && result.description.present? %>
-                    <p class="text-xs text-foreground line-clamp-4 leading-relaxed">
-                      <%= truncate(result.description, length: 200) %>
-                    </p>
-                  <% end %>
-                  <div class="flex gap-2">
-                    <%= link_to source_preview_path(source_slug: source_slug(@source), series_url: result.url),
-                                class: "flex-1 rounded-md border border-border px-2 py-1.5 text-center text-xs font-medium text-foreground hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent" do %>
-                      Details
-                    <% end %>
-                    <%= button_to "Import",
-                                  source_import_path(source_slug: source_slug(@source)),
-                                  method: :post,
-                                  params: { series_url: result.url },
-                                  class: "flex-1 rounded-md bg-accent px-2 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong",
-                                  data: { turbo_submits_with: "Importing..." } %>
-                  </div>
+            <% if @results.size >= SourcesController::BROWSE_PAGE_SIZE %>
+              <% next_page_url = source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1) %>
+              <%= turbo_frame_tag "browse-page-#{@page + 1}",
+                  src: next_page_url,
+                  loading: :lazy do %>
+                <div class="col-span-full flex flex-col items-center gap-3 py-8">
+                  <%= render UI::SpinnerComponent.new(size: :md) %>
+                  <noscript>
+                    <%= link_to "Load more", next_page_url, class: "text-sm text-muted hover:text-foreground" %>
+                  </noscript>
                 </div>
-              </div>
-            </div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <%# Subsequent pages: wrapped in a frame so Turbo can extract and replace the placeholder %>
+            <%= turbo_frame_tag "browse-page-#{@page}" do %>
+              <% @results.each do |result| %>
+                <%= render "browse_card", result: result %>
+              <% end %>
+
+              <% if @results.size >= SourcesController::BROWSE_PAGE_SIZE %>
+                <% next_page_url = source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1) %>
+                <%= turbo_frame_tag "browse-page-#{@page + 1}",
+                    src: next_page_url,
+                    loading: :lazy do %>
+                  <div class="col-span-full flex flex-col items-center gap-3 py-8">
+                    <%= render UI::SpinnerComponent.new(size: :md) %>
+                    <noscript>
+                      <%= link_to "Load more", next_page_url, class: "text-sm text-muted hover:text-foreground" %>
+                    </noscript>
+                  </div>
+                <% end %>
+              <% end %>
+            <% end %>
           <% end %>
         </div>
-
-        <%# Bottom pagination %>
-        <% if @results.size >= 24 || @page > 1 %>
-          <div class="flex items-center justify-center gap-2 pt-4">
-            <% if @page > 1 %>
-              <%= render UI::ButtonComponent.new(
-                variant: :ghost,
-                href: source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page - 1)
-              ) do %>
-                <%= icon "chevron-left", class: "h-4 w-4" %>
-                Previous
-              <% end %>
-            <% end %>
-            <span class="px-3 py-2 text-sm text-muted">Page <%= @page %></span>
-            <% if @results.size >= 24 %>
-              <%= render UI::ButtonComponent.new(
-                variant: :ghost,
-                href: source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1)
-              ) do %>
-                Next
-                <%= icon "chevron-right", class: "h-4 w-4" %>
-              <% end %>
-            <% end %>
-          </div>
-        <% end %>
       <% else %>
         <%= render UI::EmptyStateComponent.new(
           title: "No series found",

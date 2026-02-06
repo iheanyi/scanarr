@@ -227,6 +227,15 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+ * INFINITE SCROLL - turbo-frame elements become invisible to CSS layout
+ * so grid items inside them participate directly in the parent grid.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+.browse-grid > turbo-frame,
+.browse-grid turbo-frame {
+  display: contents;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
  * FORM BASE STYLES - Consistent spacing for all form elements
  * ═══════════════════════════════════════════════════════════════════════════ */
 @layer base {
