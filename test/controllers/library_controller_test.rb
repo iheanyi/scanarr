@@ -31,4 +31,28 @@ class LibraryControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
   end
+
+  test "index filters by following status" do
+    get library_path(status: "following")
+
+    assert_response :success
+  end
+
+  test "following view supports alphabetical sort" do
+    get library_path(status: "following", sort_by: "alphabetical")
+
+    assert_response :success
+  end
+
+  test "following view supports most_unread sort" do
+    get library_path(status: "following", sort_by: "most_unread")
+
+    assert_response :success
+  end
+
+  test "following view supports recently_updated sort" do
+    get library_path(status: "following", sort_by: "recently_updated")
+
+    assert_response :success
+  end
 end

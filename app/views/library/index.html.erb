@@ -36,6 +36,24 @@
             class: "w-full rounded-lg border border-border bg-surface-2 py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" %>
       </div>
     <% end %>
+
+    <% if params[:status] == "following" %>
+      <div class="flex items-center gap-2 ml-auto">
+        <span class="text-xs text-muted-2">Sort:</span>
+        <div class="flex overflow-hidden rounded-lg border border-border text-xs">
+          <% sort_by = params[:sort_by].presence || "recently_updated" %>
+          <%= link_to "Recent",
+              library_path(status: "following", q: params[:q], sort_by: "recently_updated"),
+              class: "px-2.5 py-1 transition-colors #{sort_by == 'recently_updated' ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          <%= link_to "A-Z",
+              library_path(status: "following", q: params[:q], sort_by: "alphabetical"),
+              class: "px-2.5 py-1 border-l border-border transition-colors #{sort_by == 'alphabetical' ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          <%= link_to "Unread",
+              library_path(status: "following", q: params[:q], sort_by: "most_unread"),
+              class: "px-2.5 py-1 border-l border-border transition-colors #{sort_by == 'most_unread' ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+        </div>
+      </div>
+    <% end %>
   </div>
 
   <% if @series.empty? %>
@@ -100,6 +118,12 @@
                 </div>
               <% end %>
               <div class="absolute right-2 top-2 flex items-center gap-1">
+                <% if params[:status] == "following" && @unread_counts&.dig(series.library_series_id).to_i > 0 %>
+                  <% unread = @unread_counts[series.library_series_id] %>
+                  <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                    <%= unread > 9 ? "9+" : unread %>
+                  </span>
+                <% end %>
                 <% if @followed_library_series_ids.include?(series.library_series_id) %>
                   <span class="rounded bg-accent/80 px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground backdrop-blur-sm" title="Following">
                     <%= icon "heart", class: "inline h-3 w-3" %>
@@ -121,6 +145,11 @@
             <% if series.display_author.present? %>
               <p class="truncate text-xs text-muted-2"><%= series.display_author %></p>
             <% end %>
+            <% if params[:status] == "following" && @last_checked&.dig(series.id) %>
+              <p class="truncate text-xs text-muted-2">
+                Checked <%= time_ago_in_words(@last_checked[series.id]) %> ago
+              </p>
+            <% end %>
           </div>
         <% end %>
       <% end %>
@@ -129,7 +158,7 @@
     <%= render UI::PaginationComponent.new(
       collection: @series,
       base_path: library_path,
-      params: { status: params[:status], q: params[:q] }
+      params: { status: params[:status], q: params[:q], sort_by: params[:sort_by] }
     ) %>
   <% end %>
 </div>

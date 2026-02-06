@@ -16,7 +16,47 @@ class LibraryController < ApplicationController
     if params[:status] == "following"
       followed_library_series_ids = current_user.user_series_follows.pluck(:library_series_id)
       base_scope = base_scope.where(library_series_id: followed_library_series_ids)
+
+      # Sort options for following view
+      @sort_by = params[:sort_by].presence || "recently_updated"
+      case @sort_by
+      when "alphabetical"
+        base_scope = base_scope.order(canonical_title: :asc)
+      when "most_unread"
+        # Sort by unread count descending; falls back to alphabetical for ties
+        unread_subquery = NewChapterNotification.unread
+          .where(user: current_user)
+          .joins(chapter: :series)
+          .where(series: { library_series_id: followed_library_series_ids })
+          .group("series.library_series_id")
+          .select("series.library_series_id AS ls_id, COUNT(*) AS unread_count")
+
+        base_scope = base_scope
+          .joins("LEFT JOIN (#{unread_subquery.to_sql}) AS unread_counts ON unread_counts.ls_id = series.library_series_id")
+          .order(Arel.sql("COALESCE(unread_counts.unread_count, 0) DESC, series.canonical_title ASC"))
+      else # recently_updated
+        base_scope = base_scope
+          .left_joins(:series_sources)
+          .order(Arel.sql("MAX(series_sources.last_checked_at) DESC NULLS LAST"))
+          .group("series.id")
+      end
+
       @series = base_scope.page(params[:page]).per(30)
+
+      # Pre-compute unread counts per library_series_id
+      @unread_counts = NewChapterNotification.unread
+        .where(user: current_user)
+        .joins(chapter: :series)
+        .where(series: { library_series_id: followed_library_series_ids })
+        .group("series.library_series_id")
+        .count
+
+      # Pre-compute last checked timestamps per series_id
+      series_ids = @series.map(&:id)
+      @last_checked = SeriesSource
+        .where(series_id: series_ids)
+        .group(:series_id)
+        .maximum(:last_checked_at)
     elsif params[:status].present?
       # Status filtering requires download progress data
       # Load with full association chain for status filtering

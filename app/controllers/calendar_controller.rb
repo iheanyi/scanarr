@@ -43,5 +43,25 @@ class CalendarController < ApplicationController
 
     @chapters_by_date = chapters_scope.group_by { |ch| (ch.published_at || ch.created_at).to_date }
     @sources = Source.order(:name)
+
+    # Preload download status and notification status for calendar chapters
+    all_chapter_ids = @chapters_by_date.values.flatten.map(&:id)
+    if all_chapter_ids.any?
+      @downloaded_chapter_ids = Set.new(
+        Release.joins(:file_asset)
+          .where(chapter_id: all_chapter_ids)
+          .where(file_assets: { download_status: "complete" })
+          .pluck(:chapter_id)
+      )
+
+      @unread_chapter_ids = Set.new(
+        NewChapterNotification.unread
+          .where(user: current_user, chapter_id: all_chapter_ids)
+          .pluck(:chapter_id)
+      )
+    else
+      @downloaded_chapter_ids = Set.new
+      @unread_chapter_ids = Set.new
+    end
   end
 end

@@ -79,10 +79,13 @@
                   <%= render UI::SeriesCoverComponent.new(url: chapter.series.cover_image_url, alt: chapter.series.canonical_title, size: :sm, rounded: :sm) %>
 
                   <div>
-                    <h3 class="font-medium">
+                    <h3 class="font-medium flex items-center gap-2">
                       <%= link_to chapter.series.canonical_title,
                                   source_series_path(chapter.source.slug, chapter.series.to_param),
                                   class: "hover:text-accent" %>
+                      <% if @unread_chapter_ids.include?(chapter.id) %>
+                        <span class="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-accent">New</span>
+                      <% end %>
                     </h3>
                     <p class="text-sm text-muted">
                       <%= link_to "Chapter #{chapter.chapter_number}",

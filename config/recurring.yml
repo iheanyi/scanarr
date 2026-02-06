@@ -19,6 +19,9 @@ development:
   cleanup_orphaned_downloads:
     class: CleanupOrphanedDownloadsJob
     schedule: at 3am every day
+  clean_old_notifications:
+    class: CleanOldNotificationsJob
+    schedule: at 3am every day
 
 production:
   restart_stalled_downloads:
@@ -29,6 +32,9 @@ production:
     schedule: every 30 minutes
   cleanup_orphaned_downloads:
     class: CleanupOrphanedDownloadsJob
+    schedule: at 3am every day
+  clean_old_notifications:
+    class: CleanOldNotificationsJob
     schedule: at 3am every day
 
   clear_solid_queue_finished_jobs:
