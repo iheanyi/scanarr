@@ -25,9 +25,14 @@ class FollowsController < ApplicationController
   def update
     if @follow.update(follow_params)
       @series = @follow.library_series.series.first
+      notice = if @follow.download_policy == "auto_download"
+        "Auto-download enabled"
+      else
+        "Auto-download disabled"
+      end
       respond_to do |format|
-        format.html { redirect_back fallback_location: library_path, notice: "Follow settings updated" }
-        format.turbo_stream { render turbo_stream: follow_turbo_streams(notice: "Follow settings updated") }
+        format.html { redirect_back fallback_location: library_path, notice: notice }
+        format.turbo_stream { render turbo_stream: follow_turbo_streams(notice: notice) }
       end
     else
       redirect_back fallback_location: library_path, alert: "Could not update settings"
