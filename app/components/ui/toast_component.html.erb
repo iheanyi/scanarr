@@ -1,0 +1,14 @@
+<div data-controller="toast"
+     data-toast-delay-value="4000"
+     role="status"
+     aria-live="polite"
+     class="<%= toast_classes %>">
+  <%= helpers.icon icon_name, class: "h-4 w-4 shrink-0 #{icon_color}" %>
+  <p class="flex-1 text-sm text-foreground"><%= message %></p>
+  <button type="button"
+          data-action="toast#dismiss"
+          class="shrink-0 rounded p-0.5 text-muted-2 hover:text-foreground transition-colors"
+          aria-label="Dismiss">
+    <%= helpers.icon "x", class: "h-3.5 w-3.5" %>
+  </button>
+</div>

@@ -31,6 +31,8 @@ Source
 
 ### ViewComponent Patterns
 
+**Prefer ViewComponents over partials** for reusable UI elements. ViewComponents are testable, encapsulate logic in Ruby, and avoid ERB parsing pitfalls (like broken `<%` tags that cause `NameError` at runtime).
+
 Components live in `app/components/ui/` and inherit from `UI::BaseComponent`:
 
 ```ruby
@@ -39,14 +41,25 @@ Components live in `app/components/ui/` and inherit from `UI::BaseComponent`:
   Click me
 <% end %>
 
+# Good: Render component in Turbo Stream
+turbo_stream.append("toast-container",
+  UI::ToastComponent.new(message: "Success!", variant: :success))
+
+# Bad: Using a partial for reusable UI
+turbo_stream.append("toast-container",
+  partial: "shared/toast", locals: { message: "Success!", variant: :success })
+
 # Components available:
 # - UI::ButtonComponent (variant: :primary/:secondary/:ghost, size: :sm/:md/:lg)
 # - UI::BadgeComponent
+# - UI::ToastComponent (variant: :success/:danger/:warning/:info, message:)
 # - UI::ToggleSwitchComponent (for form switches)
 # - UI::ToggleButtonComponent (for follow/unfollow)
 # - UI::SelectComponent, UI::MultiSelectComponent, UI::AutoSelectComponent
 # - UI::DropdownComponent
 ```
+
+**Important**: ViewComponent templates cannot call bare helper methods like `icon`. Use `helpers.icon` instead.
 
 ### Stimulus Controllers
 

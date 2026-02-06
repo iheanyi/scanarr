@@ -66,8 +66,7 @@ class SeriesController < ApplicationController
       format.html { redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param) }
       format.turbo_stream do
         render turbo_stream: turbo_stream.append("toast-container",
-          partial: "shared/toast",
-          locals: { message: "Reading style updated", variant: :success })
+          UI::ToastComponent.new(message: "Reading style updated", variant: :success))
       end
     end
   end

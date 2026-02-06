@@ -66,8 +66,7 @@ class FollowsController < ApplicationController
       partial: "series/follow_controls",
       locals: { series: @series, user_follow: user_follow })
     streams << turbo_stream.append("toast-container",
-      partial: "shared/toast",
-      locals: { message: notice, variant: :success }) if notice.present?
+      UI::ToastComponent.new(message: notice, variant: :success)) if notice.present?
     streams
   end
 end
