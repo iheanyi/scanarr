@@ -59,4 +59,76 @@ class UserSeriesFollowTest < ActiveSupport::TestCase
 
     assert_equal %w[mangadex comick mangasee], follow.source_priority
   end
+
+  # --- Phase 3: Smart Scheduling ---
+
+  def test_check_interval_minutes_defaults_to_nil
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series)
+
+    assert_nil follow.check_interval_minutes
+  end
+
+  def test_check_interval_minutes_stores_valid_values
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series, check_interval_minutes: 60)
+
+    assert_equal 60, follow.check_interval_minutes
+  end
+
+  def test_check_interval_minutes_validates_allowed_values
+    follow = UserSeriesFollow.new(user: @user, library_series: @library_series, check_interval_minutes: 42)
+
+    assert_not follow.valid?
+    assert_includes follow.errors[:check_interval_minutes], "is not included in the list"
+  end
+
+  def test_effective_interval_minutes_returns_custom_value
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series, check_interval_minutes: 720)
+
+    assert_equal 720, follow.effective_interval_minutes
+  end
+
+  def test_effective_interval_minutes_returns_default_when_nil
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series)
+
+    assert_equal 30, follow.effective_interval_minutes
+  end
+
+  def test_needs_check_returns_true_when_never_checked
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series)
+    series_source = SeriesSource.new(last_checked_at: nil)
+
+    assert follow.needs_check?(series_source)
+  end
+
+  def test_needs_check_returns_true_when_past_interval
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series, check_interval_minutes: 30)
+    series_source = SeriesSource.new(last_checked_at: 31.minutes.ago)
+
+    assert follow.needs_check?(series_source)
+  end
+
+  def test_needs_check_returns_false_when_within_interval
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series, check_interval_minutes: 60)
+    series_source = SeriesSource.new(last_checked_at: 30.minutes.ago)
+
+    assert_not follow.needs_check?(series_source)
+  end
+
+  def test_interval_options_constant
+    assert_equal 7, UserSeriesFollow::INTERVAL_OPTIONS.size
+    assert_equal [ "Use default (30 min)", nil ], UserSeriesFollow::INTERVAL_OPTIONS.first
+    assert_equal [ "Daily", 1440 ], UserSeriesFollow::INTERVAL_OPTIONS.last
+  end
+
+  def test_preferred_source_for_returns_default_when_no_priority
+    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series)
+    default_source = sources(:one)
+    chapter = chapters(:one) if respond_to?(:chapters)
+    chapter ||= series(:one).chapters.first
+
+    # If no chapter exists, skip
+    skip unless chapter
+
+    assert_equal default_source, follow.preferred_source_for(chapter, default_source)
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_06_190242) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_06_200036) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -395,6 +395,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_190242) do
     t.boolean "enabled", default: true, null: false
     t.string "key", null: false
     t.string "name"
+    t.datetime "rate_limited_until"
     t.string "slug", null: false
     t.string "source_type"
     t.datetime "updated_at", null: false
@@ -406,6 +407,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_190242) do
   end
 
   create_table "user_series_follows", force: :cascade do |t|
+    t.integer "check_interval_minutes"
     t.datetime "created_at", null: false
     t.integer "download_policy", default: 0, null: false
     t.bigint "library_series_id", null: false

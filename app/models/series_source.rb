@@ -4,6 +4,8 @@ class SeriesSource < ApplicationRecord
 
   scope :with_errors, -> { where.not(last_check_error: nil) }
   scope :healthy, -> { where(last_check_error: nil) }
+  scope :stale, -> { where("consecutive_failures >= ?", 10) }
+  scope :needs_attention, -> { where("consecutive_failures >= ? AND consecutive_failures < ?", 3, 10) }
 
   # Record a successful check, clearing any previous errors
   def record_check_success!
@@ -30,5 +32,9 @@ class SeriesSource < ApplicationRecord
 
   def check_critically_failing?
     consecutive_failures >= 3
+  end
+
+  def stale?
+    consecutive_failures >= 10
   end
 end

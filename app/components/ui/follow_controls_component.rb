@@ -10,6 +10,10 @@ module UI
       super()
     end
 
+    def interval_options
+      UserSeriesFollow::INTERVAL_OPTIONS
+    end
+
     private
 
     attr_reader :series, :user_follow

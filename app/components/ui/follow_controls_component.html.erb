@@ -19,6 +19,16 @@
         auto_submit: true
       ) %>
     <% end %>
+    <%= form_with model: user_follow, url: helpers.follow_path(user_follow), method: :patch do |f| %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :check_interval_minutes,
+        label: "Check frequency",
+        options: interval_options,
+        selected: user_follow.check_interval_minutes,
+        size: :sm
+      ) %>
+    <% end %>
   <% else %>
     <% if series.library_series %>
       <%= form_with url: helpers.follows_path, method: :post do |f| %>

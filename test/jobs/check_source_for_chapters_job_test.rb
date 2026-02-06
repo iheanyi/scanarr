@@ -155,11 +155,109 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     end
   end
 
+  # --- Phase 3: Rate Limit Detection ---
+
+  test "returns early if source is rate-limited" do
+    @source.update!(rate_limited_until: 5.minutes.from_now)
+
+    with_fake_adapter([]) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @series_source.reload
+
+    # Should not update last_checked_at since we returned early
+    assert_nil @series_source.last_checked_at
+  end
+
+  test "records rate limit when adapter raises 429 error" do
+    with_raising_adapter(RuntimeError.new("HTTP 429 Too Many Requests")) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @source.reload
+
+    assert_predicate @source, :rate_limited?
+  end
+
+  test "records rate limit when adapter raises rate limit error" do
+    with_raising_adapter(RuntimeError.new("rate limit exceeded")) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @source.reload
+
+    assert_predicate @source, :rate_limited?
+  end
+
+  test "does not record rate limit for non-rate-limit errors" do
+    with_raising_adapter(RuntimeError.new("connection timeout")) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @source.reload
+
+    assert_not @source.rate_limited?
+  end
+
+  test "records check failure on series_source when adapter raises" do
+    with_raising_adapter(RuntimeError.new("some error")) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @series_source.reload
+
+    assert_equal 1, @series_source.consecutive_failures
+    assert_equal "some error", @series_source.last_check_error
+  end
+
+  # --- Phase 4: Batch Download ---
+
+  test "batch downloads multiple new chapters when auto_download" do
+    @follow.update!(download_policy: :auto_download)
+
+    chapter_data = [
+      ResultTypes::Chapter.new(
+        number: "400",
+        title: "Batch Ch 1",
+        language: "en",
+        group: nil,
+        url: "https://weebcentral.com/chapters/400",
+        published_at: Time.current
+      ),
+      ResultTypes::Chapter.new(
+        number: "401",
+        title: "Batch Ch 2",
+        language: "en",
+        group: nil,
+        url: "https://weebcentral.com/chapters/401",
+        published_at: Time.current
+      )
+    ]
+
+    with_fake_adapter(chapter_data) do
+      assert_enqueued_jobs 2, only: DownloadChapterJob do
+        CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+      end
+    end
+  end
+
   private
 
   def with_fake_adapter(chapter_data)
     fake_adapter = Object.new
     fake_adapter.define_singleton_method(:chapters) { |_| chapter_data }
+
+    original_method = AdapterRegistry.method(:for)
+    AdapterRegistry.define_singleton_method(:for) { |_| fake_adapter }
+    yield
+  ensure
+    AdapterRegistry.define_singleton_method(:for, original_method)
+  end
+
+  def with_raising_adapter(error)
+    fake_adapter = Object.new
+    fake_adapter.define_singleton_method(:chapters) { |_| raise error }
 
     original_method = AdapterRegistry.method(:for)
     AdapterRegistry.define_singleton_method(:for) { |_| fake_adapter }

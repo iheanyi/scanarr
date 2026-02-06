@@ -22,6 +22,21 @@ class Source < ApplicationRecord
     (successful.to_f / total).round(2)
   end
 
+  # Check if this source is currently rate-limited
+  def rate_limited?
+    rate_limited_until.present? && rate_limited_until > Time.current
+  end
+
+  # Record a rate limit, preventing checks for the given duration
+  def record_rate_limit!(duration = 5.minutes)
+    update!(rate_limited_until: duration.from_now)
+  end
+
+  # Clear any active rate limit
+  def clear_rate_limit!
+    update!(rate_limited_until: nil) if rate_limited_until.present?
+  end
+
   private
 
   def generate_slug_from_key

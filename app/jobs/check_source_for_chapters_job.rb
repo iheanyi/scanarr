@@ -4,12 +4,18 @@ class CheckSourceForChaptersJob < ApplicationJob
   queue_as :default
   limits_concurrency to: 3, key: ->(series_id, _follow_id, _source_id) { "check_chapters:#{series_id}" }
 
+  # Patterns indicating a rate limit response from the source
+  RATE_LIMIT_PATTERNS = [ "429", "rate limit", "too many requests", "throttle" ].freeze
+
   def perform(series_id, follow_id, source_id = nil)
     series = Series.find_by(id: series_id)
     follow = UserSeriesFollow.find_by(id: follow_id)
     source = source_id ? Source.find_by(id: source_id) : series&.primary_source
 
     return unless series && follow && source
+
+    # Double-check rate limit at execution time (may have been set since enqueue)
+    return if source.rate_limited?
 
     adapter = AdapterRegistry.for(source)
     series_source = series.series_sources.find_by(source: source)
@@ -19,7 +25,9 @@ class CheckSourceForChaptersJob < ApplicationJob
 
     chapters_data = adapter.chapters(source_series_id)
 
-    new_chapter_count = 0
+    # Collect new chapters first, then batch notifications and downloads
+    new_chapters = []
+
     chapters_data.each do |ch_data|
       next if series.chapters.exists?(chapter_number: ch_data.number, language: ch_data.language || "en")
 
@@ -38,36 +46,62 @@ class CheckSourceForChaptersJob < ApplicationJob
         chapter: chapter
       )
 
-      if follow.auto_download? && chapter.source_url.present?
-        DownloadChapterJob.perform_later(
-          chapter.source_url,
-          source_key: source.key,
-          series_title: series.canonical_title,
-          source_series_id: series_source&.source_series_id,
-          chapter_number: chapter.chapter_number,
-          chapter_title: chapter.title,
-          language: chapter.language,
-          group: chapter.group
-        )
-      end
+      new_chapters << chapter
+    end
 
-      new_chapter_count += 1
+    # Batch auto-download: enqueue all new chapters after creation is complete
+    if follow.auto_download? && new_chapters.any?
+      enqueue_downloads(new_chapters, follow, source, series_source)
     end
 
     series_source&.record_check_success!
 
+    # Clear rate limit on successful check (source is healthy)
+    source.clear_rate_limit! if source.rate_limited_until.present?
+
     # Broadcast notification updates if new chapters were found
-    if new_chapter_count > 0
+    if new_chapters.any?
       broadcast_notification_update(follow.user)
     end
 
-    Rails.logger.info "[CheckSourceForChaptersJob] Found #{new_chapter_count} new chapters for series #{series_id}"
+    Rails.logger.info "[CheckSourceForChaptersJob] Found #{new_chapters.size} new chapters for series #{series_id}"
   rescue StandardError => e
+    # Detect rate limiting from error messages and back off
+    if rate_limit_error?(e)
+      source&.record_rate_limit!(5.minutes)
+      Rails.logger.warn "[CheckSourceForChaptersJob] Rate limited by source #{source&.key}, backing off 5 minutes"
+    end
+
     series_source&.record_check_failure!(e.message)
     Rails.logger.error "[CheckSourceForChaptersJob] Error checking series #{series_id}: #{e.message}"
   end
 
   private
+
+  def rate_limit_error?(error)
+    message = error.message.downcase
+    RATE_LIMIT_PATTERNS.any? { |pattern| message.include?(pattern) }
+  end
+
+  def enqueue_downloads(chapters, follow, source, series_source)
+    chapters.each do |chapter|
+      next unless chapter.source_url.present?
+
+      # Use the follow's preferred source if set, otherwise use the discovering source
+      download_source = follow.preferred_source_for(chapter, source)
+
+      DownloadChapterJob.perform_later(
+        chapter.source_url,
+        source_key: download_source.key,
+        series_title: chapter.series.canonical_title,
+        source_series_id: series_source&.source_series_id,
+        chapter_number: chapter.chapter_number,
+        chapter_title: chapter.title,
+        language: chapter.language,
+        group: chapter.group
+      )
+    end
+  end
 
   def broadcast_notification_update(user)
     unread_count = user.new_chapter_notifications.unread.count

@@ -25,11 +25,7 @@ class FollowsController < ApplicationController
   def update
     if @follow.update(follow_params)
       @series = @follow.library_series.series.first
-      notice = if @follow.download_policy == "auto_download"
-        "Auto-download enabled"
-      else
-        "Auto-download disabled"
-      end
+      notice = update_notice
       respond_to do |format|
         format.html { redirect_back fallback_location: library_path, notice: notice }
         format.turbo_stream { render turbo_stream: follow_turbo_streams(notice: notice) }
@@ -61,7 +57,19 @@ class FollowsController < ApplicationController
   end
 
   def follow_params
-    params.require(:user_series_follow).permit(:download_policy, source_priority: [])
+    params.require(:user_series_follow).permit(:download_policy, :check_interval_minutes, source_priority: [])
+  end
+
+  def update_notice
+    if params.dig(:user_series_follow, :check_interval_minutes)
+      interval = @follow.check_interval_minutes
+      label = UserSeriesFollow::INTERVAL_OPTIONS.find { |_, v| v == interval }&.first || "Default"
+      "Check frequency updated to #{label}"
+    elsif @follow.download_policy == "auto_download"
+      "Auto-download enabled"
+    else
+      "Auto-download disabled"
+    end
   end
 
   def follow_turbo_streams(notice: nil)
