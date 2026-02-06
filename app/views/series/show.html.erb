@@ -112,7 +112,7 @@
     </div>
   </header>
 
-  <section class="space-y-3" data-controller="chapter-filter">
+  <section class="space-y-3" data-controller="chapter-filter bulk-select">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <h2 class="text-xl font-semibold text-balance">Chapters</h2>
@@ -169,6 +169,13 @@
     <%= turbo_stream_from @series, :downloads %>
     <% if @chapters.any? %>
       <div class="flex items-center gap-3">
+        <label class="flex items-center gap-2 cursor-pointer shrink-0">
+          <input type="checkbox"
+                 data-bulk-select-target="selectAll"
+                 data-action="change->bulk-select#toggleAll"
+                 class="h-4 w-4 rounded border-border text-accent focus:ring-accent">
+          <span class="text-xs text-muted-2">All</span>
+        </label>
         <div class="relative flex-1">
           <%= icon "search", class: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
           <input type="text"
@@ -184,6 +191,42 @@
       <ul class="space-y-2">
         <%= render partial: "series/chapter_row", collection: @chapters, as: :chapter, locals: { source: @source, series: @series, chapter_progress_map: @chapter_progress_map } %>
       </ul>
+
+      <%# Bulk action floating bar %>
+      <div data-bulk-select-target="actionBar" class="hidden sticky bottom-4 z-10">
+        <div class="mx-auto max-w-2xl rounded-lg border border-border bg-surface shadow-lg p-3">
+          <%= form_with url: source_series_bulk_actions_path(source_slug: @source.slug, series_slug: @series.to_param), method: :post do |f| %>
+            <input type="hidden" name="chapter_ids" value="" data-bulk-select-target="chapterIds">
+            <input type="hidden" name="action_name" value="" data-bulk-select-target="actionName">
+            <div class="flex items-center justify-between gap-3">
+              <span data-bulk-select-target="count" class="text-sm font-medium text-foreground">0 selected</span>
+              <div class="flex items-center gap-2">
+                <button type="button"
+                        data-action-name="download"
+                        data-action="click->bulk-select#submitAction"
+                        class="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong">
+                  <%= icon "download", class: "h-4 w-4" %>
+                  Download
+                </button>
+                <button type="button"
+                        data-action-name="remove"
+                        data-action="click->bulk-select#submitAction"
+                        class="inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft">
+                  <%= icon "trash-2", class: "h-4 w-4" %>
+                  Remove
+                </button>
+                <button type="button"
+                        data-action-name="mark_read"
+                        data-action="click->bulk-select#submitAction"
+                        class="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-surface-2">
+                  <%= icon "check", class: "h-4 w-4" %>
+                  Mark Read
+                </button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
     <% else %>
       <%= render UI::EmptyStateComponent.new(
         title: "No chapters imported yet",

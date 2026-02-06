@@ -39,3 +39,6 @@ application.register("text-expand", TextExpandController)
 
 import ToastController from "./toast_controller"
 application.register("toast", ToastController)
+
+import BulkSelectController from "./bulk_select_controller"
+application.register("bulk-select", BulkSelectController)

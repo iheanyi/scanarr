@@ -141,6 +141,70 @@ class SeriesController < ApplicationController
     redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
   end
 
+  def bulk_action
+    @series = find_series_by_param!
+    chapter_ids = params[:chapter_ids].to_s.split(",").map(&:to_i)
+    chapters = @series.chapters.where(id: chapter_ids, source: @source)
+
+    case params[:action_name]
+    when "download"
+      series_source = @series.series_sources.find_by(source: @source)
+      enqueued = 0
+      chapters.includes(releases: :file_asset).each do |chapter|
+        next if chapter.source_url.blank?
+        latest = chapter.releases.max_by(&:created_at)
+        next if latest&.file_asset&.download_status.in?(%w[queued pending downloading complete])
+
+        release = chapter.releases.find_or_create_by!(source: @source)
+        next if release.file_asset&.download_status.in?(%w[queued pending downloading complete])
+
+        release.create_file_asset!(format: "pages", download_status: "queued", pages_downloaded: 0)
+        DownloadChapterJob.perform_later(
+          chapter.source_url,
+          source_key: @source.key,
+          series_title: @series.canonical_title,
+          source_series_id: series_source&.source_series_id,
+          chapter_number: chapter.chapter_number,
+          chapter_title: chapter.title,
+          language: chapter.language,
+          group: chapter.group,
+          release_id: release.id
+        )
+        enqueued += 1
+      end
+      flash[:notice] = "Queued #{enqueued} chapter(s) for download"
+
+    when "remove"
+      removed = 0
+      chapters.includes(releases: :file_asset).each do |chapter|
+        chapter.releases.each do |release|
+          file_asset = release.file_asset
+          next unless file_asset
+          file_asset.archive.purge if file_asset.archive.attached?
+          file_asset.pages.each { |page| page.image.purge if page.image.attached? }
+          file_asset.pages.destroy_all
+          file_asset.destroy!
+          removed += 1
+        end
+      end
+      flash[:notice] = "Removed #{removed} download(s)"
+
+    when "mark_read"
+      return unless current_user
+      marked = 0
+      chapters.each do |chapter|
+        ChapterProgress.find_or_initialize_by(user: current_user, chapter: chapter).tap do |progress|
+          progress.assign_attributes(status: "completed", page_index: 1, page_count: 1, progressed_at: Time.current)
+          progress.save!
+        end
+        marked += 1
+      end
+      flash[:notice] = "Marked #{marked} chapter(s) as read"
+    end
+
+    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+  end
+
   def refresh_metadata
     @series = find_series_by_param!
 
