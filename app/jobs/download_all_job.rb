@@ -15,8 +15,12 @@ class DownloadAllJob < ApplicationJob
 
     chapters = series.chapters.where(source: source).includes(releases: :file_asset)
     enqueued = 0
+    seen_numbers = Set.new
 
-    chapters.find_each do |chapter|
+    chapters.order(created_at: :desc).find_each do |chapter|
+      # Skip duplicate chapter numbers (e.g. different language/group variants)
+      next if seen_numbers.include?(chapter.chapter_number)
+      seen_numbers.add(chapter.chapter_number)
       next if chapter.source_url.blank?
 
       # Skip if already downloaded or in progress

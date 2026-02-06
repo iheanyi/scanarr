@@ -10,8 +10,19 @@ class SeriesController < ApplicationController
 
   def show
     @series = find_series_by_param!
+    # Deduplicate chapters by (chapter_number_value, chapter_number), keeping newest per group.
+    # DISTINCT ON requires matching leading ORDER BY, so we pick rows in a subquery
+    # then re-sort for display.
+    deduped_ids = @series.chapters
+                         .where(source: @source)
+                         .select("DISTINCT ON (chapter_number_value, chapter_number) id")
+                         .order(
+                           Arel.sql("chapter_number_value ASC NULLS LAST"),
+                           :chapter_number,
+                           Arel.sql("created_at DESC")
+                         )
     @chapters = @series.chapters
-                       .where(source: @source)
+                       .where(id: deduped_ids)
                        .includes(releases: :file_asset)
                        .order(
                          Arel.sql("chapter_number_value ASC NULLS LAST"),
