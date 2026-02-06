@@ -6,9 +6,7 @@
   ) %>
 
   <% if @error.present? %>
-    <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-      <%= @error %>
-    </div>
+    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
   <% else %>
     <section class="rounded-lg border border-border bg-surface p-4">
       <%= form_with url: source_browse_path(source_slug: source_slug(@source)), method: :get, local: true, class: "flex flex-wrap items-end gap-3" do |form| %>
@@ -34,9 +32,7 @@
           <% if @page > 1 %>
             <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page - 1),
                         class: "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" do %>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+              <%= icon "chevron-left", class: "h-4 w-4" %>
               Previous
             <% end %>
           <% end %>
@@ -45,9 +41,7 @@
             <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1),
                         class: "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" do %>
               Next
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <%= icon "chevron-right", class: "h-4 w-4" %>
             <% end %>
           <% end %>
         </div>
@@ -113,9 +107,7 @@
             <% if @page > 1 %>
               <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page - 1),
                           class: "inline-flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-surface-2" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
+                <%= icon "chevron-left", class: "h-4 w-4" %>
                 Previous
               <% end %>
             <% end %>
@@ -124,9 +116,7 @@
               <%= link_to source_browse_path(source_slug: source_slug(@source), sort: @sort, page: @page + 1),
                           class: "inline-flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-surface-2" do %>
                 Next
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <%= icon "chevron-right", class: "h-4 w-4" %>
               <% end %>
             <% end %>
           </div>

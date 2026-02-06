@@ -6,9 +6,7 @@
   </nav>
 
   <% if @error.present? %>
-    <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-      <%= @error %>
-    </div>
+    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
     <div class="pt-4">
       <%= link_to "Back to Browse", source_browse_path(source_slug: source_slug(@source)),
                   class: "inline-flex items-center gap-2 text-sm text-muted hover:text-foreground" %>

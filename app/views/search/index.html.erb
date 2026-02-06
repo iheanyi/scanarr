@@ -34,14 +34,14 @@
 
   <% if @query.present? %>
     <% if @errors.any? %>
-      <div class="rounded-lg border border-warning-soft bg-warning-soft px-4 py-3 text-sm text-warning">
+      <%= render UI::FlashMessageComponent.new(variant: :warning) do %>
         <p class="font-medium text-pretty">Some sources couldn't be searched:</p>
         <ul class="mt-1 text-xs text-warning/80 space-y-0.5">
           <% @errors.each do |error| %>
             <li><%= error[:source].name || error[:source].key %>: <%= error[:message] %></li>
           <% end %>
         </ul>
-      </div>
+      <% end %>
     <% end %>
 
     <section class="space-y-4">

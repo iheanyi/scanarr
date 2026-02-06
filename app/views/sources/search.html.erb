@@ -22,11 +22,7 @@
   </section>
 
   <% if @query.present? %>
-    <% if @error.present? %>
-      <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-        <%= @error %>
-      </div>
-    <% end %>
+    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
 
     <section class="space-y-3">
       <h2 class="text-xl font-semibold text-balance">Results (<%= @results.size %>)</h2>

@@ -1,0 +1,7 @@
+<div class="<%= flash_classes %>" role="<%= aria_role %>" aria-live="<%= aria_live %>">
+  <% if content.present? %>
+    <%= content %>
+  <% else %>
+    <%= message %>
+  <% end %>
+</div>
