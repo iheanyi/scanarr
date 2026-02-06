@@ -30,3 +30,6 @@ application.register("chapter-filter", ChapterFilterController)
 
 import RedirectSelectController from "./redirect_select_controller"
 application.register("redirect-select", RedirectSelectController)
+
+import FlashDismissController from "./flash_dismiss_controller"
+application.register("flash-dismiss", FlashDismissController)

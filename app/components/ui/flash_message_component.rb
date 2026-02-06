@@ -25,10 +25,11 @@ module UI
       info: "polite"
     }.freeze
 
-    def initialize(variant: :info, message: nil, **system_arguments)
+    def initialize(variant: :info, message: nil, dismissible: false, **system_arguments)
       super(**system_arguments)
       @variant = variant.to_sym
       @message = message
+      @dismissible = dismissible
     end
 
     def render?
@@ -49,6 +50,10 @@ module UI
 
     def aria_live
       ARIA_LIVE[@variant]
+    end
+
+    def dismissible?
+      @dismissible
     end
 
     private
