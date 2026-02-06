@@ -4,6 +4,7 @@ class CalendarController < ApplicationController
   def index
     @view_type = params[:view].presence || "week"
     @source_filter = params[:source].presence
+    @week_offset = params[:week_offset].to_i
 
     # Get followed library series IDs
     followed_library_series_ids = current_user.user_series_follows.pluck(:library_series_id)
@@ -14,7 +15,7 @@ class CalendarController < ApplicationController
     # Date range based on view type
     case @view_type
     when "week"
-      @start_date = Date.current.beginning_of_week
+      @start_date = Date.current.beginning_of_week + @week_offset.weeks
       @end_date = @start_date + 6.days
     when "month"
       @start_date = Date.current.beginning_of_month

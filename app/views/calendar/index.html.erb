@@ -20,6 +20,25 @@
                @sources.map { |s| [s.name, calendar_path(view: @view_type, source: s.slug)] },
       selected: @source_filter.present? ? calendar_path(view: @view_type, source: @source_filter) : calendar_path(view: @view_type)
     ) %>
+
+    <% if @view_type == "week" %>
+      <div class="flex items-center gap-2 ml-auto">
+        <%= link_to calendar_path(view: "week", source: @source_filter, week_offset: @week_offset - 1),
+                    class: "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" do %>
+          <%= icon "chevron-left", class: "h-4 w-4" %>
+          Prev
+        <% end %>
+        <% if @week_offset != 0 %>
+          <%= link_to "This Week", calendar_path(view: "week", source: @source_filter),
+                      class: "rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" %>
+        <% end %>
+        <%= link_to calendar_path(view: "week", source: @source_filter, week_offset: @week_offset + 1),
+                    class: "inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" do %>
+          Next
+          <%= icon "chevron-right", class: "h-4 w-4" %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 
   <% if @chapters_by_date.empty? %>
