@@ -33,7 +33,7 @@ module UI
       when :accent
         "bg-accent-soft text-accent"
       else
-        "bg-surface-2 text-secondary"
+        "bg-surface-2 text-muted"
       end
     end
   end

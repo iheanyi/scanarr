@@ -42,7 +42,7 @@ module UI
 
     def input_classes
       cn(
-        "w-full rounded-md border bg-surface text-primary placeholder:text-tertiary",
+        "w-full rounded-md border bg-surface-2 text-foreground placeholder:text-muted-2",
         "focus:outline-none focus:ring-2 focus:ring-focus focus:border-accent",
         "disabled:cursor-not-allowed disabled:opacity-50",
         @error ? "border-error" : "border-border",
