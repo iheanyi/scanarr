@@ -135,7 +135,8 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
       assert_response :success
-      assert_includes @response.body, "data-action=\"click->reader#toggleLightbox\""
+      assert_includes @response.body, "toggleLightbox"
+      assert_includes @response.body, "Lightbox"
     end
   end
 

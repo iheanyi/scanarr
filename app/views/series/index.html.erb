@@ -27,13 +27,21 @@
       <% end %>
     </section>
   <% else %>
-    <section class="rounded-lg border border-dashed border-border/80 bg-surface/40 p-6">
-      <p class="text-muted text-pretty">No series imported yet.</p>
-      <div class="mt-4">
-        <%= link_to "Search this source",
-                    source_search_path(source_slug: @source.slug),
-                    class: "inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
-      </div>
-    </section>
+    <%= render UI::EmptyStateComponent.new(
+      title: "No series imported yet",
+      description: "Search the source and import series to get started."
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "book-open", class: "h-6 w-6" %>
+      <% end %>
+      <% empty.with_action do %>
+        <%= render UI::ButtonComponent.new(
+          variant: :primary,
+          href: source_search_path(source_slug: @source.slug)
+        ) do %>
+          Search this source
+        <% end %>
+      <% end %>
+    <% end %>
   <% end %>
 </div>

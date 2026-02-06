@@ -2,9 +2,11 @@
   <%= render UI::PageHeaderComponent.new(title: "Notifications") do |header| %>
     <% if @notifications.any? { |n| !n.read? } %>
       <% header.with_actions do %>
-        <%= button_to mark_all_read_notifications_path, method: :post, class: "inline-flex items-center gap-2 rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost" do %>
-          <%= icon "check", class: "h-4 w-4" %>
-          Mark all as read
+        <%= form_with url: mark_all_read_notifications_path, method: :post do %>
+          <%= render UI::ButtonComponent.new(variant: :ghost, size: :sm, type: "submit") do %>
+            <%= icon "check", class: "h-4 w-4" %>
+            Mark all as read
+          <% end %>
         <% end %>
       <% end %>
     <% end %>
@@ -43,10 +45,13 @@
       <% end %>
     </ul>
   <% else %>
-    <div class="rounded-lg border border-dashed border-border bg-surface p-8 text-center">
-      <%= icon "bell", class: "mx-auto h-12 w-12 text-muted-2", stroke_width: "1" %>
-      <p class="mt-4 text-muted">No notifications yet</p>
-      <p class="mt-1 text-sm text-muted-2">Follow some series to get notified when new chapters are available</p>
-    </div>
+    <%= render UI::EmptyStateComponent.new(
+      title: "No notifications yet",
+      description: "Follow some series to get notified when new chapters are available."
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "bell", class: "h-6 w-6" %>
+      <% end %>
+    <% end %>
   <% end %>
 </div>

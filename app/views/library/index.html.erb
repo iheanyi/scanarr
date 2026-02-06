@@ -34,21 +34,22 @@
   </div>
 
   <% if @series.empty? %>
-    <div class="rounded-lg border border-border bg-surface p-12 text-center">
-      <%= icon "book-open", class: "mx-auto h-12 w-12 text-muted-2", stroke_width: "1.5" %>
-      <p class="mt-4 text-muted">
-        <% if params[:q].present? || params[:status].present? %>
-          No series match your filters
-        <% else %>
-          Your library is empty. Import series from a source to get started.
-        <% end %>
-      </p>
-      <% if params[:q].present? || params[:status].present? %>
-        <%= link_to "Clear filters", library_path, class: "mt-4 inline-block text-sm text-info hover:text-info" %>
-      <% else %>
-        <%= link_to "Browse sources", root_path, class: "mt-4 inline-block text-sm text-info hover:text-info" %>
+    <% has_filters = params[:q].present? || params[:status].present? %>
+    <%= render UI::EmptyStateComponent.new(
+      title: has_filters ? "No series match your filters" : "Your library is empty",
+      description: has_filters ? nil : "Import series from a source to get started."
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "book-open", class: "h-6 w-6" %>
       <% end %>
-    </div>
+      <% empty.with_action do %>
+        <% if has_filters %>
+          <%= link_to "Clear filters", library_path, class: "text-sm text-info hover:text-info" %>
+        <% else %>
+          <%= link_to "Browse sources", root_path, class: "text-sm text-info hover:text-info" %>
+        <% end %>
+      <% end %>
+    <% end %>
   <% else %>
     <!-- Grid of series -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

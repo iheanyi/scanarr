@@ -68,16 +68,23 @@
           ) %>
         </div>
         <div class="mt-3">
-          <%= form.submit "Apply filters",
-                          class: "inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
+          <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
+            Apply filters
+          <% end %>
         </div>
       <% end %>
     </div>
 
     <% if @runs.empty? %>
-      <div class="rounded-lg border border-dashed border-border bg-surface p-6 text-center">
-        <p class="text-muted">No runs yet.</p>
-      </div>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No runs yet",
+        description: "Run a smoke test above to see results here.",
+        compact: true
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "activity", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
     <% else %>
       <div class="overflow-x-auto rounded-lg border border-border bg-surface">
         <table class="w-full text-sm">

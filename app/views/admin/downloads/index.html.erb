@@ -73,8 +73,9 @@
             label: "Status"
           ) %>
           <div>
-            <%= form.submit "Filter",
-                            class: "inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
+            <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
+              Filter
+            <% end %>
           </div>
           <% if params[:status].present? %>
             <%= link_to "Clear filter", admin_downloads_path, class: "text-sm text-muted hover:text-foreground" %>
@@ -90,9 +91,15 @@
     </div>
 
     <% if @downloads.empty? || @downloads.total_count == 0 %>
-      <div class="rounded-lg border border-dashed border-border bg-surface p-6 text-center">
-        <p class="text-muted">No downloads yet.</p>
-      </div>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No downloads yet",
+        description: "Downloads will appear here when you start downloading chapters.",
+        compact: true
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "download", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
     <% else %>
       <div class="flex items-center justify-between mb-3">
         <p class="text-sm text-muted">

@@ -1,4 +1,10 @@
 <div class="space-y-6">
+  <nav aria-label="Breadcrumb" class="text-sm text-muted">
+    <%= link_to @source.name || @source.key, source_series_index_path(source_slug: @source.slug), class: "hover:text-foreground" %>
+    <span class="text-muted-2">/</span>
+    <span class="text-foreground"><%= @series.canonical_title %></span>
+  </nav>
+
   <header class="flex flex-col gap-4 sm:flex-row sm:gap-6">
     <div class="relative group">
       <div class="h-48 w-36 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-background">
@@ -187,9 +193,15 @@
         <%= render partial: "series/chapter_row", collection: @chapters, as: :chapter, locals: { source: @source, series: @series, chapter_progress_map: @chapter_progress_map } %>
       </ul>
     <% else %>
-      <div class="rounded-lg border border-dashed border-border/80 bg-surface/40 p-6">
-        <p class="text-muted text-pretty">No chapters imported yet.</p>
-      </div>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No chapters imported yet",
+        description: "Check back after importing chapters from the source.",
+        compact: true
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "book-open", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
     <% end %>
   </section>
 </div>

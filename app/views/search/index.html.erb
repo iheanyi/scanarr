@@ -16,8 +16,9 @@
                                 autofocus: true,
                                 class: "w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" %>
           </div>
-          <%= form.submit "Search",
-                          class: "inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" %>
+          <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
+            Search
+          <% end %>
         </div>
 
         <%= render UI::MultiSelectComponent.new(
@@ -79,11 +80,18 @@
           <% end %>
         </div>
       <% else %>
-        <div class="rounded-lg border border-dashed border-border bg-surface p-6 text-center">
-          <p class="text-sm text-muted text-pretty">No results found for "<%= @query %>".</p>
-          <p class="mt-1 text-xs text-muted-2 text-pretty">Try a different title or adjust your sources.</p>
-          <%= link_to "Clear search", search_path, class: "mt-4 inline-flex text-sm text-info hover:text-info" %>
-        </div>
+        <%= render UI::EmptyStateComponent.new(
+          title: "No results found",
+          description: "No results for \"#{@query}\". Try a different title or adjust your sources.",
+          compact: true
+        ) do |empty| %>
+          <% empty.with_icon do %>
+            <%= icon "search", class: "h-6 w-6" %>
+          <% end %>
+          <% empty.with_action do %>
+            <%= link_to "Clear search", search_path, class: "text-sm text-info hover:text-info" %>
+          <% end %>
+        <% end %>
       <% end %>
     </section>
   <% end %>

@@ -15,16 +15,28 @@
               <p class="text-sm text-muted text-pretty"><%= source.base_url %></p>
             </div>
             <div class="flex flex-col items-end gap-2">
-              <%= link_to "Discover",
-                          source_browse_path(source_slug: source.slug),
-                          class: "inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground" %>
+              <%= render UI::ButtonComponent.new(
+                variant: :primary,
+                size: :sm,
+                href: source_browse_path(source_slug: source.slug)
+              ) do %>
+                Discover
+              <% end %>
               <div class="flex items-center gap-2">
-                <%= link_to "View Series",
-                            source_series_index_path(source_slug: source.slug),
-                            class: "inline-flex items-center rounded-md border border-border-soft bg-surface-2 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface hover:border-border" %>
-                <%= link_to "Search",
-                            source_search_path(source_slug: source.slug),
-                            class: "inline-flex items-center rounded-md border border-accent/50 bg-accent-ghost px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-soft" %>
+                <%= render UI::ButtonComponent.new(
+                  variant: :secondary,
+                  size: :sm,
+                  href: source_series_index_path(source_slug: source.slug)
+                ) do %>
+                  View Series
+                <% end %>
+                <%= render UI::ButtonComponent.new(
+                  variant: :ghost,
+                  size: :sm,
+                  href: source_search_path(source_slug: source.slug)
+                ) do %>
+                  Search
+                <% end %>
               </div>
             </div>
           </div>
@@ -32,9 +44,13 @@
       <% end %>
     </section>
   <% else %>
-    <div class="rounded-lg border border-dashed border-border bg-surface p-6 text-center">
-      <p class="text-muted text-pretty">No sources configured yet.</p>
-      <p class="mt-1 text-xs text-muted-2 text-pretty">Sources are automatically registered when the application starts.</p>
-    </div>
+    <%= render UI::EmptyStateComponent.new(
+      title: "No sources configured yet",
+      description: "Sources are automatically registered when the application starts."
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "globe", class: "h-6 w-6" %>
+      <% end %>
+    <% end %>
   <% end %>
 </div>

@@ -69,29 +69,39 @@
 
   <nav class="flex flex-wrap items-center gap-2">
     <% if is_horizontal %>
-      <button type="button"
-              class="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground"
-              data-action="click->reader#toggleLightbox">
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        data: { action: "click->reader#toggleLightbox" }
+      ) do %>
         Lightbox
-      </button>
+      <% end %>
     <% end %>
     <% if @previous_chapter %>
-      <%= link_to "Previous Chapter",
-                  source_series_chapter_path(
-                    source_slug: source_slug(@source),
-                    series_slug: @series.to_param,
-                    chapter_identifier: chapter_identifier(@previous_chapter)
-                  ),
-                  class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground" %>
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        href: source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@previous_chapter)
+        )
+      ) do %>
+        Previous Chapter
+      <% end %>
     <% end %>
     <% if @next_chapter %>
-      <%= link_to "Next Chapter",
-                  source_series_chapter_path(
-                    source_slug: source_slug(@source),
-                    series_slug: @series.to_param,
-                    chapter_identifier: chapter_identifier(@next_chapter)
-                  ),
-                  class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground" %>
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        href: source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@next_chapter)
+        )
+      ) do %>
+        Next Chapter
+      <% end %>
     <% end %>
     <% if @chapter.source_url.present? || @release&.source_url.present? %>
       <% download_label = if @download_in_progress
@@ -99,22 +109,22 @@
                           else
                             "Download this chapter"
                           end %>
-      <% download_class = if @download_in_progress
-                            "inline-flex items-center rounded-md bg-surface-2 px-3 py-1.5 text-sm font-semibold text-foreground cursor-not-allowed"
-                          else
-                            "inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground"
-                          end %>
-      <%= button_to download_label,
-                    source_series_chapter_download_path(
+      <%= form_with url: source_series_chapter_download_path(
                       source_slug: source_slug(@source),
                       series_slug: @series.to_param,
                       chapter_identifier: chapter_identifier(@chapter)
                     ),
                     method: :post,
-                    class: download_class,
-                    disabled: @download_in_progress,
-                    aria: { disabled: @download_in_progress },
-                    data: { turbo_submits_with: "Queuing..." } %>
+                    data: { turbo_submits_with: "Queuing..." } do %>
+        <%= render UI::ButtonComponent.new(
+          variant: @download_in_progress ? :secondary : :primary,
+          size: :sm,
+          type: "submit",
+          disabled: @download_in_progress
+        ) do %>
+          <%= download_label %>
+        <% end %>
+      <% end %>
     <% end %>
     <%= form_with url: source_series_chapter_path(
                     source_slug: source_slug(@source),
@@ -200,10 +210,16 @@
         </div>
       </div>
     <% elsif @pages.empty? && @source_pages.empty? %>
-      <div class="rounded-lg border border-dashed border-border bg-surface/40 p-6 space-y-2 <%= is_horizontal ? 'shrink-0 w-screen flex flex-col items-center justify-center' : '' %>">
-        <p class="text-muted text-pretty">Streaming from source while download completes.</p>
-        <p class="text-xs text-muted-2">This does not store pages locally yet.</p>
-      </div>
+      <%= render UI::EmptyStateComponent.new(
+        title: "Streaming from source",
+        description: "This does not store pages locally yet.",
+        compact: true,
+        class: is_horizontal ? "shrink-0 w-screen" : nil
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "wifi", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
     <% end %>
     <% @pages.each do |page| %>
       <article data-reader-target="page"
