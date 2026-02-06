@@ -39,7 +39,11 @@
         <% elsif file_asset&.download_status == "failed" && file_asset.download_error.present? %>
           <%= file_asset.download_error.truncate(50) %>
         <% elsif progress.present? %>
-          Last read <%= time_ago_in_words(progress.progressed_at) %> ago
+          <% if progress.status == "in_progress" && progress.page_count.to_i > 0 %>
+            Page <%= progress.page_index %>/<%= progress.page_count %> · Last read <%= time_ago_in_words(progress.progressed_at) %> ago
+          <% else %>
+            Last read <%= time_ago_in_words(progress.progressed_at) %> ago
+          <% end %>
         <% end %>
       </p>
     </div>
