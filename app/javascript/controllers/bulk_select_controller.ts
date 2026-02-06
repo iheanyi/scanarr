@@ -52,6 +52,10 @@ export default class extends Controller {
     const selected = this.selectedIds()
     const count = selected.length
 
+    // Toggle "selecting" class on the controller element — CSS uses this
+    // to keep all checkboxes visible once any are checked
+    this.element.classList.toggle("selecting", count > 0)
+
     // Toggle action bar visibility
     if (count > 0) {
       this.actionBarTarget.classList.remove("hidden")

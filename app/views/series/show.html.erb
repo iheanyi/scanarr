@@ -169,13 +169,6 @@
     <%= turbo_stream_from @series, :downloads %>
     <% if @chapters.any? %>
       <div class="flex items-center gap-3">
-        <label class="flex items-center gap-2 cursor-pointer shrink-0">
-          <input type="checkbox"
-                 data-bulk-select-target="selectAll"
-                 data-action="change->bulk-select#toggleAll"
-                 class="h-4 w-4 rounded border-border text-accent focus:ring-accent">
-          <span class="text-xs text-muted-2">All</span>
-        </label>
         <div class="relative flex-1">
           <%= icon "search", class: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
           <input type="text"
@@ -199,7 +192,16 @@
             <input type="hidden" name="chapter_ids" value="" data-bulk-select-target="chapterIds">
             <input type="hidden" name="action_name" value="" data-bulk-select-target="actionName">
             <div class="flex items-center justify-between gap-3">
-              <span data-bulk-select-target="count" class="text-sm font-medium text-foreground">0 selected</span>
+              <div class="flex items-center gap-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox"
+                         data-bulk-select-target="selectAll"
+                         data-action="change->bulk-select#toggleAll"
+                         class="h-4 w-4 rounded border-border text-accent focus:ring-accent cursor-pointer">
+                  <span class="text-xs text-muted-2">All</span>
+                </label>
+                <span data-bulk-select-target="count" class="text-sm font-medium text-foreground">0 selected</span>
+              </div>
               <div class="flex items-center gap-2">
                 <button type="button"
                         data-action-name="download"

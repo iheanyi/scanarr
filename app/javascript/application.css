@@ -206,6 +206,11 @@
       linear-gradient(to bottom, var(--ds-grid) 1px, transparent 1px);
     background-size: 80px 80px;
   }
+
+  /* When any checkbox is checked, keep all checkboxes visible */
+  .selecting .bulk-checkbox {
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
