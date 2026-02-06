@@ -139,7 +139,7 @@ module AsuraScans
       response.body.scan(/self\.__next_f\.push\(\[.*?"pages":\s*(\[.*?\]).*?\]\)/) do |match|
         begin
           # Unescape the JSON
-          json_str = match[0].gsub('\\"', '"').gsub('\\\\', '\\')
+          json_str = match[0].gsub('\\"', '"').gsub("\\\\", "\\")
           pages_data = JSON.parse(json_str)
           pages_data.each_with_index do |page, idx|
             url = page["url"] || page["src"] || page

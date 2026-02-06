@@ -23,7 +23,7 @@ class AddMissingIndexesForPerformance < ActiveRecord::Migration[8.1]
     # Compound index for filtering chapters by series AND source
     # Used in: SeriesController#show, ChaptersController#load_context
     # Query: @series.chapters.where(source: @source)
-    add_index :chapters, [:series_id, :source_id],
+    add_index :chapters, [ :series_id, :source_id ],
               name: "index_chapters_on_series_id_and_source_id",
               algorithm: :concurrently,
               if_not_exists: true
@@ -31,7 +31,7 @@ class AddMissingIndexesForPerformance < ActiveRecord::Migration[8.1]
     # Compound index for calendar queries filtering by series and date range
     # Used in: CalendarController#index
     # Query: Chapter.where(series_id: ids).where(created_at: range)
-    add_index :chapters, [:series_id, :created_at],
+    add_index :chapters, [ :series_id, :created_at ],
               name: "index_chapters_on_series_id_and_created_at",
               algorithm: :concurrently,
               if_not_exists: true
@@ -54,14 +54,14 @@ class AddMissingIndexesForPerformance < ActiveRecord::Migration[8.1]
     # Compound index for filtering releases by chapter AND source
     # Used in: ChaptersController#latest_release
     # Query: @chapter.releases.where(source: @source).order(created_at: :desc)
-    add_index :releases, [:chapter_id, :source_id],
+    add_index :releases, [ :chapter_id, :source_id ],
               name: "index_releases_on_chapter_id_and_source_id",
               algorithm: :concurrently,
               if_not_exists: true
 
     # Compound index for ordering releases by source and creation time
     # Used in: filtering releases by source with ordering
-    add_index :releases, [:chapter_id, :source_id, :created_at],
+    add_index :releases, [ :chapter_id, :source_id, :created_at ],
               name: "index_releases_on_chapter_source_created",
               algorithm: :concurrently,
               if_not_exists: true
@@ -146,7 +146,7 @@ class AddMissingIndexesForPerformance < ActiveRecord::Migration[8.1]
     # Compound index for reliability score calculation
     # Used in: Source#reliability_score
     # Query: scraper_runs.where("created_at > ?", 30.days.ago).where(status: X)
-    add_index :scraper_runs, [:source_id, :status, :created_at],
+    add_index :scraper_runs, [ :source_id, :status, :created_at ],
               name: "index_scraper_runs_on_source_status_created",
               algorithm: :concurrently,
               if_not_exists: true

@@ -1,8 +1,8 @@
 <div class="space-y-6">
-  <header class="space-y-2">
-    <h1 class="text-2xl font-semibold text-balance text-foreground">Search</h1>
-    <p class="text-sm text-muted text-pretty">Search across multiple sources and import series into your library.</p>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Search",
+    description: "Search across multiple sources and import series into your library."
+  ) %>
 
   <section class="rounded-lg border border-border bg-surface p-4">
     <%= form_with url: search_path, method: :get, local: true do |form| %>
@@ -16,14 +16,15 @@
                                 autofocus: true,
                                 class: "w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" %>
           </div>
-          <%= form.submit "Search",
-                          class: "inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" %>
+          <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
+            Search
+          <% end %>
         </div>
 
         <%= render UI::MultiSelectComponent.new(
           name: "sources",
           label: "Sources",
-          options: @sources.map { |source| [source.name || source.key, source.id.to_s] },
+          options: @sources.map { |source| [ source.name || source.key, source.id.to_s ] },
           selected: @selected_source_ids,
           filter_placeholder: "Filter sources",
           all_label: "All sources"
@@ -34,14 +35,14 @@
 
   <% if @query.present? %>
     <% if @errors.any? %>
-      <div class="rounded-lg border border-warning-soft bg-warning-soft px-4 py-3 text-sm text-warning">
+      <%= render UI::FlashMessageComponent.new(variant: :warning) do %>
         <p class="font-medium text-pretty">Some sources couldn't be searched:</p>
         <ul class="mt-1 text-xs text-warning/80 space-y-0.5">
           <% @errors.each do |error| %>
             <li><%= error[:source].name || error[:source].key %>: <%= error[:message] %></li>
           <% end %>
         </ul>
-      </div>
+      <% end %>
     <% end %>
 
     <section class="space-y-4">
@@ -54,17 +55,9 @@
           <% @results.each do |item| %>
             <% source = item[:source] %>
             <% result = item[:result] %>
-            <div class="flex flex-col rounded-lg border border-border bg-surface p-4">
+            <div class="flex flex-col rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors">
               <div class="flex flex-1 gap-4">
-                <div class="h-32 w-24 shrink-0 overflow-hidden rounded-md border border-border bg-surface-2">
-                  <% if result.cover_url.present? %>
-                    <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover", loading: "lazy" %>
-                  <% else %>
-                    <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-muted-2">
-                      No cover
-                    </div>
-                  <% end %>
-                </div>
+                <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "#{result.title} cover", size: :lg, class: "shrink-0") %>
                 <div class="flex min-w-0 flex-1 flex-col">
                   <span class="mb-1 inline-flex w-fit items-center rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium text-accent-strong">
                     <%= source.name || source.key %>
@@ -80,17 +73,25 @@
                               source_import_path(source_slug: source_slug(source)),
                               method: :post,
                               params: { series_url: result.url },
-                              class: "inline-flex w-full items-center justify-center rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent-strong hover:bg-accent-ghost" %>
+                              class: "inline-flex w-full items-center justify-center rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent-strong hover:bg-accent-ghost",
+                              data: { turbo_submits_with: "Importing..." } %>
               </div>
             </div>
           <% end %>
         </div>
       <% else %>
-        <div class="rounded-lg border border-dashed border-border bg-surface p-6 text-center">
-          <p class="text-sm text-muted text-pretty">No results found for "<%= @query %>".</p>
-          <p class="mt-1 text-xs text-muted-2 text-pretty">Try a different title or adjust your sources.</p>
-          <%= link_to "Clear search", search_path, class: "mt-4 inline-flex text-sm text-info hover:text-info" %>
-        </div>
+        <%= render UI::EmptyStateComponent.new(
+          title: "No results found",
+          description: "No results for \"#{@query}\". Try a different title or adjust your sources.",
+          compact: true
+        ) do |empty| %>
+          <% empty.with_icon do %>
+            <%= icon "search", class: "h-6 w-6" %>
+          <% end %>
+          <% empty.with_action do %>
+            <%= link_to "Clear search", search_path, class: "text-sm text-info hover:text-info" %>
+          <% end %>
+        <% end %>
       <% end %>
     </section>
   <% end %>

@@ -55,6 +55,13 @@ module Admin
       redirect_to admin_downloads_path
     end
 
+    def refresh_all_metadata
+      RefreshAllMetadataJob.perform_later
+
+      flash[:notice] = "Refreshing all metadata in background..."
+      redirect_to admin_downloads_path
+    end
+
     def restart
       @download = FileAsset.find(params[:id])
 
@@ -70,6 +77,27 @@ module Admin
         flash[:notice] = "Download restarted successfully"
       else
         flash[:alert] = "Can only restart failed, stuck, or cancelled downloads"
+      end
+
+      redirect_to admin_downloads_path(status: params[:status])
+    end
+
+    def cancel
+      @download = FileAsset.find(params[:id])
+
+      if @download.download_status.in?(%w[queued pending downloading])
+        @download.archive.purge if @download.archive.attached?
+        @download.pages.each { |page| page.image.purge if page.image.attached? }
+        @download.pages.destroy_all
+        @download.update!(
+          download_status: "cancelled",
+          pages_downloaded: 0,
+          pages_expected: nil,
+          download_error: "Cancelled by user"
+        )
+        flash[:notice] = "Download cancelled"
+      else
+        flash[:alert] = "Can only cancel queued or in-progress downloads"
       end
 
       redirect_to admin_downloads_path(status: params[:status])

@@ -1,0 +1,20 @@
+<header class="<%= cn('space-y-2', system_arguments[:class]) %>">
+  <% if breadcrumb? %>
+    <%= breadcrumb %>
+  <% elsif breadcrumb_text.present? %>
+    <p class="text-sm text-muted"><%= breadcrumb_text %></p>
+  <% end %>
+  <div class="flex items-end justify-between gap-4">
+    <div class="space-y-1">
+      <h1 class="text-3xl font-semibold text-balance"><%= title %></h1>
+      <% if description.present? %>
+        <p class="text-muted text-pretty"><%= description %></p>
+      <% end %>
+    </div>
+    <% if actions? %>
+      <div class="flex items-center gap-2 shrink-0">
+        <%= actions %>
+      </div>
+    <% end %>
+  </div>
+</header>

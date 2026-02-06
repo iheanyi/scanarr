@@ -5,7 +5,7 @@ class NotificationsController < ApplicationController
 
   def index
     @notifications = current_user.new_chapter_notifications
-      .includes(chapter: { series: :sources })
+      .includes(chapter: { series: [ :sources, :cover_attachment ] })
       .order(created_at: :desc)
       .limit(50)
   end

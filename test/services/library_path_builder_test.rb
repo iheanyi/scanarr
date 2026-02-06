@@ -9,10 +9,12 @@ class LibraryPathBuilderTest < ActiveSupport::TestCase
     assert_equal "weeb_central/one-piece-eiichiro-oda", builder.base_path
 
     chapter = Chapter.new(series: series, chapter_number: "1.5")
+
     assert_equal "weeb_central/one-piece-eiichiro-oda/volumes/unknown/chapters/1.5", builder.chapter_path(chapter)
 
     volume = Volume.new(series: series, volume_number: "2")
     chapter.volume = volume
+
     assert_equal "weeb_central/one-piece-eiichiro-oda/volumes/2/chapters/1.5", builder.chapter_path(chapter)
   end
 end

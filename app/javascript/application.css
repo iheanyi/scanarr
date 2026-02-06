@@ -31,18 +31,18 @@
   /* ═══════════════════════════════════════════════════════════════════════════
    * TEXT HIERARCHY - Use these for content text
    *
-   * text-primary   → Headings, titles, important body text
-   * text-secondary → Labels, descriptions, supporting content
-   * text-tertiary  → Hints, timestamps, metadata, placeholders
+   * text-foreground → Headings, titles, important body text
+   * text-muted      → Labels, descriptions, supporting content
+   * text-muted-2    → Hints, timestamps, metadata, placeholders
    * ═══════════════════════════════════════════════════════════════════════════ */
-  --color-primary: var(--ds-text);
-  --color-secondary: var(--ds-muted);
-  --color-tertiary: var(--ds-muted-2);
-
-  /* Legacy aliases (prefer text-primary/secondary/tertiary for new code) */
   --color-foreground: var(--ds-text);
   --color-muted: var(--ds-muted);
   --color-muted-2: var(--ds-muted-2);
+
+  /* Deprecated aliases — prefer text-foreground/muted/muted-2 */
+  --color-primary: var(--ds-text);
+  --color-secondary: var(--ds-muted);
+  --color-tertiary: var(--ds-muted-2);
 
   /* ═══════════════════════════════════════════════════════════════════════════
    * ACCENT - Primary actions, links, success states
@@ -205,6 +205,24 @@
     background-image: linear-gradient(to right, var(--ds-grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--ds-grid) 1px, transparent 1px);
     background-size: 80px 80px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * BULK SELECT - Checkbox visibility overrides
+ *
+ * Must be in @layer utilities to override Tailwind's opacity-0 utility.
+ * @layer components has lower priority than @layer utilities in CSS cascade.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* When any checkbox is checked, keep all checkboxes visible */
+  .selecting .bulk-checkbox {
+    opacity: 1;
+  }
+
+  /* A checked checkbox is always visible so it can be deselected */
+  .bulk-checkbox:has(input:checked) {
+    opacity: 1;
   }
 }
 

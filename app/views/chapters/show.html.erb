@@ -1,21 +1,21 @@
 <% page_count = @pages.any? ? @pages.length : @source_pages.length %>
 <% initial_page_index = @initial_page_index || @chapter_progress&.page_index || (page_count.positive? ? 1 : 0) %>
 <% if page_count.positive? %>
-  <% initial_page_index = [[initial_page_index, page_count].min, 1].max %>
+  <% initial_page_index = [ [ initial_page_index, page_count ].min, 1 ].max %>
 <% else %>
   <% initial_page_index = 0 %>
 <% end %>
 <% progress_percent = page_count.positive? ? ((initial_page_index.to_f / page_count) * 100.0) : 0 %>
-<% is_horizontal = @reading_style == 'left_to_right' || @reading_style == 'right_to_left' %>
-<% is_rtl = @reading_style == 'right_to_left' %>
-<% is_long_strip = @reading_style == 'long_strip' %>
+<% is_horizontal = @reading_style == "left_to_right" || @reading_style == "right_to_left" %>
+<% is_rtl = @reading_style == "right_to_left" %>
+<% is_long_strip = @reading_style == "long_strip" %>
 <% next_chapter_url = @next_chapter ? source_series_chapter_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@next_chapter)) : nil %>
 <% next_chapter_title = @next_chapter ? "Chapter #{@next_chapter.chapter_number}" : nil %>
 <main data-controller="reader"
       data-reader-style-value="<%= @reading_style %>"
       data-reader-page-count-value="<%= page_count %>"
       data-reader-initial-page-index-value="<%= initial_page_index %>"
-      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)) : '' %>"
+      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)) : "" %>"
       <% if next_chapter_url %>
       data-reader-next-chapter-url-value="<%= next_chapter_url %>"
       data-reader-next-chapter-title-value="<%= next_chapter_title %>"
@@ -69,51 +69,62 @@
 
   <nav class="flex flex-wrap items-center gap-2">
     <% if is_horizontal %>
-      <button type="button"
-              class="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground"
-              data-action="click->reader#toggleLightbox">
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        data: { action: "click->reader#toggleLightbox" }
+      ) do %>
         Lightbox
-      </button>
+      <% end %>
     <% end %>
     <% if @previous_chapter %>
-      <%= link_to "Previous Chapter",
-                  source_series_chapter_path(
-                    source_slug: source_slug(@source),
-                    series_slug: @series.to_param,
-                    chapter_identifier: chapter_identifier(@previous_chapter)
-                  ),
-                  class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground" %>
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        href: source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@previous_chapter)
+        )
+      ) do %>
+        Previous Chapter
+      <% end %>
     <% end %>
     <% if @next_chapter %>
-      <%= link_to "Next Chapter",
-                  source_series_chapter_path(
-                    source_slug: source_slug(@source),
-                    series_slug: @series.to_param,
-                    chapter_identifier: chapter_identifier(@next_chapter)
-                  ),
-                  class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground" %>
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        href: source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@next_chapter)
+        )
+      ) do %>
+        Next Chapter
+      <% end %>
     <% end %>
     <% if @chapter.source_url.present? || @release&.source_url.present? %>
       <% download_label = if @download_in_progress
                             @file_asset&.download_status == "downloading" ? "Downloading..." : "Download queued"
-                          else
+         else
                             "Download this chapter"
-                          end %>
-      <% download_class = if @download_in_progress
-                            "inline-flex items-center rounded-md bg-surface-2 px-3 py-1.5 text-sm font-semibold text-foreground cursor-not-allowed"
-                          else
-                            "inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground"
-                          end %>
-      <%= button_to download_label,
-                    source_series_chapter_download_path(
+         end %>
+      <%= form_with url: source_series_chapter_download_path(
                       source_slug: source_slug(@source),
                       series_slug: @series.to_param,
                       chapter_identifier: chapter_identifier(@chapter)
                     ),
                     method: :post,
-                    class: download_class,
-                    disabled: @download_in_progress,
-                    aria: { disabled: @download_in_progress } %>
+                    data: { turbo_submits_with: "Queuing..." } do %>
+        <%= render UI::ButtonComponent.new(
+          variant: @download_in_progress ? :secondary : :primary,
+          size: :sm,
+          type: "submit",
+          disabled: @download_in_progress
+        ) do %>
+          <%= download_label %>
+        <% end %>
+      <% end %>
     <% end %>
     <%= form_with url: source_series_chapter_path(
                     source_slug: source_slug(@source),
@@ -127,10 +138,10 @@
         form: form,
         method: :reading_style,
         options: [
-          ["Left to Right", "left_to_right"],
-          ["Right to Left", "right_to_left"],
-          ["Long Strip", "long_strip"],
-          ["Webcomic", "webcomic"]
+          [ "Left to Right", "left_to_right" ],
+          [ "Right to Left", "right_to_left" ],
+          [ "Long Strip", "long_strip" ],
+          [ "Webcomic", "webcomic" ]
         ],
         selected: @reading_style,
         size: :sm,
@@ -140,37 +151,37 @@
   </nav>
 
   <% viewport_class = if is_horizontal
-                        base = 'flex overflow-x-auto snap-x snap-mandatory w-full'
+                        base = "flex overflow-x-auto snap-x snap-mandatory w-full"
                         is_rtl ? "#{base} flex-row-reverse" : base
-                      elsif is_long_strip
+     elsif is_long_strip
                         # Long strip: seamless vertical scroll for webtoons - no gaps
-                        'flex flex-col items-center'
-                      else
+                        "flex flex-col items-center"
+     else
                         # Webcomic: vertical scroll with small gaps between pages
-                        'flex flex-col items-center gap-4'
-                      end %>
+                        "flex flex-col items-center gap-4"
+     end %>
   <% page_class = if is_horizontal
-                    'snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer'
-                  elsif is_long_strip
+                    "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
+     elsif is_long_strip
                     # Long strip: full width, no extra styling - panels flow together
-                    'w-full max-w-3xl cursor-pointer'
-                  else
+                    "w-full max-w-3xl cursor-pointer"
+     else
                     # Webcomic: constrained pages
-                    'w-full max-w-2xl cursor-pointer'
-                  end %>
+                    "w-full max-w-2xl cursor-pointer"
+     end %>
   <% image_class = if is_long_strip
                      # Long strip: no height limit, images flow naturally
-                     'w-full max-w-full object-contain pointer-events-none'
-                   else
+                     "w-full max-w-full object-contain pointer-events-none"
+     else
                      # Other modes: constrain height for page-based viewing
-                     'max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none'
-                   end %>
+                     "max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none"
+     end %>
 
   <section data-reader-target="viewport"
            class="<%= viewport_class %>"
            data-reader-rtl="<%= is_rtl %>">
     <% if @file_asset&.download_status.present? %>
-      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? 'shrink-0 w-screen flex items-center justify-center' : '' %>">
+      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? "shrink-0 w-screen flex items-center justify-center" : "" %>">
         <% if @file_asset.download_status == "downloading" && @file_asset.pages_expected.present? %>
           Downloading pages (<%= @file_asset.pages_downloaded %>/<%= @file_asset.pages_expected %>)
         <% elsif @file_asset.download_status == "failed" %>
@@ -183,11 +194,9 @@
       </div>
     <% end %>
     <% if @source_error.present? %>
-      <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? 'shrink-0 w-screen flex flex-col items-center justify-center' : '' %>">
+      <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-screen flex flex-col items-center justify-center" : "" %>">
         <div class="flex items-center gap-2 text-danger">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-          </svg>
+          <%= icon "circle-alert", class: "h-5 w-5" %>
           <span class="font-medium">Unable to load chapter</span>
         </div>
         <p class="text-sm text-danger text-pretty"><%= @source_error %></p>
@@ -201,10 +210,16 @@
         </div>
       </div>
     <% elsif @pages.empty? && @source_pages.empty? %>
-      <div class="rounded-lg border border-dashed border-border bg-surface/40 p-6 space-y-2 <%= is_horizontal ? 'shrink-0 w-screen flex flex-col items-center justify-center' : '' %>">
-        <p class="text-muted text-pretty">Streaming from source while download completes.</p>
-        <p class="text-xs text-muted-2">This does not store pages locally yet.</p>
-      </div>
+      <%= render UI::EmptyStateComponent.new(
+        title: "Streaming from source",
+        description: "This does not store pages locally yet.",
+        compact: true,
+        class: is_horizontal ? "shrink-0 w-screen" : nil
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "wifi", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
     <% end %>
     <% @pages.each do |page| %>
       <article data-reader-target="page"
@@ -221,7 +236,7 @@
       <article data-reader-target="page"
                data-action="click->reader#openLightboxForPage"
                class="<%= page_class %>">
-        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class %>
+        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class, loading: "lazy" %>
       </article>
     <% end %>
   </section>
@@ -247,17 +262,17 @@
     </button>
     <img data-reader-target="lightboxImage"
          class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
-         alt="Reader page" />
+         alt="Reader page">
   </div>
 
   <%# Next Chapter overlay - shows when reaching end of chapter %>
   <% if @next_chapter %>
     <div data-reader-target="nextChapterOverlay"
-         class="fixed inset-0 z-40 hidden items-center justify-center bg-background/98 p-6">
+         class="fixed inset-0 z-[60] hidden items-center justify-center bg-background/98 p-6">
       <div class="max-w-md w-full space-y-6 text-center">
         <div class="space-y-2">
           <p class="text-sm text-muted uppercase tracking-wider font-medium">End of Chapter</p>
-          <h2 class="text-3xl font-bold text-foreground">Continue Reading?</h2>
+          <h2 class="text-3xl font-semibold text-foreground">Continue Reading?</h2>
         </div>
 
         <div class="rounded-xl border border-border bg-surface p-5 space-y-2">
@@ -275,14 +290,14 @@
                   data-action="click->reader#goToNextChapter"
                   class="w-full rounded-lg bg-accent px-6 py-3.5 text-base font-semibold text-accent-foreground hover:bg-accent-strong transition-colors shadow-lg shadow-accent/20">
             <span>Continue to Next Chapter</span>
-            <span class="ml-2 inline-flex items-center justify-center rounded-full bg-background/20 px-2.5 py-0.5 text-sm font-bold">
+            <span class="ml-2 inline-flex items-center justify-center rounded-full bg-background/20 px-2.5 py-0.5 text-sm font-semibold">
               <span data-reader-target="nextChapterCountdown">5</span>s
             </span>
           </button>
 
           <button type="button"
                   data-action="click->reader#cancelNextChapter"
-                  class="w-full rounded-lg border border-border bg-surface-2 px-6 py-3 text-sm font-semibold text-foreground hover:bg-surface hover:border-border-soft transition-colors">
+                  class="w-full rounded-lg border border-border bg-surface-2 px-6 py-3 text-sm font-medium text-foreground hover:bg-surface hover:border-border-soft transition-colors">
             Stay on this chapter
           </button>
 

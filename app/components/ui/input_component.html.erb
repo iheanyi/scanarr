@@ -1,6 +1,6 @@
 <div>
   <% if label.present? %>
-    <label class="text-sm font-medium text-primary">
+    <label class="text-sm font-medium text-foreground">
       <%= label %>
       <% if required %>
         <span class="text-error">*</span>
@@ -15,7 +15,7 @@
   <% end %>
 
   <% if hint.present? && error.blank? %>
-    <p class="mt-1.5 text-xs text-tertiary"><%= hint %></p>
+    <p class="mt-1.5 text-xs text-muted-2"><%= hint %></p>
   <% end %>
 
   <% if error.present? %>

@@ -11,6 +11,7 @@ class UI::BadgeComponentTest < ComponentTestCase
   def test_applies_variant_classes
     rendered = render_inline UI::BadgeComponent.new(label: "Warning", variant: :warning)
 
-    assert_includes rendered.to_html, "bg-amber-500/15"
+    assert_includes rendered.to_html, "bg-warning-soft"
+    assert_includes rendered.to_html, "text-warning"
   end
 end

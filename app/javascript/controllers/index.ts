@@ -4,9 +4,6 @@
 
 import { application } from "./application"
 
-import HelloController from "./hello_controller"
-application.register("hello", HelloController)
-
 import ReaderController from "./reader_controller"
 application.register("reader", ReaderController)
 
@@ -27,3 +24,21 @@ application.register("multi-select", MultiSelectController)
 
 import DrawerController from "./drawer_controller"
 application.register("drawer", DrawerController)
+
+import ChapterFilterController from "./chapter_filter_controller"
+application.register("chapter-filter", ChapterFilterController)
+
+import RedirectSelectController from "./redirect_select_controller"
+application.register("redirect-select", RedirectSelectController)
+
+import FlashDismissController from "./flash_dismiss_controller"
+application.register("flash-dismiss", FlashDismissController)
+
+import TextExpandController from "./text_expand_controller"
+application.register("text-expand", TextExpandController)
+
+import ToastController from "./toast_controller"
+application.register("toast", ToastController)
+
+import BulkSelectController from "./bulk_select_controller"
+application.register("bulk-select", BulkSelectController)

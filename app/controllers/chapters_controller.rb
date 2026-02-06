@@ -7,8 +7,21 @@ class ChaptersController < ApplicationController
   def show
     @release = latest_release
     file_asset = @release&.file_asset
-    @pages = if file_asset
-               file_asset.pages.includes(image_attachment: :blob).order(:position).select { |page| page.image.attached? }
+    @pages = if file_asset&.download_status == "complete"
+               pages = file_asset.pages.includes(image_attachment: :blob).order(:position).select { |page| page.image.attached? }
+
+               # Verify blobs actually exist on disk (spot-check first page)
+               if pages.any?
+                 first_blob = pages.first.image.blob
+                 if first_blob && !ActiveStorage::Blob.service.exist?(first_blob.key)
+                   Rails.logger.warn "ChaptersController: Broken blobs detected for file_asset #{file_asset.id}, falling back to source"
+                   []
+                 else
+                   pages
+                 end
+               else
+                 []
+               end
     else
                []
     end
@@ -66,29 +79,51 @@ class ChaptersController < ApplicationController
       ) and return
     end
 
-    release = @chapter.releases.create!(source: @source, format: "pages", source_url: source_url)
-    file_asset = release.create_file_asset!(
-      format: "pages",
-      download_status: "queued",
-      pages_downloaded: 0,
-      download_error: nil,
-      path: LibraryPathBuilder.new(series: @series, source: @source).chapter_path(@chapter)
-    )
+    ActiveRecord::Base.transaction do
+      release = @chapter.releases.find_or_create_by!(source: @source) do |r|
+        r.format = "pages"
+        r.source_url = source_url
+      end
 
-    # Broadcast new download to admin page
-    broadcast_admin_download(file_asset)
+      # Skip if this release already has an active download
+      if release.file_asset&.download_status.in?(%w[queued pending downloading])
+        redirect_to source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@chapter)
+        ) and return
+      end
 
-    DownloadChapterJob.perform_later(
-      source_url,
-      source_key: @source.key,
-      series_title: @series.canonical_title,
-      source_series_id: series_source&.source_series_id,
-      chapter_number: @chapter.chapter_number,
-      chapter_title: @chapter.title,
-      language: @chapter.language,
-      group: @chapter.group,
-      release_id: release.id
-    )
+      chapter_path = LibraryPathBuilder.new(series: @series, source: @source).chapter_path(@chapter)
+      file_asset = if release.file_asset
+        release.file_asset.tap do |fa|
+          fa.update!(download_status: "queued", pages_downloaded: 0, download_error: nil, path: chapter_path)
+        end
+      else
+        release.create_file_asset!(
+          format: "pages",
+          download_status: "queued",
+          pages_downloaded: 0,
+          download_error: nil,
+          path: chapter_path
+        )
+      end
+
+      # Broadcast new download to admin page
+      broadcast_admin_download(file_asset)
+
+      DownloadChapterJob.perform_later(
+        source_url,
+        source_key: @source.key,
+        series_title: @series.canonical_title,
+        source_series_id: series_source&.source_series_id,
+        chapter_number: @chapter.chapter_number,
+        chapter_title: @chapter.title,
+        language: @chapter.language,
+        group: @chapter.group,
+        release_id: release.id
+      )
+    end
 
     redirect_to source_series_chapter_path(
       source_slug: source_slug(@source),
@@ -198,7 +233,25 @@ class ChaptersController < ApplicationController
   end
 
   def latest_release
-    @chapter.releases.where(source: @source).order(created_at: :desc).first
+    releases = @chapter.releases.where(source: @source)
+                       .includes(file_asset: { pages: { image_attachment: :blob } })
+                       .order(created_at: :desc)
+
+    # Prefer the newest release whose downloaded files actually exist on disk
+    releases.each do |release|
+      fa = release.file_asset
+      next unless fa&.download_status == "complete"
+
+      first_page = fa.pages.min_by(&:position)
+      next unless first_page&.image&.blob
+
+      if ActiveStorage::Blob.service.exist?(first_page.image.blob.key)
+        return release
+      end
+    end
+
+    # Fall back to newest release (may have no download yet, or all are broken)
+    releases.first
   end
 
   def set_navigation

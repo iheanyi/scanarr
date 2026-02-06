@@ -8,12 +8,14 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
   # Test the CHAPTER_NUMBER_PATTERN constant directly
   test "CHAPTER_NUMBER_PATTERN matches integer chapter numbers" do
     pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+
     assert_match(/#{pattern}/, "123")
     assert_equal "123", "123"[/#{pattern}/, 1]
   end
 
   test "CHAPTER_NUMBER_PATTERN matches decimal chapter numbers" do
     pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+
     assert_match(/#{pattern}/, "123.5")
     assert_equal "123.5", "123.5"[/#{pattern}/, 1]
   end
@@ -37,6 +39,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
     url = "/series/some-manga/chapter/123"
 
     chapter_num = url[/\/chapter\/#{pattern}/, 1]
+
     assert_equal "123", chapter_num
   end
 
@@ -45,6 +48,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
     url = "/series/some-manga/chapter/123.5"
 
     chapter_num = url[/\/chapter\/#{pattern}/, 1]
+
     assert_equal "123.5", chapter_num
   end
 
@@ -53,17 +57,20 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
     url = "/series/some-manga/chapter/45.75"
 
     chapter_num = url[/\/chapter\/#{pattern}/, 1]
+
     assert_equal "45.75", chapter_num
   end
 
   # Test the extract_chapter_number helper method
   test "extract_chapter_number returns integer from text" do
     result = @adapter.send(:extract_chapter_number, "Chapter 42")
+
     assert_equal "42", result
   end
 
   test "extract_chapter_number returns decimal from text" do
     result = @adapter.send(:extract_chapter_number, "Chapter 42.5")
+
     assert_equal "42.5", result
   end
 

@@ -1,9 +1,9 @@
-<main class="space-y-6">
-  <header class="space-y-2">
-    <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
-    <h1 class="text-3xl font-semibold text-balance">Search</h1>
-    <p class="text-muted text-pretty">Search the source and import a series into your library.</p>
-  </header>
+<div class="space-y-6">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Search",
+    description: "Search the source and import a series into your library.",
+    breadcrumb_text: @source.name || @source.key
+  ) %>
 
   <section class="rounded-lg border border-border bg-surface p-4">
     <%= form_with url: source_search_path(source_slug: source_slug(@source)), method: :get, local: true do |form| %>
@@ -13,38 +13,27 @@
           <%= form.text_field :q,
                               value: @query,
                               placeholder: "One Piece",
-                              class: "w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-2" %>
+                              class: "w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" %>
         </div>
-        <%= form.submit "Search",
-                        class: "inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
+        <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
+          Search
+        <% end %>
       </div>
     <% end %>
   </section>
 
   <% if @query.present? %>
-    <% if @error.present? %>
-      <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-        <%= @error %>
-      </div>
-    <% end %>
+    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
 
     <section class="space-y-3">
       <h2 class="text-xl font-semibold text-balance">Results (<%= @results.size %>)</h2>
       <% if @results.any? %>
         <ul class="space-y-3">
           <% @results.each do |result| %>
-            <li class="rounded-lg border border-border bg-surface p-4">
+            <li class="rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-4">
-                  <div class="h-24 w-16 overflow-hidden rounded-md border border-border bg-background">
-                    <% if result.cover_url.present? %>
-                      <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover" %>
-                    <% else %>
-                      <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-muted-2">
-                        No cover
-                      </div>
-                    <% end %>
-                  </div>
+                  <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "#{result.title} cover", size: :md) %>
                   <div class="space-y-1">
                     <p class="text-sm text-muted">Series</p>
                     <p class="text-lg font-semibold text-balance"><%= result.title %></p>
@@ -54,14 +43,23 @@
                               source_import_path(source_slug: source_slug(@source)),
                               method: :post,
                               params: { series_url: result.url },
-                              class: "inline-flex items-center rounded-md border border-accent/40 px-4 py-2 text-sm font-semibold text-accent" %>
+                              class: "inline-flex items-center rounded-md border border-accent/40 px-4 py-2 text-sm font-semibold text-accent",
+                              data: { turbo_submits_with: "Importing..." } %>
               </div>
             </li>
           <% end %>
         </ul>
       <% else %>
-        <p class="text-sm text-muted text-pretty">No results.</p>
+        <%= render UI::EmptyStateComponent.new(
+          title: "No results",
+          description: "Try a different search term.",
+          compact: true
+        ) do |empty| %>
+          <% empty.with_icon do %>
+            <%= icon "search", class: "h-6 w-6" %>
+          <% end %>
+        <% end %>
       <% end %>
     </section>
   <% end %>
-</main>
+</div>

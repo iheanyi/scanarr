@@ -1,0 +1,22 @@
+<div class="<%= flash_classes %>"
+     role="<%= aria_role %>"
+     aria-live="<%= aria_live %>"
+     <% if dismissible? %>data-controller="flash-dismiss"<% end %>>
+  <div class="flex items-center justify-between gap-2">
+    <div>
+      <% if content.present? %>
+        <%= content %>
+      <% else %>
+        <%= message %>
+      <% end %>
+    </div>
+    <% if dismissible? %>
+      <button type="button"
+              data-action="flash-dismiss#dismiss"
+              class="shrink-0 rounded-md p-1 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-current"
+              aria-label="Dismiss">
+        <%= helpers.icon "x", class: "h-4 w-4" %>
+      </button>
+    <% end %>
+  </div>
+</div>

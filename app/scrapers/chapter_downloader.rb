@@ -34,7 +34,7 @@ class ChapterDownloader
     ext = File.extname(URI.parse(url).path)
     return ext unless ext.nil? || ext.empty?
 
-    type = [mime_type, response_type].compact.join(" ")
+    type = [ mime_type, response_type ].compact.join(" ")
     return ".png" if type.match?(/png/i)
     return ".webp" if type.match?(/webp/i)
     return ".jpg" if type.match?(/jpe?g/i)

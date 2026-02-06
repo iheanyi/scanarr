@@ -1,4 +1,4 @@
-<main class="space-y-6">
+<div class="space-y-6">
   <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
     <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground" %>
     <span class="text-muted-2">/</span>
@@ -6,9 +6,7 @@
   </nav>
 
   <% if @error.present? %>
-    <div class="rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-      <%= @error %>
-    </div>
+    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
     <div class="pt-4">
       <%= link_to "Back to Browse", source_browse_path(source_slug: source_slug(@source)),
                   class: "inline-flex items-center gap-2 text-sm text-muted hover:text-foreground" %>
@@ -17,28 +15,19 @@
     <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
       <%# Cover and quick actions %>
       <div class="space-y-4">
-        <div class="aspect-[2/3] overflow-hidden rounded-lg border border-border bg-background">
-          <% if @series.cover_url.present? %>
-            <%= image_tag @series.cover_url, alt: "#{@series.title} cover", class: "h-full w-full object-cover" %>
-          <% else %>
-            <div class="flex h-full w-full items-center justify-center text-sm uppercase text-muted-2">
-              No cover
-            </div>
-          <% end %>
-        </div>
+        <%= render UI::SeriesCoverComponent.new(url: @series.cover_url, alt: "#{@series.title} cover", size: :full, aspect: "2/3", rounded: :lg) %>
 
         <%= button_to "Import to Library",
                       source_import_path(source_slug: source_slug(@source)),
                       method: :post,
                       params: { series_url: @series_url },
-                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90" %>
+                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent-strong",
+                      data: { turbo_submits_with: "Importing..." } %>
 
         <%= link_to @series.url, target: "_blank", rel: "noopener",
                     class: "flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-surface-2" do %>
           View on <%= @source.name %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
+          <%= icon "external-link", class: "h-4 w-4" %>
         <% end %>
       </div>
 
@@ -68,16 +57,7 @@
               </span>
             <% end %>
             <% if @series.status.present? %>
-              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium
-                <%= case @series.status.to_s.downcase
-                    when 'ongoing' then 'bg-info-soft text-info'
-                    when 'completed' then 'bg-success-soft text-success'
-                    when 'hiatus' then 'bg-warning-soft text-warning'
-                    when 'cancelled' then 'bg-danger-soft text-danger'
-                    else 'bg-surface-2 text-foreground'
-                    end %>">
-                <%= @series.status.to_s.titleize %>
-              </span>
+              <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
             <% end %>
             <% if @series.series_type.present? %>
               <span class="inline-flex rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-foreground">
@@ -119,7 +99,7 @@
             </h2>
             <ul class="divide-y divide-border">
               <% @chapters.each do |chapter| %>
-                <li class="py-2 first:pt-0 last:pb-0">
+                <li class="py-2 first:pt-0 last:pb-0 -mx-2 px-2 rounded-md transition-colors hover:bg-surface-2/40">
                   <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">
                       <p class="text-sm text-foreground truncate">
@@ -154,4 +134,4 @@
       </div>
     </div>
   <% end %>
-</main>
+</div>

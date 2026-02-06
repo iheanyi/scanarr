@@ -14,18 +14,18 @@ module UI
     end
 
     def button_classes
-      "inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:border-zinc-500"
+      "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs font-semibold text-foreground hover:border-border-soft"
     end
 
     def menu_classes
-      cn("absolute z-10 mt-2 w-48 rounded-md border border-zinc-800 bg-zinc-950 shadow-lg", alignment_classes)
+      cn("absolute z-10 mt-2 w-48 rounded-md border border-border bg-surface shadow-lg", alignment_classes)
     end
 
     def item_classes(selected:)
       if selected
-        "block w-full px-3 py-2 text-left text-xs text-emerald-300 bg-emerald-500/10"
+        "block w-full px-3 py-2 text-left text-xs text-accent bg-accent-soft"
       else
-        "block w-full px-3 py-2 text-left text-xs text-zinc-200 hover:bg-zinc-900"
+        "block w-full px-3 py-2 text-left text-xs text-foreground hover:bg-surface-2"
       end
     end
 

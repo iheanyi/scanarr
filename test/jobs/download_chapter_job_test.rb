@@ -52,6 +52,7 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     )
 
     release.reload
+
     assert_instance_of Release, release
     assert_equal "weeb_central", release.source.key
     assert_equal "One Piece", release.chapter.series.canonical_title
@@ -59,12 +60,15 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     assert_equal "Chapter 1", release.chapter.title
 
     series_source = SeriesSource.find_by(source: release.source, series: release.chapter.series)
+
     assert_equal "SERIES123", series_source.source_series_id
     assert_equal "weeb_central/one-piece", series_source.library_base_path
 
     file_asset = release.file_asset
+
     assert_equal "weeb_central/one-piece/volumes/unknown/chapters/1", file_asset.path
     pages = file_asset.pages.order(:position).to_a
+
     assert_equal [ 1, 2 ], pages.map(&:position)
     assert_equal [ "001.jpg", "002.jpg" ], pages.map { |page| page.image.filename.to_s }
     assert_equal [ "page-1", "page-2" ], pages.map { |page| page.image.download }

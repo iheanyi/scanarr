@@ -1,0 +1,118 @@
+<div class="space-y-8">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Reading Stats",
+    description: "Your reading activity and habits."
+  ) %>
+
+  <%# Stat cards %>
+  <section class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+    <%= render UI::StatCardComponent.new(label: "Chapters Read", value: @total_chapters_read, color: :accent) %>
+    <%= render UI::StatCardComponent.new(label: "Pages Read", value: number_with_delimiter(@total_pages_read), color: :info) %>
+    <%= render UI::StatCardComponent.new(label: "Series In Progress", value: @series_with_progress, color: :success) %>
+    <%= render UI::StatCardComponent.new(label: "Series Followed", value: @series_followed, color: :muted) %>
+    <%= render UI::StatCardComponent.new(label: "Chapters / Week", value: @chapters_per_week, color: :warning) %>
+  </section>
+
+  <%# Reading activity heatmap %>
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Reading Activity</h2>
+    <p class="text-xs text-muted-2">Last 12 weeks</p>
+    <div class="overflow-x-auto rounded-lg border border-border bg-surface p-4">
+      <div class="flex gap-1">
+        <div class="flex flex-col gap-1 text-[10px] text-muted-2 pr-2 pt-0.5">
+          <span class="h-3 leading-3">Mon</span>
+          <span class="h-3 leading-3"></span>
+          <span class="h-3 leading-3">Wed</span>
+          <span class="h-3 leading-3"></span>
+          <span class="h-3 leading-3">Fri</span>
+          <span class="h-3 leading-3"></span>
+          <span class="h-3 leading-3">Sun</span>
+        </div>
+        <% max_count = [ @daily_activity.values.max || 1, 1 ].max %>
+        <% start_date = 12.weeks.ago.to_date %>
+        <% start_date = start_date - start_date.cwday + 1 %> <%# Align to Monday %>
+        <% end_date = Date.current %>
+        <% week_start = start_date %>
+        <% while week_start <= end_date %>
+          <div class="flex flex-col gap-1">
+            <% (0..6).each do |day_offset| %>
+              <% day = week_start + day_offset %>
+              <% if day <= end_date && day >= start_date %>
+                <% count = @daily_activity[day] || 0 %>
+                <% intensity = count == 0 ? 0 : [ (count.to_f / max_count * 4).ceil, 4 ].min %>
+                <% bg = case intensity
+                   when 0 then "bg-surface-2"
+                   when 1 then "bg-success/25"
+                   when 2 then "bg-success/50"
+                   when 3 then "bg-success/75"
+                   else "bg-success"
+                   end %>
+                <div class="h-3 w-3 rounded-sm <%= bg %>" title="<%= day.strftime("%b %d, %Y") %>: <%= count %> chapter<%= count == 1 ? "" : "s" %>"></div>
+              <% else %>
+                <div class="h-3 w-3"></div>
+              <% end %>
+            <% end %>
+          </div>
+          <% week_start += 7 %>
+        <% end %>
+      </div>
+      <div class="flex items-center justify-end gap-1.5 mt-3 text-[10px] text-muted-2">
+        <span>Less</span>
+        <div class="h-3 w-3 rounded-sm bg-surface-2"></div>
+        <div class="h-3 w-3 rounded-sm bg-success/25"></div>
+        <div class="h-3 w-3 rounded-sm bg-success/50"></div>
+        <div class="h-3 w-3 rounded-sm bg-success/75"></div>
+        <div class="h-3 w-3 rounded-sm bg-success"></div>
+        <span>More</span>
+      </div>
+    </div>
+  </section>
+
+  <%# Top genres %>
+  <% if @top_tags.any? %>
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Top Genres</h2>
+      <div class="space-y-2 rounded-lg border border-border bg-surface p-4">
+        <% tag_max = @top_tags.values.max %>
+        <% @top_tags.each do |tag, count| %>
+          <div class="flex items-center gap-3">
+            <span class="w-24 shrink-0 truncate text-sm text-foreground"><%= tag %></span>
+            <div class="flex-1 h-5 rounded bg-surface-2 overflow-hidden">
+              <div class="h-full rounded bg-accent/60" style="width: <%= (count.to_f / tag_max * 100).round %>%"></div>
+            </div>
+            <span class="w-8 shrink-0 text-right text-xs text-muted-2"><%= count %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# Recently read %>
+  <% if @recently_read.any? %>
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Recently Read</h2>
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        <% @recently_read.each do |series| %>
+          <% source = series.sources.first %>
+          <% next unless source %>
+          <%= link_to source_series_path(source_slug: source.slug, series_slug: series.to_param),
+                      class: "group space-y-2" do %>
+            <div class="aspect-[2/3] overflow-hidden rounded-lg border border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors">
+              <% if series.cover_image_url.present? %>
+                <%= image_tag series.cover_image_url,
+                              alt: series.canonical_title,
+                              class: "h-full w-full object-cover transition-transform group-hover:scale-105",
+                              loading: "lazy" %>
+              <% else %>
+                <div class="flex h-full w-full items-center justify-center">
+                  <span class="text-xs text-muted-2">No cover</span>
+                </div>
+              <% end %>
+            </div>
+            <p class="text-sm font-medium text-foreground line-clamp-2 group-hover:text-accent transition-colors"><%= series.canonical_title %></p>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

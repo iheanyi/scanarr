@@ -584,5 +584,5 @@ Config:
 
 - Mihon client project: https://github.com/mihonapp/mihon
 - Mihon extension source: https://github.com/keiyoushi/extensions-source
-- Overseer task management: https://github.com/dmmulroy/overseer
+- Tasuku task management: https://github.com/iheanyi/tasuku
 - Rails ActiveStorage overview: https://guides.rubyonrails.org/active_storage_overview.html

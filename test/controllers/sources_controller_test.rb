@@ -27,6 +27,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
   def test_index_returns_success
     get "/"
+
     assert_response :success
     assert_includes @response.body, "Weeb Central"
     assert_includes @response.body, "/sources/weeb-central"
@@ -36,6 +37,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   def test_search_shows_results
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/search", params: { q: "one piece" }
+
       assert_response :success
       assert_includes @response.body, "One Piece"
       assert_includes @response.body, "https://img.example.com/cover.jpg"
@@ -47,6 +49,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       post "/sources/weeb-central/import", params: { series_url: "https://weebcentral.com/series/OP" }
       # Find the newly created series to get its public_id-slug format
       series = Series.find_by(canonical_title: "One Piece")
+
       assert_redirected_to "/sources/weeb-central/#{series.to_param}"
     end
   end

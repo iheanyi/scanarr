@@ -96,7 +96,7 @@ class Series < ApplicationRecord
     gap_penalty = calculate_chapter_gaps * -5
     reliability = primary_source&.reliability_score.to_f * 20
 
-    new_score = [chapter_score + gap_penalty + reliability, 0].max
+    new_score = [ chapter_score + gap_penalty + reliability, 0 ].max
     update!(quality_score: new_score.round(2))
     new_score
   end

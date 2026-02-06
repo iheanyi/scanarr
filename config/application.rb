@@ -29,6 +29,5 @@ module Scanarr
 
     # Enable full-stack Rails for Hotwire/Stimulus UI.
     config.api_only = false
-
   end
 end

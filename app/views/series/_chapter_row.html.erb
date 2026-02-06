@@ -1,8 +1,21 @@
-<%# locals: (chapter:, source:, series:, progress: nil) %>
+<%# locals: (chapter:, source:, series:, progress: nil, chapter_progress_map: nil) %>
+<% progress = progress || chapter_progress_map&.dig(chapter.id) %>
 <% latest_release = chapter.releases.max_by(&:created_at) %>
 <% file_asset = latest_release&.file_asset %>
-<li id="<%= dom_id(chapter) %>" class="rounded-lg border border-border/80 bg-surface/40 p-4">
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+<% is_read = progress&.status == "completed" %>
+<li id="<%= dom_id(chapter) %>"
+    data-chapter-filter-target="item"
+    data-chapter-filter-text="chapter <%= chapter.chapter_number %> <%= chapter.title %>"
+    class="group/row rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/30 transition-colors <%= "opacity-60" if is_read %>">
+  <div class="flex gap-3 sm:items-center">
+    <div class="pt-1 sm:pt-0 shrink-0 bulk-checkbox opacity-0 group-hover/row:opacity-100 transition-opacity">
+      <input type="checkbox"
+             value="<%= chapter.id %>"
+             data-bulk-select-target="checkbox"
+             data-action="change->bulk-select#toggle"
+             class="h-4 w-4 rounded border-border text-accent focus:ring-accent cursor-pointer">
+    </div>
+    <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="space-y-1">
       <div class="flex flex-wrap items-center gap-2">
         <%= link_to "Chapter #{chapter.chapter_number}",
@@ -11,65 +24,36 @@
                       series_slug: series.to_param,
                       chapter_identifier: chapter.chapter_number
                     ),
-                    class: "text-base font-semibold text-accent" %>
-        <% if progress.present? %>
-          <% progress_label = if progress.status == "completed"
-                                "Completed"
-                              else
-                                "In progress"
-                              end %>
-          <% progress_classes = case progress_label
-                               when "Completed"
-                                 "bg-accent-soft text-accent border-accent/30"
-                               else
-                                 "bg-amber-500/10 text-amber-200 border-amber-500/30"
-                               end %>
-          <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold <%= progress_classes %>">
-            <%= progress_label %>
-          </span>
-        <% end %>
-        <% if file_asset&.download_status.present? %>
-          <% label = case file_asset.download_status
-                     when "downloading"
-                       "Downloading"
-                     when "failed"
-                       "Failed"
-                     when "complete"
-                       "Ready"
-                     else
-                       "Queued"
-                     end %>
-          <% label_classes = case file_asset.download_status
-                             when "downloading"
-                               "bg-accent-soft text-accent border-accent/30"
-                             when "failed"
-                               "bg-rose-500/10 text-rose-200 border-rose-500/30"
-                             when "complete"
-                               "bg-sky-500/10 text-sky-200 border-sky-500/30"
-                             else
-                               "bg-surface-2/60 text-foreground border-border"
-                             end %>
-          <span id="<%= dom_id(chapter, :status) %>" class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold <%= label_classes %>">
-            <%= label %>
-          </span>
-        <% end %>
+                    class: "text-base font-semibold #{is_read ? "text-muted" : "text-accent"}" %>
+        <%# Single-badge priority: active download > failed > reading progress > download complete %>
+        <span id="<%= dom_id(chapter, :status) %>">
+          <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
+            <% dl_label = file_asset.download_status == "downloading" ? "Downloading" : "Queued" %>
+            <%= render UI::StatusBadgeComponent.new(status: file_asset.download_status, label: dl_label, bordered: true) %>
+          <% elsif file_asset&.download_status == "failed" %>
+            <%= render UI::StatusBadgeComponent.new(status: "failed", label: "Failed", bordered: true) %>
+          <% elsif progress.present? %>
+            <% progress_label = progress.status == "completed" ? "Completed" : "In Progress" %>
+            <%= render UI::StatusBadgeComponent.new(status: progress.status == "completed" ? "completed" : "in progress", label: progress_label, bordered: true) %>
+          <% end %>
+        </span>
       </div>
       <% if chapter.meaningful_title? %>
         <p class="text-sm text-muted text-pretty"><%= chapter.title %></p>
       <% end %>
-      <% if file_asset&.download_status.present? %>
-        <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-muted-2">
-          <% if file_asset.download_status == "downloading" && file_asset.pages_expected.present? %>
-            Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
-          <% elsif file_asset.download_status == "failed" %>
-            Download failed<%= ": #{file_asset.download_error.truncate(50)}" if file_asset.download_error.present? %>
-          <% elsif file_asset.download_status == "complete" %>
-            Ready
+      <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-muted-2">
+        <% if file_asset&.download_status == "downloading" && file_asset.pages_expected.present? %>
+          Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
+        <% elsif file_asset&.download_status == "failed" && file_asset.download_error.present? %>
+          <%= file_asset.download_error.truncate(50) %>
+        <% elsif progress.present? %>
+          <% if progress.status == "in_progress" && progress.page_count.to_i > 0 %>
+            Page <%= progress.page_index %>/<%= progress.page_count %> · Last read <%= time_ago_in_words(progress.progressed_at) %> ago
           <% else %>
-            Queued
+            Last read <%= time_ago_in_words(progress.progressed_at) %> ago
           <% end %>
-        </p>
-      <% end %>
+        <% end %>
+      </p>
     </div>
     <div class="flex items-center gap-2">
       <% if file_asset&.download_status == "complete" %>
@@ -79,11 +63,9 @@
                         chapter_identifier: chapter.chapter_number
                       ),
                       method: :delete,
-                      class: "inline-flex items-center rounded-md border border-rose-500/40 px-3 py-1.5 text-sm font-semibold text-rose-300 hover:bg-rose-500/10",
+                      class: "inline-flex items-center rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft",
                       data: { turbo_confirm: "Remove download for Chapter #{chapter.chapter_number}?" } do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          <%= icon "trash-2", class: "h-4 w-4 mr-1" %>
           Remove
         <% end %>
       <% end %>
@@ -94,10 +76,8 @@
                         chapter_identifier: chapter.chapter_number
                       ),
                       method: :post,
-                      class: "inline-flex items-center rounded-md border border-amber-500/40 px-3 py-1.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/10" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+                      class: "inline-flex items-center rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft" do %>
+          <%= icon "x", class: "h-4 w-4 mr-1" %>
           Cancel
         <% end %>
       <% end %>
@@ -112,9 +92,11 @@
                           chapter_identifier: chapter.chapter_number
                         ),
                         method: :post,
-                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent" %>
+                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent",
+                        data: { turbo_submits_with: "Queuing..." } %>
         <% end %>
       <% end %>
+    </div>
     </div>
   </div>
 </li>

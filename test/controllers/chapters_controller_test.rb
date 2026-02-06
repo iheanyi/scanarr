@@ -22,6 +22,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   def test_show_includes_next_chapter_link
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/2"
     end
@@ -30,6 +31,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   def test_show_includes_previous_chapter_link
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/2"
+
       assert_response :success
       assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/1"
     end
@@ -43,6 +45,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/10"
+
       assert_response :success
       assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/Extra"
     end
@@ -56,6 +59,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "Streaming from source"
     end
@@ -67,6 +71,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "Streaming from source"
     end
@@ -74,17 +79,19 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
   def test_download_enqueues_job
     clear_enqueued_jobs
-    assert_difference -> { Release.count }, 1 do
-      assert_difference -> { FileAsset.count }, 1 do
+    assert_no_difference -> { Release.count } do
+      assert_no_difference -> { FileAsset.count } do
         assert_enqueued_jobs 1 do
           post "/sources/weeb-central/#{series_url}/chapters/1/download"
         end
       end
     end
 
-    release = Release.order(created_at: :desc).first
-    assert_equal "queued", release.file_asset.download_status
+    release = chapters(:one).releases.where(source: sources(:one)).order(created_at: :desc).first
+
+    assert_equal "queued", release.file_asset.reload.download_status
     job = enqueued_jobs.last
+
     assert_equal DownloadChapterJob, job[:job]
   end
 
@@ -96,16 +103,18 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
 
     progress = ChapterProgress.order(created_at: :desc).first
+
     assert_equal 2, progress.page_index
     assert_equal 5, progress.page_count
     assert_equal "in_progress", progress.status
-    assert progress.progressed_at.present?
+    assert_predicate progress.progressed_at, :present?
     assert_response :success
   end
 
   def test_show_renders_progress_bar
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "data-reader-target=\"progressText\""
       assert_includes @response.body, "data-reader-target=\"progressBar\""
@@ -126,6 +135,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "Page 2 / 2"
     end
@@ -134,14 +144,17 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   def test_show_renders_lightbox_toggle
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
-      assert_includes @response.body, "data-action=\"click->reader#toggleLightbox\""
+      assert_includes @response.body, "toggleLightbox"
+      assert_includes @response.body, "Lightbox"
     end
   end
 
   def test_show_renders_lightbox_overlay
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "data-reader-target=\"lightbox\""
       assert_includes @response.body, "data-reader-target=\"lightboxImage\""
@@ -151,8 +164,10 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   def test_show_renders_lightbox_inside_reader_controller
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       main = @response.body[/<main[^>]*data-controller="reader".*?<\/main>/m]
+
       assert main, "Expected reader controller markup to be present"
       assert_includes main, "data-reader-target=\"lightbox\""
     end
@@ -161,6 +176,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   def test_show_caps_reader_image_size
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
+
       assert_response :success
       assert_includes @response.body, "max-w-2xl"
       assert_includes @response.body, "max-h-[75vh]"
@@ -170,6 +186,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   def test_show_prefers_page_param_for_initial_page
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1", params: { page: 2 }
+
       assert_response :success
       assert_includes @response.body, "Page 2 / 2"
     end
@@ -180,6 +197,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/2"
+
       assert_response :success
       assert_includes @response.body, "Download queued"
       assert_match(/disabled=\"disabled\"/, @response.body)
@@ -191,7 +209,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     release = releases(:one)
     file_asset = file_assets(:one)
 
-    assert file_asset.persisted?
+    assert_predicate file_asset, :persisted?
     assert_equal "complete", file_asset.download_status
 
     delete "/sources/weeb-central/#{series_url}/chapters/#{chapter.chapter_number}/download"
@@ -207,6 +225,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to "/sources/weeb-central/#{series_url}"
     follow_redirect!
+
     assert_includes @response.body, "Download removed"
   end
 
@@ -220,6 +239,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to "/sources/weeb-central/#{series_url}"
     file_asset.reload
+
     assert_equal "cancelled", file_asset.download_status
     assert_equal "Cancelled by user", file_asset.download_error
   end
@@ -234,6 +254,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to "/sources/weeb-central/#{series_url}"
     file_asset.reload
+
     assert_equal "cancelled", file_asset.download_status
     assert_equal "Cancelled by user", file_asset.download_error
     assert_equal 0, file_asset.pages_downloaded

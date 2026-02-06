@@ -43,6 +43,7 @@ class SeriesImporterTest < ActiveSupport::TestCase
     assert_includes series.normalized_categories, "manga"
     assert_equal "left_to_right", series.reading_style
     series_source = SeriesSource.find_by!(series: series, source: source, source_series_id: "series-123")
+
     assert_equal "weeb_central/one-piece-eiichiro-oda", series_source.library_base_path
     assert_equal 2, series.chapters.where(source: source).count
     assert_equal "https://weebcentral.com/chapters/01CHAPTER", series.chapters.find_by(chapter_number: "1").source_url
@@ -56,6 +57,7 @@ class SeriesImporterTest < ActiveSupport::TestCase
 
     assert_difference -> { Series.count }, 0 do
       series = importer.import!("https://weebcentral.com/series/OP")
+
       assert_equal existing.id, series.id
     end
   end

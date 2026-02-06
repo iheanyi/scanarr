@@ -43,7 +43,7 @@ class AddRemainingPerformanceIndexes < ActiveRecord::Migration[8.1]
     # Compound index for source + source_series_id lookup
     # Used in: SeriesImporter, DownloadChapterJob
     # Query: SeriesSource.find_by(source: X, source_series_id: Y)
-    add_index :series_sources, [:source_id, :source_series_id],
+    add_index :series_sources, [ :source_id, :source_series_id ],
               name: "index_series_sources_on_source_id_and_source_series_id",
               algorithm: :concurrently,
               if_not_exists: true
@@ -62,7 +62,7 @@ class AddRemainingPerformanceIndexes < ActiveRecord::Migration[8.1]
 
     # Compound index for enabled + name (sorted filtered queries)
     # Query: Source.where(enabled: true).order(:name, :key)
-    add_index :sources, [:enabled, :name],
+    add_index :sources, [ :enabled, :name ],
               name: "index_sources_on_enabled_and_name",
               algorithm: :concurrently,
               if_not_exists: true
@@ -86,7 +86,7 @@ class AddRemainingPerformanceIndexes < ActiveRecord::Migration[8.1]
     # Triple compound for precise chapter lookup by number within series/source
     # Used in: ChaptersController#load_context
     # Query: chapter_scope.find_by(chapter_number: X) where scope is series+source
-    add_index :chapters, [:series_id, :source_id, :chapter_number],
+    add_index :chapters, [ :series_id, :source_id, :chapter_number ],
               name: "index_chapters_on_series_source_chapter_number",
               algorithm: :concurrently,
               if_not_exists: true
@@ -109,7 +109,7 @@ class AddRemainingPerformanceIndexes < ActiveRecord::Migration[8.1]
 
     # Compound for user notification listing with created_at ordering
     # Query: current_user.new_chapter_notifications.order(created_at: :desc)
-    add_index :new_chapter_notifications, [:user_id, :created_at],
+    add_index :new_chapter_notifications, [ :user_id, :created_at ],
               name: "index_new_chapter_notifications_on_user_id_and_created_at",
               algorithm: :concurrently,
               if_not_exists: true

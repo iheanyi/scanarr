@@ -2,7 +2,7 @@
 
 class CheckSourceForChaptersJob < ApplicationJob
   queue_as :default
-  limits_concurrency to: 3, key: ->(series_id, _, _) { "check_chapters:#{series_id}" }
+  limits_concurrency to: 3, key: ->(series_id, _follow_id, _source_id) { "check_chapters:#{series_id}" }
 
   def perform(series_id, follow_id, source_id = nil)
     series = Series.find_by(id: series_id)
@@ -53,6 +53,8 @@ class CheckSourceForChaptersJob < ApplicationJob
 
       new_chapter_count += 1
     end
+
+    series_source&.update!(last_checked_at: Time.current)
 
     Rails.logger.info "[CheckSourceForChaptersJob] Found #{new_chapter_count} new chapters for series #{series_id}"
   rescue StandardError => e

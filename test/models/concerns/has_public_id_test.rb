@@ -13,7 +13,7 @@ class HasPublicIdTest < ActiveSupport::TestCase
   test "generates public_id on create" do
     chapter = Chapter.create!(series: @series, chapter_number: "1")
 
-    assert chapter.public_id.present?
+    assert_predicate chapter.public_id, :present?
   end
 
   test "public_id has correct length" do
@@ -26,6 +26,7 @@ class HasPublicIdTest < ActiveSupport::TestCase
     chapter = Chapter.create!(series: @series, chapter_number: "1")
 
     allowed_chars = HasPublicId::PUBLIC_ID_ALPHABET.chars
+
     chapter.public_id.chars.each do |char|
       assert_includes allowed_chars, char, "Character '#{char}' not in allowed alphabet"
     end
@@ -90,6 +91,7 @@ class HasPublicIdTest < ActiveSupport::TestCase
 
     assert_equal HasPublicId::PUBLIC_ID_LENGTH, id.length
     allowed_chars = HasPublicId::PUBLIC_ID_ALPHABET.chars
+
     id.chars.each do |char|
       assert_includes allowed_chars, char
     end

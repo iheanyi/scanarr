@@ -1,7 +1,7 @@
 class Chapter < ApplicationRecord
   include HasPublicId
 
-  belongs_to :series
+  belongs_to :series, counter_cache: true
   belongs_to :volume, optional: true
   belongs_to :source, optional: true
   has_many :releases, dependent: :destroy

@@ -31,14 +31,14 @@ module UI
 
     def title_classes
       cn(
-        "font-semibold text-primary",
+        "font-semibold text-foreground",
         @compact ? "text-sm" : "text-lg"
       )
     end
 
     def description_classes
       cn(
-        "text-secondary max-w-sm",
+        "text-muted max-w-sm",
         @compact ? "text-xs mt-1" : "text-sm mt-2"
       )
     end

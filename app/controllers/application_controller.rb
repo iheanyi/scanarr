@@ -1,11 +1,20 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+
   before_action :authenticate!
 
   helper_method :current_user, :user_signed_in?, :authenticated?, :current_notifications, :unread_notification_count
 
   private
+
+  def render_not_found
+    respond_to do |format|
+      format.html { render "errors/not_found", status: :not_found, layout: "application" }
+      format.json { render json: { error: "Not found" }, status: :not_found }
+    end
+  end
 
   # Auth credentials from env vars with sensible defaults
   def auth_username
@@ -62,7 +71,7 @@ class ApplicationController < ActionController::Base
 
   def current_notifications
     @current_notifications ||= current_user.new_chapter_notifications
-      .includes(chapter: { series: :sources })
+      .includes(chapter: :series)
       .unread
       .recent
       .order(created_at: :desc)

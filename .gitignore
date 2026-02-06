@@ -68,8 +68,9 @@ Thumbs.db
 .overmind.sock
 .foreman
 
-# Overseer task management
-.overseer/
+# Tasuku task management
+.tasuku/
+.tasuku.*/
 
 # Bootsnap cache
 /tmp/cache/bootsnap*

@@ -5,16 +5,18 @@ class CheckNewChaptersJob < ApplicationJob
   limits_concurrency to: 1, key: "check_new_chapters"
 
   def perform
-    follows = UserSeriesFollow.includes(library_series: :series)
+    follows = UserSeriesFollow.includes(library_series: { series: :series_sources })
     count = follows.count
 
     Rails.logger.info "[CheckNewChaptersJob] Starting check for #{count} follows"
 
     follows.find_each do |follow|
       follow.library_series.series.each do |series|
-        next unless series.source
+        series.series_sources.each do |ss|
+          next unless ss.source_series_id.present?
 
-        CheckSourceForChaptersJob.perform_later(series.id, follow.id)
+          CheckSourceForChaptersJob.perform_later(series.id, follow.id, ss.source_id)
+        end
       end
     end
 

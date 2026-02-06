@@ -8,6 +8,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
   def test_index_returns_success
     series = series(:one)
     get "/sources/weeb-central"
+
     assert_response :success
     assert_includes @response.body, "One Piece"
     assert_includes @response.body, "/sources/weeb-central/#{series_url(series)}"
@@ -16,6 +17,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
   def test_show_returns_success
     series = series(:one)
     get "/sources/weeb-central/#{series_url(series)}"
+
     assert_response :success
     assert_includes @response.body, "Chapter 1"
     assert_includes @response.body, "/sources/weeb-central/#{series_url(series)}/chapters/1"
@@ -29,12 +31,14 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     Chapter.create!(series: series, source: source, chapter_number: "Extra", title: "Chapter 10 Extra")
 
     get "/sources/weeb-central/#{series_url(series)}"
+
     assert_response :success
     body = @response.body
-    assert body.index(">Chapter 1</a>") < body.index(">Chapter 2</a>")
-    assert body.index(">Chapter 2</a>") < body.index(">Chapter 10</a>")
-    assert body.index(">Chapter 10</a>") < body.index(">Chapter Extra</a>")
-    assert body.index(">Chapter Extra</a>") < body.index(">Chapter 10.5</a>")
+
+    assert_operator body.index(">Chapter 1</a>"), :<, body.index(">Chapter 2</a>")
+    assert_operator body.index(">Chapter 2</a>"), :<, body.index(">Chapter 10</a>")
+    assert_operator body.index(">Chapter 10</a>"), :<, body.index(">Chapter Extra</a>")
+    assert_operator body.index(">Chapter Extra</a>"), :<, body.index(">Chapter 10.5</a>")
   end
 
   def test_show_renders_progress_pill_for_signed_in_user
@@ -52,13 +56,15 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     )
 
     get "/sources/weeb-central/#{series_url(series)}"
+
     assert_response :success
-    assert_includes @response.body, "In progress"
+    assert_includes @response.body, "In Progress"
   end
 
   def test_show_displays_download_all_button
     series = series(:one)
     get "/sources/weeb-central/#{series_url(series)}"
+
     assert_response :success
     assert_includes @response.body, "Download All"
   end
@@ -76,6 +82,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to "/sources/weeb-central/#{series_url(series)}"
     follow_redirect!
+
     assert_includes @response.body, "Queuing"
   end
 
@@ -97,17 +104,20 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     series.update!(cover_url: "https://example.com/cover.jpg")
 
     post "/sources/weeb-central/#{series_url(series)}/refresh_cover"
+
     assert_redirected_to "/sources/weeb-central/#{series_url(series)}"
   end
 
   def test_to_param_format
     series = series(:one)
+
     assert_equal "#{series.public_id}-#{series.slug}", series.to_param
   end
 
   def test_find_by_param_extracts_public_id
     series = series(:one)
     found = Series.find_by_param!(series.to_param)
+
     assert_equal series, found
   end
 end

@@ -15,6 +15,8 @@ Rails.application.routes.draw do
   root "sources#index"
   get "/library", to: "library#index", as: :library
   get "/calendar", to: "calendar#index", as: :calendar
+  get "/stats", to: "stats#show", as: :stats
+  get "/history", to: "reading_history#index", as: :reading_history
   resources :follows, only: [ :create, :update, :destroy ]
 
   # Notifications
@@ -38,6 +40,7 @@ Rails.application.routes.draw do
   post "/sources/:source_slug/:series_slug/refresh_cover", to: "series#refresh_cover", as: :source_series_refresh_cover
   delete "/sources/:source_slug/:series_slug/remove_all_downloads", to: "series#remove_all_downloads", as: :source_series_remove_all_downloads
   post "/sources/:source_slug/:series_slug/cancel_all_downloads", to: "series#cancel_all_downloads", as: :source_series_cancel_all_downloads
+  post "/sources/:source_slug/:series_slug/bulk_actions", to: "series#bulk_action", as: :source_series_bulk_actions
   post "/sources/:source_slug/:series_slug/refresh_metadata", to: "series#refresh_metadata", as: :source_series_refresh_metadata
   get "/chapters/:public_id", to: "chapters#redirect", as: :chapter_public
   get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier", to: "chapters#show", as: :source_series_chapter
@@ -60,7 +63,9 @@ Rails.application.routes.draw do
     post "scrapers/:source_id/smoke", to: "scrapers#run_smoke", as: :scraper_smoke
     get "downloads", to: "downloads#index", as: :downloads
     post "downloads/refresh_all_covers", to: "downloads#refresh_all_covers", as: :refresh_all_covers
+    post "downloads/refresh_all_metadata", to: "downloads#refresh_all_metadata", as: :refresh_all_metadata
     post "downloads/:id/restart", to: "downloads#restart", as: :download_restart
+    post "downloads/:id/cancel", to: "downloads#cancel", as: :download_cancel
     post "downloads/restart_all_failed", to: "downloads#restart_all_failed", as: :restart_all_failed_downloads
     post "downloads/restart_all_stuck", to: "downloads#restart_all_stuck", as: :restart_all_stuck_downloads
   end

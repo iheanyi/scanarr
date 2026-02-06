@@ -9,6 +9,6 @@ class CreateUserSeriesFollows < ActiveRecord::Migration[8.1]
       t.datetime :created_at, null: false
     end
 
-    add_index :user_series_follows, [:user_id, :library_series_id], unique: true
+    add_index :user_series_follows, [ :user_id, :library_series_id ], unique: true
   end
 end

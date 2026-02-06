@@ -3,18 +3,21 @@ require "test_helper"
 class LibrarySeriesTest < ActiveSupport::TestCase
   def test_generates_public_id
     library_series = LibrarySeries.create!(canonical_title: "One Piece")
-    assert library_series.public_id.present?
+
+    assert_predicate library_series.public_id, :present?
     assert_equal 12, library_series.public_id.length
   end
 
   def test_generates_slug_from_title
     library_series = LibrarySeries.create!(canonical_title: "One Piece Omega")
+
     assert_equal "one-piece-omega", library_series.slug
   end
 
   def test_slug_is_unique
     first = LibrarySeries.create!(canonical_title: "Slug Test")
     second = LibrarySeries.create!(canonical_title: "Slug Test")
+
     assert first.slug.start_with?("slug-test")
     assert second.slug.start_with?("slug-test")
     assert_not_equal first.slug, second.slug
@@ -23,26 +26,31 @@ class LibrarySeriesTest < ActiveSupport::TestCase
   def test_status_enum
     library_series = LibrarySeries.create!(canonical_title: "One Piece")
 
-    assert library_series.ongoing?
+    assert_predicate library_series, :ongoing?
 
     library_series.update!(status: :completed)
-    assert library_series.completed?
+
+    assert_predicate library_series, :completed?
 
     library_series.update!(status: :hiatus)
-    assert library_series.hiatus?
+
+    assert_predicate library_series, :hiatus?
 
     library_series.update!(status: :cancelled)
-    assert library_series.cancelled?
+
+    assert_predicate library_series, :cancelled?
   end
 
   def test_to_param_includes_public_id_and_slug
     library_series = LibrarySeries.create!(canonical_title: "One Piece")
+
     assert_equal "#{library_series.public_id}-#{library_series.slug}", library_series.to_param
   end
 
   def test_find_by_param
     library_series = LibrarySeries.create!(canonical_title: "One Piece")
     found = LibrarySeries.find_by_param!(library_series.to_param)
+
     assert_equal library_series, found
   end
 

@@ -45,8 +45,9 @@ class ImportSeriesJobTest < ActiveJob::TestCase
     end
 
     run.reload
+
     assert_equal "success", run.status
-    assert run.finished_at.present?
+    assert_predicate run.finished_at, :present?
     assert_equal "https://weebcentral.com/series/OP", run.stats_json.fetch("series_url")
     assert_equal 2, run.stats_json.fetch("chapter_count")
   end
@@ -67,9 +68,10 @@ class ImportSeriesJobTest < ActiveJob::TestCase
     end
 
     run.reload
+
     assert_equal "failed", run.status
-    assert run.error.present?
-    assert run.finished_at.present?
+    assert_predicate run.error, :present?
+    assert_predicate run.finished_at, :present?
   end
 
   private

@@ -1,36 +1,30 @@
 <div class="space-y-6">
-  <header class="flex items-end justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold text-foreground">Library</h1>
-      <p class="mt-1 text-sm text-muted">
-        <%= @total_series %> series · <%= @total_chapters %> chapters · <%= @downloaded_chapters %> downloaded
-      </p>
-    </div>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Library",
+    description: "#{@total_series} series · #{@total_chapters} chapters · #{@downloaded_chapters} downloaded"
+  ) %>
 
   <!-- Filters -->
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex overflow-hidden rounded-lg border border-border bg-surface-2/60 text-sm">
       <%= link_to "All",
           library_path,
-          class: "px-3 py-1.5 #{params[:status].blank? ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 transition-colors #{params[:status].blank? ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
       <%= link_to "Downloaded",
           library_path(status: "downloaded", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border #{params[:status] == 'downloaded' ? 'bg-success-soft text-success' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'downloaded' ? 'bg-success-soft text-success' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
       <%= link_to "In Progress",
           library_path(status: "in_progress", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border #{params[:status] == 'in_progress' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'in_progress' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
       <%= link_to "Not Downloaded",
           library_path(status: "not_downloaded", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border #{params[:status] == 'not_downloaded' ? 'bg-surface-2 text-muted' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'not_downloaded' ? 'bg-surface-2 text-muted' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
     </div>
 
     <%= form_with url: library_path, method: :get, class: "flex-1 max-w-xs", data: { turbo_frame: "_top" } do |f| %>
       <%= hidden_field_tag :status, params[:status] if params[:status].present? %>
       <div class="relative">
-        <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-        </svg>
+        <%= icon "search", class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
         <%= f.search_field :q,
             value: params[:q],
             placeholder: "Search library...",
@@ -40,23 +34,22 @@
   </div>
 
   <% if @series.empty? %>
-    <div class="rounded-lg border border-border bg-surface p-12 text-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-      </svg>
-      <p class="mt-4 text-muted">
-        <% if params[:q].present? || params[:status].present? %>
-          No series match your filters
-        <% else %>
-          Your library is empty. Import series from a source to get started.
-        <% end %>
-      </p>
-      <% if params[:q].present? || params[:status].present? %>
-        <%= link_to "Clear filters", library_path, class: "mt-4 inline-block text-sm text-info hover:text-info" %>
-      <% else %>
-        <%= link_to "Browse sources", root_path, class: "mt-4 inline-block text-sm text-info hover:text-info" %>
+    <% has_filters = params[:q].present? || params[:status].present? %>
+    <%= render UI::EmptyStateComponent.new(
+      title: has_filters ? "No series match your filters" : "Your library is empty",
+      description: has_filters ? nil : "Import series from a source to get started."
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "book-open", class: "h-6 w-6" %>
       <% end %>
-    </div>
+      <% empty.with_action do %>
+        <% if has_filters %>
+          <%= link_to "Clear filters", library_path, class: "text-sm text-info hover:text-info" %>
+        <% else %>
+          <%= link_to "Browse sources", root_path, class: "text-sm text-info hover:text-info" %>
+        <% end %>
+      <% end %>
+    <% end %>
   <% else %>
     <!-- Grid of series -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -67,14 +60,12 @@
         <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
 
         <%= link_to series_path, class: "group block" do %>
-          <div class="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-surface-2">
+          <div class="relative aspect-[2/3] overflow-hidden rounded-lg border border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors">
             <% if series.cover_image_url.present? %>
-              <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title %>
+              <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title, loading: "lazy" %>
             <% else %>
               <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                </svg>
+                <%= icon "book-open", class: "h-12 w-12 text-muted-2", stroke_width: "1.5" %>
               </div>
             <% end %>
 
@@ -82,7 +73,7 @@
             <% if progress[:total] > 0 %>
               <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="<%= progress[:downloaded] == progress[:total] ? 'text-success' : 'text-muted' %>">
+                  <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
                     <%= progress[:downloaded] %>/<%= progress[:total] %>
                   </span>
                   <% if progress[:downloading] > 0 %>
@@ -97,7 +88,7 @@
                 </div>
                 <% if progress[:total] > 0 %>
                   <div class="mt-1 h-1 overflow-hidden rounded-full bg-border">
-                    <div class="h-full rounded-full <%= progress[:downloaded] == progress[:total] ? 'bg-success' : 'bg-info' %>"
+                    <div class="h-full rounded-full <%= progress[:downloaded] == progress[:total] ? "bg-success" : "bg-info" %>"
                          style="width: <%= (progress[:downloaded].to_f / progress[:total] * 100).round %>%"></div>
                   </div>
                 <% end %>
@@ -115,7 +106,7 @@
           </div>
 
           <div class="mt-2">
-            <h3 class="truncate text-sm font-medium text-foreground group-hover:text-foreground">
+            <h3 class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">
               <%= series.canonical_title %>
             </h3>
             <% if series.display_author.present? %>
@@ -125,5 +116,11 @@
         <% end %>
       <% end %>
     </div>
+
+    <%= render UI::PaginationComponent.new(
+      collection: @series,
+      base_path: library_path,
+      params: { status: params[:status], q: params[:q] }
+    ) %>
   <% end %>
 </div>

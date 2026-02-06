@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Scanarr</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -15,15 +15,14 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
   <body class="min-h-dvh bg-background text-foreground text-pretty">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-foreground">Skip to content</a>
     <div data-controller="drawer" class="min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <header class="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
         <button type="button"
                 class="inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-foreground hover:bg-surface-2/80"
                 data-action="click->drawer#open"
                 aria-label="Open navigation">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <%= icon "menu", class: "h-5 w-5", aria: { hidden: true } %>
         </button>
         <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
       </header>
@@ -37,23 +36,18 @@
 
       <div class="min-h-dvh">
         <% if flash[:notice].present? || flash[:alert].present? %>
-          <div class="mx-auto w-full max-w-6xl px-4 pt-4">
-            <% if flash[:notice].present? %>
-              <div class="rounded-lg border border-success-soft bg-success-soft px-4 py-3 text-sm text-success">
-                <%= flash[:notice] %>
-              </div>
-            <% end %>
-            <% if flash[:alert].present? %>
-              <div class="rounded-lg border border-danger-soft bg-danger-soft px-4 py-3 text-sm text-danger">
-                <%= flash[:alert] %>
-              </div>
-            <% end %>
+          <div class="mx-auto w-full max-w-6xl px-4 pt-4 space-y-2">
+            <%= render UI::FlashMessageComponent.new(variant: :success, message: flash[:notice], dismissible: true) %>
+            <%= render UI::FlashMessageComponent.new(variant: :danger, message: flash[:alert], dismissible: true) %>
           </div>
         <% end %>
-        <main class="mx-auto w-full max-w-6xl px-4 py-8">
+        <main id="main-content" class="mx-auto w-full max-w-6xl px-4 py-8">
           <%= yield %>
         </main>
       </div>
+
+      <%# Toast container for Turbo Stream notifications %>
+      <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-80 max-w-[calc(100vw-2rem)]"></div>
 
       <dialog data-drawer-target="dialog"
               data-action="click->drawer#closeOnBackdrop"
@@ -64,9 +58,7 @@
                   class="inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-foreground hover:bg-surface-2/80"
                   data-action="drawer#close"
                   aria-label="Close navigation">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
+            <%= icon "x", class: "h-5 w-5", aria: { hidden: true } %>
           </button>
         </div>
         <div class="mt-4 h-full pb-6">
