@@ -173,7 +173,14 @@ export default class extends Controller {
   }
 
   next() {
-    this.scrollToIndex(this.currentIndex + 1)
+    const nextIndex = this.currentIndex + 1
+    if (nextIndex >= this.pageTargets.length) {
+      // Past last page — trigger next chapter flow
+      if (this.lightboxOpen) this.closeLightbox()
+      this.checkEndOfChapter()
+      return
+    }
+    this.scrollToIndex(nextIndex)
   }
 
   previous() {
