@@ -1,21 +1,21 @@
 <% page_count = @pages.any? ? @pages.length : @source_pages.length %>
 <% initial_page_index = @initial_page_index || @chapter_progress&.page_index || (page_count.positive? ? 1 : 0) %>
 <% if page_count.positive? %>
-  <% initial_page_index = [[initial_page_index, page_count].min, 1].max %>
+  <% initial_page_index = [ [ initial_page_index, page_count ].min, 1 ].max %>
 <% else %>
   <% initial_page_index = 0 %>
 <% end %>
 <% progress_percent = page_count.positive? ? ((initial_page_index.to_f / page_count) * 100.0) : 0 %>
-<% is_horizontal = @reading_style == 'left_to_right' || @reading_style == 'right_to_left' %>
-<% is_rtl = @reading_style == 'right_to_left' %>
-<% is_long_strip = @reading_style == 'long_strip' %>
+<% is_horizontal = @reading_style == "left_to_right" || @reading_style == "right_to_left" %>
+<% is_rtl = @reading_style == "right_to_left" %>
+<% is_long_strip = @reading_style == "long_strip" %>
 <% next_chapter_url = @next_chapter ? source_series_chapter_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@next_chapter)) : nil %>
 <% next_chapter_title = @next_chapter ? "Chapter #{@next_chapter.chapter_number}" : nil %>
 <main data-controller="reader"
       data-reader-style-value="<%= @reading_style %>"
       data-reader-page-count-value="<%= page_count %>"
       data-reader-initial-page-index-value="<%= initial_page_index %>"
-      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)) : '' %>"
+      data-reader-progress-url-value="<%= current_user ? source_series_chapter_progress_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@chapter)) : "" %>"
       <% if next_chapter_url %>
       data-reader-next-chapter-url-value="<%= next_chapter_url %>"
       data-reader-next-chapter-title-value="<%= next_chapter_title %>"
@@ -106,9 +106,9 @@
     <% if @chapter.source_url.present? || @release&.source_url.present? %>
       <% download_label = if @download_in_progress
                             @file_asset&.download_status == "downloading" ? "Downloading..." : "Download queued"
-                          else
+         else
                             "Download this chapter"
-                          end %>
+         end %>
       <%= form_with url: source_series_chapter_download_path(
                       source_slug: source_slug(@source),
                       series_slug: @series.to_param,
@@ -138,10 +138,10 @@
         form: form,
         method: :reading_style,
         options: [
-          ["Left to Right", "left_to_right"],
-          ["Right to Left", "right_to_left"],
-          ["Long Strip", "long_strip"],
-          ["Webcomic", "webcomic"]
+          [ "Left to Right", "left_to_right" ],
+          [ "Right to Left", "right_to_left" ],
+          [ "Long Strip", "long_strip" ],
+          [ "Webcomic", "webcomic" ]
         ],
         selected: @reading_style,
         size: :sm,
@@ -151,37 +151,37 @@
   </nav>
 
   <% viewport_class = if is_horizontal
-                        base = 'flex overflow-x-auto snap-x snap-mandatory w-full'
+                        base = "flex overflow-x-auto snap-x snap-mandatory w-full"
                         is_rtl ? "#{base} flex-row-reverse" : base
-                      elsif is_long_strip
+     elsif is_long_strip
                         # Long strip: seamless vertical scroll for webtoons - no gaps
-                        'flex flex-col items-center'
-                      else
+                        "flex flex-col items-center"
+     else
                         # Webcomic: vertical scroll with small gaps between pages
-                        'flex flex-col items-center gap-4'
-                      end %>
+                        "flex flex-col items-center gap-4"
+     end %>
   <% page_class = if is_horizontal
-                    'snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer'
-                  elsif is_long_strip
+                    "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
+     elsif is_long_strip
                     # Long strip: full width, no extra styling - panels flow together
-                    'w-full max-w-3xl cursor-pointer'
-                  else
+                    "w-full max-w-3xl cursor-pointer"
+     else
                     # Webcomic: constrained pages
-                    'w-full max-w-2xl cursor-pointer'
-                  end %>
+                    "w-full max-w-2xl cursor-pointer"
+     end %>
   <% image_class = if is_long_strip
                      # Long strip: no height limit, images flow naturally
-                     'w-full max-w-full object-contain pointer-events-none'
-                   else
+                     "w-full max-w-full object-contain pointer-events-none"
+     else
                      # Other modes: constrain height for page-based viewing
-                     'max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none'
-                   end %>
+                     "max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none"
+     end %>
 
   <section data-reader-target="viewport"
            class="<%= viewport_class %>"
            data-reader-rtl="<%= is_rtl %>">
     <% if @file_asset&.download_status.present? %>
-      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? 'shrink-0 w-screen flex items-center justify-center' : '' %>">
+      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? "shrink-0 w-screen flex items-center justify-center" : "" %>">
         <% if @file_asset.download_status == "downloading" && @file_asset.pages_expected.present? %>
           Downloading pages (<%= @file_asset.pages_downloaded %>/<%= @file_asset.pages_expected %>)
         <% elsif @file_asset.download_status == "failed" %>
@@ -194,7 +194,7 @@
       </div>
     <% end %>
     <% if @source_error.present? %>
-      <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? 'shrink-0 w-screen flex flex-col items-center justify-center' : '' %>">
+      <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-screen flex flex-col items-center justify-center" : "" %>">
         <div class="flex items-center gap-2 text-danger">
           <%= icon "circle-alert", class: "h-5 w-5" %>
           <span class="font-medium">Unable to load chapter</span>
@@ -262,7 +262,7 @@
     </button>
     <img data-reader-target="lightboxImage"
          class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
-         alt="Reader page" />
+         alt="Reader page">
   </div>
 
   <%# Next Chapter overlay - shows when reaching end of chapter %>
