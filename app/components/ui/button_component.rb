@@ -39,9 +39,9 @@ module UI
       when :primary
         "bg-accent text-accent-foreground hover:bg-accent-strong"
       when :secondary
-        "bg-surface-2 text-primary hover:bg-surface"
+        "bg-surface-2 text-foreground hover:bg-surface"
       when :ghost
-        "border border-border text-primary hover:bg-surface-2 hover:border-border-soft"
+        "border border-border text-foreground hover:bg-surface-2 hover:border-border-soft"
       when :danger
         "bg-error text-foreground hover:bg-error/90"
       else

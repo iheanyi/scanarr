@@ -31,18 +31,18 @@
   /* ═══════════════════════════════════════════════════════════════════════════
    * TEXT HIERARCHY - Use these for content text
    *
-   * text-primary   → Headings, titles, important body text
-   * text-secondary → Labels, descriptions, supporting content
-   * text-tertiary  → Hints, timestamps, metadata, placeholders
+   * text-foreground → Headings, titles, important body text
+   * text-muted      → Labels, descriptions, supporting content
+   * text-muted-2    → Hints, timestamps, metadata, placeholders
    * ═══════════════════════════════════════════════════════════════════════════ */
-  --color-primary: var(--ds-text);
-  --color-secondary: var(--ds-muted);
-  --color-tertiary: var(--ds-muted-2);
-
-  /* Legacy aliases (prefer text-primary/secondary/tertiary for new code) */
   --color-foreground: var(--ds-text);
   --color-muted: var(--ds-muted);
   --color-muted-2: var(--ds-muted-2);
+
+  /* Deprecated aliases — prefer text-foreground/muted/muted-2 */
+  --color-primary: var(--ds-text);
+  --color-secondary: var(--ds-muted);
+  --color-tertiary: var(--ds-muted-2);
 
   /* ═══════════════════════════════════════════════════════════════════════════
    * ACCENT - Primary actions, links, success states
