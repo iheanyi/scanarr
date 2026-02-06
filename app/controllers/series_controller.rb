@@ -158,7 +158,11 @@ class SeriesController < ApplicationController
         release = chapter.releases.find_or_create_by!(source: @source)
         next if release.file_asset&.download_status.in?(%w[queued pending downloading complete])
 
-        release.create_file_asset!(format: "pages", download_status: "queued", pages_downloaded: 0)
+        if release.file_asset
+          release.file_asset.update!(download_status: "queued", download_error: nil, pages_downloaded: 0)
+        else
+          release.create_file_asset!(format: "pages", download_status: "queued", pages_downloaded: 0)
+        end
         DownloadChapterJob.perform_later(
           chapter.source_url,
           source_key: @source.key,

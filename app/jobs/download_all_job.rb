@@ -17,7 +17,7 @@ class DownloadAllJob < ApplicationJob
     enqueued = 0
     seen_numbers = Set.new
 
-    chapters.order(created_at: :desc).find_each do |chapter|
+    chapters.order(created_at: :desc).each do |chapter|
       # Skip duplicate chapter numbers (e.g. different language/group variants)
       next if seen_numbers.include?(chapter.chapter_number)
       seen_numbers.add(chapter.chapter_number)
