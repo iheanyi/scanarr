@@ -1,11 +1,20 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+
   before_action :authenticate!
 
   helper_method :current_user, :user_signed_in?, :authenticated?, :current_notifications, :unread_notification_count
 
   private
+
+  def render_not_found
+    respond_to do |format|
+      format.html { render "errors/not_found", status: :not_found, layout: "application" }
+      format.json { render json: { error: "Not found" }, status: :not_found }
+    end
+  end
 
   # Auth credentials from env vars with sensible defaults
   def auth_username

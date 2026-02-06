@@ -1,0 +1,11 @@
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+  <div class="text-6xl font-bold text-muted-2">422</div>
+  <h1 class="text-2xl font-semibold text-foreground">Unprocessable request</h1>
+  <p class="text-muted max-w-md">The request could not be processed. This may be a security issue — try refreshing the page.</p>
+  <div class="flex items-center gap-3 mt-4">
+    <%= link_to "Go home", root_path, class: "inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" %>
+    <button onclick="window.location.reload()" class="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface">
+      Refresh
+    </button>
+  </div>
+</div>

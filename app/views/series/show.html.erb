@@ -36,6 +36,12 @@
     <div class="space-y-2 flex-1">
       <div class="flex items-center gap-2">
         <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
+        <% if @series.status.present? %>
+          <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
+        <% end %>
+        <% if @series.series_type.present? %>
+          <span class="inline-flex items-center rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted"><%= @series.series_type.titleize %></span>
+        <% end %>
         <%= button_to source_series_refresh_metadata_path(source_slug: @source.slug, series_slug: @series.to_param),
                       method: :post,
                       class: "inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted hover:text-foreground hover:border-muted" do %>
@@ -50,20 +56,31 @@
       <% if @series.display_author.present? %>
         <p class="text-sm text-foreground">by <%= @series.display_author %></p>
       <% end %>
-      <% if @series.description.present? %>
-        <div class="max-w-2xl text-sm text-muted space-y-2">
-          <p class="text-pretty"><%= truncate(@series.description, length: 240, separator: " ") %></p>
-          <% if @series.description.length > 240 %>
-            <details class="text-xs text-muted-2">
-              <summary class="cursor-pointer hover:text-foreground">Show more</summary>
-              <div class="mt-2 text-sm text-muted">
-                <%= simple_format(@series.description, class: "space-y-2") %>
-              </div>
-            </details>
+      <% if @series.raw_tags.present? %>
+        <div class="flex flex-wrap gap-1.5">
+          <% @series.raw_tags.first(12).each do |tag| %>
+            <span class="inline-block rounded-full bg-surface-2 border border-border px-2.5 py-0.5 text-xs text-muted"><%= tag %></span>
+          <% end %>
+          <% if @series.raw_tags.size > 12 %>
+            <span class="inline-block rounded-full bg-surface-2 border border-border px-2.5 py-0.5 text-xs text-muted-2">+<%= @series.raw_tags.size - 12 %> more</span>
           <% end %>
         </div>
       <% end %>
-      <p class="text-muted text-pretty">Choose a chapter to read or download.</p>
+      <% if @series.description.present? %>
+        <div class="max-w-2xl text-sm text-muted" data-controller="text-expand">
+          <div class="text-pretty <%= "line-clamp-3" if @series.description.length > 200 %>" data-text-expand-target="content">
+            <%= simple_format(@series.description) %>
+          </div>
+          <% if @series.description.length > 200 %>
+            <button type="button"
+                    class="text-xs text-muted-2 hover:text-foreground cursor-pointer mt-1"
+                    data-text-expand-target="toggle"
+                    data-action="click->text-expand#toggle">
+              Show more
+            </button>
+          <% end %>
+        </div>
+      <% end %>
 
       <% if user_signed_in? %>
         <div class="flex flex-wrap items-center gap-3 mt-3" id="follow-controls">

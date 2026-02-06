@@ -28,11 +28,12 @@ class CalendarController < ApplicationController
       @end_date = @start_date + 6.days
     end
 
-    # Query chapters
+    # Query chapters — use published_at (actual release date), fall back to created_at
+    date_range = @start_date.beginning_of_day..@end_date.end_of_day
     chapters_scope = Chapter.includes(:source, series: :cover_attachment)
       .where(series_id: followed_series_ids)
-      .where(created_at: @start_date.beginning_of_day..@end_date.end_of_day)
-      .order(created_at: :desc)
+      .where("COALESCE(chapters.published_at, chapters.created_at) BETWEEN ? AND ?", date_range.first, date_range.last)
+      .order(Arel.sql("COALESCE(chapters.published_at, chapters.created_at) DESC"))
 
     # Apply source filter
     if @source_filter.present?
@@ -40,7 +41,7 @@ class CalendarController < ApplicationController
       chapters_scope = chapters_scope.where(source: source) if source
     end
 
-    @chapters_by_date = chapters_scope.group_by { |ch| ch.created_at.to_date }
+    @chapters_by_date = chapters_scope.group_by { |ch| (ch.published_at || ch.created_at).to_date }
     @sources = Source.order(:name)
   end
 end

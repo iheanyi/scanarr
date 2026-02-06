@@ -33,3 +33,6 @@ application.register("redirect-select", RedirectSelectController)
 
 import FlashDismissController from "./flash_dismiss_controller"
 application.register("flash-dismiss", FlashDismissController)
+
+import TextExpandController from "./text_expand_controller"
+application.register("text-expand", TextExpandController)
