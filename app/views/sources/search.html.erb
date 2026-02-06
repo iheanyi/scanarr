@@ -36,15 +36,7 @@
             <li class="rounded-lg border border-border bg-surface p-4">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-4">
-                  <div class="h-24 w-16 overflow-hidden rounded-md border border-border bg-background">
-                    <% if result.cover_url.present? %>
-                      <%= image_tag result.cover_url, alt: "#{result.title} cover", class: "h-full w-full object-cover", loading: "lazy" %>
-                    <% else %>
-                      <div class="flex h-full w-full items-center justify-center text-[10px] uppercase text-muted-2">
-                        No cover
-                      </div>
-                    <% end %>
-                  </div>
+                  <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "#{result.title} cover", size: :md) %>
                   <div class="space-y-1">
                     <p class="text-sm text-muted">Series</p>
                     <p class="text-lg font-semibold text-balance"><%= result.title %></p>

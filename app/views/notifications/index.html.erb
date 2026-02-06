@@ -3,9 +3,7 @@
     <% if @notifications.any? { |n| !n.read? } %>
       <% header.with_actions do %>
         <%= button_to mark_all_read_notifications_path, method: :post, class: "inline-flex items-center gap-2 rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+          <%= icon "check", class: "h-4 w-4" %>
           Mark all as read
         <% end %>
       <% end %>
@@ -16,15 +14,7 @@
     <ul class="divide-y divide-border rounded-lg border border-border bg-surface">
       <% @notifications.each do |notification| %>
         <li class="flex items-center gap-4 px-4 py-3 <%= notification.read? ? 'opacity-60' : '' %>">
-          <% if notification.chapter.series.cover_image_url.present? %>
-            <div class="h-12 w-9 shrink-0 overflow-hidden rounded border border-border">
-              <%= image_tag notification.chapter.series.cover_image_url, alt: "", class: "h-full w-full object-cover", loading: "lazy" %>
-            </div>
-          <% else %>
-            <div class="flex h-12 w-9 shrink-0 items-center justify-center rounded border border-border bg-surface-2">
-              <span class="text-xs text-muted-2">?</span>
-            </div>
-          <% end %>
+          <%= render UI::SeriesCoverComponent.new(url: notification.chapter.series.cover_image_url, alt: "", size: :xs, rounded: :sm, class: "shrink-0") %>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-foreground truncate"><%= notification.chapter.series.canonical_title %></p>
             <p class="text-sm text-muted">
@@ -39,17 +29,13 @@
             <% source = notification.chapter.series.sources.first %>
             <% if source %>
               <%= link_to source_series_chapter_path(source_slug: source.slug, series_slug: notification.chapter.series.to_param, chapter_identifier: notification.chapter.public_id), class: "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted hover:text-foreground hover:border-border-soft" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+                <%= icon "book-open", class: "h-3 w-3" %>
                 Read
               <% end %>
             <% end %>
             <% unless notification.read? %>
               <%= button_to mark_read_notification_path(notification), method: :post, class: "inline-flex items-center rounded-md border border-border p-1 text-muted hover:text-foreground hover:border-border-soft" do %>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+                <%= icon "check", class: "h-4 w-4" %>
               <% end %>
             <% end %>
           </div>
@@ -58,9 +44,7 @@
     </ul>
   <% else %>
     <div class="rounded-lg border border-dashed border-border bg-surface p-8 text-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-muted-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
+      <%= icon "bell", class: "mx-auto h-12 w-12 text-muted-2", stroke_width: "1" %>
       <p class="mt-4 text-muted">No notifications yet</p>
       <p class="mt-1 text-sm text-muted-2">Follow some series to get notified when new chapters are available</p>
     </div>

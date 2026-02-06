@@ -54,16 +54,7 @@
             <% chapters.each do |chapter| %>
               <div class="px-4 py-3 flex items-center justify-between hover:bg-surface">
                 <div class="flex items-center gap-4">
-                  <% if chapter.series.cover_image_url.present? %>
-                    <%= image_tag chapter.series.cover_image_url,
-                                 alt: chapter.series.canonical_title,
-                                 class: "w-12 h-16 object-cover rounded",
-                                 loading: "lazy" %>
-                  <% else %>
-                    <div class="w-12 h-16 bg-surface rounded flex items-center justify-center">
-                      <span class="text-muted-2 text-xs">No cover</span>
-                    </div>
-                  <% end %>
+                  <%= render UI::SeriesCoverComponent.new(url: chapter.series.cover_image_url, alt: chapter.series.canonical_title, size: :sm, rounded: :sm) %>
 
                   <div>
                     <h3 class="font-medium">

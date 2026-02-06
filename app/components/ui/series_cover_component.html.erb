@@ -1,0 +1,9 @@
+<div class="<%= container_classes %>">
+  <% if has_cover? %>
+    <%= image_tag url, alt: alt, class: "h-full w-full object-cover", loading: loading %>
+  <% else %>
+    <div class="flex h-full w-full items-center justify-center">
+      <span class="text-xs uppercase text-muted-2">No cover</span>
+    </div>
+  <% end %>
+</div>
