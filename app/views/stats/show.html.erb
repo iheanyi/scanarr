@@ -97,18 +97,15 @@
           <% next unless source %>
           <%= link_to source_series_path(source_slug: source.slug, series_slug: series.to_param),
                       class: "group space-y-2" do %>
-            <div class="aspect-[2/3] overflow-hidden rounded-lg border border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors">
-              <% if series.cover_image_url.present? %>
-                <%= image_tag series.cover_image_url,
-                              alt: series.canonical_title,
-                              class: "h-full w-full object-cover transition-transform group-hover:scale-105",
-                              loading: "lazy" %>
-              <% else %>
-                <div class="flex h-full w-full items-center justify-center">
-                  <span class="text-xs text-muted-2">No cover</span>
-                </div>
-              <% end %>
-            </div>
+            <%= render UI::SeriesCoverComponent.new(
+              url: series.cover_image_url,
+              alt: series.canonical_title,
+              size: :full,
+              aspect: "2/3",
+              rounded: :lg,
+              image_class: "transition-transform group-hover:scale-105",
+              class: "border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors"
+            ) %>
             <p class="text-sm font-medium text-foreground line-clamp-2 group-hover:text-accent transition-colors"><%= series.canonical_title %></p>
           <% end %>
         <% end %>

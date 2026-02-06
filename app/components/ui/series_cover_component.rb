@@ -4,6 +4,9 @@ require_relative "base_component"
 
 module UI
   class SeriesCoverComponent < BaseComponent
+    renders_one :fallback
+    renders_one :overlay
+
     SIZE_CLASSES = {
       xs: "h-12 w-9",
       sm: "h-16 w-12",
@@ -28,7 +31,7 @@ module UI
       "16/9" => "aspect-video"
     }.freeze
 
-    def initialize(url:, alt: "", size: :md, aspect: nil, rounded: :md, loading: "lazy", **system_arguments)
+    def initialize(url:, alt: "", size: :md, aspect: nil, rounded: :md, loading: "lazy", image_class: nil, **system_arguments)
       super(**system_arguments)
       @url = url
       @alt = alt
@@ -36,6 +39,7 @@ module UI
       @aspect = aspect
       @rounded = rounded
       @loading = loading
+      @image_class = image_class
     end
 
     def container_classes
@@ -46,6 +50,10 @@ module UI
         ROUNDED_CLASSES[@rounded.to_sym] || ROUNDED_CLASSES[:md],
         system_arguments[:class]
       )
+    end
+
+    def image_classes
+      cn("h-full w-full object-cover", @image_class)
     end
 
     def has_cover?

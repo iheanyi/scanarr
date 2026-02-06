@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_06_044551) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_06_190242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -227,7 +227,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_06_044551) do
   end
 
   create_table "series_sources", force: :cascade do |t|
+    t.integer "consecutive_failures", default: 0, null: false
     t.datetime "created_at", null: false
+    t.text "last_check_error"
+    t.datetime "last_check_error_at"
     t.datetime "last_checked_at"
     t.string "library_base_path"
     t.bigint "series_id", null: false

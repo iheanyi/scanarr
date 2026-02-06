@@ -1,0 +1,37 @@
+<%= turbo_stream.replace "notification-list" do %>
+  <ul id="notification-list" class="divide-y divide-border rounded-lg border border-border bg-surface">
+    <% current_user.new_chapter_notifications.includes(chapter: { series: [ :sources, :cover_attachment ] }).order(created_at: :desc).limit(50).each do |notification| %>
+      <li id="<%= dom_id(notification) %>" class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-surface-2/40 opacity-60">
+        <%= render UI::SeriesCoverComponent.new(url: notification.chapter.series.cover_image_url, alt: "", size: :xs, rounded: :sm, class: "shrink-0") %>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-foreground truncate"><%= notification.chapter.series.canonical_title %></p>
+          <p class="text-sm text-muted">
+            Chapter <%= notification.chapter.chapter_number %>
+            <% if notification.chapter.title.present? %>
+              - <%= notification.chapter.title %>
+            <% end %>
+          </p>
+          <p class="text-xs text-muted-2"><%= time_ago_in_words(notification.created_at) %> ago</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <% source = notification.chapter.series.sources.first %>
+          <% if source %>
+            <%= link_to source_series_chapter_path(source_slug: source.slug, series_slug: notification.chapter.series.to_param, chapter_identifier: notification.chapter.public_id), class: "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted hover:text-foreground hover:border-border-soft" do %>
+              <%= icon "book-open", class: "h-3 w-3" %>
+              Read
+            <% end %>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= turbo_stream.replace "notification-count" do %>
+  <span id="notification-count" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full">
+  </span>
+<% end %>
+
+<%= turbo_stream.append "toast-container" do %>
+  <%= render UI::ToastComponent.new(message: "All notifications marked as read", variant: :success) %>
+<% end %>

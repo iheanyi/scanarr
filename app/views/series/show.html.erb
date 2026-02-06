@@ -6,11 +6,16 @@
   </nav>
 
   <header class="flex flex-col gap-4 sm:flex-row sm:gap-6">
-    <div class="relative group">
-      <div class="h-48 w-36 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-background">
-        <% if @series.cover_image_url.present? %>
-          <%= image_tag @series.cover_image_url, alt: "#{@series.canonical_title} cover", class: "h-full w-full object-cover" %>
-        <% else %>
+    <div class="relative group shrink-0">
+      <%= render UI::SeriesCoverComponent.new(
+        url: @series.cover_image_url,
+        alt: "#{@series.canonical_title} cover",
+        size: :xl,
+        rounded: :lg,
+        loading: "eager",
+        class: "h-48 w-36 border-border/80"
+      ) do |cover| %>
+        <% cover.with_fallback do %>
           <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
             <span class="text-xs uppercase text-muted-2">No cover</span>
             <% if @series.cover_url.present? %>
@@ -23,13 +28,15 @@
             <% end %>
           </div>
         <% end %>
-      </div>
-      <% if @series.cover_url.present? && @series.cover_image_url.present? %>
-        <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
-                      method: :post,
-                      class: "absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center rounded-md bg-surface/90 border border-border px-2 py-1 text-xs font-medium text-foreground hover:text-accent" do %>
-          <%= icon "refresh-cw", class: "h-3 w-3 mr-1" %>
-          Refresh
+        <% cover.with_overlay do %>
+          <% if @series.cover_url.present? && @series.cover_image_url.present? %>
+            <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
+                          method: :post,
+                          class: "absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center rounded-md bg-surface/90 border border-border px-2 py-1 text-xs font-medium text-foreground hover:text-accent" do %>
+              <%= icon "refresh-cw", class: "h-3 w-3 mr-1" %>
+              Refresh
+            <% end %>
+          <% end %>
         <% end %>
       <% end %>
     </div>
@@ -79,6 +86,24 @@
               Show more
             </button>
           <% end %>
+        </div>
+      <% end %>
+
+      <% if @check_error %>
+        <div class="mt-4 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft p-3">
+          <%= icon "alert-triangle", class: "h-4 w-4 shrink-0 text-danger mt-0.5" %>
+          <div class="text-sm">
+            <p class="font-medium text-danger">
+              Chapter check failing
+              <% if @check_error.check_critically_failing? %>
+                (<%= @check_error.consecutive_failures %> consecutive failures)
+              <% end %>
+            </p>
+            <p class="text-muted text-xs mt-0.5"><%= @check_error.last_check_error %></p>
+            <% if @check_error.last_check_error_at %>
+              <p class="text-muted-2 text-xs mt-0.5">Last failed <%= time_ago_in_words(@check_error.last_check_error_at) %> ago</p>
+            <% end %>
+          </div>
         </div>
       <% end %>
 

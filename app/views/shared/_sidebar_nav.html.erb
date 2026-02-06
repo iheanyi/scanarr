@@ -75,11 +75,9 @@
                 aria-label="Open notifications">
           <%= icon "bell", class: "h-4 w-4", aria: { hidden: true } %>
           <span>Notifications</span>
-          <% if unread_notification_count > 0 %>
-            <span class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground">
-              <%= unread_notification_count > 9 ? "9+" : unread_notification_count %>
-            </span>
-          <% end %>
+          <span id="notification-count" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full <%= unread_notification_count > 0 ? "bg-accent text-[10px] font-semibold text-accent-foreground" : "" %>">
+            <%= unread_notification_count > 0 ? (unread_notification_count > 9 ? "9+" : unread_notification_count) : "" %>
+          </span>
         </button>
         <div data-dropdown-target="menu" class="hidden absolute left-0 bottom-full mb-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-surface shadow-xl z-50">
           <div class="flex items-center justify-between border-b border-border px-4 py-2">

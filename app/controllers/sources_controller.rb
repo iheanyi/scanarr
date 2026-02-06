@@ -92,7 +92,10 @@ class SourcesController < ApplicationController
     series = importer.import!(series_url)
     chapter_count = series.chapters.where(source: @source).count
 
-    flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}"
+    # Ensure library series exists for the follow button
+    series.ensure_library_series!
+
+    flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}. Follow this series to get notified of new chapters!"
     redirect_to source_series_path(
       source_slug: source_slug(@source),
       series_slug: series.to_param

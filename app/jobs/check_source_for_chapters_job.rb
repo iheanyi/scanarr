@@ -54,10 +54,37 @@ class CheckSourceForChaptersJob < ApplicationJob
       new_chapter_count += 1
     end
 
-    series_source&.update!(last_checked_at: Time.current)
+    series_source&.record_check_success!
+
+    # Broadcast notification updates if new chapters were found
+    if new_chapter_count > 0
+      broadcast_notification_update(follow.user)
+    end
 
     Rails.logger.info "[CheckSourceForChaptersJob] Found #{new_chapter_count} new chapters for series #{series_id}"
   rescue StandardError => e
+    series_source&.record_check_failure!(e.message)
     Rails.logger.error "[CheckSourceForChaptersJob] Error checking series #{series_id}: #{e.message}"
+  end
+
+  private
+
+  def broadcast_notification_update(user)
+    unread_count = user.new_chapter_notifications.unread.count
+    display = unread_count > 9 ? "9+" : unread_count.to_s
+
+    badge_classes = if unread_count > 0
+      "ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent text-[10px] font-semibold text-accent-foreground"
+    else
+      "ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full"
+    end
+
+    html = %(<span id="notification-count" class="#{badge_classes}">#{unread_count > 0 ? display : ""}</span>)
+
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [ user, :notifications ],
+      target: "notification-count",
+      html: html
+    )
   end
 end

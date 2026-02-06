@@ -11,8 +11,8 @@ class NotificationsController < ApplicationController
   end
 
   def mark_read
-    notification = current_user.new_chapter_notifications.find(params[:id])
-    notification.mark_as_read!
+    @notification = current_user.new_chapter_notifications.includes(chapter: { series: [ :sources, :cover_attachment ] }).find(params[:id])
+    @notification.mark_as_read!
 
     respond_to do |format|
       format.html { redirect_back fallback_location: notifications_path }

@@ -67,6 +67,10 @@ class SeriesController < ApplicationController
     else
       @chapter_progress_map = {}
     end
+
+    # Load error state for the current source
+    @series_source = @series.series_sources.find_by(source: @source)
+    @check_error = @series_source if @series_source&.check_failing?
   end
 
   def update

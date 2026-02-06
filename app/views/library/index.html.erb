@@ -19,6 +19,11 @@
       <%= link_to "Not Downloaded",
           library_path(status: "not_downloaded", q: params[:q]),
           class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'not_downloaded' ? 'bg-surface-2 text-muted' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+      <%= link_to library_path(status: "following", q: params[:q]),
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'following' ? 'bg-accent-soft text-accent' : 'text-muted hover:text-foreground hover:bg-surface-2'}" do %>
+        <%= icon "heart", class: "inline h-3 w-3 mr-0.5" %>
+        Following
+      <% end %>
     </div>
 
     <%= form_with url: library_path, method: :get, class: "flex-1 max-w-xs", data: { turbo_frame: "_top" } do |f| %>
@@ -60,50 +65,54 @@
         <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
 
         <%= link_to series_path, class: "group block" do %>
-          <div class="relative aspect-[2/3] overflow-hidden rounded-lg border border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors">
-            <% if series.cover_image_url.present? %>
-              <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title, loading: "lazy" %>
-            <% else %>
+          <%= render UI::SeriesCoverComponent.new(
+            url: series.cover_image_url,
+            alt: series.canonical_title,
+            size: :full,
+            aspect: "2/3",
+            rounded: :lg,
+            image_class: "transition group-hover:scale-105",
+            class: "relative border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors"
+          ) do |cover| %>
+            <% cover.with_fallback do %>
               <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
                 <%= icon "book-open", class: "h-12 w-12 text-muted-2", stroke_width: "1.5" %>
               </div>
             <% end %>
-
-            <!-- Progress overlay -->
-            <% if progress[:total] > 0 %>
-              <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
-                    <%= progress[:downloaded] %>/<%= progress[:total] %>
-                  </span>
-                  <% if progress[:downloading] > 0 %>
-                    <span class="flex items-center gap-1 text-warning">
-                      <svg class="h-3 w-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <%= progress[:downloading] %>
+            <% cover.with_overlay do %>
+              <% if progress[:total] > 0 %>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
+                      <%= progress[:downloaded] %>/<%= progress[:total] %>
                     </span>
-                  <% end %>
-                </div>
-                <% if progress[:total] > 0 %>
+                    <% if progress[:downloading] > 0 %>
+                      <span class="flex items-center gap-1 text-warning">
+                        <%= render UI::SpinnerComponent.new(size: :xs, class: "text-warning") %>
+                        <%= progress[:downloading] %>
+                      </span>
+                    <% end %>
+                  </div>
                   <div class="mt-1 h-1 overflow-hidden rounded-full bg-border">
                     <div class="h-full rounded-full <%= progress[:downloaded] == progress[:total] ? "bg-success" : "bg-info" %>"
                          style="width: <%= (progress[:downloaded].to_f / progress[:total] * 100).round %>%"></div>
                   </div>
+                </div>
+              <% end %>
+              <div class="absolute right-2 top-2 flex items-center gap-1">
+                <% if @followed_library_series_ids.include?(series.library_series_id) %>
+                  <span class="rounded bg-accent/80 px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground backdrop-blur-sm" title="Following">
+                    <%= icon "heart", class: "inline h-3 w-3" %>
+                  </span>
+                <% end %>
+                <% if source %>
+                  <span class="rounded bg-background/70 px-1.5 py-0.5 text-[10px] font-medium text-muted backdrop-blur-sm">
+                    <%= source.name %>
+                  </span>
                 <% end %>
               </div>
             <% end %>
-
-            <!-- Source badge -->
-            <% if source %>
-              <div class="absolute right-2 top-2">
-                <span class="rounded bg-background/70 px-1.5 py-0.5 text-[10px] font-medium text-muted backdrop-blur-sm">
-                  <%= source.name %>
-                </span>
-              </div>
-            <% end %>
-          </div>
+          <% end %>
 
           <div class="mt-2">
             <h3 class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">

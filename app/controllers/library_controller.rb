@@ -12,8 +12,13 @@ class LibraryController < ApplicationController
       )
     end
 
-    # Status filtering requires download progress data
-    if params[:status].present?
+    # "Following" filter: only show series the user is following
+    if params[:status] == "following"
+      followed_library_series_ids = current_user.user_series_follows.pluck(:library_series_id)
+      base_scope = base_scope.where(library_series_id: followed_library_series_ids)
+      @series = base_scope.page(params[:page]).per(30)
+    elsif params[:status].present?
+      # Status filtering requires download progress data
       # Load with full association chain for status filtering
       all_series = base_scope.includes(chapters: { releases: :file_asset }).to_a
 
@@ -42,8 +47,17 @@ class LibraryController < ApplicationController
     end
 
     # Pre-compute download progress for displayed series only
-    if params[:status].blank?
+    # (skip for download-status filters that already loaded the full tree)
+    unless params[:status].in?(%w[downloaded in_progress not_downloaded])
       preload_download_progress(@series)
+    end
+
+    # Pre-load follow data for library cards
+    if current_user
+      followed_ids = current_user.user_series_follows.pluck(:library_series_id)
+      @followed_library_series_ids = Set.new(followed_ids)
+    else
+      @followed_library_series_ids = Set.new
     end
 
     # Stats (single queries, no N+1)
