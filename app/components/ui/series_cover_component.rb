@@ -34,10 +34,15 @@ module UI
       cn(
         "overflow-hidden border border-border bg-background",
         SIZE_CLASSES[@size.to_sym] || SIZE_CLASSES[:md],
-        @aspect ? "aspect-[#{@aspect}]" : nil,
         ROUNDED_CLASSES[@rounded.to_sym] || ROUNDED_CLASSES[:md],
         system_arguments[:class]
       )
+    end
+
+    def container_style
+      return nil unless @aspect
+
+      "aspect-ratio: #{@aspect}"
     end
 
     def has_cover?
