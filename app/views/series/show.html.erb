@@ -84,7 +84,7 @@
 
       <div class="flex flex-wrap items-center gap-3 mt-4">
         <% if user_signed_in? %>
-          <%= render "series/follow_controls", series: @series, user_follow: @user_follow %>
+          <%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %>
         <% end %>
 
         <span class="hidden sm:block h-5 w-px bg-border"></span>

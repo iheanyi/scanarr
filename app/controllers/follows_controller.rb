@@ -63,8 +63,7 @@ class FollowsController < ApplicationController
     user_follow = @follow&.persisted? ? @follow : nil
     streams = []
     streams << turbo_stream.replace("follow-controls",
-      partial: "series/follow_controls",
-      locals: { series: @series, user_follow: user_follow })
+      UI::FollowControlsComponent.new(series: @series, user_follow: user_follow))
     streams << turbo_stream.append("toast-container",
       UI::ToastComponent.new(message: notice, variant: :success)) if notice.present?
     streams
