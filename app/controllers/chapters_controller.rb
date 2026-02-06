@@ -220,7 +220,25 @@ class ChaptersController < ApplicationController
   end
 
   def latest_release
-    @chapter.releases.where(source: @source).order(created_at: :desc).first
+    releases = @chapter.releases.where(source: @source)
+                       .includes(file_asset: { pages: { image_attachment: :blob } })
+                       .order(created_at: :desc)
+
+    # Prefer the newest release whose downloaded files actually exist on disk
+    releases.each do |release|
+      fa = release.file_asset
+      next unless fa&.download_status == "complete"
+
+      first_page = fa.pages.min_by(&:position)
+      next unless first_page&.image&.blob
+
+      if ActiveStorage::Blob.service.exist?(first_page.image.blob.key)
+        return release
+      end
+    end
+
+    # Fall back to newest release (may have no download yet, or all are broken)
+    releases.first
   end
 
   def set_navigation
