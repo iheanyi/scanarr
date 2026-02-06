@@ -10,7 +10,7 @@ class CreateNewChapterNotifications < ActiveRecord::Migration[8.0]
         t.timestamp :created_at
       end
 
-      add_index :new_chapter_notifications, [:user_id, :read, :created_at], name: "idx_notifications_user_read_created"
+      add_index :new_chapter_notifications, [ :user_id, :read, :created_at ], name: "idx_notifications_user_read_created"
     end
   end
 end

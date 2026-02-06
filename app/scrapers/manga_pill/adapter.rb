@@ -405,7 +405,6 @@ module MangaPill
       else "image/jpeg"
       end
     end
-
   end
 end
 

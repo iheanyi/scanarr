@@ -12,7 +12,7 @@ class AddPerformanceIndexes < ActiveRecord::Migration[8.1]
     add_index :series_sources, :source_series_id
 
     # Composite index for file_assets status + updated_at queries
-    add_index :file_assets, [:download_status, :updated_at],
+    add_index :file_assets, [ :download_status, :updated_at ],
               name: "index_file_assets_on_status_and_updated_at"
 
     # Index for finding chapters by source URL
