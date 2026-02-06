@@ -9,16 +9,16 @@
     <div class="flex overflow-hidden rounded-lg border border-border bg-surface-2/60 text-sm">
       <%= link_to "All",
           library_path,
-          class: "px-3 py-1.5 #{params[:status].blank? ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 transition-colors #{params[:status].blank? ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
       <%= link_to "Downloaded",
           library_path(status: "downloaded", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border #{params[:status] == 'downloaded' ? 'bg-success-soft text-success' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'downloaded' ? 'bg-success-soft text-success' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
       <%= link_to "In Progress",
           library_path(status: "in_progress", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border #{params[:status] == 'in_progress' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'in_progress' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
       <%= link_to "Not Downloaded",
           library_path(status: "not_downloaded", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border #{params[:status] == 'not_downloaded' ? 'bg-surface-2 text-muted' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
+          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'not_downloaded' ? 'bg-surface-2 text-muted' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
     </div>
 
     <%= form_with url: library_path, method: :get, class: "flex-1 max-w-xs", data: { turbo_frame: "_top" } do |f| %>
@@ -60,7 +60,7 @@
         <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
 
         <%= link_to series_path, class: "group block" do %>
-          <div class="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-surface-2">
+          <div class="relative aspect-[2/3] overflow-hidden rounded-lg border border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors">
             <% if series.cover_image_url.present? %>
               <%= image_tag series.cover_image_url, class: "h-full w-full object-cover transition group-hover:scale-105", alt: series.canonical_title, loading: "lazy" %>
             <% else %>
@@ -73,7 +73,7 @@
             <% if progress[:total] > 0 %>
               <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="<%= progress[:downloaded] == progress[:total] ? 'text-success' : 'text-muted' %>">
+                  <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
                     <%= progress[:downloaded] %>/<%= progress[:total] %>
                   </span>
                   <% if progress[:downloading] > 0 %>
@@ -88,7 +88,7 @@
                 </div>
                 <% if progress[:total] > 0 %>
                   <div class="mt-1 h-1 overflow-hidden rounded-full bg-border">
-                    <div class="h-full rounded-full <%= progress[:downloaded] == progress[:total] ? 'bg-success' : 'bg-info' %>"
+                    <div class="h-full rounded-full <%= progress[:downloaded] == progress[:total] ? "bg-success" : "bg-info" %>"
                          style="width: <%= (progress[:downloaded].to_f / progress[:total] * 100).round %>%"></div>
                   </div>
                 <% end %>
@@ -106,7 +106,7 @@
           </div>
 
           <div class="mt-2">
-            <h3 class="truncate text-sm font-medium text-foreground group-hover:text-foreground">
+            <h3 class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">
               <%= series.canonical_title %>
             </h3>
             <% if series.display_author.present? %>
@@ -126,8 +126,8 @@
         <% end %>
 
         <% window = 3 %>
-        <% start_page = [@series.current_page - window, 1].max %>
-        <% end_page = [@series.current_page + window, @series.total_pages].min %>
+        <% start_page = [ @series.current_page - window, 1 ].max %>
+        <% end_page = [ @series.current_page + window, @series.total_pages ].min %>
         <% (start_page..end_page).each do |page_num| %>
           <% if page_num == @series.current_page %>
             <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md"><%= page_num %></span>

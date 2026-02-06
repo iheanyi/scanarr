@@ -17,7 +17,7 @@
                  autocomplete="username"
                  required
                  autofocus
-                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
+                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
         </div>
 
         <div>
@@ -27,14 +27,13 @@
                  id="password"
                  autocomplete="current-password"
                  required
-                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" />
+                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
         </div>
       </div>
 
-      <button type="submit"
-              class="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background">
+      <%= render UI::ButtonComponent.new(variant: :primary, type: "submit", size: :lg, class: "w-full") do %>
         Sign in
-      </button>
+      <% end %>
     <% end %>
 
     <p class="text-center text-xs text-muted-2">

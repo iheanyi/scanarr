@@ -13,7 +13,7 @@
         <%= render UI::SelectComponent.new(
           form: form,
           method: :sort,
-          options: @sort_options.map { |s| [s.titleize, s] },
+          options: @sort_options.map { |s| [ s.titleize, s ] },
           selected: @sort,
           label: "Sort by"
         ) %>
@@ -57,7 +57,7 @@
       <% if @results.any? %>
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           <% @results.each do |result| %>
-            <div class="group relative overflow-hidden rounded-lg border border-border bg-surface focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-background">
+            <div class="group relative overflow-hidden rounded-lg border border-border/80 bg-surface hover:border-accent/40 transition-colors focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-background">
               <div class="aspect-[2/3] overflow-hidden bg-background">
                 <% if result.cover_url.present? %>
                   <%= image_tag result.cover_url,

@@ -10,14 +10,14 @@
       <% %w[week month recent].each do |view| %>
         <%= link_to view.titleize,
               calendar_path(view: view, source: @source_filter),
-              class: "px-4 py-2 text-sm #{@view_type == view ? 'bg-accent text-accent-foreground' : 'bg-surface-2 hover:bg-surface'}" %>
+              class: "px-4 py-2 text-sm transition-colors #{@view_type == view ? 'bg-accent text-accent-foreground' : 'bg-surface-2 text-muted hover:bg-surface hover:text-foreground'}" %>
       <% end %>
     </div>
 
     <%# Source Filter %>
     <%= render UI::RedirectSelectComponent.new(
-      options: [["All Sources", calendar_path(view: @view_type)]] +
-               @sources.map { |s| [s.name, calendar_path(view: @view_type, source: s.slug)] },
+      options: [ [ "All Sources", calendar_path(view: @view_type) ] ] +
+               @sources.map { |s| [ s.name, calendar_path(view: @view_type, source: s.slug) ] },
       selected: @source_filter.present? ? calendar_path(view: @view_type, source: @source_filter) : calendar_path(view: @view_type)
     ) %>
 
@@ -42,17 +42,20 @@
   </div>
 
   <% if @chapters_by_date.empty? %>
-    <div class="text-center py-12 text-muted">
-      <p class="text-lg mb-2">No new chapters in this period</p>
-      <p class="text-sm">
+    <%= render UI::EmptyStateComponent.new(
+      title: "No new chapters in this period",
+      description: current_user.user_series_follows.empty? ? nil : "Check back later for new releases from your followed series.",
+      compact: true
+    ) do |empty| %>
+      <% empty.with_icon do %>
+        <%= icon "calendar", class: "h-6 w-6" %>
+      <% end %>
+      <% empty.with_action do %>
         <% if current_user.user_series_follows.empty? %>
-          <%= link_to "Follow some series", library_path, class: "text-accent hover:underline" %>
-          to see releases here.
-        <% else %>
-          Check back later for new releases from your followed series.
+          <%= link_to "Follow some series", library_path, class: "text-sm text-info hover:text-info" %>
         <% end %>
-      </p>
-    </div>
+      <% end %>
+    <% end %>
   <% else %>
     <div class="space-y-6">
       <% (@start_date..@end_date).to_a.reverse.each do |date| %>
@@ -71,7 +74,7 @@
 
           <div class="divide-y divide-border">
             <% chapters.each do |chapter| %>
-              <div class="px-4 py-3 flex items-center justify-between hover:bg-surface">
+              <div class="px-4 py-3 flex items-center justify-between hover:bg-surface transition-colors">
                 <div class="flex items-center gap-4">
                   <%= render UI::SeriesCoverComponent.new(url: chapter.series.cover_image_url, alt: chapter.series.canonical_title, size: :sm, rounded: :sm) %>
 
@@ -96,9 +99,13 @@
                 </div>
 
                 <div class="flex gap-2">
-                  <%= link_to "Read",
-                              source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number),
-                              class: "px-3 py-1 bg-accent hover:bg-accent-strong rounded text-sm text-accent-foreground" %>
+                  <%= render UI::ButtonComponent.new(
+                    variant: :primary,
+                    size: :sm,
+                    href: source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number)
+                  ) do %>
+                    Read
+                  <% end %>
                 </div>
               </div>
             <% end %>

@@ -13,7 +13,7 @@
           <%= form.text_field :q,
                               value: @query,
                               placeholder: "One Piece",
-                              class: "w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-2" %>
+                              class: "w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" %>
         </div>
         <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
           Search
@@ -30,7 +30,7 @@
       <% if @results.any? %>
         <ul class="space-y-3">
           <% @results.each do |result| %>
-            <li class="rounded-lg border border-border bg-surface p-4">
+            <li class="rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-4">
                   <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "#{result.title} cover", size: :md) %>
