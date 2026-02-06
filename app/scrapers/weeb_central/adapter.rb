@@ -25,6 +25,10 @@ module WeebCentral
       SORT_MAP.keys
     end
 
+    def browse_page_size
+      32
+    end
+
     def browse(sort: "latest", page: 1, limit: 20)
       weeb_sort = SORT_MAP.fetch(sort.to_s, "Latest Updates")
       offset = (page - 1) * limit

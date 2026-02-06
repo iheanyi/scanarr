@@ -52,6 +52,11 @@ class BaseAdapter
     SORT_OPTIONS
   end
 
+  # Results per page for browse. Override in adapters with known API limits.
+  def browse_page_size
+    20
+  end
+
   # Normalize status strings from various sources to standard values.
   # Returns: "ongoing", "completed", "hiatus", "cancelled"
   # Defaults to "ongoing" for unrecognized values.

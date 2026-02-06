@@ -7,8 +7,6 @@ class SourcesController < ApplicationController
     @sources = Source.where(enabled: true).order(:name)
   end
 
-  BROWSE_PAGE_SIZE = 48
-
   def browse
     @sort = params[:sort].presence || "latest"
     @page = (params[:page].presence || 1).to_i
@@ -27,8 +25,9 @@ class SourcesController < ApplicationController
       return
     end
 
+    @page_size = adapter.browse_page_size
     @sort_options = adapter.browse_sort_options
-    @results = adapter.browse(sort: @sort, page: @page, limit: BROWSE_PAGE_SIZE)
+    @results = adapter.browse(sort: @sort, page: @page, limit: @page_size)
   rescue BaseAdapter::BrowseNotSupportedError => e
     @error = e.message
   rescue StandardError => e

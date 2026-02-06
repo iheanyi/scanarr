@@ -25,6 +25,10 @@ module Mangadex
       true
     end
 
+    def browse_page_size
+      48
+    end
+
     def browse(sort: "latest", page: 1, limit: 20)
       order = case sort
       when "popular"
