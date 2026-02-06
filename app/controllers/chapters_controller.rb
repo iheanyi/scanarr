@@ -7,8 +7,21 @@ class ChaptersController < ApplicationController
   def show
     @release = latest_release
     file_asset = @release&.file_asset
-    @pages = if file_asset
-               file_asset.pages.includes(image_attachment: :blob).order(:position).select { |page| page.image.attached? }
+    @pages = if file_asset&.download_status == "complete"
+               pages = file_asset.pages.includes(image_attachment: :blob).order(:position).select { |page| page.image.attached? }
+
+               # Verify blobs actually exist on disk (spot-check first page)
+               if pages.any?
+                 first_blob = pages.first.image.blob
+                 if first_blob && !ActiveStorage::Blob.service.exist?(first_blob.key)
+                   Rails.logger.warn "ChaptersController: Broken blobs detected for file_asset #{file_asset.id}, falling back to source"
+                   []
+                 else
+                   pages
+                 end
+               else
+                 []
+               end
     else
                []
     end

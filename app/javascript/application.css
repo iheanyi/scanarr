@@ -211,6 +211,11 @@
   .selecting .bulk-checkbox {
     opacity: 1;
   }
+
+  /* A checked checkbox is always visible so it can be deselected */
+  .bulk-checkbox:has(input:checked) {
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -125,11 +125,13 @@ class DownloadChapterJob < ApplicationJob
       updates[:source_url] = @chapter_url if @chapter_url.present? && @chapter.source_url.blank?
       @chapter.update!(updates) if updates.any?
 
-      @release = @chapter.releases.create!(
-        source: @source,
-        format: "pages",
-        source_url: @chapter_url
-      )
+      @release = @chapter.releases.find_or_create_by!(source: @source) do |r|
+        r.format = "pages"
+        r.source_url = @chapter_url
+      end
+
+      # Update source_url if it changed
+      @release.update!(source_url: @chapter_url) if @release.source_url != @chapter_url
     end
 
     series_source = SeriesSource.find_by(series: @series, source: @source)
@@ -143,11 +145,19 @@ class DownloadChapterJob < ApplicationJob
 
     @file_asset = @release.file_asset
     if @file_asset
-      # Resume from existing state or transition from queued to downloading
+      # Clean up old pages when re-downloading
       unless @file_asset.download_status == "downloading"
+        # Purge old page blobs to avoid orphans
+        @file_asset.pages.includes(image_attachment: :blob).each do |page|
+          page.image.purge if page.image.attached?
+        end
+        @file_asset.pages.destroy_all
+
         @file_asset.update!(
           download_status: "downloading",
           download_error: nil,
+          pages_downloaded: 0,
+          pages_expected: nil,
           path: @file_asset.path.presence || builder.chapter_path(@chapter)
         )
       end
@@ -229,10 +239,30 @@ class DownloadChapterJob < ApplicationJob
   end
 
   def finalize
+    pages = @file_asset.pages.includes(image_attachment: :blob).order(:position)
+    page_count = pages.count
+
+    # Verify blobs actually exist on disk before marking complete
+    # (page.image.attached? only checks the DB association, not the actual file)
+    sample_pages = [ pages.first, pages.last ].compact.uniq
+    missing = sample_pages.any? { |p| p.image.blob && !ActiveStorage::Blob.service.exist?(p.image.blob.key) }
+
+    if missing
+      @file_asset.update!(
+        page_count: page_count,
+        download_status: "failed",
+        pages_downloaded: @file_asset.pages_downloaded,
+        download_error: "Download verification failed: blob files missing from storage"
+      )
+      Rails.logger.error "DownloadChapterJob: Blob verification failed for file_asset #{@file_asset.id}"
+      broadcast_chapter_update(@chapter, @source)
+      return
+    end
+
     @file_asset.update!(
-      page_count: @file_asset.pages.count,
+      page_count: page_count,
       download_status: "complete",
-      pages_downloaded: @file_asset.pages.count
+      pages_downloaded: page_count
     )
     @file_asset.archive.purge if @file_asset.archive.attached?
     ChapterPackager.new(@file_asset).package!
