@@ -2,8 +2,8 @@
   <% if @label.present? %>
     <label class="text-sm text-muted"><%= @label %></label>
   <% end %>
-  <div class="relative inline-block">
-    <select onchange="window.location.href = this.value" class="<%= select_classes %>">
+  <div class="relative inline-block" data-controller="redirect-select">
+    <select data-action="change->redirect-select#navigate" class="<%= select_classes %>">
       <% @options.each do |label, value| %>
         <option value="<%= value %>" <%= 'selected' if @selected == value %>><%= label %></option>
       <% end %>

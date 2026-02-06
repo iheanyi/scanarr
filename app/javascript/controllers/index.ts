@@ -4,9 +4,6 @@
 
 import { application } from "./application"
 
-import HelloController from "./hello_controller"
-application.register("hello", HelloController)
-
 import ReaderController from "./reader_controller"
 application.register("reader", ReaderController)
 
@@ -30,3 +27,6 @@ application.register("drawer", DrawerController)
 
 import ChapterFilterController from "./chapter_filter_controller"
 application.register("chapter-filter", ChapterFilterController)
+
+import RedirectSelectController from "./redirect_select_controller"
+application.register("redirect-select", RedirectSelectController)
