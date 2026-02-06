@@ -60,6 +60,7 @@ Rails.application.routes.draw do
     post "scrapers/:source_id/smoke", to: "scrapers#run_smoke", as: :scraper_smoke
     get "downloads", to: "downloads#index", as: :downloads
     post "downloads/refresh_all_covers", to: "downloads#refresh_all_covers", as: :refresh_all_covers
+    post "downloads/refresh_all_metadata", to: "downloads#refresh_all_metadata", as: :refresh_all_metadata
     post "downloads/:id/restart", to: "downloads#restart", as: :download_restart
     post "downloads/restart_all_failed", to: "downloads#restart_all_failed", as: :restart_all_failed_downloads
     post "downloads/restart_all_stuck", to: "downloads#restart_all_stuck", as: :restart_all_stuck_downloads

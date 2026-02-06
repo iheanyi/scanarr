@@ -55,6 +55,13 @@ module Admin
       redirect_to admin_downloads_path
     end
 
+    def refresh_all_metadata
+      RefreshAllMetadataJob.perform_later
+
+      flash[:notice] = "Refreshing all metadata in background..."
+      redirect_to admin_downloads_path
+    end
+
     def restart
       @download = FileAsset.find(params[:id])
 

@@ -1,4 +1,4 @@
-<main class="space-y-8">
+<div class="space-y-8">
   <%= turbo_stream_from "admin_downloads" %>
 
   <header class="space-y-2">
@@ -26,28 +26,52 @@
     </div>
   </section>
 
-  <section class="rounded-lg border border-border bg-surface p-4">
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="text-sm font-semibold">Cover Images</h3>
-        <p class="text-xs text-muted-2 mt-1">
-          <%= @covers_attached %>/<%= @series_count %> stored locally
-          <% if @covers_missing > 0 %>
-            · <%= @covers_missing %> missing
+  <section class="grid gap-4 md:grid-cols-2">
+    <div class="rounded-lg border border-border bg-surface p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-semibold">Cover Images</h3>
+          <p class="text-xs text-muted-2 mt-1">
+            <%= @covers_attached %>/<%= @series_count %> stored locally
+            <% if @covers_missing > 0 %>
+              · <%= @covers_missing %> missing
+            <% end %>
+          </p>
+        </div>
+        <% if @series_count > 0 %>
+          <%= button_to admin_refresh_all_covers_path,
+                        method: :post,
+                        class: "inline-flex items-center gap-1.5 rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
+                        data: { turbo_confirm: "Refresh all #{@series_count} covers from source? This fetches fresh cover URLs and downloads them." } do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh All
           <% end %>
-        </p>
-      </div>
-      <% if @series_count > 0 %>
-        <%= button_to admin_refresh_all_covers_path,
-                      method: :post,
-                      class: "inline-flex items-center gap-1.5 rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
-                      data: { turbo_confirm: "Refresh all #{@series_count} covers from source? This fetches fresh cover URLs and downloads them." } do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh All
         <% end %>
-      <% end %>
+      </div>
+    </div>
+
+    <div class="rounded-lg border border-border bg-surface p-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-semibold">Series Metadata</h3>
+          <p class="text-xs text-muted-2 mt-1">
+            Re-import titles, descriptions, tags, covers, and chapters for all series
+          </p>
+        </div>
+        <% if @series_count > 0 %>
+          <%= button_to admin_refresh_all_metadata_path,
+                        method: :post,
+                        class: "inline-flex items-center gap-1.5 rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
+                        data: { turbo_confirm: "Refresh all metadata for #{@series_count} series? This re-imports titles, descriptions, tags, covers, and chapters from each source." } do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh All
+          <% end %>
+        <% end %>
+      </div>
     </div>
   </section>
 
@@ -115,7 +139,7 @@
           <% end %>
         </div>
       </div>
-      <div class="overflow-hidden rounded-lg border border-border bg-surface">
+      <div class="overflow-x-auto rounded-lg border border-border bg-surface">
         <table class="w-full text-sm">
           <thead class="bg-surface-2 text-left text-muted">
             <tr>
@@ -164,4 +188,4 @@
       <% end %>
     <% end %>
   </section>
-</main>
+</div>
