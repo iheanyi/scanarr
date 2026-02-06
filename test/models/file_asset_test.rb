@@ -7,7 +7,7 @@ class FileAssetTest < ActiveSupport::TestCase
     release = Release.create!(chapter: chapter)
     asset = FileAsset.create!(release: release)
 
-    assert asset.public_id.present?
+    assert_predicate asset.public_id, :present?
     assert_equal 12, asset.public_id.length
     assert_equal asset.public_id, asset.to_param
   end

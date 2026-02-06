@@ -30,6 +30,7 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     end
 
     new_chapter = @series.chapters.find_by(chapter_number: "100")
+
     assert_equal "New Chapter", new_chapter.title
     assert_equal "en", new_chapter.language
     assert_equal @source, new_chapter.source
@@ -82,6 +83,7 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     end
 
     notification = NewChapterNotification.last
+
     assert_equal @user, notification.user
     assert_equal "200", notification.chapter.chapter_number
   end
@@ -136,6 +138,7 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     end
 
     @series_source.reload
+
     assert_not_nil @series_source.last_checked_at
     assert_in_delta Time.current, @series_source.last_checked_at, 5.seconds
   end

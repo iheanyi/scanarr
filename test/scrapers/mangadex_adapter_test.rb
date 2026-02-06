@@ -57,12 +57,14 @@ class MangadexAdapterTest < ActiveSupport::TestCase
 
   def test_search_returns_results
     results = @adapter.search("naruto")
+
     assert_equal 1, results.size
     assert_equal "Naruto", results.first.title
   end
 
   def test_series_parses_tags_and_type
     series = @adapter.series(@manga_id)
+
     assert_equal "Naruto", series.title
     assert_includes series.tags, "Action"
     assert_equal "manga", series.series_type
@@ -72,12 +74,14 @@ class MangadexAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_returns_list
     chapters = @adapter.chapters(@manga_id)
+
     assert_equal 2, chapters.size
     assert_equal "1", chapters.first.number
   end
 
   def test_pages_returns_urls
     pages = @adapter.pages(@chapter_id)
+
     assert_equal 2, pages.size
     assert_match %r{/data/}, pages.first.url
   end

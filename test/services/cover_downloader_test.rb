@@ -14,7 +14,7 @@ class CoverDownloaderTest < ActiveSupport::TestCase
 
     CoverDownloader.download(@series, @cover_url)
 
-    assert @series.cover.attached?
+    assert_predicate @series.cover, :attached?
     assert_equal "cover.jpg", @series.cover.filename.to_s
   end
 
@@ -28,7 +28,7 @@ class CoverDownloaderTest < ActiveSupport::TestCase
 
     CoverDownloader.download(@series, @cover_url)
 
-    assert @series.cover.attached?
+    assert_predicate @series.cover, :attached?
   end
 
   test "stops after max redirects" do
@@ -48,7 +48,7 @@ class CoverDownloaderTest < ActiveSupport::TestCase
 
     CoverDownloader.download(@series, @cover_url)
 
-    assert @series.cover.attached?
+    assert_predicate @series.cover, :attached?
   end
 
   test "does nothing for blank URL" do
@@ -74,7 +74,7 @@ class CoverDownloaderTest < ActiveSupport::TestCase
 
     CoverDownloader.download(@series, @cover_url)
 
-    assert @series.cover.attached?
+    assert_predicate @series.cover, :attached?
     assert_equal "cover.png", @series.cover.filename.to_s
   end
 end

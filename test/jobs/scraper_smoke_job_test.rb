@@ -51,8 +51,9 @@ class ScraperSmokeJobTest < ActiveJob::TestCase
     end
 
     run.reload
+
     assert_equal "success", run.status
-    assert run.finished_at.present?
+    assert_predicate run.finished_at, :present?
     assert_equal 1, run.stats_json.fetch("search_count")
     assert_equal 1, run.stats_json.fetch("chapter_count")
     assert_equal 1, run.stats_json.fetch("page_count")
@@ -74,9 +75,10 @@ class ScraperSmokeJobTest < ActiveJob::TestCase
     end
 
     run.reload
+
     assert_equal "failed", run.status
-    assert run.error.present?
-    assert run.finished_at.present?
+    assert_predicate run.error, :present?
+    assert_predicate run.finished_at, :present?
   end
 
   private

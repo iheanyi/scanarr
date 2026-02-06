@@ -15,7 +15,7 @@ class ChapterPackagerTest < ActiveSupport::TestCase
 
     ChapterPackager.new(file_asset).package!
 
-    assert file_asset.archive.attached?
+    assert_predicate file_asset.archive, :attached?
     file_asset.archive.blob.open do |file|
       Zip::File.open(file.path) do |zip|
         assert_equal [ "001.jpg", "002.jpg" ], zip.entries.map(&:name)

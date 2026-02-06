@@ -12,7 +12,8 @@ class WeebCentralPaginationTest < ActiveSupport::TestCase
                results.first
 
       chapters = adapter.chapters(series.url)
-      assert chapters.size > 100, "expected 100+ chapters, got #{chapters.size}"
+
+      assert_operator chapters.size, :>, 100, "expected 100+ chapters, got #{chapters.size}"
     end
   end
 end

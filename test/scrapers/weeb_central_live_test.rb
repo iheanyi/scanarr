@@ -7,16 +7,20 @@ class WeebCentralLiveTest < ActiveSupport::TestCase
       adapter = WeebCentral::Adapter.new(config: config)
 
       results = adapter.search("one piece")
-      assert results.any?, "expected search results"
+
+      assert_predicate results, :any?, "expected search results"
 
       series = adapter.series(results.first.url)
-      assert series.title.present?, "expected series title"
+
+      assert_predicate series.title, :present?, "expected series title"
 
       chapters = adapter.chapters(series.url)
-      assert chapters.any?, "expected chapters"
+
+      assert_predicate chapters, :any?, "expected chapters"
 
       pages = adapter.pages(chapters.first.url)
-      assert pages.any?, "expected pages"
+
+      assert_predicate pages, :any?, "expected pages"
     end
   end
 end

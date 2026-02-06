@@ -3,6 +3,7 @@ require "test_helper"
 class ChapterProgressTest < ActiveSupport::TestCase
   def test_requires_user_and_chapter
     progress = ChapterProgress.new(page_index: 1, page_count: 10, status: "in_progress")
+
     assert_not progress.valid?
     assert_includes progress.errors[:user], "must exist"
     assert_includes progress.errors[:chapter], "must exist"
@@ -38,6 +39,7 @@ class ChapterProgressTest < ActiveSupport::TestCase
     chapter = chapters(:one)
 
     progress = ChapterProgress.new(user: user, chapter: chapter, status: "in_progress", progressed_at: Time.current)
+
     assert_not progress.valid?
     assert_includes progress.errors[:page_index], "can't be blank"
     assert_includes progress.errors[:page_count], "can't be blank"
