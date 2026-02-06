@@ -74,16 +74,16 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
   def test_download_enqueues_job
     clear_enqueued_jobs
-    assert_difference -> { Release.count }, 1 do
-      assert_difference -> { FileAsset.count }, 1 do
+    assert_no_difference -> { Release.count } do
+      assert_no_difference -> { FileAsset.count } do
         assert_enqueued_jobs 1 do
           post "/sources/weeb-central/#{series_url}/chapters/1/download"
         end
       end
     end
 
-    release = Release.order(created_at: :desc).first
-    assert_equal "queued", release.file_asset.download_status
+    release = chapters(:one).releases.where(source: sources(:one)).order(created_at: :desc).first
+    assert_equal "queued", release.file_asset.reload.download_status
     job = enqueued_jobs.last
     assert_equal DownloadChapterJob, job[:job]
   end

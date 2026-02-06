@@ -66,29 +66,51 @@ class ChaptersController < ApplicationController
       ) and return
     end
 
-    release = @chapter.releases.create!(source: @source, format: "pages", source_url: source_url)
-    file_asset = release.create_file_asset!(
-      format: "pages",
-      download_status: "queued",
-      pages_downloaded: 0,
-      download_error: nil,
-      path: LibraryPathBuilder.new(series: @series, source: @source).chapter_path(@chapter)
-    )
+    ActiveRecord::Base.transaction do
+      release = @chapter.releases.find_or_create_by!(source: @source) do |r|
+        r.format = "pages"
+        r.source_url = source_url
+      end
 
-    # Broadcast new download to admin page
-    broadcast_admin_download(file_asset)
+      # Skip if this release already has an active download
+      if release.file_asset&.download_status.in?(%w[queued pending downloading])
+        redirect_to source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@chapter)
+        ) and return
+      end
 
-    DownloadChapterJob.perform_later(
-      source_url,
-      source_key: @source.key,
-      series_title: @series.canonical_title,
-      source_series_id: series_source&.source_series_id,
-      chapter_number: @chapter.chapter_number,
-      chapter_title: @chapter.title,
-      language: @chapter.language,
-      group: @chapter.group,
-      release_id: release.id
-    )
+      chapter_path = LibraryPathBuilder.new(series: @series, source: @source).chapter_path(@chapter)
+      file_asset = if release.file_asset
+        release.file_asset.tap do |fa|
+          fa.update!(download_status: "queued", pages_downloaded: 0, download_error: nil, path: chapter_path)
+        end
+      else
+        release.create_file_asset!(
+          format: "pages",
+          download_status: "queued",
+          pages_downloaded: 0,
+          download_error: nil,
+          path: chapter_path
+        )
+      end
+
+      # Broadcast new download to admin page
+      broadcast_admin_download(file_asset)
+
+      DownloadChapterJob.perform_later(
+        source_url,
+        source_key: @source.key,
+        series_title: @series.canonical_title,
+        source_series_id: series_source&.source_series_id,
+        chapter_number: @chapter.chapter_number,
+        chapter_title: @chapter.title,
+        language: @chapter.language,
+        group: @chapter.group,
+        release_id: release.id
+      )
+    end
 
     redirect_to source_series_chapter_path(
       source_slug: source_slug(@source),
