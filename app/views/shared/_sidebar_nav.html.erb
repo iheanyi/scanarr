@@ -18,7 +18,7 @@
       <div class="flex flex-col gap-1">
         <%= link_to "Library", library_path, nav_link_attributes.call(library_path) %>
         <%= link_to "Calendar", calendar_path, nav_link_attributes.call(calendar_path) %>
-        <%= link_to "Sources", root_path, nav_link_attributes.call(root_path) %>
+        <%= link_to "Home", root_path, nav_link_attributes.call(root_path) %>
         <%= link_to "Search", search_path, nav_link_attributes.call(search_path) %>
       </div>
     </div>
@@ -28,7 +28,7 @@
       <div class="flex flex-col gap-1">
         <%= link_to "Downloads", admin_downloads_path, nav_link_attributes.call(admin_downloads_path) %>
         <%= link_to "Jobs", "/admin/jobs", nav_link_attributes.call("/admin/jobs") %>
-        <%= link_to "Admin", admin_scrapers_path, nav_link_attributes.call(admin_scrapers_path) %>
+        <%= link_to "Scrapers", admin_scrapers_path, nav_link_attributes.call(admin_scrapers_path) %>
         <%= link_to "Design System", design_system_path, nav_link_attributes.call(design_system_path) %>
       </div>
     </div>
