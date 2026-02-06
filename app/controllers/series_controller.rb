@@ -77,7 +77,7 @@ class SeriesController < ApplicationController
     if @series.cover_url.present?
       # Force re-download by purging existing cover
       @series.cover.purge if @series.cover.attached?
-      download_cover(@series, @series.cover_url)
+      CoverDownloader.download(@series, @series.cover_url)
       flash[:notice] = "Cover image refreshed"
     else
       flash[:alert] = "No cover URL available to refresh"
@@ -143,29 +143,6 @@ class SeriesController < ApplicationController
   end
 
   private
-
-  def download_cover(series, cover_url)
-    uri = URI.parse(cover_url)
-    response = Net::HTTP.get_response(uri)
-    return unless response.is_a?(Net::HTTPSuccess)
-
-    content_type = response["content-type"]
-    extension = case content_type
-    when /jpeg|jpg/i then "jpg"
-    when /png/i then "png"
-    when /webp/i then "webp"
-    when /gif/i then "gif"
-    else "jpg"
-    end
-
-    series.cover.attach(
-      io: StringIO.new(response.body),
-      filename: "cover.#{extension}",
-      content_type: content_type
-    )
-  rescue StandardError => e
-    Rails.logger.warn "Failed to download cover for #{series.canonical_title}: #{e.message}"
-  end
 
   def series_params
     params.require(:series).permit(:reading_style)

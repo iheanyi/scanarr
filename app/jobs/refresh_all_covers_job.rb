@@ -51,67 +51,6 @@ class RefreshAllCoversJob < ApplicationJob
     # Purge existing cover to force re-download
     series.cover.purge if series.cover.attached?
 
-    uri = URI.parse(cover_url)
-    http = Net::HTTP.new(uri.host, uri.port)
-    if uri.scheme == "https"
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.open_timeout = 10
-      http.read_timeout = 30
-    end
-
-    request = Net::HTTP::Get.new(uri.request_uri)
-    response = http.request(request)
-    return unless response.is_a?(Net::HTTPSuccess)
-
-    content_type = response["content-type"]
-    extension = case content_type
-    when /jpeg|jpg/i then "jpg"
-    when /png/i then "png"
-    when /webp/i then "webp"
-    when /gif/i then "gif"
-    else "jpg"
-    end
-
-    series.cover.attach(
-      io: StringIO.new(response.body),
-      filename: "cover.#{extension}",
-      content_type: content_type
-    )
-  rescue OpenSSL::SSL::SSLError => e
-    Rails.logger.warn "SSL error downloading cover for #{series.canonical_title}, retrying insecure: #{e.message}"
-    retry_download_cover_insecure(series, cover_url)
-  rescue => e
-    Rails.logger.warn "Failed to download cover for #{series.canonical_title}: #{e.message}"
-  end
-
-  def retry_download_cover_insecure(series, cover_url)
-    uri = URI.parse(cover_url)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    http.open_timeout = 10
-    http.read_timeout = 30
-
-    request = Net::HTTP::Get.new(uri.request_uri)
-    response = http.request(request)
-    return unless response.is_a?(Net::HTTPSuccess)
-
-    content_type = response["content-type"]
-    extension = case content_type
-    when /jpeg|jpg/i then "jpg"
-    when /png/i then "png"
-    when /webp/i then "webp"
-    when /gif/i then "gif"
-    else "jpg"
-    end
-
-    series.cover.attach(
-      io: StringIO.new(response.body),
-      filename: "cover.#{extension}",
-      content_type: content_type
-    )
-  rescue => e
-    Rails.logger.warn "Failed to download cover (insecure retry) for #{series.canonical_title}: #{e.message}"
+    CoverDownloader.download(series, cover_url)
   end
 end
