@@ -1,8 +1,8 @@
 <div class="space-y-6">
-  <header class="space-y-2">
-    <h1 class="text-2xl font-semibold text-balance text-foreground">Search</h1>
-    <p class="text-sm text-muted text-pretty">Search across multiple sources and import series into your library.</p>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Search",
+    description: "Search across multiple sources and import series into your library."
+  ) %>
 
   <section class="rounded-lg border border-border bg-surface p-4">
     <%= form_with url: search_path, method: :get, local: true do |form| %>
@@ -80,7 +80,8 @@
                               source_import_path(source_slug: source_slug(source)),
                               method: :post,
                               params: { series_url: result.url },
-                              class: "inline-flex w-full items-center justify-center rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent-strong hover:bg-accent-ghost" %>
+                              class: "inline-flex w-full items-center justify-center rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent-strong hover:bg-accent-ghost",
+                              data: { turbo_submits_with: "Importing..." } %>
               </div>
             </div>
           <% end %>

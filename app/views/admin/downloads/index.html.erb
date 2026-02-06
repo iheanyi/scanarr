@@ -1,11 +1,11 @@
 <div class="space-y-8">
   <%= turbo_stream_from "admin_downloads" %>
 
-  <header class="space-y-2">
-    <p class="text-sm text-muted">Admin</p>
-    <h1 class="text-3xl font-semibold text-balance">Download Queue</h1>
-    <p class="text-muted text-pretty">Monitor download progress and view recent downloads.</p>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Download Queue",
+    description: "Monitor download progress and view recent downloads.",
+    breadcrumb_text: "Admin"
+  ) %>
 
   <section id="download_stats" class="grid gap-4 md:grid-cols-4">
     <div class="rounded-lg border border-border bg-surface p-4">

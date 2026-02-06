@@ -1,9 +1,9 @@
 <div class="space-y-6">
-  <header class="space-y-2">
-    <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
-    <h1 class="text-3xl font-semibold text-balance">Series</h1>
-    <p class="text-muted text-pretty">Browse imported series for this source.</p>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Series",
+    description: "Browse imported series for this source.",
+    breadcrumb_text: @source.name || @source.key
+  ) %>
 
   <% if @series.any? %>
     <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

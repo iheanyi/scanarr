@@ -1,12 +1,8 @@
 <div class="space-y-6">
-  <header class="flex items-end justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-semibold text-foreground">Library</h1>
-      <p class="mt-1 text-sm text-muted">
-        <%= @total_series %> series · <%= @total_chapters %> chapters · <%= @downloaded_chapters %> downloaded
-      </p>
-    </div>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Library",
+    description: "#{@total_series} series · #{@total_chapters} chapters · #{@downloaded_chapters} downloaded"
+  ) %>
 
   <!-- Filters -->
   <div class="flex flex-wrap items-center gap-3">

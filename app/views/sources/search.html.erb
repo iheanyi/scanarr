@@ -1,9 +1,9 @@
 <div class="space-y-6">
-  <header class="space-y-2">
-    <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
-    <h1 class="text-3xl font-semibold text-balance">Search</h1>
-    <p class="text-muted text-pretty">Search the source and import a series into your library.</p>
-  </header>
+  <%= render UI::PageHeaderComponent.new(
+    title: "Search",
+    description: "Search the source and import a series into your library.",
+    breadcrumb_text: @source.name || @source.key
+  ) %>
 
   <section class="rounded-lg border border-border bg-surface p-4">
     <%= form_with url: source_search_path(source_slug: source_slug(@source)), method: :get, local: true do |form| %>
