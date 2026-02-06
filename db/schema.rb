@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_04_195608) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_06_044551) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -197,6 +197,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_04_195608) do
     t.string "artist_name"
     t.string "author_name"
     t.string "canonical_title", null: false
+    t.integer "chapters_count", default: 0, null: false
     t.string "cover_url"
     t.datetime "created_at", null: false
     t.datetime "deleted_at"

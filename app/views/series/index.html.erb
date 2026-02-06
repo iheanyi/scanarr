@@ -1,4 +1,4 @@
-<main class="space-y-6">
+<div class="space-y-6">
   <header class="space-y-2">
     <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
     <h1 class="text-3xl font-semibold text-balance">Series</h1>
@@ -28,7 +28,7 @@
               <% if series.display_author.present? %>
                 <p class="text-sm text-muted mt-1">by <%= series.display_author %></p>
               <% end %>
-              <p class="text-xs text-muted-2 mt-auto"><%= series.chapters.count %> chapters</p>
+              <p class="text-xs text-muted-2 mt-auto"><%= series.chapters_count %> chapters</p>
             </div>
           </div>
         <% end %>
@@ -44,4 +44,4 @@
       </div>
     </section>
   <% end %>
-</main>
+</div>
