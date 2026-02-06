@@ -20,6 +20,14 @@ module UI
       lg: "rounded-lg"
     }.freeze
 
+    # Full class names so Tailwind JIT can detect them at build time.
+    ASPECT_CLASSES = {
+      "2/3" => "aspect-[2/3]",
+      "3/4" => "aspect-[3/4]",
+      "1/1" => "aspect-square",
+      "16/9" => "aspect-video"
+    }.freeze
+
     def initialize(url:, alt: "", size: :md, aspect: nil, rounded: :md, loading: "lazy", **system_arguments)
       super(**system_arguments)
       @url = url
@@ -34,7 +42,7 @@ module UI
       cn(
         "overflow-hidden border border-border bg-background",
         SIZE_CLASSES[@size.to_sym] || SIZE_CLASSES[:md],
-        @aspect ? "aspect-[#{@aspect}]" : nil,
+        @aspect ? ASPECT_CLASSES[@aspect.to_s] : nil,
         ROUNDED_CLASSES[@rounded.to_sym] || ROUNDED_CLASSES[:md],
         system_arguments[:class]
       )
