@@ -42,6 +42,15 @@ default: &default
     headers:
       User-Agent: "ScanarrScraper/0.1"
       Referer: "https://mangapill.com/"
+  comick:
+    base_url: "https://comick.live"
+    delay_ms: 400
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://comick.live/"
 
 development:
   <<: *default

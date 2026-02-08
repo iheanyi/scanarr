@@ -8,7 +8,8 @@
   { key: "weeb_central", name: "Weeb Central", base_url: "https://weebcentral.com", source_type: "html", default_priority: 20, enabled: true },
   { key: "manga_see", name: "MangaSee", base_url: "https://mangasee123.com", source_type: "html", default_priority: 30, enabled: true },
   { key: "asura_scans", name: "Asura Scans", base_url: "https://asuracomic.net", source_type: "html", default_priority: 40, enabled: true },
-  { key: "manga_pill", name: "MangaPill", base_url: "https://mangapill.com", source_type: "html", default_priority: 50, enabled: true }
+  { key: "manga_pill", name: "MangaPill", base_url: "https://mangapill.com", source_type: "html", default_priority: 50, enabled: true },
+  { key: "comick", name: "Comick", base_url: "https://comick.live", source_type: "api", default_priority: 15, enabled: true }
 ].each do |attrs|
   Source.find_or_create_by!(key: attrs[:key]) do |source|
     source.name = attrs[:name]

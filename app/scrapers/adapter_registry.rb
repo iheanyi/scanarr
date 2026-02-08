@@ -8,7 +8,8 @@ class AdapterRegistry
     "weeb_central" => -> { WeebCentral::Adapter },
     "manga_see" => -> { MangaSee::Adapter },
     "asura_scans" => -> { AsuraScans::Adapter },
-    "manga_pill" => -> { MangaPill::Adapter }
+    "manga_pill" => -> { MangaPill::Adapter },
+    "comick" => -> { Comick::Adapter }
   }.freeze
 
   class << self
