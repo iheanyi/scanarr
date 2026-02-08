@@ -33,13 +33,14 @@
           </p>
         </div>
         <% if @series_count > 0 %>
-          <%= button_to admin_refresh_all_covers_path,
-                        method: :post,
-                        class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
-                        data: { turbo_confirm: "Refresh all #{@series_count} covers from source? This fetches fresh cover URLs and downloads them." } do %>
-            <%= icon "refresh-cw", class: "h-4 w-4" %>
-            Refresh All
-          <% end %>
+          <%= render UI::ConfirmButtonComponent.new(
+            label: "Refresh All",
+            url: admin_refresh_all_covers_path,
+            method: :post,
+            variant: :accent,
+            confirm: "Refresh all #{@series_count} covers from source? This fetches fresh cover URLs and downloads them.",
+            icon: "refresh-cw"
+          ) %>
         <% end %>
       </div>
     </div>
@@ -53,13 +54,14 @@
           </p>
         </div>
         <% if @series_count > 0 %>
-          <%= button_to admin_refresh_all_metadata_path,
-                        method: :post,
-                        class: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
-                        data: { turbo_confirm: "Refresh all metadata for #{@series_count} series? This re-imports titles, descriptions, tags, covers, and chapters from each source." } do %>
-            <%= icon "refresh-cw", class: "h-4 w-4" %>
-            Refresh All
-          <% end %>
+          <%= render UI::ConfirmButtonComponent.new(
+            label: "Refresh All",
+            url: admin_refresh_all_metadata_path,
+            method: :post,
+            variant: :accent,
+            confirm: "Refresh all metadata for #{@series_count} series? This re-imports titles, descriptions, tags, covers, and chapters from each source.",
+            icon: "refresh-cw"
+          ) %>
         <% end %>
       </div>
     </div>
@@ -113,22 +115,26 @@
         </p>
         <div class="flex items-center gap-2">
           <% if @stuck_count > 0 %>
-            <%= button_to admin_restart_all_stuck_downloads_path,
-                          method: :post,
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-info/40 px-3 py-1.5 text-sm font-medium text-info hover:bg-info-soft",
-                          data: { turbo_confirm: "Restart all #{@stuck_count} stuck downloads?" } do %>
-              <%= icon "refresh-cw", class: "h-4 w-4" %>
-              Restart Stuck (<%= @stuck_count %>)
-            <% end %>
+            <%= render UI::ConfirmButtonComponent.new(
+              label: "Restart Stuck",
+              url: admin_restart_all_stuck_downloads_path,
+              method: :post,
+              variant: :info,
+              confirm: "Restart all #{@stuck_count} stuck downloads?",
+              icon: "refresh-cw",
+              count: @stuck_count
+            ) %>
           <% end %>
           <% if (@stats["failed"] || 0) > 0 %>
-            <%= button_to admin_restart_all_failed_downloads_path,
-                          method: :post,
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger-soft",
-                          data: { turbo_confirm: "Restart all #{@stats['failed']} failed downloads?" } do %>
-              <%= icon "refresh-cw", class: "h-4 w-4" %>
-              Restart Failed (<%= @stats["failed"] %>)
-            <% end %>
+            <%= render UI::ConfirmButtonComponent.new(
+              label: "Restart Failed",
+              url: admin_restart_all_failed_downloads_path,
+              method: :post,
+              variant: :danger,
+              confirm: "Restart all #{@stats['failed']} failed downloads?",
+              icon: "refresh-cw",
+              count: @stats["failed"]
+            ) %>
           <% end %>
         </div>
       </div>

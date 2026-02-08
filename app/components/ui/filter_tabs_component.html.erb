@@ -1,0 +1,10 @@
+<div class="<%= container_classes %>">
+  <% @items.each_with_index do |item, index| %>
+    <%= link_to item[:href], class: item_classes(item, index) do %>
+      <% if item[:icon] %>
+        <%= helpers.icon item[:icon], class: "inline h-3 w-3 mr-0.5" %>
+      <% end %>
+      <%= item[:label] %>
+    <% end %>
+  <% end %>
+</div>

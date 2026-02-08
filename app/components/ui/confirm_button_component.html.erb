@@ -1,0 +1,12 @@
+<%= button_to @url,
+              method: @method,
+              class: button_classes,
+              params: @params,
+              title: @title,
+              data: { turbo_confirm: @confirm } do %>
+  <%= helpers.icon @icon_name, class: icon_size %>
+  <%= @label %>
+  <% if @count.present? %>
+    <span class="<%= count_classes %>"><%= @count %></span>
+  <% end %>
+<% end %>

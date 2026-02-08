@@ -6,13 +6,9 @@
 
   <div class="flex flex-wrap items-center gap-4">
     <%# View Type Toggle %>
-    <div class="flex rounded-lg overflow-hidden border border-border">
-      <% %w[week month recent].each do |view| %>
-        <%= link_to view.titleize,
-              calendar_path(view: view, source: @source_filter),
-              class: "px-4 py-2 text-sm transition-colors #{@view_type == view ? 'bg-accent text-accent-foreground' : 'bg-surface-2 text-muted hover:bg-surface hover:text-foreground'}" %>
-      <% end %>
-    </div>
+    <%= render UI::FilterTabsComponent.new(items: %w[week month recent].map { |view|
+      { label: view.titleize, href: calendar_path(view: view, source: @source_filter), active: @view_type == view, variant: :primary }
+    }) %>
 
     <%# Source Filter %>
     <%= render UI::RedirectSelectComponent.new(

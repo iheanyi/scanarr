@@ -1,0 +1,8 @@
+<div class="relative">
+  <%= helpers.icon "search", class: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
+  <% if @form %>
+    <%= @form.search_field @name, value: @value, placeholder: @placeholder, class: input_classes, data: data_attributes %>
+  <% else %>
+    <%= tag.input type: "text", name: @name, value: @value, placeholder: @placeholder, class: input_classes, data: data_attributes %>
+  <% end %>
+</div>

@@ -57,30 +57,32 @@
     </div>
     <div class="flex items-center gap-2">
       <% if file_asset&.download_status == "complete" %>
-        <%= button_to source_series_chapter_remove_download_path(
-                        source_slug: source.slug,
-                        series_slug: series.to_param,
-                        chapter_identifier: chapter_identifier(chapter)
-                      ),
-                      method: :delete,
-                      class: "inline-flex items-center rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft",
-                      data: { turbo_confirm: "Remove download for Chapter #{chapter.chapter_number}?" } do %>
-          <%= icon "trash-2", class: "h-4 w-4 mr-1" %>
-          Remove
-        <% end %>
+        <%= render UI::ConfirmButtonComponent.new(
+          label: "Remove",
+          url: source_series_chapter_remove_download_path(
+            source_slug: source.slug,
+            series_slug: series.to_param,
+            chapter_identifier: chapter_identifier(chapter)
+          ),
+          method: :delete,
+          variant: :danger,
+          confirm: "Remove download for Chapter #{chapter.chapter_number}?",
+          icon: "trash-2"
+        ) %>
       <% end %>
       <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
-        <%= button_to source_series_chapter_cancel_download_path(
-                        source_slug: source.slug,
-                        series_slug: series.to_param,
-                        chapter_identifier: chapter_identifier(chapter)
-                      ),
-                      method: :post,
-                      class: "inline-flex items-center rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft",
-                      data: { turbo_confirm: "Cancel this download?" } do %>
-          <%= icon "x", class: "h-4 w-4 mr-1" %>
-          Cancel
-        <% end %>
+        <%= render UI::ConfirmButtonComponent.new(
+          label: "Cancel",
+          url: source_series_chapter_cancel_download_path(
+            source_slug: source.slug,
+            series_slug: series.to_param,
+            chapter_identifier: chapter_identifier(chapter)
+          ),
+          method: :post,
+          variant: :warning,
+          confirm: "Cancel this download?",
+          icon: "x"
+        ) %>
       <% end %>
       <% if chapter.source_url.present? %>
         <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>

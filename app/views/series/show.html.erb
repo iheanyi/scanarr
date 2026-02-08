@@ -155,24 +155,26 @@
       <% if @chapters.any? %>
         <div class="flex items-center gap-2">
           <% if @in_progress_count > 0 %>
-            <%= button_to source_series_cancel_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
-                          method: :post,
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft",
-                          data: { turbo_confirm: "Cancel all #{@in_progress_count} in-progress download(s)?" } do %>
-              <%= icon "x", class: "h-4 w-4" %>
-              Cancel All
-              <span class="rounded-full bg-warning/20 px-1.5 py-0.5 text-xs"><%= @in_progress_count %></span>
-            <% end %>
+            <%= render UI::ConfirmButtonComponent.new(
+              label: "Cancel All",
+              url: source_series_cancel_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
+              method: :post,
+              variant: :warning,
+              confirm: "Cancel all #{@in_progress_count} in-progress download(s)?",
+              icon: "x",
+              count: @in_progress_count
+            ) %>
           <% end %>
           <% if @downloaded_count > 0 %>
-            <%= button_to source_series_remove_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
-                          method: :delete,
-                          class: "inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft",
-                          data: { turbo_confirm: "Remove all #{@downloaded_count} downloaded chapter(s)? This cannot be undone." } do %>
-              <%= icon "trash-2", class: "h-4 w-4" %>
-              Remove All
-              <span class="rounded-full bg-danger/20 px-1.5 py-0.5 text-xs"><%= @downloaded_count %></span>
-            <% end %>
+            <%= render UI::ConfirmButtonComponent.new(
+              label: "Remove All",
+              url: source_series_remove_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
+              method: :delete,
+              variant: :danger,
+              confirm: "Remove all #{@downloaded_count} downloaded chapter(s)? This cannot be undone.",
+              icon: "trash-2",
+              count: @downloaded_count
+            ) %>
           <% end %>
           <div data-controller="loading-button">
             <%= form_with url: source_series_download_all_path(source_slug: @source.slug, series_slug: @series.to_param),
@@ -201,14 +203,11 @@
     <%= turbo_stream_from @series, :downloads %>
     <% if @chapters.any? %>
       <div class="flex items-center gap-3">
-        <div class="relative flex-1">
-          <%= icon "search", class: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
-          <input type="text"
-                 placeholder="Filter chapters by number or title…"
-                 data-chapter-filter-target="input"
-                 data-action="input->chapter-filter#filter:throttled"
-                 data-throttled-wait="200"
-                 class="w-full rounded-lg border border-border bg-surface-2 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
+        <div class="flex-1">
+          <%= render UI::SearchInputComponent.new(
+            placeholder: "Filter chapters by number or title\u2026",
+            data: { chapter_filter_target: "input", action: "input->chapter-filter#filter:throttled", throttled_wait: "200" }
+          ) %>
         </div>
         <span data-chapter-filter-target="count" class="shrink-0 text-xs text-muted-2">
           <%= @chapters.size %> of <%= @chapters.size %>

@@ -22,8 +22,14 @@
   <td class="px-4 py-3">
     <% if download.pages_expected.to_i > 0 %>
       <div class="flex items-center gap-2">
-        <div class="h-2 flex-1 rounded-full bg-surface-2">
-          <div class="h-2 rounded-full <%= download.download_status == "complete" ? "bg-accent" : "bg-info" %> transition-all" style="width: <%= progress_pct %>%"></div>
+        <div class="flex-1">
+          <%= render UI::ProgressBarComponent.new(
+            value: download.pages_downloaded,
+            max: download.pages_expected,
+            color: download.download_status == "complete" ? :accent : :info,
+            size: :md,
+            track: :surface
+          ) %>
         </div>
         <span class="text-xs text-muted tabular-nums"><%= download.pages_downloaded %>/<%= download.pages_expected %></span>
       </div>
@@ -38,22 +44,27 @@
   <td class="px-4 py-3">
     <div class="flex items-center gap-1">
       <% if can_restart %>
-        <%= button_to admin_download_restart_path(download, status: params[:status]),
-                      method: :post,
-                      class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-warning hover:bg-warning-soft",
-                      title: is_stuck ? "Restart stuck download" : "Restart download" do %>
-          <%= icon "refresh-cw", class: "h-3.5 w-3.5" %>
-          Restart
-        <% end %>
+        <%= render UI::ConfirmButtonComponent.new(
+          label: "Restart",
+          url: admin_download_restart_path(download, status: params[:status]),
+          method: :post,
+          variant: :warning,
+          confirm: is_stuck ? "Restart stuck download?" : "Restart download?",
+          icon: "refresh-cw",
+          compact: true,
+          title: is_stuck ? "Restart stuck download" : "Restart download"
+        ) %>
       <% end %>
       <% if download.download_status.in?(%w[queued pending downloading]) %>
-        <%= button_to admin_download_cancel_path(download, status: params[:status]),
-                      method: :post,
-                      class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft",
-                      data: { turbo_confirm: "Cancel this download?" } do %>
-          <%= icon "x", class: "h-3.5 w-3.5" %>
-          Cancel
-        <% end %>
+        <%= render UI::ConfirmButtonComponent.new(
+          label: "Cancel",
+          url: admin_download_cancel_path(download, status: params[:status]),
+          method: :post,
+          variant: :danger,
+          confirm: "Cancel this download?",
+          icon: "x",
+          compact: true
+        ) %>
       <% end %>
       <% unless can_restart || download.download_status.in?(%w[queued pending downloading]) %>
         <span class="text-muted-2">—</span>
