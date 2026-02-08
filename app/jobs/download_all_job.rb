@@ -24,7 +24,7 @@ class DownloadAllJob < ApplicationJob
       next if chapter.source_url.blank?
 
       # Skip if already downloaded or in progress
-      latest_release = chapter.releases.max_by(&:created_at)
+      latest_release = chapter.releases.to_a.max_by(&:created_at)
       file_asset = latest_release&.file_asset
       next if file_asset&.download_status.in?(%w[queued pending downloading complete])
 

@@ -1,5 +1,5 @@
 class DesignSystemController < ApplicationController
-  skip_before_action :authenticate!
+  allow_unauthenticated_access
 
   def show
   end

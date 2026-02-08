@@ -1,10 +1,18 @@
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
+  # Setup wizard
+  get "/setup", to: "setup#new", as: :setup
+  post "/setup", to: "setup#create"
+
   # Authentication
   get "/login", to: "sessions#new", as: :login
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy", as: :logout
+
+  # Registration
+  get "/register", to: "registrations#new", as: :register
+  post "/register", to: "registrations#create"
 
   get "/design-system", to: "design_system#show", as: :design_system
 
@@ -69,6 +77,8 @@ Rails.application.routes.draw do
     post "downloads/restart_all_failed", to: "downloads#restart_all_failed", as: :restart_all_failed_downloads
     post "downloads/restart_all_stuck", to: "downloads#restart_all_stuck", as: :restart_all_stuck_downloads
 
+    resources :users, only: %i[index new create destroy]
+
     # Backups
     get "backups", to: "backups#index", as: :backups
     post "backups", to: "backups#create", as: :create_backup
@@ -80,7 +90,10 @@ Rails.application.routes.draw do
   # Settings
   get "/settings", to: "settings#show", as: :settings
   patch "/settings", to: "settings#update"
+  patch "/settings/site", to: "settings#update_site_settings", as: :settings_site
   patch "/settings/source/:source_id", to: "settings#update_source", as: :settings_source
+  patch "/settings/password", to: "settings#update_password", as: :settings_password
+  post "/settings/regenerate_api_key", to: "settings#regenerate_api_key", as: :settings_regenerate_api_key
 
   # Library Export/Import
   get "/export", to: "exports#show", as: :export

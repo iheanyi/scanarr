@@ -36,8 +36,11 @@
       <% end %>
     <% end %>
 
-    <p class="text-center text-xs text-muted-2">
-      Default credentials: <code class="text-muted">scanarr</code> / <code class="text-muted">ilovemanga</code>
-    </p>
+    <% if SiteSetting.registration_enabled? %>
+      <p class="text-center text-sm text-muted">
+        Don't have an account?
+        <%= link_to "Sign up", register_path, class: "text-accent hover:text-accent/80" %>
+      </p>
+    <% end %>
   </div>
 </div>

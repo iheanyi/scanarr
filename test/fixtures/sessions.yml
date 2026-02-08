@@ -1,0 +1,1 @@
+# Sessions are created dynamically in tests via sign_in_as

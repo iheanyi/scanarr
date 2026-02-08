@@ -104,7 +104,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <% latest_release = chapter.releases.loaded? ? chapter.releases.max_by(&:created_at) : chapter.releases.includes(:file_asset).order(created_at: :desc).first %>
+                  <% latest_release = @latest_release_map[chapter.id] %>
                   <% file_asset = latest_release&.file_asset %>
                   <% if file_asset&.download_status == "complete" %>
                     <%= render UI::StatusBadgeComponent.new(status: "complete", label: "Downloaded") %>

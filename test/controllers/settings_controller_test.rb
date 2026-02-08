@@ -71,9 +71,60 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_not source.reload.enabled?
   end
 
-  def test_show_redirects_when_no_user
-    # Simulate unauthenticated request by skipping auth headers
-    get settings_path, headers: { "HTTP_AUTHORIZATION" => nil }
+  def test_show_displays_administration_section_for_admin
+    get settings_path
+
+    assert_response :success
+    assert_includes @response.body, "Administration"
+    assert_includes @response.body, "Allow Registration"
+  end
+
+  def test_show_hides_administration_section_for_member
+    sign_out
+    sign_in_as(users(:member))
+
+    get settings_path
+
+    assert_response :success
+    assert_not_includes @response.body, "Administration"
+  end
+
+  def test_admin_can_toggle_registration_off
+    patch settings_site_path, params: { site_setting: { registration_enabled: "false" } }
+
+    assert_not SiteSetting.registration_enabled?
+  end
+
+  def test_admin_can_toggle_registration_on
+    SiteSetting.instance.update!(registration_enabled: false)
+
+    patch settings_site_path, params: { site_setting: { registration_enabled: "true" } }
+
+    assert SiteSetting.registration_enabled?
+  end
+
+  def test_member_cannot_update_site_settings
+    sign_out
+    sign_in_as(users(:member))
+
+    patch settings_site_path, params: { site_setting: { registration_enabled: "false" } }
+
+    assert_redirected_to root_path
+    assert SiteSetting.registration_enabled?
+  end
+
+  def test_update_site_settings_via_turbo_stream
+    patch settings_site_path,
+      params: { site_setting: { registration_enabled: "false" } },
+      headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_includes @response.body, "Site settings saved"
+  end
+
+  def test_show_redirects_when_not_authenticated
+    sign_out
+    get settings_path
 
     assert_redirected_to login_path
   end

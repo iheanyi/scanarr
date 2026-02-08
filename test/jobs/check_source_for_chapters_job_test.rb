@@ -8,7 +8,7 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     @source = sources(:one)
     @series_source = series_sources(:one)
     @follow = user_series_follows(:one)
-    @user = users(:one)
+    @user = users(:admin)
   end
 
   test "creates new chapters from adapter data" do
@@ -240,6 +240,65 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
         CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
       end
     end
+  end
+
+  test "does not issue per-chapter EXISTS queries (N+1 prevention)" do
+    # Create several existing chapters that the job should skip
+    5.times do |i|
+      @series.chapters.create!(
+        chapter_number: "50#{i}",
+        title: "Existing #{i}",
+        language: "en",
+        source: @source,
+        source_url: "https://weebcentral.com/chapters/50#{i}"
+      )
+    end
+
+    # Adapter returns all existing + 2 new chapters
+    chapter_data = (0...5).map do |i|
+      ResultTypes::Chapter.new(
+        number: "50#{i}",
+        title: "Existing #{i}",
+        language: "en",
+        group: nil,
+        url: "https://weebcentral.com/chapters/50#{i}",
+        published_at: Time.current
+      )
+    end + [
+      ResultTypes::Chapter.new(
+        number: "600",
+        title: "New One",
+        language: "en",
+        group: nil,
+        url: "https://weebcentral.com/chapters/600",
+        published_at: Time.current
+      ),
+      ResultTypes::Chapter.new(
+        number: "601",
+        title: "New Two",
+        language: "en",
+        group: nil,
+        url: "https://weebcentral.com/chapters/601",
+        published_at: Time.current
+      )
+    ]
+
+    with_fake_adapter(chapter_data) do
+      # The job should use a single pluck to check existing chapters,
+      # not one EXISTS per chapter_data item.
+      # With 7 chapters_data items, an N+1 would fire 7+ EXISTS queries.
+      # The fixed version fires 1 pluck + creates for the 2 new ones.
+      query_count = count_queries do
+        CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+      end
+
+      # Should be well under 7 chapter-existence queries.
+      # A rough budget: pluck(1) + find_by(2) + creates(~6 for 2 chapters + 2 notifications) + broadcast(~3) + success update(1)
+      # The key assertion: query count should NOT scale linearly with chapter_data size.
+      assert_operator query_count, :<, 30, "Expected fewer than 30 queries (got #{query_count}); possible N+1 on chapter existence checks"
+    end
+
+    assert_equal 2, @series.chapters.where(chapter_number: %w[600 601]).count
   end
 
   private

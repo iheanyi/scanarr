@@ -1,5 +1,7 @@
 module Admin
   class BackupsController < ApplicationController
+    before_action :require_admin
+
     def index
       @backups = BackupRecord.recent.page(params[:page]).per(20)
       @stats = {

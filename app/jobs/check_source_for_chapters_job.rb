@@ -25,11 +25,17 @@ class CheckSourceForChaptersJob < ApplicationJob
 
     chapters_data = adapter.chapters(source_series_id)
 
+    # Prefetch existing chapter identifiers to avoid per-chapter EXISTS queries (N+1)
+    existing_chapters = series.chapters
+      .pluck(:chapter_number, :language)
+      .map { |num, lang| [ num, lang ] }
+      .to_set
+
     # Collect new chapters first, then batch notifications and downloads
     new_chapters = []
 
     chapters_data.each do |ch_data|
-      next if series.chapters.exists?(chapter_number: ch_data.number, language: ch_data.language || "en")
+      next if existing_chapters.include?([ ch_data.number, ch_data.language || "en" ])
 
       chapter = series.chapters.create!(
         chapter_number: ch_data.number,
@@ -84,6 +90,9 @@ class CheckSourceForChaptersJob < ApplicationJob
   end
 
   def enqueue_downloads(chapters, follow, source, series_source)
+    # All chapters belong to the same series; cache the title to avoid N+1
+    series_title = chapters.first&.series&.canonical_title
+
     chapters.each do |chapter|
       next unless chapter.source_url.present?
 
@@ -93,7 +102,7 @@ class CheckSourceForChaptersJob < ApplicationJob
       DownloadChapterJob.perform_later(
         chapter.source_url,
         source_key: download_source.key,
-        series_title: chapter.series.canonical_title,
+        series_title: series_title,
         source_series_id: series_source&.source_series_id,
         chapter_number: chapter.chapter_number,
         chapter_title: chapter.title,

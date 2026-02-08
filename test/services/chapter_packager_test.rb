@@ -2,6 +2,29 @@ require "test_helper"
 require "zip"
 
 class ChapterPackagerTest < ActiveSupport::TestCase
+  def test_preloads_image_attachments_to_avoid_n_plus_1
+    series = Series.create!(canonical_title: "Query Test")
+    chapter = Chapter.create!(series: series, chapter_number: "1")
+    release = Release.create!(chapter: chapter)
+    file_asset = FileAsset.create!(release: release)
+
+    5.times do |i|
+      page = file_asset.pages.create!(position: i + 1)
+      page.image.attach(io: StringIO.new("page-#{i}"), filename: "00#{i}.jpg", content_type: "image/jpeg")
+    end
+
+    packager = ChapterPackager.new(file_asset)
+
+    # Measure queries during packaging (after construction)
+    query_count = count_queries { packager.package! }
+
+    # With 5 pages, an N+1 would fire 5+ attachment queries.
+    # The fixed version uses includes(image_attachment: :blob) in a single query.
+    # Budget: pages query(1) + attachment preload(~2) + blob reads(5 opens) + archive attach(~3)
+    assert_operator query_count, :<, 20, "Expected fewer than 20 queries for 5 pages (got #{query_count}); possible N+1 on image attachments"
+    assert_predicate file_asset.archive, :attached?
+  end
+
   def test_packages_pages_into_cbz
     series = Series.create!(canonical_title: "One Piece")
     chapter = Chapter.create!(series: series, chapter_number: "1")

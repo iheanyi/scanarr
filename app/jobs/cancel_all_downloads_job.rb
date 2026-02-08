@@ -13,7 +13,7 @@ class CancelAllDownloadsJob < ApplicationJob
       return
     end
 
-    chapters = series.chapters.where(source: source).includes(releases: { file_asset: :pages })
+    chapters = series.chapters.where(source: source).includes(releases: { file_asset: { pages: { image_attachment: :blob } } })
     cancelled = 0
 
     chapters.find_each do |chapter|

@@ -96,7 +96,12 @@ class SourcesController < ApplicationController
     # Ensure library series exists for the follow button
     series.ensure_library_series!
 
-    flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}. Follow this series to get notified of new chapters!"
+    # Auto-follow for the importing user
+    current_user.user_series_follows.find_or_create_by!(library_series: series.library_series) do |follow|
+      follow.download_policy = current_user.effective_download_policy
+    end
+
+    flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}."
     redirect_to source_series_path(
       source_slug: source_slug(@source),
       series_slug: series.to_param

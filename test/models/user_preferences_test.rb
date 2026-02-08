@@ -2,7 +2,7 @@ require "test_helper"
 
 class UserPreferencesTest < ActiveSupport::TestCase
   setup do
-    @user = User.create!(email: "prefs-test@scanarr.local")
+    @user = User.create!(email: "prefs-test@scanarr.local", username: "prefs_test_user")
   end
 
   def test_effective_reading_style_defaults_to_left_to_right

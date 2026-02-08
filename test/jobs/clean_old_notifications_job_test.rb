@@ -4,7 +4,7 @@ require "test_helper"
 
 class CleanOldNotificationsJobTest < ActiveJob::TestCase
   setup do
-    @user = users(:one)
+    @user = users(:admin)
     @chapter = chapters(:one)
   end
 

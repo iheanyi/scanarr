@@ -36,7 +36,7 @@
             <p class="text-xs text-muted-2"><%= time_ago_in_words(notification.created_at) %> ago</p>
           </div>
           <div class="flex items-center gap-2">
-            <% source = notification.chapter.series.sources.first %>
+            <% source = notification.chapter.series.primary_source %>
             <% if source %>
               <%= link_to source_series_chapter_path(source_slug: source.slug, series_slug: notification.chapter.series.to_param, chapter_identifier: notification.chapter.public_id), class: "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted hover:text-foreground hover:border-border-soft" do %>
                 <%= icon "book-open", class: "h-3 w-3" %>

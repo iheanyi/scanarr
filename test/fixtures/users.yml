@@ -1,8 +1,13 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+admin:
+  email: admin@scanarr.local
+  username: admin
+  password_digest: <%= BCrypt::Password.create("testpassword123") %>
+  api_key: scanarr_test_admin_key_000000000000000000
+  role: 0
 
-# Simple user fixtures - authentication is handled by HTTP Basic Auth
-one:
-  email: reader-one@example.com
-
-two:
-  email: reader-two@example.com
+member:
+  email: member@example.com
+  username: member
+  password_digest: <%= BCrypt::Password.create("testpassword123") %>
+  api_key: scanarr_test_member_key_00000000000000000
+  role: 1

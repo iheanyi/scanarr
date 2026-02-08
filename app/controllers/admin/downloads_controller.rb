@@ -1,5 +1,7 @@
 module Admin
   class DownloadsController < ApplicationController
+    before_action :require_admin
+
     # Custom ordering: downloading first, then queued, then complete, then failed
     STATUS_ORDER = Arel.sql(<<~SQL.squish)
       CASE download_status
@@ -87,7 +89,7 @@ module Admin
 
       if @download.download_status.in?(%w[queued pending downloading])
         @download.archive.purge if @download.archive.attached?
-        @download.pages.each { |page| page.image.purge if page.image.attached? }
+        @download.pages.includes(image_attachment: :blob).each { |page| page.image.purge if page.image.attached? }
         @download.pages.destroy_all
         @download.update!(
           download_status: "cancelled",

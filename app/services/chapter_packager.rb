@@ -7,7 +7,7 @@ class ChapterPackager
   end
 
   def package!
-    pages = @file_asset.pages.order(:position).to_a
+    pages = @file_asset.pages.includes(image_attachment: :blob).order(:position).to_a
     return if pages.empty?
 
     buffer = Zip::OutputStream.write_buffer do |zip|

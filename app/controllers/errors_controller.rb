@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ErrorsController < ApplicationController
-  skip_before_action :authenticate!
+  allow_unauthenticated_access
 
   def not_found
     render "errors/not_found", status: :not_found, layout: "application"

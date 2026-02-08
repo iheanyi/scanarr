@@ -188,9 +188,9 @@ class ChaptersController < ApplicationController
     file_asset = release&.file_asset
 
     if file_asset&.download_status.in?(%w[queued pending downloading])
-      # Purge any partially downloaded files
+      # Purge any partially downloaded files (preload to avoid N+1)
       file_asset.archive.purge if file_asset.archive.attached?
-      file_asset.pages.each { |page| page.image.purge if page.image.attached? }
+      file_asset.pages.includes(image_attachment: :blob).each { |page| page.image.purge if page.image.attached? }
       file_asset.pages.destroy_all
 
       # Reset status to cancelled

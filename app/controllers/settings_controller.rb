@@ -2,10 +2,12 @@
 
 class SettingsController < ApplicationController
   before_action :require_user
+  before_action :require_admin, only: %i[update_source update_site_settings]
 
   def show
     @user = current_user
     @sources = Source.order(:name)
+    @site_settings = SiteSetting.instance if current_user.admin?
   end
 
   def update
@@ -30,6 +32,67 @@ class SettingsController < ApplicationController
     end
   end
 
+  def update_password
+    @user = current_user
+
+    unless @user.authenticate(params[:current_password])
+      respond_to do |format|
+        format.html { redirect_to settings_path, alert: "Current password is incorrect" }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.append("toast-container",
+            UI::ToastComponent.new(message: "Current password is incorrect", variant: :danger))
+        end
+      end
+      return
+    end
+
+    if @user.update(password: params[:new_password], password_confirmation: params[:new_password_confirmation])
+      respond_to do |format|
+        format.html { redirect_to settings_path, notice: "Password updated" }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.append("toast-container",
+            UI::ToastComponent.new(message: "Password updated", variant: :success))
+        end
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to settings_path, alert: @user.errors.full_messages.join(", ") }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.append("toast-container",
+            UI::ToastComponent.new(message: @user.errors.full_messages.join(", "), variant: :danger))
+        end
+      end
+    end
+  end
+
+  def regenerate_api_key
+    current_user.regenerate_api_key!
+
+    respond_to do |format|
+      format.html { redirect_to settings_path, notice: "API key regenerated" }
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.replace("api-key-display", partial: "settings/api_key", locals: { user: current_user }),
+          turbo_stream.append("toast-container",
+            UI::ToastComponent.new(message: "API key regenerated", variant: :success))
+        ]
+      end
+    end
+  end
+
+  def update_site_settings
+    site_settings = SiteSetting.instance
+    site_settings.update!(site_settings_params)
+
+    respond_to do |format|
+      format.html { redirect_to settings_path, notice: "Site settings saved" }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.append("toast-container",
+          UI::ToastComponent.new(message: "Site settings saved", variant: :success))
+      end
+    end
+  end
+
   def update_source
     source = Source.find(params[:source_id])
     source.update!(enabled: params[:enabled] == "1")
@@ -45,6 +108,10 @@ class SettingsController < ApplicationController
   end
 
   private
+
+  def site_settings_params
+    params.require(:site_setting).permit(:registration_enabled)
+  end
 
   def user_preferences_params
     params.require(:user).permit(

@@ -63,5 +63,13 @@ class CalendarController < ApplicationController
       @downloaded_chapter_ids = Set.new
       @unread_chapter_ids = Set.new
     end
+
+    # Pre-compute latest release per chapter to avoid N+1 in view
+    @latest_release_map = {}
+    @chapters_by_date.each_value do |chapters|
+      chapters.each do |chapter|
+        @latest_release_map[chapter.id] = chapter.releases.to_a.max_by(&:created_at)
+      end
+    end
   end
 end

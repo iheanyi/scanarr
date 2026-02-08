@@ -1,13 +1,19 @@
 class User < ApplicationRecord
-  # Simple user model for storing progress/follows
-  # Authentication is handled by HTTP Basic Auth at the controller level
+  has_secure_password validations: false
 
+  has_many :sessions, dependent: :destroy
   has_many :chapter_progresses, dependent: :destroy
   has_many :user_series_follows, dependent: :destroy
   has_many :followed_library_series, through: :user_series_follows, source: :library_series
   has_many :new_chapter_notifications, dependent: :destroy
 
+  enum :role, { admin: 0, member: 1 }, default: :admin
+
   validates :email, presence: true, uniqueness: true
+  validates :username, presence: true, uniqueness: true
+  validates :password, length: { minimum: 8 }, if: -> { password.present? }
+
+  before_save :generate_api_key
 
   # JSONB preferences with typed accessors
   store_accessor :preferences,
@@ -62,5 +68,23 @@ class User < ApplicationRecord
 
   def effective_cleanup_days
     notification_auto_cleanup_days.presence&.to_i
+  end
+
+  def setup_complete?
+    password_digest.present? && username.present?
+  end
+
+  def regenerate_api_key!
+    update!(api_key: self.class.generate_api_key)
+  end
+
+  private
+
+  def generate_api_key
+    self.api_key ||= self.class.generate_api_key
+  end
+
+  def self.generate_api_key
+    "scanarr_#{SecureRandom.hex(24)}"
   end
 end

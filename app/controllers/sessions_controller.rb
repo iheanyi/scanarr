@@ -1,5 +1,5 @@
 class SessionsController < ApplicationController
-  skip_before_action :authenticate!, only: %i[new create]
+  allow_unauthenticated_access only: %i[new create]
   layout "minimal"
 
   def new
@@ -7,10 +7,9 @@ class SessionsController < ApplicationController
   end
 
   def create
-    if valid_credentials?(params[:username], params[:password])
-      session[:authenticated] = true
-      session[:authenticated_at] = Time.current.to_i
-      redirect_to root_path, notice: "Welcome to Scanarr!"
+    if (user = User.authenticate_by(username: params[:username], password: params[:password]))
+      start_new_session_for(user)
+      redirect_to after_authentication_url, notice: "Welcome to Scanarr!"
     else
       flash.now[:alert] = "Invalid username or password"
       render :new, status: :unprocessable_entity
@@ -18,7 +17,7 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    reset_session
+    terminate_session
     redirect_to login_path, notice: "You have been logged out"
   end
 end

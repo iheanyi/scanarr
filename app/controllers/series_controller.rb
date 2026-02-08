@@ -31,10 +31,11 @@ class SeriesController < ApplicationController
                          :id
                        )
 
-    # Pre-compute latest release and stats to avoid N+1 in views
+    # Pre-compute latest release per chapter via SQL to avoid N+1
+    # Uses the already-preloaded releases association for in-memory lookup
     @latest_release_map = {}
     @chapters.each do |chapter|
-      @latest_release_map[chapter.id] = chapter.releases.max_by(&:created_at)
+      @latest_release_map[chapter.id] = chapter.releases.to_a.max_by(&:created_at)
     end
 
     # Pre-compute chapter stats
@@ -124,7 +125,8 @@ class SeriesController < ApplicationController
   def remove_all_downloads
     @series = find_series_by_param!
 
-    chapters = @series.chapters.where(source: @source).includes(releases: :file_asset)
+    chapters = @series.chapters.where(source: @source)
+                       .includes(releases: { file_asset: { pages: { image_attachment: :blob } } })
     removed = 0
 
     chapters.each do |chapter|
@@ -132,7 +134,7 @@ class SeriesController < ApplicationController
         file_asset = release.file_asset
         next unless file_asset
 
-        # Purge all attached files
+        # Purge all attached files (pages/images already preloaded)
         file_asset.archive.purge if file_asset.archive.attached?
         file_asset.pages.each { |page| page.image.purge if page.image.attached? }
         file_asset.pages.destroy_all
@@ -166,7 +168,7 @@ class SeriesController < ApplicationController
       enqueued = 0
       chapters.includes(releases: :file_asset).each do |chapter|
         next if chapter.source_url.blank?
-        latest = chapter.releases.max_by(&:created_at)
+        latest = chapter.releases.to_a.max_by(&:created_at)
         next if latest&.file_asset&.download_status.in?(%w[queued pending downloading complete])
 
         release = chapter.releases.find_or_create_by!(source: @source)
@@ -190,7 +192,7 @@ class SeriesController < ApplicationController
 
     when "remove"
       removed = 0
-      chapters.includes(releases: :file_asset).each do |chapter|
+      chapters.includes(releases: { file_asset: { pages: { image_attachment: :blob } } }).each do |chapter|
         chapter.releases.each do |release|
           file_asset = release.file_asset
           next unless file_asset

@@ -1,0 +1,51 @@
+<div class="space-y-6 max-w-4xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Users",
+    description: "Manage user accounts and roles."
+  ) %>
+
+  <div class="flex justify-end">
+    <%= render UI::ButtonComponent.new(variant: :primary, href: new_admin_user_path) do %>
+      <%= icon "user-plus", class: "h-4 w-4" %>
+      Add User
+    <% end %>
+  </div>
+
+  <div class="rounded-lg border border-border bg-surface overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-surface-2/50">
+          <th class="px-4 py-3 text-left font-medium text-muted">Username</th>
+          <th class="px-4 py-3 text-left font-medium text-muted">Email</th>
+          <th class="px-4 py-3 text-left font-medium text-muted">Role</th>
+          <th class="px-4 py-3 text-left font-medium text-muted">Created</th>
+          <th class="px-4 py-3 text-right font-medium text-muted">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        <% @users.each do |user| %>
+          <tr class="hover:bg-surface-2/30">
+            <td class="px-4 py-3 font-medium text-foreground"><%= user.username %></td>
+            <td class="px-4 py-3 text-muted"><%= user.email %></td>
+            <td class="px-4 py-3">
+              <%= render UI::BadgeComponent.new(
+                label: user.role.capitalize,
+                variant: user.admin? ? :info : :default
+              ) %>
+            </td>
+            <td class="px-4 py-3 text-muted"><%= user.created_at.strftime("%b %d, %Y") %></td>
+            <td class="px-4 py-3 text-right">
+              <% unless user == current_user %>
+                <%= button_to admin_user_path(user), method: :delete,
+                    class: "text-sm text-danger hover:text-danger/80",
+                    data: { turbo_confirm: "Delete #{user.username}?" } do %>
+                  Delete
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -188,22 +188,23 @@ chapter.releases.where(source: source).order(created_at: :desc).first
 
 ### Authentication Pattern
 
-Uses HTTP Basic Auth with auto-created admin user (not Devise sessions):
+Uses Rails 8 built-in authentication: `has_secure_password`, DB-backed `Session` model, `Current` model, `Authentication` concern.
 
 ```ruby
-# In ApplicationController
-def authenticate!
-  return if session[:authenticated]
-  # Falls back to HTTP Basic Auth
-end
+# Authentication concern (included in ApplicationController)
+# - before_action :require_authentication (all controllers by default)
+# - allow_unauthenticated_access (opt-out for login/setup pages)
+# - start_new_session_for(user) / terminate_session
+# - current_user / authenticated?
+# - require_admin (for admin-only controllers)
 
-def current_user
-  return nil unless authenticated?
-  @current_user = User.find_or_create_by!(email: "admin@scanarr.local")
-end
+# Roles: admin (0), member (1) — enum on User model
+# API key auth via X-Api-Key header
+# Auto-login mode: SCANARR_DISABLE_AUTH=true
+# Setup wizard: redirects to /setup if no user has password_digest
 ```
 
-Test requests auto-include Basic Auth via test_helper.rb overrides.
+Test requests use `sign_in_as(user)` / `sign_out` from `SessionTestHelper`.
 
 ### RuboCop Style (rubocop-rails-omakase + extensions)
 

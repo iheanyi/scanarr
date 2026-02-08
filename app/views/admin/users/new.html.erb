@@ -1,0 +1,63 @@
+<div class="space-y-6 max-w-xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Add User",
+    description: "Create a new user account."
+  ) %>
+
+  <div class="rounded-lg border border-border bg-surface p-6">
+    <% if @user.errors.any? %>
+      <div class="mb-6 rounded-lg border border-danger/30 bg-danger-soft p-4">
+        <ul class="space-y-1 text-sm text-danger">
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @user, url: admin_users_path, class: "space-y-4" do |f| %>
+      <div>
+        <%= f.label :username, class: "block text-sm font-medium text-muted" %>
+        <%= f.text_field :username,
+              required: true,
+              class: "mt-1 block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
+      </div>
+
+      <div>
+        <%= f.label :email, class: "block text-sm font-medium text-muted" %>
+        <%= f.text_field :email,
+              required: true,
+              class: "mt-1 block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
+      </div>
+
+      <div>
+        <%= f.label :password, class: "block text-sm font-medium text-muted" %>
+        <%= f.password_field :password,
+              required: true,
+              autocomplete: "new-password",
+              class: "mt-1 block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
+        <p class="mt-1 text-xs text-muted-2">Minimum 8 characters</p>
+      </div>
+
+      <div>
+        <%= f.label :password_confirmation, "Confirm Password", class: "block text-sm font-medium text-muted" %>
+        <%= f.password_field :password_confirmation,
+              required: true,
+              autocomplete: "new-password",
+              class: "mt-1 block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
+      </div>
+
+      <div>
+        <%= f.label :role, class: "block text-sm font-medium text-muted" %>
+        <%= f.select :role, [ [ "Member", "member" ], [ "Admin", "admin" ] ],
+              {},
+              class: "mt-1 block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <%= render UI::ButtonComponent.new(label: "Create User", variant: :primary, type: "submit") %>
+        <%= render UI::ButtonComponent.new(label: "Cancel", variant: :secondary, href: admin_users_path) %>
+      </div>
+    <% end %>
+  </div>
+</div>

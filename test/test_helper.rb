@@ -5,6 +5,8 @@ require "view_component/test_helpers"
 require "components/component_test_case"
 require "vcr"
 require "webmock/minitest"
+require "support/query_counter"
+require "test_helpers/session_test_helper"
 
 VCR.configure do |config|
   config.cassette_library_dir = "test/vcr_cassettes"
@@ -22,40 +24,22 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+    include QueryCounter
   end
 end
 
 module ActionDispatch
   class IntegrationTest
-    # HTTP Basic Auth helper for tests
-    def http_basic_auth_header(username = "scanarr", password = "ilovemanga")
-      { "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(username, password) }
+    include SessionTestHelper
+
+    setup do
+      @test_user = users(:admin)
+      sign_in_as(@test_user)
     end
 
-    # Override request methods to automatically include auth
-    def get(path, **options)
-      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
-      super
-    end
-
-    def post(path, **options)
-      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
-      super
-    end
-
-    def patch(path, **options)
-      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
-      super
-    end
-
-    def delete(path, **options)
-      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
-      super
-    end
-
-    def follow_redirect!(**options)
-      options[:headers] = http_basic_auth_header.merge(options[:headers] || {})
-      super
+    def api_key_header(user = nil)
+      user ||= @test_user
+      { "X-Api-Key" => user.api_key }
     end
   end
 end
