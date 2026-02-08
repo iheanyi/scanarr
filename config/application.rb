@@ -27,6 +27,11 @@ module Scanarr
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # Use vips for image variant processing (faster, lower memory than ImageMagick).
+    # Requires libvips: `brew install vips` on macOS, `apt install libvips-dev` on Linux.
+    # Falls back gracefully if unavailable — original images are served instead.
+    config.active_storage.variant_processor = :vips
+
     # Enable full-stack Rails for Hotwire/Stimulus UI.
     config.api_only = false
 

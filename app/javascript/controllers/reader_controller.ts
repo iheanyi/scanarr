@@ -293,12 +293,29 @@ export default class extends Controller {
   private syncState() {
     this.updateProgressUI()
     this.scheduleProgressSave()
+    this.preloadAhead()
     this.checkEndOfChapter()
     // Update URL last - it can fail with credentials in URL (browser security)
     try {
       this.updateURL()
     } catch {
       // Ignore SecurityError when URL contains credentials
+    }
+  }
+
+  // Preload upcoming images so page flips feel instant.
+  // Switches the next few lazy images to eager loading, triggering
+  // the browser to start downloading them before they're scrolled into view.
+  private preloadAhead() {
+    const PRELOAD_COUNT = 5
+    const start = this.currentIndex + 1
+    const end = Math.min(start + PRELOAD_COUNT, this.pageTargets.length)
+
+    for (let i = start; i < end; i++) {
+      const img = this.pageTargets[i]?.querySelector("img") as HTMLImageElement | null
+      if (img && img.loading === "lazy") {
+        img.loading = "eager"
+      }
     }
   }
 

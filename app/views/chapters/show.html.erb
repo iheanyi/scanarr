@@ -229,7 +229,7 @@
                data-action="click->reader#openLightboxForPage"
                class="<%= page_class %>">
         <% if page.image.attached? %>
-          <%= image_tag url_for(page.image), alt: "Page #{page.position}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
+          <%= image_tag url_for(page.display_image), alt: "Page #{page.position}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
         <% else %>
           <p class="text-sm text-muted text-pretty">Image unavailable.</p>
         <% end %>

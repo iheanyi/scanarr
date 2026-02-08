@@ -225,6 +225,9 @@ class DownloadChapterJob < ApplicationJob
         content_type: content_type
       )
 
+      # Pre-process the WebP display variant so it's ready before the user opens the chapter
+      page.preprocess_display_variant!
+
       @file_asset.update!(pages_downloaded: position)
 
       # Broadcast to admin downloads on every page for real-time progress

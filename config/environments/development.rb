@@ -29,6 +29,9 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
+  # Serve files directly (proxy) instead of redirecting, saving an HTTP roundtrip per image.
+  config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
   # Don't actually send emails in development
   config.action_mailer.delivery_method = :test
   config.action_mailer.perform_deliveries = false
