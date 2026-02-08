@@ -1,3 +1,8 @@
+<% content_for :head do %>
+  <meta name="turbo-refresh-method" content="morph">
+  <meta name="turbo-refresh-scroll" content="preserve">
+<% end %>
+
 <div class="space-y-6">
   <nav aria-label="Breadcrumb" class="text-sm text-muted">
     <%= link_to @source.name || @source.key, source_series_index_path(source_slug: @source.slug), class: "hover:text-foreground", data: { turbo_preload: "" } %>
