@@ -200,6 +200,36 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     assert_not @source.rate_limited?
   end
 
+  test "clears consecutive failures on successful check" do
+    @series_source.update!(
+      consecutive_failures: 3,
+      last_check_error: "previous error",
+      last_check_error_at: 1.hour.ago
+    )
+
+    with_fake_adapter([]) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @series_source.reload
+
+    assert_equal 0, @series_source.consecutive_failures
+    assert_nil @series_source.last_check_error
+    assert_nil @series_source.last_check_error_at
+  end
+
+  test "clears rate limit on successful check" do
+    @source.update!(rate_limited_until: 1.minute.ago)
+
+    with_fake_adapter([]) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    @source.reload
+
+    assert_nil @source.rate_limited_until
+  end
+
   test "records check failure on series_source when adapter raises" do
     with_raising_adapter(RuntimeError.new("some error")) do
       CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
