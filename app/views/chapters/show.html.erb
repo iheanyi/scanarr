@@ -23,9 +23,9 @@
       class="space-y-6">
   <%# Breadcrumbs %>
   <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
-    <%= link_to @source.name, source_series_index_path(source_slug: source_slug(@source)), class: "hover:text-foreground" %>
+    <%= link_to @source.name, source_series_index_path(source_slug: source_slug(@source)), class: "hover:text-foreground", data: { turbo_preload: "" } %>
     <span class="text-muted-2">/</span>
-    <%= link_to @series.canonical_title, source_series_path(source_slug: source_slug(@source), series_slug: @series.to_param), class: "hover:text-foreground truncate max-w-xs" %>
+    <%= link_to @series.canonical_title, source_series_path(source_slug: source_slug(@source), series_slug: @series.to_param), class: "hover:text-foreground truncate max-w-xs", data: { turbo_preload: "" } %>
     <span class="text-muted-2">/</span>
     <span class="text-foreground">Ch. <%= @chapter.chapter_number %></span>
   </nav>
@@ -85,7 +85,8 @@
           source_slug: source_slug(@source),
           series_slug: @series.to_param,
           chapter_identifier: chapter_identifier(@previous_chapter)
-        )
+        ),
+        data: { turbo_preload: "" }
       ) do %>
         Previous Chapter
       <% end %>
@@ -98,7 +99,8 @@
           source_slug: source_slug(@source),
           series_slug: @series.to_param,
           chapter_identifier: chapter_identifier(@next_chapter)
-        )
+        ),
+        data: { turbo_preload: "" }
       ) do %>
         Next Chapter
       <% end %>
@@ -133,7 +135,8 @@
                   ),
                   method: :get,
                   local: true,
-                  id: "reading-style-form" do |form| %>
+                  id: "reading-style-form",
+                  data: { turbo_submits_with: "Updating..." } do |form| %>
       <%= render UI::AutoSelectComponent.new(
         form: form,
         method: :reading_style,

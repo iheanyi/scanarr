@@ -7,7 +7,7 @@
      {
        class: "#{base} #{is_active ? active : inactive}",
        aria: (is_active ? { current: "page" } : nil),
-       data: { action: "click->drawer#close" }
+       data: { action: "click->drawer#close", turbo_preload: "" }
      }.compact
    end %>
 
@@ -95,7 +95,7 @@
           <div class="flex items-center justify-between border-b border-border px-4 py-2">
             <span class="text-sm font-semibold text-foreground">Notifications</span>
             <% if unread_notification_count > 0 %>
-              <%= button_to mark_all_read_notifications_path, method: :post, class: "text-xs text-success hover:text-success" do %>
+              <%= button_to mark_all_read_notifications_path, method: :post, class: "text-xs text-success hover:text-success", data: { turbo_submits_with: "Marking..." } do %>
                 Mark all read
               <% end %>
             <% end %>
@@ -108,7 +108,7 @@
                     <p class="text-sm text-foreground truncate"><%= notification.chapter.series.canonical_title %></p>
                     <p class="text-xs text-muted">Chapter <%= notification.chapter.chapter_number %></p>
                   </div>
-                  <%= button_to mark_read_notification_path(notification), method: :post, class: "shrink-0 text-muted hover:text-foreground" do %>
+                  <%= button_to mark_read_notification_path(notification), method: :post, class: "shrink-0 text-muted hover:text-foreground", data: { turbo_submits_with: "..." } do %>
                     <%= icon "check", class: "h-4 w-4" %>
                   <% end %>
                 </div>
@@ -125,7 +125,7 @@
         </div>
       </div>
 
-      <%= button_to logout_path, method: :delete, class: "inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-muted hover:text-foreground", title: "Logout", aria: { label: "Logout" } do %>
+      <%= button_to logout_path, method: :delete, class: "inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-muted hover:text-foreground", title: "Logout", aria: { label: "Logout" }, data: { turbo_confirm: "Log out?" } do %>
         <%= icon "log-out", class: "h-4 w-4", aria: { hidden: true } %>
       <% end %>
     </div>

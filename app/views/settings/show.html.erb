@@ -11,7 +11,7 @@
       <p class="text-sm text-muted mt-1">Set your default reading style and language.</p>
     </div>
 
-    <%= form_with model: @user, url: settings_path, method: :patch, class: "space-y-4" do |f| %>
+    <%= form_with model: @user, url: settings_path, method: :patch, class: "space-y-4", data: { turbo_submits_with: "Saving..." } do |f| %>
       <%= render UI::AutoSelectComponent.new(
         form: f,
         method: :default_reading_style,
@@ -43,7 +43,7 @@
       <p class="text-sm text-muted mt-1">Default settings applied to new series follows.</p>
     </div>
 
-    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
       <%= render UI::AutoSelectComponent.new(
         form: f,
         method: :default_download_policy,
@@ -54,7 +54,7 @@
       ) %>
     <% end %>
 
-    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
       <% interval_options = UserSeriesFollow::INTERVAL_OPTIONS.reject { |_, v| v.nil? } %>
       <%= render UI::AutoSelectComponent.new(
         form: f,
@@ -74,7 +74,7 @@
       <p class="text-sm text-muted mt-1">Control how and when you receive notifications.</p>
     </div>
 
-    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
       <%= render UI::ToggleSwitchComponent.new(
         form: f,
         method: :notifications_enabled,
@@ -86,7 +86,7 @@
       ) %>
     <% end %>
 
-    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
       <%= render UI::AutoSelectComponent.new(
         form: f,
         method: :notification_auto_cleanup_days,
@@ -120,7 +120,7 @@
             <% end %>
           </div>
 
-          <%= form_with model: source, url: settings_source_path(source_id: source.id), method: :patch do |f| %>
+          <%= form_with model: source, url: settings_source_path(source_id: source.id), method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
             <%= render UI::ToggleSwitchComponent.new(
               form: f,
               method: :enabled,

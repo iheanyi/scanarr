@@ -100,7 +100,8 @@
                     <% if backup.status == "complete" && backup.file_exists? %>
                       <%= link_to admin_backup_download_path(backup),
                                   class: "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted hover:text-foreground hover:bg-surface-2",
-                                  title: "Download" do %>
+                                  title: "Download",
+                                  data: { turbo: false } do %>
                         <%= icon "download", class: "h-3.5 w-3.5" %>
                       <% end %>
                       <%= button_to admin_backup_verify_path(backup), method: :post,

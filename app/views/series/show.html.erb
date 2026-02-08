@@ -1,6 +1,6 @@
 <div class="space-y-6">
   <nav aria-label="Breadcrumb" class="text-sm text-muted">
-    <%= link_to @source.name || @source.key, source_series_index_path(source_slug: @source.slug), class: "hover:text-foreground" %>
+    <%= link_to @source.name || @source.key, source_series_index_path(source_slug: @source.slug), class: "hover:text-foreground", data: { turbo_preload: "" } %>
     <span class="text-muted-2">/</span>
     <span class="text-foreground"><%= @series.canonical_title %></span>
   </nav>
@@ -117,7 +117,8 @@
         <%= form_with model: @series,
                       url: source_series_update_path(source_slug: @source.slug, series_slug: @series.to_param),
                       method: :patch,
-                      class: "flex items-center gap-2" do |form| %>
+                      class: "flex items-center gap-2",
+                      data: { turbo_submits_with: "Updating..." } do |form| %>
           <%= icon "book-open", class: "h-3.5 w-3.5 text-muted-2" %>
           <%= render UI::AutoSelectComponent.new(
             form: form,
@@ -174,6 +175,7 @@
                           data: { action: "submit->loading-button#submit" } do %>
               <button type="submit"
                       data-loading-button-target="button"
+                      data-turbo-submits-with="Queuing..."
                       <%= "disabled" if @downloadable_count == 0 %>
                       class="<%= @downloadable_count > 0 ? "inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong transition-opacity" : "inline-flex items-center gap-1.5 rounded-md bg-surface-2 px-3 py-1.5 text-sm font-semibold text-muted cursor-not-allowed" %>">
                 <svg data-loading-button-target="spinner" xmlns="http://www.w3.org/2000/svg" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -211,7 +213,7 @@
       </ul>
 
       <%# Bulk action floating bar %>
-      <div data-bulk-select-target="actionBar" class="hidden sticky bottom-4 z-10">
+      <div data-bulk-select-target="actionBar" data-turbo-temporary class="hidden sticky bottom-4 z-10">
         <div class="mx-auto max-w-2xl rounded-lg border border-border bg-surface shadow-lg p-3">
           <%= form_with url: source_series_bulk_actions_path(source_slug: @source.slug, series_slug: @series.to_param), method: :post do |f| %>
             <input type="hidden" name="chapter_ids" value="" data-bulk-select-target="chapterIds">

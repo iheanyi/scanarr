@@ -82,7 +82,7 @@
         <% series_source = series.primary_series_source %>
         <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
 
-        <%= link_to series_path, class: "group block" do %>
+        <%= link_to series_path, class: "group block", data: { turbo_preload: "" } do %>
           <%= render UI::SeriesCoverComponent.new(
             url: series.cover_image_url,
             alt: series.canonical_title,

@@ -22,7 +22,7 @@
                     source_series_chapter_path(
                       source_slug: source.slug,
                       series_slug: series.to_param,
-                      chapter_identifier: chapter.chapter_number
+                      chapter_identifier: chapter_identifier(chapter)
                     ),
                     class: "text-base font-semibold #{is_read ? "text-muted" : "text-accent"}" %>
         <%# Single-badge priority: active download > failed > reading progress > download complete %>
@@ -60,7 +60,7 @@
         <%= button_to source_series_chapter_remove_download_path(
                         source_slug: source.slug,
                         series_slug: series.to_param,
-                        chapter_identifier: chapter.chapter_number
+                        chapter_identifier: chapter_identifier(chapter)
                       ),
                       method: :delete,
                       class: "inline-flex items-center rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft",
@@ -73,10 +73,11 @@
         <%= button_to source_series_chapter_cancel_download_path(
                         source_slug: source.slug,
                         series_slug: series.to_param,
-                        chapter_identifier: chapter.chapter_number
+                        chapter_identifier: chapter_identifier(chapter)
                       ),
                       method: :post,
-                      class: "inline-flex items-center rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft" do %>
+                      class: "inline-flex items-center rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft",
+                      data: { turbo_confirm: "Cancel this download?" } do %>
           <%= icon "x", class: "h-4 w-4 mr-1" %>
           Cancel
         <% end %>
@@ -89,7 +90,7 @@
                         source_series_chapter_download_path(
                           source_slug: source.slug,
                           series_slug: series.to_param,
-                          chapter_identifier: chapter.chapter_number
+                          chapter_identifier: chapter_identifier(chapter)
                         ),
                         method: :post,
                         class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent",

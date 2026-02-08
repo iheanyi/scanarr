@@ -2,7 +2,7 @@ class ChaptersController < ApplicationController
   before_action :load_context, only: %i[show enqueue_download update_progress remove_download cancel_download]
   # Authentication handled by ApplicationController
 
-  helper_method :source_slug, :chapter_identifier
+  helper_method :source_slug
 
   def show
     @release = latest_release
@@ -288,10 +288,6 @@ class ChaptersController < ApplicationController
     else
       @initial_page_index = 0
     end
-  end
-
-  def chapter_identifier(chapter)
-    chapter.chapter_number.presence || chapter.public_id
   end
 
   def find_source

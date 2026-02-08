@@ -82,7 +82,8 @@
                     <h3 class="font-medium flex items-center gap-2">
                       <%= link_to chapter.series.canonical_title,
                                   source_series_path(chapter.source.slug, chapter.series.to_param),
-                                  class: "hover:text-accent" %>
+                                  class: "hover:text-accent",
+                                  data: { turbo_preload: "" } %>
                       <% if @unread_chapter_ids.include?(chapter.id) %>
                         <span class="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-accent">New</span>
                       <% end %>
@@ -90,7 +91,8 @@
                     <p class="text-sm text-muted">
                       <%= link_to "Chapter #{chapter.chapter_number}",
                                   source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number),
-                                  class: "hover:text-accent" %>
+                                  class: "hover:text-accent",
+                                  data: { turbo_preload: "" } %>
                       <% if chapter.title.present? && chapter.title != "Chapter #{chapter.chapter_number}" %>
                         - <%= chapter.title %>
                       <% end %>
@@ -125,7 +127,8 @@
                   <%= render UI::ButtonComponent.new(
                     variant: :primary,
                     size: :sm,
-                    href: source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number)
+                    href: source_series_chapter_path(chapter.source.slug, chapter.series.to_param, chapter.chapter_number),
+                    data: { turbo_preload: "" }
                   ) do %>
                     Read
                   <% end %>

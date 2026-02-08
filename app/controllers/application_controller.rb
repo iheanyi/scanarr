@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate!
 
-  helper_method :current_user, :user_signed_in?, :authenticated?, :current_notifications, :unread_notification_count
+  helper_method :current_user, :user_signed_in?, :authenticated?, :current_notifications, :unread_notification_count, :chapter_identifier
 
   private
 
@@ -86,5 +86,9 @@ class ApplicationController < ActionController::Base
 
   def unread_notification_count
     @unread_notification_count ||= current_user.new_chapter_notifications.unread.count
+  end
+
+  def chapter_identifier(chapter)
+    chapter.chapter_number.presence || chapter.public_id
   end
 end

@@ -6,7 +6,7 @@
   <%= render UI::PageHeaderComponent.new(title: "Notifications") do |header| %>
     <% if @notifications.any? { |n| !n.read? } %>
       <% header.with_actions do %>
-        <%= form_with url: mark_all_read_notifications_path, method: :post do %>
+        <%= form_with url: mark_all_read_notifications_path, method: :post, data: { turbo_submits_with: "Marking..." } do %>
           <%= render UI::ButtonComponent.new(variant: :ghost, size: :sm, type: "submit") do %>
             <%= icon "check", class: "h-4 w-4" %>
             Mark all as read
@@ -40,7 +40,7 @@
               <% end %>
             <% end %>
             <% unless notification.read? %>
-              <%= button_to mark_read_notification_path(notification), method: :post, class: "inline-flex items-center rounded-md border border-border p-1 text-muted hover:text-foreground hover:border-border-soft" do %>
+              <%= button_to mark_read_notification_path(notification), method: :post, class: "inline-flex items-center rounded-md border border-border p-1 text-muted hover:text-foreground hover:border-border-soft", data: { turbo_submits_with: "..." } do %>
                 <%= icon "check", class: "h-4 w-4" %>
               <% end %>
             <% end %>
