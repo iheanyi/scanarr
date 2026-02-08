@@ -29,5 +29,9 @@ module Scanarr
 
     # Enable full-stack Rails for Hotwire/Stimulus UI.
     config.api_only = false
+
+    # Use our own controller for error pages (404, 422, 500)
+    # so Turbo Drive gets proper HTML responses instead of "invalid response"
+    config.exceptions_app = routes
   end
 end

@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+  rescue_from ActionController::RoutingError, with: :render_not_found
 
   before_action :authenticate!
 
@@ -12,7 +13,27 @@ class ApplicationController < ActionController::Base
   def render_not_found
     respond_to do |format|
       format.html { render "errors/not_found", status: :not_found, layout: "application" }
+      format.turbo_stream { render "errors/not_found", status: :not_found, layout: "application", content_type: "text/html" }
       format.json { render json: { error: "Not found" }, status: :not_found }
+      format.any { render "errors/not_found", status: :not_found, layout: "application", content_type: "text/html" }
+    end
+  end
+
+  def render_unprocessable
+    respond_to do |format|
+      format.html { render "errors/unprocessable_entity", status: :unprocessable_entity, layout: "application" }
+      format.turbo_stream { render "errors/unprocessable_entity", status: :unprocessable_entity, layout: "application", content_type: "text/html" }
+      format.json { render json: { error: "Unprocessable request" }, status: :unprocessable_entity }
+      format.any { render "errors/unprocessable_entity", status: :unprocessable_entity, layout: "application", content_type: "text/html" }
+    end
+  end
+
+  def render_internal_error
+    respond_to do |format|
+      format.html { render "errors/internal_server_error", status: :internal_server_error, layout: "application" }
+      format.turbo_stream { render "errors/internal_server_error", status: :internal_server_error, layout: "application", content_type: "text/html" }
+      format.json { render json: { error: "Internal server error" }, status: :internal_server_error }
+      format.any { render "errors/internal_server_error", status: :internal_server_error, layout: "application", content_type: "text/html" }
     end
   end
 

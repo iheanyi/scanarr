@@ -89,4 +89,9 @@ Rails.application.routes.draw do
 
   # Mission Control for SolidQueue job monitoring
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"
+
+  # Error pages (used by config.exceptions_app = routes)
+  match "/404", to: "errors#not_found", via: :all
+  match "/422", to: "errors#unprocessable_entity", via: :all
+  match "/500", to: "errors#internal_server_error", via: :all
 end
