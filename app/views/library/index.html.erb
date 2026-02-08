@@ -6,52 +6,28 @@
 
   <!-- Filters -->
   <div class="flex flex-wrap items-center gap-3">
-    <div class="flex overflow-hidden rounded-lg border border-border bg-surface-2/60 text-sm">
-      <%= link_to "All",
-          library_path,
-          class: "px-3 py-1.5 transition-colors #{params[:status].blank? ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-      <%= link_to "Downloaded",
-          library_path(status: "downloaded", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'downloaded' ? 'bg-success-soft text-success' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-      <%= link_to "In Progress",
-          library_path(status: "in_progress", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'in_progress' ? 'bg-warning-soft text-warning' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-      <%= link_to "Not Downloaded",
-          library_path(status: "not_downloaded", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'not_downloaded' ? 'bg-surface-2 text-muted' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-      <%= link_to library_path(status: "following", q: params[:q]),
-          class: "px-3 py-1.5 border-l border-border transition-colors #{params[:status] == 'following' ? 'bg-accent-soft text-accent' : 'text-muted hover:text-foreground hover:bg-surface-2'}" do %>
-        <%= icon "heart", class: "inline h-3 w-3 mr-0.5" %>
-        Following
-      <% end %>
-    </div>
+    <%= render UI::FilterTabsComponent.new(items: [
+      { label: "All", href: library_path, active: params[:status].blank? },
+      { label: "Downloaded", href: library_path(status: "downloaded", q: params[:q]), active: params[:status] == "downloaded", variant: :success },
+      { label: "In Progress", href: library_path(status: "in_progress", q: params[:q]), active: params[:status] == "in_progress", variant: :warning },
+      { label: "Not Downloaded", href: library_path(status: "not_downloaded", q: params[:q]), active: params[:status] == "not_downloaded" },
+      { label: "Following", href: library_path(status: "following", q: params[:q]), active: params[:status] == "following", variant: :accent, icon: "eye" }
+    ]) %>
 
     <%= form_with url: library_path, method: :get, class: "flex-1 max-w-xs", data: { turbo_frame: "_top" } do |f| %>
       <%= hidden_field_tag :status, params[:status] if params[:status].present? %>
-      <div class="relative">
-        <%= icon "search", class: "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-2" %>
-        <%= f.search_field :q,
-            value: params[:q],
-            placeholder: "Search library...",
-            class: "w-full rounded-lg border border-border bg-surface-2 py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent" %>
-      </div>
+      <%= render UI::SearchInputComponent.new(form: f, name: :q, value: params[:q], placeholder: "Search library...") %>
     <% end %>
 
     <% if params[:status] == "following" %>
       <div class="flex items-center gap-2 ml-auto">
         <span class="text-xs text-muted-2">Sort:</span>
-        <div class="flex overflow-hidden rounded-lg border border-border text-xs">
-          <% sort_by = params[:sort_by].presence || "recently_updated" %>
-          <%= link_to "Recent",
-              library_path(status: "following", q: params[:q], sort_by: "recently_updated"),
-              class: "px-2.5 py-1 transition-colors #{sort_by == 'recently_updated' ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-          <%= link_to "A-Z",
-              library_path(status: "following", q: params[:q], sort_by: "alphabetical"),
-              class: "px-2.5 py-1 border-l border-border transition-colors #{sort_by == 'alphabetical' ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-          <%= link_to "Unread",
-              library_path(status: "following", q: params[:q], sort_by: "most_unread"),
-              class: "px-2.5 py-1 border-l border-border transition-colors #{sort_by == 'most_unread' ? 'bg-surface-2 text-foreground' : 'text-muted hover:text-foreground hover:bg-surface-2'}" %>
-        </div>
+        <% sort_by = params[:sort_by].presence || "recently_updated" %>
+        <%= render UI::FilterTabsComponent.new(size: :sm, items: [
+          { label: "Recent", href: library_path(status: "following", q: params[:q], sort_by: "recently_updated"), active: sort_by == "recently_updated" },
+          { label: "A-Z", href: library_path(status: "following", q: params[:q], sort_by: "alphabetical"), active: sort_by == "alphabetical" },
+          { label: "Unread", href: library_path(status: "following", q: params[:q], sort_by: "most_unread"), active: sort_by == "most_unread" }
+        ]) %>
       </div>
     <% end %>
   </div>
@@ -111,9 +87,13 @@
                       </span>
                     <% end %>
                   </div>
-                  <div class="mt-1 h-1 overflow-hidden rounded-full bg-border">
-                    <div class="h-full rounded-full <%= progress[:downloaded] == progress[:total] ? "bg-success" : "bg-info" %>"
-                         style="width: <%= (progress[:downloaded].to_f / progress[:total] * 100).round %>%"></div>
+                  <div class="mt-1">
+                    <%= render UI::ProgressBarComponent.new(
+                      value: progress[:downloaded],
+                      max: progress[:total],
+                      color: progress[:downloaded] == progress[:total] ? :success : :info,
+                      size: :xs
+                    ) %>
                   </div>
                 </div>
               <% end %>
@@ -126,7 +106,7 @@
                 <% end %>
                 <% if @followed_library_series_ids.include?(series.library_series_id) %>
                   <span class="rounded bg-accent/80 px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground backdrop-blur-sm" title="Following">
-                    <%= icon "heart", class: "inline h-3 w-3" %>
+                    <%= icon "eye", class: "inline h-3 w-3" %>
                   </span>
                 <% end %>
                 <% if source %>
