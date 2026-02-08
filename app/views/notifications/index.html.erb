@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-preview">
+<% end %>
+
 <div class="space-y-6">
   <% if user_signed_in? %>
     <%= turbo_stream_from current_user, :notification_items %>

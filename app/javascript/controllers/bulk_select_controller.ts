@@ -11,13 +11,50 @@ export default class extends Controller {
   declare chapterIdsTarget: HTMLInputElement
   declare actionNameTarget: HTMLInputElement
 
-  toggle() {
+  private lastCheckedIndex: number | null = null
+  private shiftHeld = false
+
+  connect() {
+    this.captureShift = this.captureShift.bind(this)
+    document.addEventListener("mousedown", this.captureShift as EventListener)
+  }
+
+  disconnect() {
+    document.removeEventListener("mousedown", this.captureShift as EventListener)
+  }
+
+  private captureShift(event: MouseEvent) {
+    this.shiftHeld = event.shiftKey
+  }
+
+  toggle(event: Event) {
+    const target =
+      (event.target as HTMLElement).closest("input[type='checkbox']") as HTMLInputElement |
+      null || (event.currentTarget as HTMLInputElement)
+    const visible = this.visibleCheckboxes()
+    const currentIndex = visible.indexOf(target)
+
+    if (this.shiftHeld && this.lastCheckedIndex !== null && currentIndex !== -1) {
+      const start = Math.min(this.lastCheckedIndex, currentIndex)
+      const end = Math.max(this.lastCheckedIndex, currentIndex)
+      const checked = target.checked
+
+      for (let i = start; i <= end; i++) {
+        visible[i].checked = checked
+      }
+    }
+
+    if (currentIndex !== -1) {
+      this.lastCheckedIndex = currentIndex
+    }
+
     this.updateUI()
   }
 
   toggleAll() {
     const checked = this.hasSelectAllTarget && this.selectAllTarget.checked
     this.visibleCheckboxes().forEach((cb) => (cb.checked = checked))
+    this.lastCheckedIndex = null
     this.updateUI()
   }
 

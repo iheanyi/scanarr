@@ -125,11 +125,22 @@ class ChaptersController < ApplicationController
       )
     end
 
-    redirect_to source_series_chapter_path(
-      source_slug: source_slug(@source),
-      series_slug: @series.to_param,
-      chapter_identifier: chapter_identifier(@chapter)
-    )
+    respond_to do |format|
+      format.html do
+        redirect_to source_series_chapter_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param,
+          chapter_identifier: chapter_identifier(@chapter)
+        )
+      end
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          dom_id(@chapter),
+          partial: "series/chapter_row",
+          locals: { chapter: @chapter.reload, source: @source, series: @series, progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil }
+        )
+      end
+    end
   end
 
   def remove_download
@@ -149,10 +160,27 @@ class ChaptersController < ApplicationController
       flash[:alert] = "No download found to remove"
     end
 
-    redirect_to source_series_path(
-      source_slug: source_slug(@source),
-      series_slug: @series.to_param
-    )
+    respond_to do |format|
+      format.html do
+        redirect_to source_series_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param
+        )
+      end
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.replace(
+            dom_id(@chapter),
+            partial: "series/chapter_row",
+            locals: { chapter: @chapter.reload, source: @source, series: @series, progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil }
+          ),
+          turbo_stream.append(
+            "toast-container",
+            UI::ToastComponent.new(message: flash[:notice] || flash[:alert], variant: flash[:notice] ? :success : :danger)
+          )
+        ]
+      end
+    end
   end
 
   def cancel_download
@@ -177,10 +205,27 @@ class ChaptersController < ApplicationController
       flash[:alert] = "No active download to cancel"
     end
 
-    redirect_to source_series_path(
-      source_slug: source_slug(@source),
-      series_slug: @series.to_param
-    )
+    respond_to do |format|
+      format.html do
+        redirect_to source_series_path(
+          source_slug: source_slug(@source),
+          series_slug: @series.to_param
+        )
+      end
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.replace(
+            dom_id(@chapter),
+            partial: "series/chapter_row",
+            locals: { chapter: @chapter.reload, source: @source, series: @series, progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil }
+          ),
+          turbo_stream.append(
+            "toast-container",
+            UI::ToastComponent.new(message: flash[:notice] || flash[:alert], variant: flash[:notice] ? :success : :warning)
+          )
+        ]
+      end
+    end
   end
 
   def update_progress

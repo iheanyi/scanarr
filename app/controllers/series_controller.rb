@@ -92,8 +92,18 @@ class SeriesController < ApplicationController
     # Fan out downloads via background job
     DownloadAllJob.perform_later(@series.id, @source.id)
 
-    flash[:notice] = "Queuing downloads in background..."
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    respond_to do |format|
+      format.html do
+        flash[:notice] = "Queuing downloads in background..."
+        redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+      end
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.append(
+          "toast-container",
+          UI::ToastComponent.new(message: "Queuing downloads in background...", variant: :success)
+        )
+      end
+    end
   end
 
   def refresh_cover

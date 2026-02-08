@@ -206,7 +206,8 @@
           <input type="text"
                  placeholder="Filter chapters by number or title…"
                  data-chapter-filter-target="input"
-                 data-action="input->chapter-filter#filter"
+                 data-action="input->chapter-filter#filter:throttled"
+                 data-throttled-wait="200"
                  class="w-full rounded-lg border border-border bg-surface-2 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
         </div>
         <span data-chapter-filter-target="count" class="shrink-0 text-xs text-muted-2">

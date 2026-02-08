@@ -45,3 +45,24 @@ application.register("bulk-select", BulkSelectController)
 
 import LazyFrameController from "./lazy_frame_controller"
 application.register("lazy-frame", LazyFrameController)
+
+// ─── Custom Action Options ──────────────────────────────────────────────────
+// Inline replacements for stimulus-fx. Uses Stimulus's first-party
+// registerActionOption API -- no external dependency needed.
+
+// :throttled -- limits how often an action fires.
+// Usage: data-action="input->chapter-filter#filter:throttled"
+// Set interval: data-throttled-wait="300" (default 300ms)
+const throttleTimers = new WeakMap<Element, number>()
+application.registerActionOption("throttled", ({ element }: { element: Element }) => {
+  const wait = parseInt((element as HTMLElement).dataset.throttledWait || "300")
+  if (throttleTimers.has(element)) return false
+  throttleTimers.set(element, window.setTimeout(() => throttleTimers.delete(element), wait))
+  return true
+})
+
+// :whenOutside -- fires only when event target is outside the controller element.
+// Usage: data-action="click@window->dropdown#close:whenOutside"
+application.registerActionOption("whenOutside", ({ event, element }: { event: Event; element: Element }) => {
+  return !element.contains(event.target as Node)
+})
