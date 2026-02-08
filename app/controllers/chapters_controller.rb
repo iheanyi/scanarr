@@ -137,7 +137,7 @@ class ChaptersController < ApplicationController
         render turbo_stream: turbo_stream.replace(
           dom_id(@chapter),
           partial: "series/chapter_row",
-          locals: { chapter: @chapter.reload, source: @source, series: @series, progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil }
+          locals: chapter_row_locals
         )
       end
     end
@@ -172,7 +172,7 @@ class ChaptersController < ApplicationController
           turbo_stream.replace(
             dom_id(@chapter),
             partial: "series/chapter_row",
-            locals: { chapter: @chapter.reload, source: @source, series: @series, progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil }
+            locals: chapter_row_locals
           ),
           turbo_stream.append(
             "toast-container",
@@ -217,7 +217,7 @@ class ChaptersController < ApplicationController
           turbo_stream.replace(
             dom_id(@chapter),
             partial: "series/chapter_row",
-            locals: { chapter: @chapter.reload, source: @source, series: @series, progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil }
+            locals: chapter_row_locals
           ),
           turbo_stream.append(
             "toast-container",
@@ -345,6 +345,18 @@ class ChaptersController < ApplicationController
 
   def source_slug(source)
     source.slug
+  end
+
+  def chapter_row_locals
+    @chapter.reload
+    latest_release = @chapter.releases.includes(:file_asset).order(created_at: :desc).first
+    {
+      chapter: @chapter,
+      source: @source,
+      series: @series,
+      progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil,
+      latest_release: latest_release
+    }
   end
 
   def broadcast_admin_download(file_asset)

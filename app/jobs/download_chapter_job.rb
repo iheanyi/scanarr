@@ -281,12 +281,14 @@ class DownloadChapterJob < ApplicationJob
 
   def broadcast_chapter_update(chapter, source)
     series = chapter.series
+    chapter.reload
+    latest_release = chapter.releases.includes(:file_asset).order(created_at: :desc).first
     # Broadcast to series page
     Turbo::StreamsChannel.broadcast_replace_to(
       [ series, :downloads ],
       target: ActionView::RecordIdentifier.dom_id(chapter),
       partial: "series/chapter_row",
-      locals: { chapter: chapter.reload, source: source, series: series, progress: nil }
+      locals: { chapter: chapter, source: source, series: series, progress: nil, latest_release: latest_release }
     )
 
     # Broadcast to admin downloads page

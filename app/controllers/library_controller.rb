@@ -58,39 +58,36 @@ class LibraryController < ApplicationController
         .group(:series_id)
         .maximum(:last_checked_at)
     elsif params[:status].present?
-      # Status filtering requires download progress data
-      # Load with full association chain for status filtering
-      all_series = base_scope.includes(chapters: { releases: :file_asset }).to_a
-
+      # Status filtering via SQL subqueries (avoids loading all series into memory)
       case params[:status]
       when "downloaded"
-        all_series = all_series.select do |s|
-          progress = s.download_progress
-          progress[:downloaded] > 0 && progress[:downloaded] == progress[:total]
-        end
+        downloaded_ids = FileAsset.where(download_status: "complete")
+                                  .joins(release: { chapter: :series })
+                                  .select("series.id")
+                                  .distinct
+        base_scope = base_scope.where(id: downloaded_ids)
       when "in_progress"
-        all_series = all_series.select do |s|
-          progress = s.download_progress
-          progress[:downloading] > 0 || (progress[:downloaded] > 0 && progress[:downloaded] < progress[:total])
-        end
+        in_progress_ids = FileAsset.where(download_status: %w[downloading queued pending])
+                                   .joins(release: { chapter: :series })
+                                   .select("series.id")
+                                   .distinct
+        base_scope = base_scope.where(id: in_progress_ids)
       when "not_downloaded"
-        all_series = all_series.select do |s|
-          progress = s.download_progress
-          progress[:downloaded] == 0 && progress[:downloading] == 0
-        end
+        any_download_ids = FileAsset.where(download_status: %w[complete downloading queued pending])
+                                    .joins(release: { chapter: :series })
+                                    .select("series.id")
+                                    .distinct
+        base_scope = base_scope.where.not(id: any_download_ids)
       end
 
-      @series = Kaminari.paginate_array(all_series).page(params[:page]).per(30)
+      @series = base_scope.page(params[:page]).per(30)
     else
       # No status filter: paginate at the DB level (much faster)
       @series = base_scope.page(params[:page]).per(30)
     end
 
     # Pre-compute download progress for displayed series only
-    # (skip for download-status filters that already loaded the full tree)
-    unless params[:status].in?(%w[downloaded in_progress not_downloaded])
-      preload_download_progress(@series)
-    end
+    preload_download_progress(@series)
 
     # Pre-load follow data for library cards
     if current_user

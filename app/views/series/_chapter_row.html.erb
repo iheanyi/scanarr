@@ -1,6 +1,6 @@
-<%# locals: (chapter:, source:, series:, progress: nil, chapter_progress_map: nil) %>
+<%# locals: (chapter:, source:, series:, progress: nil, chapter_progress_map: nil, latest_release: nil, latest_release_map: nil) %>
 <% progress = progress || chapter_progress_map&.dig(chapter.id) %>
-<% latest_release = chapter.releases.max_by(&:created_at) %>
+<% latest_release = latest_release || latest_release_map&.dig(chapter.id) || (chapter.releases.loaded? ? chapter.releases.max_by(&:created_at) : chapter.releases.includes(:file_asset).order(created_at: :desc).first) %>
 <% file_asset = latest_release&.file_asset %>
 <% is_read = progress&.status == "completed" %>
 <li id="<%= dom_id(chapter) %>"

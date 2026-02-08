@@ -51,6 +51,7 @@ class CancelAllDownloadsJob < ApplicationJob
     # Get fresh data for the partial
     chapter.reload
     source = chapter.source
+    latest_release = chapter.releases.includes(:file_asset).order(created_at: :desc).first
 
     Turbo::StreamsChannel.broadcast_replace_to(
       [ series, :downloads ],
@@ -60,7 +61,8 @@ class CancelAllDownloadsJob < ApplicationJob
         chapter: chapter,
         source: source,
         series: series,
-        progress: nil
+        progress: nil,
+        latest_release: latest_release
       }
     )
   rescue => e

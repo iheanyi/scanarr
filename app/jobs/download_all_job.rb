@@ -66,11 +66,13 @@ class DownloadAllJob < ApplicationJob
   private
 
   def broadcast_chapter_update(chapter, source, series)
+    chapter.reload
+    latest_release = chapter.releases.includes(:file_asset).order(created_at: :desc).first
     Turbo::StreamsChannel.broadcast_replace_to(
       [ series, :downloads ],
       target: ActionView::RecordIdentifier.dom_id(chapter),
       partial: "series/chapter_row",
-      locals: { chapter: chapter.reload, source: source, series: series, progress: nil }
+      locals: { chapter: chapter, source: source, series: series, progress: nil, latest_release: latest_release }
     )
   rescue StandardError => e
     Rails.logger.warn "DownloadAllJob: Failed to broadcast chapter update: #{e.message}"

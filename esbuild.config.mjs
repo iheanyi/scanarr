@@ -2,6 +2,7 @@ import * as esbuild from "esbuild";
 import postcss from "esbuild-postcss";
 
 const watch = process.argv.includes("--watch");
+const isProduction = process.env.NODE_ENV === "production" || process.env.RAILS_ENV === "production";
 
 const context = await esbuild.context({
   entryPoints: [
@@ -15,6 +16,8 @@ const context = await esbuild.context({
   publicPath: "/assets",
   plugins: [postcss()],
   logLevel: "info",
+  minify: isProduction,
+  target: isProduction ? "es2020" : undefined,
 });
 
 if (watch) {
