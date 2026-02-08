@@ -24,6 +24,27 @@ class User < ApplicationRecord
     :notifications_enabled,
     :notification_auto_cleanup_days
 
+  LANGUAGE_OPTIONS = [
+    [ "Any", "" ],
+    [ "English", "en" ],
+    [ "Japanese", "ja" ],
+    [ "Korean", "ko" ],
+    [ "Chinese (Simplified)", "zh" ],
+    [ "Chinese (Traditional)", "zh-hk" ],
+    [ "Spanish", "es" ],
+    [ "Portuguese (BR)", "pt-br" ],
+    [ "French", "fr" ],
+    [ "German", "de" ],
+    [ "Italian", "it" ],
+    [ "Russian", "ru" ],
+    [ "Polish", "pl" ],
+    [ "Thai", "th" ],
+    [ "Vietnamese", "vi" ],
+    [ "Indonesian", "id" ],
+    [ "Arabic", "ar" ],
+    [ "Turkish", "tr" ]
+  ].freeze
+
   READING_STYLE_OPTIONS = [
     [ "Left to Right", "left_to_right" ],
     [ "Right to Left", "right_to_left" ],

@@ -75,19 +75,17 @@
         label: "Default Reading Style",
         hint: "Used when a series has no reading style set."
       ) %>
+    <% end %>
 
-      <div class="space-y-1">
-        <%= f.label :default_language, "Preferred Language", class: "text-sm text-muted" %>
-        <%= f.text_field :default_language,
-              value: @user.default_language,
-              placeholder: "e.g. en, ja, ko",
-              class: "block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
-        <p class="text-xs text-muted-2">ISO language code for preferred chapter translations.</p>
-      </div>
-
-      <div>
-        <%= render UI::ButtonComponent.new(label: "Save", variant: :primary, size: :sm, type: "submit") %>
-      </div>
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :default_language,
+        options: User::LANGUAGE_OPTIONS,
+        selected: @user.default_language,
+        label: "Preferred Language",
+        hint: "Preferred language for chapter translations."
+      ) %>
     <% end %>
   </section>
 
