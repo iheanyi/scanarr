@@ -1,0 +1,156 @@
+<div class="space-y-8 max-w-3xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Settings",
+    description: "Configure global defaults and manage sources."
+  ) %>
+
+  <%# Reading Preferences %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Reading Preferences</h2>
+      <p class="text-sm text-muted mt-1">Set your default reading style and language.</p>
+    </div>
+
+    <%= form_with model: @user, url: settings_path, method: :patch, class: "space-y-4" do |f| %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :default_reading_style,
+        options: User::READING_STYLE_OPTIONS,
+        selected: @user.default_reading_style,
+        label: "Default Reading Style",
+        hint: "Used when a series has no reading style set."
+      ) %>
+
+      <div class="space-y-1">
+        <%= f.label :default_language, "Preferred Language", class: "text-sm text-muted" %>
+        <%= f.text_field :default_language,
+              value: @user.default_language,
+              placeholder: "e.g. en, ja, ko",
+              class: "block w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30" %>
+        <p class="text-xs text-muted-2">ISO language code for preferred chapter translations.</p>
+      </div>
+
+      <div>
+        <%= render UI::ButtonComponent.new(label: "Save", variant: :primary, size: :sm, type: "submit") %>
+      </div>
+    <% end %>
+  </section>
+
+  <%# Download Defaults %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Download Defaults</h2>
+      <p class="text-sm text-muted mt-1">Default settings applied to new series follows.</p>
+    </div>
+
+    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :default_download_policy,
+        options: User::DOWNLOAD_POLICY_OPTIONS,
+        selected: @user.default_download_policy,
+        label: "Download Policy",
+        hint: "Whether to automatically download new chapters or just notify."
+      ) %>
+    <% end %>
+
+    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+      <% interval_options = UserSeriesFollow::INTERVAL_OPTIONS.reject { |_, v| v.nil? } %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :default_check_interval_minutes,
+        options: interval_options,
+        selected: @user.default_check_interval_minutes,
+        label: "Default Check Interval",
+        hint: "How often to check followed series for new chapters."
+      ) %>
+    <% end %>
+  </section>
+
+  <%# Notifications %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Notifications</h2>
+      <p class="text-sm text-muted mt-1">Control how and when you receive notifications.</p>
+    </div>
+
+    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+      <%= render UI::ToggleSwitchComponent.new(
+        form: f,
+        method: :notifications_enabled,
+        label: "Enable Notifications",
+        description: "Receive notifications for new chapters in followed series.",
+        auto_submit: true,
+        on_value: "true",
+        off_value: "false"
+      ) %>
+    <% end %>
+
+    <%= form_with model: @user, url: settings_path, method: :patch do |f| %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :notification_auto_cleanup_days,
+        options: User::CLEANUP_DAYS_OPTIONS,
+        selected: @user.notification_auto_cleanup_days,
+        label: "Auto-cleanup Read Notifications",
+        hint: "Automatically delete read notifications after this period."
+      ) %>
+    <% end %>
+  </section>
+
+  <%# Sources %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Sources</h2>
+      <p class="text-sm text-muted mt-1">Manage which sources are active for searching and fetching chapters.</p>
+    </div>
+
+    <div class="divide-y divide-border">
+      <% @sources.each do |source| %>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-foreground"><%= source.name %></span>
+              <% if source.rate_limited? %>
+                <%= render UI::BadgeComponent.new(label: "Rate Limited", variant: :warning) %>
+              <% end %>
+            </div>
+            <% if source.base_url.present? %>
+              <p class="text-xs text-muted-2 truncate"><%= source.base_url %></p>
+            <% end %>
+          </div>
+
+          <%= form_with model: source, url: settings_source_path(source_id: source.id), method: :patch do |f| %>
+            <%= render UI::ToggleSwitchComponent.new(
+              form: f,
+              method: :enabled,
+              label: "",
+              on_value: "1",
+              off_value: "0",
+              auto_submit: true
+            ) %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Data Management %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Data Management</h2>
+      <p class="text-sm text-muted mt-1">Export, import, and manage your library data.</p>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <%= render UI::ButtonComponent.new(variant: :secondary, href: export_path) do %>
+        <%= icon "archive", class: "h-4 w-4" %>
+        Export / Import
+      <% end %>
+      <%= render UI::ButtonComponent.new(variant: :secondary, href: admin_backups_path) do %>
+        <%= icon "hard-drive", class: "h-4 w-4" %>
+        Backups
+      <% end %>
+    </div>
+  </section>
+</div>

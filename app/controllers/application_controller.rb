@@ -69,6 +69,12 @@ class ApplicationController < ActionController::Base
     authenticated?
   end
 
+  def require_user
+    return if current_user
+
+    redirect_to root_path, alert: "You must be logged in to access that page."
+  end
+
   def current_notifications
     @current_notifications ||= current_user.new_chapter_notifications
       .includes(chapter: :series)

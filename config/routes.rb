@@ -77,6 +77,11 @@ Rails.application.routes.draw do
     post "backups/:id/verify", to: "backups#verify", as: :backup_verify
   end
 
+  # Settings
+  get "/settings", to: "settings#show", as: :settings
+  patch "/settings", to: "settings#update"
+  patch "/settings/source/:source_id", to: "settings#update_source", as: :settings_source
+
   # Library Export/Import
   get "/export", to: "exports#show", as: :export
   post "/export", to: "exports#create"

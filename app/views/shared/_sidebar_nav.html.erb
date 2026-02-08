@@ -17,8 +17,8 @@
       <span class="text-xs uppercase tracking-wider text-muted-2">Browse</span>
       <div class="flex flex-col gap-0.5">
         <%= link_to root_path, nav_link_attributes.call(root_path) do %>
-          <%= icon "globe", class: "h-4 w-4 shrink-0" %>
-          Sources
+          <%= icon "house", class: "h-4 w-4 shrink-0" %>
+          Home
         <% end %>
         <%= link_to library_path, nav_link_attributes.call(library_path) do %>
           <%= icon "book-open", class: "h-4 w-4 shrink-0" %>
@@ -43,6 +43,10 @@
         <%= link_to export_path, nav_link_attributes.call(export_path) do %>
           <%= icon "archive", class: "h-4 w-4 shrink-0" %>
           Export / Import
+        <% end %>
+        <%= link_to settings_path, nav_link_attributes.call(settings_path) do %>
+          <%= icon "settings", class: "h-4 w-4 shrink-0" %>
+          Settings
         <% end %>
       </div>
     </div>
