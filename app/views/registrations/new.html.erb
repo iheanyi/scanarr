@@ -1,0 +1,76 @@
+<div class="flex min-h-screen items-center justify-center px-4">
+  <div class="w-full max-w-sm space-y-8">
+    <div class="text-center">
+      <h1 class="text-3xl font-semibold text-foreground">Scanarr</h1>
+      <p class="mt-2 text-sm text-muted">Create an account to get started.</p>
+    </div>
+
+    <% if @user.errors.any? %>
+      <div class="rounded-lg border border-danger/30 bg-danger-soft p-4">
+        <ul class="space-y-1 text-sm text-danger">
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @user, url: register_path, method: :post, class: "space-y-6" do |f| %>
+      <div class="space-y-4">
+        <div>
+          <label for="user_username" class="block text-sm font-medium text-muted">Username</label>
+          <input type="text"
+                 name="user[username]"
+                 id="user_username"
+                 value="<%= @user.username %>"
+                 autocomplete="username"
+                 required
+                 autofocus
+                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
+        </div>
+
+        <div>
+          <label for="user_email" class="block text-sm font-medium text-muted">Email</label>
+          <input type="email"
+                 name="user[email]"
+                 id="user_email"
+                 value="<%= @user.email %>"
+                 autocomplete="email"
+                 required
+                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
+        </div>
+
+        <div>
+          <label for="user_password" class="block text-sm font-medium text-muted">Password</label>
+          <input type="password"
+                 name="user[password]"
+                 id="user_password"
+                 autocomplete="new-password"
+                 required
+                 minlength="8"
+                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
+          <p class="mt-1 text-xs text-muted-2">Minimum 8 characters</p>
+        </div>
+
+        <div>
+          <label for="user_password_confirmation" class="block text-sm font-medium text-muted">Confirm Password</label>
+          <input type="password"
+                 name="user[password_confirmation]"
+                 id="user_password_confirmation"
+                 autocomplete="new-password"
+                 required
+                 class="mt-1 block w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent">
+        </div>
+      </div>
+
+      <%= render UI::ButtonComponent.new(variant: :primary, type: "submit", size: :lg, class: "w-full") do %>
+        Create Account
+      <% end %>
+    <% end %>
+
+    <p class="text-center text-sm text-muted">
+      Already have an account?
+      <%= link_to "Sign in", login_path, class: "text-accent hover:text-accent/80" %>
+    </p>
+  </div>
+</div>
