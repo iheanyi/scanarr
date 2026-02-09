@@ -51,6 +51,51 @@ default: &default
     headers:
       User-Agent: "ScanarrScraper/0.1"
       Referer: "https://comick.live/"
+  tcb_scans:
+    base_url: "https://tcbonepiecechapters.com"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://tcbonepiecechapters.com/"
+  manga_kakalot:
+    base_url: "https://www.mangakakalot.gg"
+    delay_ms: 400
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://www.mangakakalot.gg/"
+  flame_comics:
+    base_url: "https://flamecomics.xyz"
+    delay_ms: 3500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://flamecomics.xyz/"
+  batoto:
+    base_url: "https://bato.to"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://bato.to/"
+  manga_here:
+    base_url: "https://www.mangahere.cc"
+    delay_ms: 2000
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://www.mangahere.cc/"
 
 development:
   <<: *default

@@ -9,7 +9,12 @@ class AdapterRegistry
     "manga_see" => -> { MangaSee::Adapter },
     "asura_scans" => -> { AsuraScans::Adapter },
     "manga_pill" => -> { MangaPill::Adapter },
-    "comick" => -> { Comick::Adapter }
+    "comick" => -> { Comick::Adapter },
+    "tcb_scans" => -> { TcbScans::Adapter },
+    "manga_kakalot" => -> { MangaKakalot::Adapter },
+    "flame_comics" => -> { FlameComics::Adapter },
+    "batoto" => -> { Batoto::Adapter },
+    "manga_here" => -> { MangaHere::Adapter }
   }.freeze
 
   class << self

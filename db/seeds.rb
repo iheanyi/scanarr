@@ -9,7 +9,12 @@
   { key: "manga_see", name: "MangaSee", base_url: "https://mangasee123.com", source_type: "html", default_priority: 30, enabled: true },
   { key: "asura_scans", name: "Asura Scans", base_url: "https://asuracomic.net", source_type: "html", default_priority: 40, enabled: true },
   { key: "manga_pill", name: "MangaPill", base_url: "https://mangapill.com", source_type: "html", default_priority: 50, enabled: true },
-  { key: "comick", name: "Comick", base_url: "https://comick.live", source_type: "api", default_priority: 15, enabled: true }
+  { key: "comick", name: "Comick", base_url: "https://comick.live", source_type: "api", default_priority: 15, enabled: true },
+  { key: "tcb_scans", name: "TCB Scans", base_url: "https://tcbonepiecechapters.com", source_type: "html", default_priority: 55, enabled: true },
+  { key: "manga_kakalot", name: "MangaKakalot", base_url: "https://www.mangakakalot.gg", source_type: "html", default_priority: 60, enabled: true },
+  { key: "flame_comics", name: "Flame Comics", base_url: "https://flamecomics.xyz", source_type: "api", default_priority: 65, enabled: true },
+  { key: "batoto", name: "BatoTo", base_url: "https://bato.to", source_type: "html", default_priority: 70, enabled: true },
+  { key: "manga_here", name: "MangaHere", base_url: "https://www.mangahere.cc", source_type: "html", default_priority: 75, enabled: true }
 ].each do |attrs|
   Source.find_or_create_by!(key: attrs[:key]) do |source|
     source.name = attrs[:name]
