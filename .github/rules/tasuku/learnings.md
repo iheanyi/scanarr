@@ -8,6 +8,7 @@ _Auto-synced from .tasuku/context/learnings.md_
 - Turbo Frame lazy loading (`loading: :lazy`) uses IntersectionObserver to detect when the frame enters the viewport. CSS `display: contents` removes an element's box model, making IntersectionObserver unable to observe it. Never use `display: contents` on turbo-frame sentinels that need lazy loading. Instead, keep sentinels outside the CSS Grid and let each page render its own grid section.
 - Always check Rack Mini Profiler after making changes. Key performance patterns: ActiveStorage includes must use cover_attachment: :blob (not just :cover_attachment). Keep server-side response times under 200ms. Watch for N+1 queries, sidebar rendering twice, and redundant per-request queries.
 - Never use `path` as a shell loop variable in zsh; it aliases PATH and can break command resolution (`date`, `tr`, `base64`, etc.). Use names like `url_path` instead.
+- Always avoid ad-hoc local DB mutations during profiling/debug runs. Use an explicit, idempotent development seed user or a one-line rails console upsert, and document the workflow so user data/setup remains predictable.
 
 ## Insights
 
