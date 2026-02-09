@@ -44,6 +44,10 @@
           <%= icon "archive", class: "h-4 w-4 shrink-0" %>
           Export / Import
         <% end %>
+        <%= link_to source_migrations_path, nav_link_attributes.call(source_migrations_path) do %>
+          <%= icon "arrow-right-left", class: "h-4 w-4 shrink-0" %>
+          Source Migration
+        <% end %>
         <%= link_to settings_path, nav_link_attributes.call(settings_path) do %>
           <%= icon "settings", class: "h-4 w-4 shrink-0" %>
           Settings

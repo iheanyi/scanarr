@@ -120,6 +120,54 @@
     <% end %>
   </section>
 
+  <%# Source Priority %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Source Priority</h2>
+      <p class="text-sm text-muted mt-1">
+        Drag to reorder which sources are preferred for downloads and chapter checks.
+        Higher sources are tried first.
+      </p>
+    </div>
+
+    <% priority = Array(current_user.default_source_priority) %>
+    <% enabled_sources = @sources.select(&:enabled) %>
+    <% ordered_sources = if priority.any?
+      # Sort by priority order, then append any sources not in the priority list
+      prioritized = priority.filter_map { |key| enabled_sources.find { |s| s.key == key } }
+      remaining = enabled_sources.reject { |s| priority.include?(s.key) }
+      prioritized + remaining
+    else
+      enabled_sources
+    end %>
+
+    <%= form_with url: settings_source_priority_path, method: :patch, data: { controller: "sortable-list" } do |f| %>
+      <input type="hidden" name="source_priority" data-sortable-list-target="input"
+             value="<%= ordered_sources.map(&:key).to_json %>">
+
+      <div class="divide-y divide-border">
+        <% ordered_sources.each_with_index do |source, i| %>
+          <div class="flex items-center gap-3 py-2 cursor-grab active:cursor-grabbing"
+               data-sortable-list-target="item"
+               data-source-key="<%= source.key %>">
+            <span class="text-xs text-muted-2 w-5 text-right"><%= i + 1 %></span>
+            <span class="flex-1 text-sm font-medium text-foreground"><%= source.name %></span>
+            <div class="flex gap-1">
+              <button type="button" data-action="click->sortable-list#moveUp"
+                      class="p-1 text-muted hover:text-foreground" title="Move up">
+                <%= icon "chevron-up", class: "h-4 w-4" %>
+              </button>
+              <button type="button" data-action="click->sortable-list#moveDown"
+                      class="p-1 text-muted hover:text-foreground" title="Move down">
+                <%= icon "chevron-down", class: "h-4 w-4" %>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
   <%# Notifications %>
   <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
     <div>

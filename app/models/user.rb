@@ -22,7 +22,8 @@ class User < ApplicationRecord
     :default_download_policy,
     :default_check_interval_minutes,
     :notifications_enabled,
-    :notification_auto_cleanup_days
+    :notification_auto_cleanup_days,
+    :default_source_priority
 
   LANGUAGE_OPTIONS = [
     [ "Any", "" ],

@@ -93,6 +93,19 @@ class SettingsController < ApplicationController
     end
   end
 
+  def update_source_priority
+    priority = JSON.parse(params[:source_priority]) rescue []
+    current_user.update!(default_source_priority: priority)
+
+    respond_to do |format|
+      format.html { redirect_to settings_path, notice: "Source priority saved" }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.append("toast-container",
+          UI::ToastComponent.new(message: "Source priority saved", variant: :success))
+      end
+    end
+  end
+
   def update_source
     source = Source.find(params[:source_id])
     source.update!(enabled: params[:enabled] == "1")
