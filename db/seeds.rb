@@ -14,7 +14,14 @@
   { key: "manga_kakalot", name: "MangaKakalot", base_url: "https://www.mangakakalot.gg", source_type: "html", default_priority: 60, enabled: true },
   { key: "flame_comics", name: "Flame Comics", base_url: "https://flamecomics.xyz", source_type: "api", default_priority: 65, enabled: true },
   { key: "batoto", name: "BatoTo", base_url: "https://bato.to", source_type: "html", default_priority: 70, enabled: true },
-  { key: "manga_here", name: "MangaHere", base_url: "https://www.mangahere.cc", source_type: "html", default_priority: 75, enabled: true }
+  { key: "manga_here", name: "MangaHere", base_url: "https://www.mangahere.cc", source_type: "html", default_priority: 75, enabled: true },
+  { key: "manga_clash", name: "MangaClash", base_url: "https://toonclash.com", source_type: "html", default_priority: 80, enabled: true },
+  { key: "manga_buddy", name: "MangaBuddy", base_url: "https://mangabuddy.com", source_type: "html", default_priority: 85, enabled: true },
+  { key: "zero_scans", name: "Zero Scans", base_url: "https://zscans.com", source_type: "api", default_priority: 90, enabled: true },
+  { key: "manhua_plus", name: "ManhuaPlus", base_url: "https://manhuaplus.com", source_type: "html", default_priority: 95, enabled: true },
+  { key: "isekai_scan", name: "IsekaiScan", base_url: "https://isekaiscan.top", source_type: "html", default_priority: 100, enabled: true },
+  { key: "toonily", name: "Toonily", base_url: "https://toonily.me", source_type: "html", default_priority: 105, enabled: true },
+  { key: "drake_scans", name: "Drake Scans", base_url: "https://drakecomic.org", source_type: "html", default_priority: 110, enabled: true }
 ].each do |attrs|
   Source.find_or_create_by!(key: attrs[:key]) do |source|
     source.name = attrs[:name]

@@ -96,6 +96,69 @@ default: &default
     headers:
       User-Agent: "ScanarrScraper/0.1"
       Referer: "https://www.mangahere.cc/"
+  manga_clash:
+    base_url: "https://toonclash.com"
+    delay_ms: 1000
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://toonclash.com/"
+  manga_buddy:
+    base_url: "https://mangabuddy.com"
+    delay_ms: 1000
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://mangabuddy.com/"
+  zero_scans:
+    base_url: "https://zscans.com"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://zscans.com/"
+  manhua_plus:
+    base_url: "https://manhuaplus.com"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://manhuaplus.com/"
+  isekai_scan:
+    base_url: "https://isekaiscan.top"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://isekaiscan.top/"
+  toonily:
+    base_url: "https://toonily.me"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://toonily.me/"
+  drake_scans:
+    base_url: "https://drakecomic.org"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://drakecomic.org/"
 
 development:
   <<: *default

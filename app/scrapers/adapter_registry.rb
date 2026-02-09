@@ -14,7 +14,14 @@ class AdapterRegistry
     "manga_kakalot" => -> { MangaKakalot::Adapter },
     "flame_comics" => -> { FlameComics::Adapter },
     "batoto" => -> { Batoto::Adapter },
-    "manga_here" => -> { MangaHere::Adapter }
+    "manga_here" => -> { MangaHere::Adapter },
+    "manga_clash" => -> { MangaClash::Adapter },
+    "manga_buddy" => -> { MangaBuddy::Adapter },
+    "zero_scans" => -> { ZeroScans::Adapter },
+    "manhua_plus" => -> { ManhuaPlus::Adapter },
+    "isekai_scan" => -> { IsekaiScan::Adapter },
+    "toonily" => -> { Toonily::Adapter },
+    "drake_scans" => -> { DrakeScans::Adapter }
   }.freeze
 
   class << self
