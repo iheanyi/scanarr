@@ -92,7 +92,3 @@ class HttpClient
     result
   end
 end
-
-module Scrapers
-  HttpClient = ::HttpClient
-end

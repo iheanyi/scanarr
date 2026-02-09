@@ -70,7 +70,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/?m_orderby=latest" => browse_fixture_html
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -112,7 +112,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("solo leveling")
 
@@ -182,7 +182,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent/")
 
@@ -247,7 +247,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
       "POST #{@base_url}/wp-admin/admin-ajax.php" => ajax_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: ajax_fixtures, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
@@ -265,7 +265,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent/")
 
@@ -317,7 +317,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/#{@series_slug}/chapter-lazy/" => pages_lazy_src_fixture
     }
     http = FakeHttpClient.new(mapping: lazy_fixture, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/manga/#{@series_slug}/chapter-lazy/")
 
@@ -335,7 +335,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/manga/solo-leveling/chapter-999/")
 
@@ -373,7 +373,7 @@ class MangaReadAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/?m_orderby=latest" => browse_fixture_html
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaRead::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.browse(sort: "latest", page: 1)
 

@@ -70,7 +70,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/?order=update&page=1" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -106,7 +106,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("logging")
 
@@ -170,7 +170,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent/")
 
@@ -232,7 +232,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent/")
 
@@ -281,7 +281,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/some-series-chapter-999/")
 
@@ -295,7 +295,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/some-series-chapter-1/" => pages_js_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: js_fixture, base_url: @base_url)
-    adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/some-series-chapter-1/")
 
@@ -327,7 +327,7 @@ class DrakeScansAdapterTest < ActiveSupport::TestCase
   # --- Jetpack CDN Stripping Tests ---
 
   def test_strip_jetpack_cdn
-    adapter = DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::DrakeScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     # Use send to test private method
     assert_equal "https://drakecomic.org/wp-content/uploads/image.jpg",

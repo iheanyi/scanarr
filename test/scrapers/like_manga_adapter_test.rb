@@ -70,7 +70,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/?act=searchadvance&f%5Bsortby%5D=lastest-chap" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -106,7 +106,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
@@ -158,7 +158,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/nonexistent/")
 
@@ -220,7 +220,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/nonexistent/")
 
@@ -261,7 +261,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/some-chapter/")
 
@@ -275,7 +275,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/#{@chapter_slug}-fallback/" => pages_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/#{@chapter_slug}-fallback/")
 
@@ -342,7 +342,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/solo-leveling/" => series_manhwa_fixture
     }
     http = FakeHttpClient.new(mapping: manhwa_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     series = adapter.series("#{@base_url}/solo-leveling/")
 
@@ -356,7 +356,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/titled-series/" => series_with_titled_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: title_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/titled-series/")
     titled = chapters.find { |ch| ch.number == "5" }
@@ -380,7 +380,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/?act=ajax&chap_id=0&code=load_list_chapter&keyword=&manga_id=12345&page_num=2" => ajax_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: ajax_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/#{@series_slug}/")
 
@@ -398,7 +398,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/?act=searchadvance&f%5Bsortby%5D=top-manga" => browse_fixture
     }
     http = FakeHttpClient.new(mapping: popular_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.browse(sort: "popular", page: 1)
 
@@ -416,7 +416,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_browse_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.browse(sort: "latest", page: 1)
 
@@ -444,31 +444,31 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
   # --- Status Parsing Tests ---
 
   def test_status_complete
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "completed", adapter.normalize_status("Complete")
   end
 
   def test_status_in_process
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "ongoing", adapter.normalize_status("In process")
   end
 
   def test_status_pause
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "hiatus", adapter.normalize_status("Pause")
   end
 
   def test_status_unknown_defaults_to_ongoing
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "ongoing", adapter.normalize_status("SomeRandomStatus")
   end
 
   def test_status_nil_defaults_to_ongoing
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "ongoing", adapter.normalize_status(nil)
   end
@@ -480,7 +480,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/datasrc-chapter/" => pages_datasrc_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/datasrc-chapter/")
 

@@ -21,8 +21,9 @@ require "cgi"
 # Browse supports: recently_updated, most_viewed, trending, title_az
 # Search requires a VRF token (WebView-based in Tachiyomi), so we use
 # the filter page without keyword for browse and the series page for details.
-module MangaFire
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaFire
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://mangafire.to"
 
     def supports_browse?
@@ -628,10 +629,4 @@ module MangaFire
     end
   end
 end
-
-# Register with legacy namespace
-module Scrapers
-  module MangaFire
-    Adapter = ::MangaFire::Adapter
-  end
 end

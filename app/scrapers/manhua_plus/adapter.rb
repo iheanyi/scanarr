@@ -13,8 +13,9 @@ require "nokogiri"
 # Series: GET /manga/{slug}/
 # Chapters: AJAX POST to /manga/{slug}/ajax/chapters/ or inline li.wp-manga-chapter
 # Pages: GET /manga/{slug}/{chapter-slug}/ with images in div.page-break img
-module ManhuaPlus
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module ManhuaPlus
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://manhuaplus.com"
 
     def supports_browse?
@@ -434,9 +435,4 @@ module ManhuaPlus
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module ManhuaPlus
-    Adapter = ::ManhuaPlus::Adapter
-  end
 end

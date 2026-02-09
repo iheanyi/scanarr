@@ -49,7 +49,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Latest_Releases/1" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -104,7 +104,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
@@ -116,7 +116,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Find/zzzznothing" => no_results_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.search("zzzznothing")
 
@@ -201,7 +201,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/Manga/nonexistent")
 
@@ -213,7 +213,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Manga/Solo_Leveling" => completed_series_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     series = adapter.series("#{@base_url}/Manga/Solo_Leveling")
 
@@ -225,7 +225,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Manga/Solo_Leveling" => completed_series_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     series = adapter.series("#{@base_url}/Manga/Solo_Leveling")
 
@@ -341,7 +341,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Manga/Decimal_Series" => decimal_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/Manga/Decimal_Series")
 
@@ -357,7 +357,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Manga/Decimal_Series" => decimal_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/Manga/Decimal_Series")
     numbers = chapters.map { |ch| ch.number.to_f }
@@ -367,7 +367,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/Manga/nonexistent")
 
@@ -425,7 +425,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/Read1_One_Piece_999")
 
@@ -438,7 +438,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Read1_Solo_Leveling_1" => pages_with_wrapper_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/Read1_Solo_Leveling_1")
 
@@ -451,7 +451,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Read1_Webp_Test_1" => pages_webp_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/Read1_Webp_Test_1")
 
@@ -466,7 +466,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/Read1_Png_Test_1" => pages_png_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/Read1_Png_Test_1")
 
@@ -550,7 +550,7 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
 
   def test_browse_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.browse(sort: "latest", page: 1)
 
@@ -565,18 +565,11 @@ class MangaFreakAdapterTest < ActiveSupport::TestCase
       "GET #{custom_url}/Find/test" => search_fixture
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: custom_url)
-    adapter = MangaFreak::Adapter.new(config: { "base_url" => custom_url }, http: http)
+    adapter = Scrapers::MangaFreak::Adapter.new(config: { "base_url" => custom_url }, http: http)
 
     results = adapter.search("test")
 
     assert_operator results.size, :>, 0
-  end
-
-  # --- Module Registration Tests ---
-
-  def test_registered_in_scrapers_namespace
-    assert defined?(Scrapers::MangaFreak::Adapter)
-    assert_equal MangaFreak::Adapter, Scrapers::MangaFreak::Adapter
   end
 
   private

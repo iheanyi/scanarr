@@ -9,8 +9,9 @@ require "nokogiri"
 # Next.js app — all data comes via /_next/data/{buildId}/{path}.json
 # Build ID must be fetched dynamically from __NEXT_DATA__ script tag.
 # Rate limit: strict, 2 requests per 7 seconds (delay_ms: 3500)
-module FlameComics
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module FlameComics
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://flamecomics.xyz"
     CDN_URL = "https://cdn.flamecomics.xyz"
 
@@ -328,9 +329,4 @@ module FlameComics
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module FlameComics
-    Adapter = ::FlameComics::Adapter
-  end
 end

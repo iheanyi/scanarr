@@ -3,8 +3,9 @@
 # AsuraScans adapter
 # Reference: https://github.com/keiyoushi/extensions-source/tree/main/src/en/asurascans
 # Note: AsuraScans uses a Next.js frontend, NOT WordPress/Madara
-module AsuraScans
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module AsuraScans
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://asuracomic.net"
     # Regex pattern for chapter numbers (integers or decimals like 123.5)
     CHAPTER_NUMBER_PATTERN = '(\d+(?:\.\d+)?)'
@@ -236,9 +237,4 @@ module AsuraScans
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module AsuraScans
-    Adapter = ::AsuraScans::Adapter
-  end
 end

@@ -45,7 +45,3 @@ module ResultTypes
 
   Page = Struct.new(:index, :url, :mime_type, keyword_init: true)
 end
-
-module Scrapers
-  ResultTypes = ::ResultTypes
-end

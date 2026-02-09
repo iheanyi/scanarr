@@ -14,8 +14,9 @@ require "base64"
 # Series: GET /{slug} with selectors #title-detail-manga, .detail-info img
 # Chapters: .wp-manga-chapter on series page + AJAX pagination
 # Pages: JWT-like token with base64-encoded image array, fallback to img tags
-module LikeManga
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module LikeManga
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://likemanga.ink"
 
     def supports_browse?
@@ -493,9 +494,4 @@ module LikeManga
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module LikeManga
-    Adapter = ::LikeManga::Adapter
-  end
 end

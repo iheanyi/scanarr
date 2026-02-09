@@ -12,8 +12,9 @@ require "nokogiri"
 # - JavaScript variable extraction for chapter page images
 #
 # Domain history: manganelo.com -> readmanganato.com -> chapmanganato.to -> natomanga.com
-module MangaNato
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaNato
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://www.natomanga.com"
 
     # Vietnamese diacritical character mapping for query normalization
@@ -344,10 +345,4 @@ module MangaNato
     end
   end
 end
-
-# Register with legacy namespace
-module Scrapers
-  module MangaNato
-    Adapter = ::MangaNato::Adapter
-  end
 end

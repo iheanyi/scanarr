@@ -57,7 +57,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga-list/hot-manga" => browse_popular_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # -- Search --
@@ -92,7 +92,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
 
   def test_search_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.search("nonexistent")
 
@@ -153,7 +153,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
 
   def test_series_returns_nil_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_nil adapter.series("nonexistent")
   end
@@ -210,7 +210,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_equal [], adapter.chapters("nonexistent")
   end
@@ -242,7 +242,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/#{@slug}/#{@chapter_slug}" => pages_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/manga/#{@slug}/#{@chapter_slug}")
 
@@ -252,7 +252,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
 
   def test_pages_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_equal [], adapter.pages("#{@base_url}/manga/foo/chapter-1")
   end
@@ -280,7 +280,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
 
   def test_browse_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_equal [], adapter.browse(sort: "latest")
   end

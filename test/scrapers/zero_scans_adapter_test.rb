@@ -66,7 +66,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/swordflake/comic/#{@series_slug}/chapters/#{@chapter_id}" => pages_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -107,7 +107,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("solo")
 
@@ -159,7 +159,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/comics/nonexistent")
 
@@ -220,7 +220,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/comics/nonexistent?id=99999")
 
@@ -263,7 +263,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/swordflake/comic/#{@series_slug}/chapters/#{@chapter_id}" => pages_fixture_good_quality_only
     }
     http = FakeHttpClient.new(mapping: good_quality_fixture, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/comics/#{@series_slug}/#{@chapter_id}")
 
@@ -273,7 +273,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/comics/solo-leveling/99999")
 

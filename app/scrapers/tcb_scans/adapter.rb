@@ -12,8 +12,9 @@ require "nokogiri"
 #
 # Small catalog, pure HTML scraping, no API, no search endpoint.
 # Search is implemented by fetching /projects and filtering client-side.
-module TcbScans
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module TcbScans
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://tcbonepiecechapters.com"
 
     def supports_browse?
@@ -197,9 +198,4 @@ module TcbScans
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module TcbScans
-    Adapter = ::TcbScans::Adapter
-  end
 end

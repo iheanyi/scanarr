@@ -41,13 +41,13 @@ class ChaptersController < ApplicationController
       if source_url.present?
         begin
           @source_pages = adapter_for(@source).pages(source_url)
-        rescue BaseAdapter::ChapterNotFoundError => e
+        rescue Scrapers::Errors::ChapterNotFoundError => e
           @source_error = "This chapter is no longer available on the source. It may have been removed or replaced."
           Rails.logger.warn "Chapter not found: #{@chapter.id} - #{e.message}"
-        rescue BaseAdapter::RateLimitError => e
+        rescue Scrapers::Errors::RateLimitError => e
           @source_error = "The source is rate limiting requests. Please try again in a few minutes."
           Rails.logger.warn "Rate limited: #{@chapter.id} - #{e.message}"
-        rescue BaseAdapter::SourceUnavailableError, BaseAdapter::ScraperError => e
+        rescue Scrapers::Errors::SourceUnavailableError, Scrapers::Errors::ScraperError => e
           @source_error = "Unable to load pages from source: #{e.message}"
           Rails.logger.error "Scraper error for chapter #{@chapter.id}: #{e.class} - #{e.message}"
         end

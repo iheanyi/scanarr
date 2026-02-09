@@ -69,7 +69,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/search?page=1&sort=updated_at" => search_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -102,7 +102,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
@@ -160,7 +160,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/99999-nonexistent")
 
@@ -222,7 +222,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/99999-nonexistent")
 
@@ -265,7 +265,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapter/full-url-test" => pages_fixture_full_urls
     )
     http = FakeHttpClient.new(mapping: full_url_fixtures, base_url: @base_url)
-    adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/chapter/full-url-test")
 
@@ -280,7 +280,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapter/html-test" => pages_fixture_html_imgs
     )
     http = FakeHttpClient.new(mapping: html_fixtures, base_url: @base_url)
-    adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/chapter/html-test")
 
@@ -292,7 +292,7 @@ class MangaBuddyAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaBuddy::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/chapter/99999")
 

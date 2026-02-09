@@ -31,7 +31,7 @@ class ToonilyAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/az-list?page=1&sort=views" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = Toonily::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::Toonily::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # -- Search tests --

@@ -12,8 +12,9 @@ require "nokogiri"
 #   Latest:   /Latest_Releases/{page}
 #
 # Domain history: mangafreak.net → w13.mangafreak.net → ww2.mangafreak.me
-module MangaFreak
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaFreak
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://ww2.mangafreak.me"
 
     def supports_browse?
@@ -286,9 +287,4 @@ module MangaFreak
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaFreak
-    Adapter = ::MangaFreak::Adapter
-  end
 end

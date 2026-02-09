@@ -48,7 +48,7 @@ class WeebCentralAdapterTest < ActiveSupport::TestCase
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
     @config = { "base_url" => @base_url }
-    @adapter = WeebCentral::Adapter.new(config: @config, http: @http)
+    @adapter = Scrapers::WeebCentral::Adapter.new(config: @config, http: @http)
   end
 
   def test_search_returns_results

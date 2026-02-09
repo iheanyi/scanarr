@@ -12,8 +12,9 @@ require "nokogiri"
 # Series: GET /manga/{slug}/
 # Chapters: POST /wp-admin/admin-ajax.php (action=manga_get_chapters) or GET /ajax-list-chapter?mangaID={id}
 # Pages: GET /manga/{slug}/{chapter-slug}/ with images in div.page-break img
-module IsekaiScan
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module IsekaiScan
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://isekaiscan.top"
 
     def supports_browse?
@@ -454,9 +455,4 @@ module IsekaiScan
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module IsekaiScan
-    Adapter = ::IsekaiScan::Adapter
-  end
 end

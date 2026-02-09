@@ -15,15 +15,15 @@ class SourcesController < ApplicationController
 
     scope = Source.where(enabled: true)
     @sources = case @sort_by
-               when "name_desc"
+    when "name_desc"
                  scope.order(name: :desc)
-               when "most_series"
+    when "most_series"
                  scope.left_joins(:series_sources)
                       .group("sources.id")
                       .order(Arel.sql("COUNT(series_sources.id) DESC"), name: :asc)
-               else # name_asc
+    else # name_asc
                  scope.order(name: :asc)
-               end
+    end
   end
 
   def browse
@@ -47,7 +47,7 @@ class SourcesController < ApplicationController
     @page_size = adapter.browse_page_size
     @sort_options = adapter.browse_sort_options
     @results = adapter.browse(sort: @sort, page: @page, limit: @page_size)
-  rescue BaseAdapter::BrowseNotSupportedError => e
+  rescue Scrapers::Errors::BrowseNotSupportedError => e
     @error = e.message
   rescue StandardError => e
     @error = "Browse failed: #{e.message}"
@@ -73,7 +73,7 @@ class SourcesController < ApplicationController
     adapter = AdapterRegistry.for(@source)
     @series = adapter.series(@series_url)
     @chapters = adapter.chapters(@series_url).first(10) # Preview first 10 chapters
-  rescue BaseAdapter::SeriesNotFoundError => e
+  rescue Scrapers::Errors::SeriesNotFoundError => e
     @error = "Series not found: #{e.message}"
   rescue StandardError => e
     @error = "Failed to load series: #{e.message}"
@@ -125,7 +125,7 @@ class SourcesController < ApplicationController
       source_slug: source_slug(@source),
       series_slug: series.to_param
     )
-  rescue BaseAdapter::ScraperError, StandardError => e
+  rescue Scrapers::Errors::ScraperError, StandardError => e
     Rails.logger.error "Import failed for #{series_url}: #{e.class} - #{e.message}"
     redirect_to search_path(q: params[:q]), alert: "Import failed: #{e.message}"
   end

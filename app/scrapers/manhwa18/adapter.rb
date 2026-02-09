@@ -16,8 +16,9 @@ require "nokogiri"
 #
 # Chapter list is inline on the series page (ul.list-chapters.at-series).
 # Page images use data-src with CDN URLs (cdn.manhwa18.com).
-module Manhwa18
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module Manhwa18
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://manhwa18.net"
 
     def supports_browse?
@@ -337,9 +338,4 @@ module Manhwa18
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module Manhwa18
-    Adapter = ::Manhwa18::Adapter
-  end
 end

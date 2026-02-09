@@ -1,8 +1,9 @@
 require "nokogiri"
 require "set"
 
-module WeebCentral
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module WeebCentral
+  class Adapter < Scrapers::BaseAdapter
     SERIES_LINK_SELECTOR = "a[href*='/series/']"
     CHAPTER_LINK_SELECTOR = "a[href*='/chapters/']"
     PAGE_IMAGE_SELECTOR = "img"
@@ -370,9 +371,4 @@ module WeebCentral
     end
   end
 end
-
-module Scrapers
-  module WeebCentral
-    Adapter = ::WeebCentral::Adapter
-  end
 end

@@ -13,8 +13,9 @@ require "json"
 # Series: GET /manga/item/{slug}/ -> HTML
 # Chapters: GET /get/chapters/?manga_id={id} -> JSON
 # Pages: GET /chapter/en/{slug}/ -> HTML with img.lazy[data-src]
-module MangaGeko
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaGeko
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://www.mgeko.cc"
 
     def supports_browse?
@@ -357,9 +358,4 @@ module MangaGeko
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaGeko
-    Adapter = ::MangaGeko::Adapter
-  end
 end

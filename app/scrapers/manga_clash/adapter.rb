@@ -13,8 +13,9 @@ require "nokogiri"
 # Series: GET /manga/{slug}/
 # Chapters: Listed on series page in li.wp-manga-chapter
 # Pages: GET /manga/{slug}/{chapter-slug}/ with images in div.page-break img
-module MangaClash
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaClash
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://toonclash.com"
 
     def supports_browse?
@@ -425,9 +426,4 @@ module MangaClash
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaClash
-    Adapter = ::MangaClash::Adapter
-  end
 end

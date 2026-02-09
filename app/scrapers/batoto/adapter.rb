@@ -11,8 +11,9 @@ require "nokogiri"
 # Chapter pages embed image URLs in the page HTML pointing to CDN servers.
 #
 # Domain history: bato.to -> xbat.tv -> bato.si -> bato.ing (mirrors)
-module Batoto
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module Batoto
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://bato.to"
 
     # BatoTo supports browse via search with empty query
@@ -585,10 +586,4 @@ module Batoto
     end
   end
 end
-
-# Register with legacy namespace
-module Scrapers
-  module Batoto
-    Adapter = ::Batoto::Adapter
-  end
 end

@@ -16,8 +16,9 @@ require "nokogiri"
 #
 # Chapter list is inline HTML on the series page (<ul class="chapter-list">).
 # Page images use data-src with CDN URLs (s{n}.toonilycdnv2.xyz).
-module Toonily
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module Toonily
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://toonily.me"
 
     def supports_browse?
@@ -317,9 +318,4 @@ module Toonily
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module Toonily
-    Adapter = ::Toonily::Adapter
-  end
 end

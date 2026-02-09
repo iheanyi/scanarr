@@ -30,7 +30,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga-list?page=1&sort=most-view" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # -- Search tests --
@@ -73,7 +73,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("solo")
 
@@ -145,7 +145,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent")
 
@@ -209,7 +209,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent")
 
@@ -267,7 +267,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/manga/solo-max-level-newbie/chapter-999-999")
 
@@ -279,7 +279,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/test/chapter-1-1" => pages_with_junk_fixture
     }
     http = FakeHttpClient.new(mapping: fixture, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/manga/test/chapter-1-1")
 
@@ -295,7 +295,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/test/chapter-1-1" => pages_webp_fixture
     }
     http = FakeHttpClient.new(mapping: fixture, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/manga/test/chapter-1-1")
 
@@ -340,7 +340,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
 
   def test_browse_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.browse(sort: "latest", page: 1)
 
@@ -352,7 +352,7 @@ class Manhwa18AdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga-list?page=1&sort=latest" => browse_fixture
     }
     http = FakeHttpClient.new(mapping: fixture, base_url: @base_url)
-    adapter = Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::Manhwa18::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.browse(sort: "latest", page: 1)
 

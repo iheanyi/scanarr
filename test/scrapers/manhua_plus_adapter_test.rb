@@ -72,7 +72,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/?m_orderby=latest" => browse_fixture_html
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -108,7 +108,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("martial peak")
 
@@ -178,7 +178,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent/")
 
@@ -240,7 +240,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent/")
 
@@ -281,7 +281,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/manga/martial-peak/chapter-999/")
 
@@ -312,7 +312,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
   # --- Date Parsing Tests ---
 
   def test_parses_full_month_date
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     result = adapter.send(:parse_madara_date, "December 22, 2025")
 
@@ -323,7 +323,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
   end
 
   def test_parses_ordinal_date
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     result = adapter.send(:parse_madara_date, "January 5th, 2024")
 
@@ -334,7 +334,7 @@ class ManhuaPlusAdapterTest < ActiveSupport::TestCase
   end
 
   def test_parses_relative_date
-    adapter = ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::ManhuaPlus::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     result = adapter.send(:parse_madara_date, "3 days ago")
 

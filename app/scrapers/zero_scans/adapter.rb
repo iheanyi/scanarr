@@ -11,8 +11,9 @@ require "json"
 # and browse are handled client-side by filtering/sorting the full list.
 #
 # Domain history: zeroscans.com -> zscans.com
-module ZeroScans
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module ZeroScans
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://zscans.com"
     API_PATH = "swordflake"
 
@@ -352,9 +353,4 @@ module ZeroScans
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module ZeroScans
-    Adapter = ::ZeroScans::Adapter
-  end
 end

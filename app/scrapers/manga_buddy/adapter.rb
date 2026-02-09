@@ -13,8 +13,9 @@ require "nokogiri"
 # - Page images via JS variables `mainServer` + `chapImages`, or HTML `#chapter-images img`
 #
 # CDN image fallback: sb.mbcdn.xyz when primary CDN returns errors
-module MangaBuddy
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaBuddy
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://mangabuddy.com"
 
     MANGA_ID_REGEX = %r{/manga/(\d+)-}
@@ -414,9 +415,4 @@ module MangaBuddy
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaBuddy
-    Adapter = ::MangaBuddy::Adapter
-  end
 end

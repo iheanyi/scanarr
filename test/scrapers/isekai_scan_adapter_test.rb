@@ -73,7 +73,7 @@ class IsekaiScanAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/?m_orderby=latest" => browse_fixture_html
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -109,7 +109,7 @@ class IsekaiScanAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("solo leveling")
 
@@ -173,7 +173,7 @@ class IsekaiScanAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent/")
 
@@ -227,7 +227,7 @@ class IsekaiScanAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent/")
 
@@ -268,7 +268,7 @@ class IsekaiScanAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::IsekaiScan::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/manga/solo-leveling/chapter-999/")
 

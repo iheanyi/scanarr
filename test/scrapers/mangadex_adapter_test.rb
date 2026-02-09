@@ -52,7 +52,7 @@ class MangadexAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/at-home/server/#{@chapter_id}" => pages_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = Mangadex::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::Mangadex::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   def test_search_returns_results

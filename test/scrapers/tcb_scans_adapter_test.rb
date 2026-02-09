@@ -27,7 +27,7 @@ class TcbScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapters/1094/one-piece-chapter-1094" => pages_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = TcbScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::TcbScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   def test_search_returns_results

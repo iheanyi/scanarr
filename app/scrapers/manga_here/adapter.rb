@@ -14,8 +14,9 @@ require "date"
 # from chapterfun.ashx AJAX responses.
 #
 # Domain history: mangahere.com -> mangahere.cc (current)
-module MangaHere
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaHere
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://www.mangahere.cc"
 
     def supports_browse?
@@ -526,10 +527,4 @@ module MangaHere
     end
   end
 end
-
-# Register with legacy namespace
-module Scrapers
-  module MangaHere
-    Adapter = ::MangaHere::Adapter
-  end
 end

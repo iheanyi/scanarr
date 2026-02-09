@@ -8,8 +8,9 @@ require "nokogiri"
 #
 # Hybrid source: JSON API for chapters, HTML scraping for search/series, JS extraction for pages.
 # Domain history: mangakakalot.com -> manganelo.com -> readmanganato.com -> chapmanganato.to -> mangakakalot.gg
-module MangaKakalot
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaKakalot
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://www.mangakakalot.gg"
 
     # Vietnamese diacritical character mapping for query normalization
@@ -334,10 +335,4 @@ module MangaKakalot
     end
   end
 end
-
-# Register with legacy namespace
-module Scrapers
-  module MangaKakalot
-    Adapter = ::MangaKakalot::Adapter
-  end
 end

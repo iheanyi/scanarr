@@ -62,7 +62,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     }
 
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = FlameComics::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::FlameComics::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search ---

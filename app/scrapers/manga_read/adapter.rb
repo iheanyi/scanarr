@@ -12,8 +12,9 @@ require "nokogiri"
 # Series: GET /manga/{slug}/
 # Chapters: Listed on series page in li.wp-manga-chapter
 # Pages: GET /manga/{slug}/{chapter-slug}/ with images in div.page-break img
-module MangaRead
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaRead
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://www.mangaread.org"
 
     def supports_browse?
@@ -448,9 +449,4 @@ module MangaRead
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaRead
-    Adapter = ::MangaRead::Adapter
-  end
 end

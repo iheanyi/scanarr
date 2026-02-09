@@ -2,8 +2,9 @@
 
 # MangaSee adapter
 # Reference: https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangasee
-module MangaSee
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaSee
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://mangasee123.com"
 
     def search(query)
@@ -197,9 +198,4 @@ module MangaSee
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaSee
-    Adapter = ::MangaSee::Adapter
-  end
 end

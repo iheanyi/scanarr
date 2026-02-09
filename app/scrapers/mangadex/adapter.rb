@@ -1,7 +1,8 @@
 require "json"
 
-module Mangadex
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module Mangadex
+  class Adapter < Scrapers::BaseAdapter
     def search(query)
       response = http.get("/manga", params: { title: query, limit: 20, includes: [ "cover_art", "author" ] })
       payload = JSON.parse(response.body)
@@ -171,11 +172,11 @@ module Mangadex
 
         # Check for specific error types
         if errors.include?("not found") || errors.include?("does not exist")
-          raise ChapterNotFoundError, "Chapter is no longer available on MangaDex"
+          raise Scrapers::Errors::ChapterNotFoundError, "Chapter is no longer available on MangaDex"
         elsif errors.include?("rate limit")
-          raise RateLimitError, "MangaDex rate limit exceeded, please try again later"
+          raise Scrapers::Errors::RateLimitError, "MangaDex rate limit exceeded, please try again later"
         else
-          raise ScraperError, "MangaDex error: #{errors}"
+          raise Scrapers::Errors::ScraperError, "MangaDex error: #{errors}"
         end
       end
 
@@ -184,7 +185,7 @@ module Mangadex
 
       if base.nil? || chapter_data.nil?
         Rails.logger.error "MangaDex unexpected response for chapter #{id}: #{payload.inspect}"
-        raise SourceUnavailableError, "MangaDex returned an unexpected response"
+        raise Scrapers::Errors::SourceUnavailableError, "MangaDex returned an unexpected response"
       end
 
       hash = chapter_data.fetch("hash")
@@ -245,10 +246,5 @@ module Mangadex
       end
     end
   end
-end
-
-module Scrapers
-  module Mangadex
-    Adapter = ::Mangadex::Adapter
   end
 end

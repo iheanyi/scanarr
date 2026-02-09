@@ -1,8 +1,9 @@
 require "json"
 require "nokogiri"
 
-module Comick
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module Comick
+  class Adapter < Scrapers::BaseAdapter
     SITE_URL = "https://comick.live"
     IMAGE_CDN = "https://meo.comick.pictures"
 
@@ -56,7 +57,7 @@ module Comick
       doc = Nokogiri::HTML(response.body)
 
       script = doc.at_css("#comic-data")
-      raise SeriesNotFoundError, "Could not find comic data for #{slug}" unless script
+      raise Scrapers::Errors::SeriesNotFoundError, "Could not find comic data for #{slug}" unless script
 
       data = JSON.parse(script.text)
 
@@ -132,7 +133,7 @@ module Comick
       doc = Nokogiri::HTML(response.body)
 
       script = doc.at_css("#sv-data")
-      raise ChapterNotFoundError, "Could not find chapter data for #{chapter_url}" unless script
+      raise Scrapers::Errors::ChapterNotFoundError, "Could not find chapter data for #{chapter_url}" unless script
 
       data = JSON.parse(script.text)
       images = data.dig("chapter", "images") || []
@@ -269,8 +270,4 @@ module Comick
   end
 end
 
-module Scrapers
-  module Comick
-    Adapter = ::Comick::Adapter
-  end
 end

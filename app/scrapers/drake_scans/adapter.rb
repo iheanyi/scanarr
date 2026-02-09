@@ -15,8 +15,9 @@ require "nokogiri"
 # Pages: GET /{chapter-url}/ with images in div#readerarea img or JS "images" array
 #
 # Special: Strips Jetpack CDN prefix (https://i[0-9].wp.com/) from image URLs
-module DrakeScans
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module DrakeScans
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://drakecomic.org"
 
     JETPACK_CDN_REGEX = /\Ahttps:\/\/i\d\.wp\.com\//
@@ -425,9 +426,4 @@ module DrakeScans
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module DrakeScans
-    Adapter = ::DrakeScans::Adapter
-  end
 end

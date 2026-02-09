@@ -69,7 +69,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/v3x-search?sort=views_a&page=1" => search_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -97,7 +97,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
@@ -149,7 +149,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/title/99999")
 
@@ -204,7 +204,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/title/99999")
 
@@ -240,7 +240,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapter/cdn-test" => pages_fixture_cdn
     )
     http = FakeHttpClient.new(mapping: cdn_fixtures, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/chapter/cdn-test")
 
@@ -252,7 +252,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/chapter/99999")
 

@@ -7,8 +7,9 @@
 # - No pagination support (homepage only shows ~40 latest, ~10 trending)
 # - Only "latest" and "popular" sort options (no alphabetical)
 # - The `page` and `limit` parameters are ignored due to homepage constraints
-module MangaPill
-  class Adapter < ::BaseAdapter
+module Scrapers
+  module MangaPill
+  class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://mangapill.com"
 
     # MangaPill supports browse via homepage scraping
@@ -408,9 +409,4 @@ module MangaPill
   end
 end
 
-# Register with legacy namespace
-module Scrapers
-  module MangaPill
-    Adapter = ::MangaPill::Adapter
-  end
 end
