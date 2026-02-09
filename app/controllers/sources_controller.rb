@@ -15,15 +15,15 @@ class SourcesController < ApplicationController
 
     scope = Source.where(enabled: true)
     @sources = case @sort_by
-    when "name_desc"
+               when "name_desc"
                  scope.order(name: :desc)
-    when "most_series"
+               when "most_series"
                  scope.left_joins(:series_sources)
                       .group("sources.id")
                       .order(Arel.sql("COUNT(series_sources.id) DESC"), name: :asc)
-    else # name_asc
+               else # name_asc
                  scope.order(name: :asc)
-    end
+               end
   end
 
   def browse
