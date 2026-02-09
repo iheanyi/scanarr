@@ -159,6 +159,69 @@ default: &default
     headers:
       User-Agent: "ScanarrScraper/0.1"
       Referer: "https://drakecomic.org/"
+  like_manga:
+    base_url: "https://likemanga.ink"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://likemanga.ink/"
+  manga_freak:
+    base_url: "https://ww2.mangafreak.me"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://ww2.mangafreak.me/"
+  manga_read:
+    base_url: "https://www.mangaread.org"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://www.mangaread.org/"
+  manga_geko:
+    base_url: "https://www.mgeko.cc"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://www.mgeko.cc/"
+  manhwa18:
+    base_url: "https://manhwa18.net"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://manhwa18.net/"
+  manga_nato:
+    base_url: "https://natomanga.com"
+    delay_ms: 400
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://natomanga.com/"
+  manga_fire:
+    base_url: "https://mangafire.to"
+    delay_ms: 500
+    open_timeout: 10
+    read_timeout: 20
+    max_retries: 2
+    headers:
+      User-Agent: "ScanarrScraper/0.1"
+      Referer: "https://mangafire.to/"
 
 development:
   <<: *default

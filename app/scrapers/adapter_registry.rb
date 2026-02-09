@@ -21,7 +21,14 @@ class AdapterRegistry
     "manhua_plus" => -> { ManhuaPlus::Adapter },
     "isekai_scan" => -> { IsekaiScan::Adapter },
     "toonily" => -> { Toonily::Adapter },
-    "drake_scans" => -> { DrakeScans::Adapter }
+    "drake_scans" => -> { DrakeScans::Adapter },
+    "like_manga" => -> { LikeManga::Adapter },
+    "manga_freak" => -> { MangaFreak::Adapter },
+    "manga_read" => -> { MangaRead::Adapter },
+    "manga_geko" => -> { MangaGeko::Adapter },
+    "manhwa18" => -> { Manhwa18::Adapter },
+    "manga_nato" => -> { MangaNato::Adapter },
+    "manga_fire" => -> { MangaFire::Adapter }
   }.freeze
 
   class << self
