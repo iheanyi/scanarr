@@ -97,11 +97,11 @@
         <p class="text-sm text-muted mt-1">
           Import your library from a Mihon, TachiJ2K, Yokai, or Tachiyomi backup file.
           Series, chapters, reading progress, and AniList/MAL tracking will be imported.
+          Large backups are processed in the background.
         </p>
       </div>
 
-      <%= form_with url: import_tachiyomi_path, method: :post, multipart: true, class: "space-y-4",
-                    data: { turbo_confirm: "Import from Mihon backup? Unmapped sources will be skipped." } do |f| %>
+      <%= form_with url: preview_tachiyomi_path, method: :post, multipart: true, class: "space-y-4" do |f| %>
         <div>
           <label for="file" class="text-sm font-medium text-foreground mb-0">Backup File</label>
           <%= f.file_field :file, accept: ".tachibk,.proto.gz",
@@ -109,36 +109,13 @@
           <p class="text-xs text-muted-2 mt-1">Accepts .tachibk and .proto.gz files</p>
         </div>
 
-        <div>
-          <span class="text-sm font-medium text-foreground">Conflict Strategy</span>
-          <div class="mt-2 space-y-2">
-            <label class="flex items-center gap-2 text-sm">
-              <%= f.radio_button :strategy, "merge", checked: true, class: "accent-accent" %>
-              <span>
-                <span class="font-medium">Merge</span>
-                <span class="text-muted"> — Add new data, keep existing progress</span>
-              </span>
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-              <%= f.radio_button :strategy, "overwrite", class: "accent-accent" %>
-              <span>
-                <span class="font-medium">Overwrite</span>
-                <span class="text-muted"> — Replace existing with Mihon data</span>
-              </span>
-            </label>
-            <label class="flex items-center gap-2 text-sm">
-              <%= f.radio_button :strategy, "skip", class: "accent-accent" %>
-              <span>
-                <span class="font-medium">Skip</span>
-                <span class="text-muted"> — Only import new series</span>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <%= f.submit "Import from Mihon",
+        <%= f.submit "Preview Backup",
                       class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer" %>
       <% end %>
+
+      <%# Turbo Stream for background import status %>
+      <%= turbo_stream_from current_user, :tachiyomi_import %>
+      <div id="tachiyomi-import-status"></div>
     </section>
 
     <%# Mihon/Tachiyomi Export %>

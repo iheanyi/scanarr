@@ -1,0 +1,134 @@
+<div class="space-y-8">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Preview Mihon Import",
+    description: "Review what's in your backup before importing."
+  ) do |header|
+    header.with_breadcrumb do %>
+      <%= link_to export_path, class: "inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors" do %>
+        <%= icon "arrow-left", class: "h-4 w-4" %>
+        Back to Export & Import
+      <% end %>
+    <% end
+  end %>
+
+  <%# Summary Stats %>
+  <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+    <%= render UI::StatCardComponent.new(label: "Total Manga", value: @preview[:total_manga], color: :accent) %>
+    <%= render UI::StatCardComponent.new(label: "Can Import", value: @preview[:mapped_manga], color: :success) %>
+    <%= render UI::StatCardComponent.new(label: "Will Be Skipped", value: @preview[:unmapped_manga], color: @preview[:unmapped_manga] > 0 ? :warning : :muted) %>
+    <%= render UI::StatCardComponent.new(label: "Total Chapters", value: @preview[:total_chapters], color: :accent) %>
+    <%= render UI::StatCardComponent.new(label: "Read Chapters", value: @preview[:read_chapters], color: :info) %>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <%# Sources Breakdown %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-semibold">Sources in Backup</h2>
+        <p class="text-sm text-muted mt-1">
+          <%= @preview[:sources].count { |s| s[:mapped] } %> of <%= @preview[:sources].size %> sources are available in Scanarr.
+        </p>
+      </div>
+
+      <div class="divide-y divide-border">
+        <% @preview[:sources].sort_by { |s| s[:mapped] ? 0 : 1 }.each do |source| %>
+          <div class="flex items-center justify-between py-3">
+            <div class="flex items-center gap-3">
+              <% if source[:mapped] %>
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-success-soft">
+                  <%= icon "check", class: "h-3.5 w-3.5 text-success" %>
+                </span>
+              <% else %>
+                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-error-soft">
+                  <%= icon "x", class: "h-3.5 w-3.5 text-error" %>
+                </span>
+              <% end %>
+              <span class="text-sm font-medium"><%= source[:name] %></span>
+            </div>
+            <% if source[:mapped] %>
+              <%= render UI::BadgeComponent.new(label: "Available", variant: :success) %>
+            <% else %>
+              <%= render UI::BadgeComponent.new(label: "Not Available", variant: :warning) %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <%# Additional Stats + Import Form %>
+    <div class="space-y-6">
+      <%# Additional stats %>
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+        <h2 class="text-lg font-semibold">Additional Data</h2>
+        <div class="rounded-md bg-surface-2 p-4 space-y-2">
+          <dl class="grid grid-cols-2 gap-2 text-sm">
+            <dt class="text-muted">Reading History</dt>
+            <dd class="font-semibold"><%= @preview[:total_history] %> entries</dd>
+            <dt class="text-muted">Tracker Links</dt>
+            <dd class="font-semibold"><%= @preview[:total_tracking] %> entries</dd>
+          </dl>
+        </div>
+      </section>
+
+      <%# Unmapped sources warning %>
+      <% if @preview[:unmapped_manga] > 0 %>
+        <div class="flex gap-3 rounded-lg border border-warning/30 bg-warning-soft/50 p-4">
+          <%= icon "alert-triangle", class: "h-5 w-5 text-warning shrink-0 mt-0.5" %>
+          <div class="space-y-1">
+            <p class="text-sm font-semibold text-warning">Some manga will be skipped</p>
+            <p class="text-sm text-muted">
+              <%= @preview[:unmapped_manga] %> manga from
+              <%= @preview[:unmapped_sources].map { |s| s[:name] }.first(5).join(", ") %>
+              <% if @preview[:unmapped_sources].size > 5 %>
+                and <%= @preview[:unmapped_sources].size - 5 %> more
+              <% end %>
+              cannot be imported because those sources aren't available in Scanarr.
+            </p>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Import Form %>
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+        <h2 class="text-lg font-semibold">Import Settings</h2>
+
+        <%= form_with url: import_tachiyomi_path, method: :post, class: "space-y-4" do |f| %>
+          <div>
+            <span class="text-sm font-medium text-foreground">Conflict Strategy</span>
+            <div class="mt-2 space-y-2">
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.radio_button :strategy, "merge", checked: true, class: "accent-accent" %>
+                <span>
+                  <span class="font-medium">Merge</span>
+                  <span class="text-muted"> — Add new data, keep existing progress</span>
+                </span>
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.radio_button :strategy, "overwrite", class: "accent-accent" %>
+                <span>
+                  <span class="font-medium">Overwrite</span>
+                  <span class="text-muted"> — Replace existing with Mihon data</span>
+                </span>
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.radio_button :strategy, "skip", class: "accent-accent" %>
+                <span>
+                  <span class="font-medium">Skip</span>
+                  <span class="text-muted"> — Only import new series</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <%= render UI::ButtonComponent.new(label: nil, variant: :primary, type: "submit") do %>
+              <%= icon "upload", class: "h-4 w-4" %>
+              Confirm Import
+            <% end %>
+            <%= render UI::ButtonComponent.new(label: "Cancel", variant: :ghost, href: export_path) %>
+          </div>
+        <% end %>
+      </section>
+    </div>
+  </div>
+</div>

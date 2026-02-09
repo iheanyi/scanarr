@@ -94,11 +94,22 @@ Rails.application.routes.draw do
   patch "/settings/source/:source_id", to: "settings#update_source", as: :settings_source
   patch "/settings/password", to: "settings#update_password", as: :settings_password
   post "/settings/regenerate_api_key", to: "settings#regenerate_api_key", as: :settings_regenerate_api_key
+  patch "/settings/source_priority", to: "settings#update_source_priority", as: :settings_source_priority
 
   # Library Export/Import
   get "/export", to: "exports#show", as: :export
   post "/export", to: "exports#create"
   post "/import", to: "exports#import_library", as: :import_library
+  post "/import/tachiyomi/preview", to: "exports#preview_tachiyomi", as: :preview_tachiyomi
+  post "/import/tachiyomi", to: "exports#import_tachiyomi", as: :import_tachiyomi
+  post "/export/tachiyomi", to: "exports#export_tachiyomi", as: :export_tachiyomi
+
+  # Source Migrations
+  resources :source_migrations, only: [ :index, :create ] do
+    collection do
+      post :preview
+    end
+  end
 
   # Mission Control for SolidQueue job monitoring
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"
