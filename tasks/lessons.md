@@ -1,5 +1,6 @@
 # Lessons
 
+- 2026-02-09: Performance: Always check Rack Mini Profiler after changes. Look for N+1 queries (especially ActiveStorage — MUST use `cover_attachment: :blob` not just `:cover_attachment`), redundant queries on every request (notification counts, setup checks), and view rendering overhead. Keep server-side response times under 200ms. The profiler badge shows on every page in dev. Common traps: sidebar renders twice (desktop + mobile), `User.exists?` in before_action on every request, loading entire associations into memory when SQL can do it (e.g., chapter prev/next navigation). Postgres > SQLite for concurrent writes (download jobs + web requests). No pure Ruby option for image processing — libvips is the way.
 - 2026-02-04: CI Brakeman: Don't use `--ensure-latest` flag - causes exit code 5 when newer version exists. Remove from bin/brakeman.
 - 2026-02-04: Test fixtures: When multiple fixtures share same foreign key (e.g., two releases for same chapter), `order(created_at: :desc).first` picks based on fixture load order. Fix by ensuring fixtures use different relationships or cleaning up in test setup.
 - 2026-02-04: rubocop-rails-omakase requires spaces inside array brackets: `[ "a", "b" ]` not `["a", "b"]`.

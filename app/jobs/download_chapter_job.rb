@@ -230,11 +230,12 @@ class DownloadChapterJob < ApplicationJob
 
       @file_asset.update!(pages_downloaded: position)
 
-      # Broadcast to admin downloads on every page for real-time progress
-      broadcast_admin_download_update
-
-      # Broadcast to series page every 3 pages (less noisy)
-      broadcast_chapter_update(@chapter, @source) if (position % 3).zero?
+      # Broadcast progress updates every 5 pages to reduce rendering overhead
+      # Each broadcast renders a full partial, so less frequent = less CPU in the job
+      if (position % 5).zero? || position == @pages.size
+        broadcast_admin_download_update
+        broadcast_chapter_update(@chapter, @source)
+      end
 
       # Checkpoint after each page - allows job to be interrupted and resumed
       step.advance! from: position

@@ -52,19 +52,12 @@ class StatsController < ApplicationController
   end
 
   def recently_read_series
-    chapter_ids = current_user.chapter_progresses
-                              .order(progressed_at: :desc)
-                              .limit(100)
-                              .pluck(:chapter_id)
-
-    return Series.none if chapter_ids.empty?
-
-    series_ids = Chapter.where(id: chapter_ids)
-                        .distinct
-                        .pluck(:series_id)
-
-    Series.where(id: series_ids)
-          .includes(:cover_attachment, :sources)
-          .limit(10)
+    # Single query with subselects instead of 3 sequential queries
+    Series.where(id:
+      Chapter.where(id:
+        current_user.chapter_progresses.order(progressed_at: :desc).limit(100).select(:chapter_id)
+      ).select(:series_id)
+    ).includes({ cover_attachment: :blob }, :sources)
+     .limit(10)
   end
 end

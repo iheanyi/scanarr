@@ -6,11 +6,10 @@ class CalendarController < ApplicationController
     @source_filter = params[:source].presence
     @week_offset = params[:week_offset].to_i
 
-    # Get followed library series IDs
-    followed_library_series_ids = current_user.user_series_follows.pluck(:library_series_id)
-
-    # Get all series linked to followed library series
-    followed_series_ids = Series.where(library_series_id: followed_library_series_ids).pluck(:id)
+    # Get followed series IDs in a single query using subselect
+    followed_series_ids = Series
+      .where(library_series_id: current_user.user_series_follows.select(:library_series_id))
+      .pluck(:id)
 
     # Date range based on view type
     case @view_type
@@ -30,7 +29,7 @@ class CalendarController < ApplicationController
 
     # Query chapters — use published_at (actual release date), fall back to created_at
     date_range = @start_date.beginning_of_day..@end_date.end_of_day
-    chapters_scope = Chapter.includes(:source, series: [ :cover_attachment, :sources, :series_sources ], releases: :file_asset)
+    chapters_scope = Chapter.includes(:source, series: [ { cover_attachment: :blob }, :sources, :series_sources ], releases: :file_asset)
       .where(series_id: followed_series_ids)
       .where("COALESCE(chapters.published_at, chapters.created_at) BETWEEN ? AND ?", date_range.first, date_range.last)
       .order(Arel.sql("COALESCE(chapters.published_at, chapters.created_at) DESC"))

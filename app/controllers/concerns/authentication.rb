@@ -19,9 +19,20 @@ module Authentication
   def redirect_to_setup
     return if auth_disabled?
     return if controller_name == "setup"
-    unless User.where.not(password_digest: nil).exists?
+    unless setup_complete?
       redirect_to setup_path
     end
+  end
+
+  # Cache the setup check — after initial setup, this is always true
+  # and never needs to hit the database again.
+  def setup_complete?
+    @@setup_complete = nil unless defined?(@@setup_complete) # rubocop:disable Style/ClassVars
+    @@setup_complete ||= User.where.not(password_digest: nil).exists? # rubocop:disable Style/ClassVars
+  end
+
+  def self.reset_setup_cache!
+    @@setup_complete = nil # rubocop:disable Style/ClassVars
   end
 
   def auth_disabled?

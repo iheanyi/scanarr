@@ -300,20 +300,24 @@ class ChaptersController < ApplicationController
   end
 
   def set_navigation
-    ordered = @series.chapters
-                     .where(source: @source)
-                     .order(
-                       Arel.sql("chapter_number_value ASC NULLS LAST"),
-                       :chapter_number,
-                       :id
-                     )
-                     .to_a
-                     .uniq(&:chapter_number)
-    index = ordered.index { |c| c.chapter_number == @chapter.chapter_number }
-    return unless index
+    base = @series.chapters.where(source: @source)
+    current_val = @chapter.chapter_number_value
 
-    @previous_chapter = ordered[index - 1] if index.positive?
-    @next_chapter = ordered[index + 1] if index < ordered.length - 1
+    if current_val
+      @previous_chapter = base
+        .where("chapter_number_value < ?", current_val)
+        .order(Arel.sql("chapter_number_value DESC"))
+        .first
+
+      @next_chapter = base
+        .where("chapter_number_value > ?", current_val)
+        .order(Arel.sql("chapter_number_value ASC"))
+        .first
+    else
+      # Fallback for chapters without a numeric value
+      @previous_chapter = base.where("id < ?", @chapter.id).order(id: :desc).first
+      @next_chapter = base.where("id > ?", @chapter.id).order(id: :asc).first
+    end
   end
 
   def set_initial_page_index

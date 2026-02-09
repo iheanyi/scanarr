@@ -45,16 +45,22 @@ class ApplicationController < ActionController::Base
   def current_notifications
     return [] unless current_user
     @current_notifications ||= current_user.new_chapter_notifications
-      .includes(chapter: :series)
+      .includes(chapter: { series: { cover_attachment: :blob } })
       .unread
       .recent
       .order(created_at: :desc)
       .limit(10)
+      .to_a
   end
 
   def unread_notification_count
     return 0 unless current_user
-    @unread_notification_count ||= current_user.new_chapter_notifications.unread.count
+    # Reuse already-loaded notifications to avoid a separate COUNT query
+    if defined?(@current_notifications) && @current_notifications
+      @current_notifications.size
+    else
+      @unread_notification_count ||= current_user.new_chapter_notifications.unread.count
+    end
   end
 
   def chapter_identifier(chapter)
