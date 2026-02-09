@@ -55,4 +55,16 @@ class LibraryControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
   end
+
+  test "series links escape library turbo frame" do
+    get library_path
+
+    assert_response :success
+
+    source = sources(:one)
+    series = series(:one)
+    series_url = source_series_path(source_slug: source.slug, series_slug: series.to_param)
+
+    assert_select %(turbo-frame#library-content a[href="#{series_url}"][data-turbo-frame="_top"]), minimum: 1
+  end
 end

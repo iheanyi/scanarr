@@ -16,6 +16,10 @@ rescue Google::Protobuf::TypeError
 end
 
 module Tachiyomi
+  # Zeitwerk expects this constant for lib/tachiyomi/backup_pb.rb.
+  module BackupPb
+  end
+
   Backup = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tachiyomi.Backup").msgclass
   BackupManga = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tachiyomi.BackupManga").msgclass
   BackupChapter = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tachiyomi.BackupChapter").msgclass

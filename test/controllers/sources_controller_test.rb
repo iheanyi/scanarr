@@ -34,6 +34,13 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "application-" # CSS asset
   end
 
+  def test_index_navigation_buttons_escape_turbo_frame
+    get "/"
+
+    assert_response :success
+    assert_select %(turbo-frame#sources-content a[data-turbo-frame="_top"]), minimum: 3
+  end
+
   def test_search_shows_results
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/search", params: { q: "one piece" }

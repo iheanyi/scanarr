@@ -29,6 +29,7 @@
                         source_slug: @source.slug,
                         series_slug: series.to_param
                       ),
+                      data: { turbo_frame: "_top" },
                       class: "group rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors" do %>
             <div class="flex gap-4">
               <%= render UI::SeriesCoverComponent.new(url: series.cover_image_url, alt: "#{series.canonical_title} cover", size: :lg, class: "shrink-0") %>

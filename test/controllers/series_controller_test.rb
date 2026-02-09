@@ -14,6 +14,14 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "/sources/weeb-central/#{series_url(series)}"
   end
 
+  def test_index_series_links_escape_turbo_frame
+    series = series(:one)
+    get "/sources/weeb-central"
+
+    assert_response :success
+    assert_select %(turbo-frame#series-content a[href="/sources/weeb-central/#{series_url(series)}"][data-turbo-frame="_top"]), minimum: 1
+  end
+
   def test_show_returns_success
     series = series(:one)
     get "/sources/weeb-central/#{series_url(series)}"
