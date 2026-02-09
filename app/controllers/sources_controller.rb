@@ -3,8 +3,27 @@ class SourcesController < ApplicationController
 
   helper_method :source_slug
 
+  SORT_OPTIONS = {
+    "name_asc" => "Name A–Z",
+    "name_desc" => "Name Z–A",
+    "most_series" => "Most Series"
+  }.freeze
+
   def index
-    @sources = Source.where(enabled: true).order(:name)
+    @sort_by = params[:sort_by].presence || "name_asc"
+    @sort_options = SORT_OPTIONS
+
+    scope = Source.where(enabled: true)
+    @sources = case @sort_by
+               when "name_desc"
+                 scope.order(name: :desc)
+               when "most_series"
+                 scope.left_joins(:series_sources)
+                      .group("sources.id")
+                      .order(Arel.sql("COUNT(series_sources.id) DESC"), name: :asc)
+               else # name_asc
+                 scope.order(name: :asc)
+               end
   end
 
   def browse

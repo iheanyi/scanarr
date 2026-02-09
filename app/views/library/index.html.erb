@@ -18,127 +18,134 @@
       <%= hidden_field_tag :status, params[:status] if params[:status].present? %>
       <%= render UI::SearchInputComponent.new(form: f, name: :q, value: params[:q], placeholder: "Search library...") %>
     <% end %>
-
-    <% if params[:status] == "following" %>
-      <div class="flex items-center gap-2 ml-auto">
-        <span class="text-xs text-muted-2">Sort:</span>
-        <% sort_by = params[:sort_by].presence || "recently_updated" %>
-        <%= render UI::FilterTabsComponent.new(size: :sm, items: [
-          { label: "Recent", href: library_path(status: "following", q: params[:q], sort_by: "recently_updated"), active: sort_by == "recently_updated" },
-          { label: "A-Z", href: library_path(status: "following", q: params[:q], sort_by: "alphabetical"), active: sort_by == "alphabetical" },
-          { label: "Unread", href: library_path(status: "following", q: params[:q], sort_by: "most_unread"), active: sort_by == "most_unread" }
-        ]) %>
-      </div>
-    <% end %>
   </div>
 
-  <% if @series.empty? %>
-    <% has_filters = params[:q].present? || params[:status].present? %>
-    <%= render UI::EmptyStateComponent.new(
-      title: has_filters ? "No series match your filters" : "Your library is empty",
-      description: has_filters ? nil : "Import series from a source to get started."
-    ) do |empty| %>
-      <% empty.with_icon do %>
-        <%= icon "book-open", class: "h-6 w-6" %>
-      <% end %>
-      <% empty.with_action do %>
-        <% if has_filters %>
-          <%= link_to "Clear filters", library_path, class: "text-sm text-info hover:text-info" %>
-        <% else %>
-          <%= link_to "Browse sources", root_path, class: "text-sm text-info hover:text-info" %>
-        <% end %>
-      <% end %>
-    <% end %>
-  <% else %>
-    <!-- Grid of series -->
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-      <% @series.each do |series| %>
-        <% progress = series.download_progress %>
-        <% source = series.primary_source %>
-        <% series_source = series.primary_series_source %>
-        <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
-
-        <%= link_to series_path, class: "group block", data: { turbo_preload: "" } do %>
-          <%= render UI::SeriesCoverComponent.new(
-            url: series.cover_image_url,
-            alt: series.canonical_title,
-            size: :full,
-            aspect: "2/3",
-            rounded: :lg,
-            image_class: "transition group-hover:scale-105",
-            class: "relative border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors"
-          ) do |cover| %>
-            <% cover.with_fallback do %>
-              <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
-                <%= icon "book-open", class: "h-12 w-12 text-muted-2", stroke_width: "1.5" %>
-              </div>
-            <% end %>
-            <% cover.with_overlay do %>
-              <% if progress[:total] > 0 %>
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
-                      <%= progress[:downloaded] %>/<%= progress[:total] %>
-                    </span>
-                    <% if progress[:downloading] > 0 %>
-                      <span class="flex items-center gap-1 text-warning">
-                        <%= render UI::SpinnerComponent.new(size: :xs, class: "text-warning") %>
-                        <%= progress[:downloading] %>
-                      </span>
-                    <% end %>
-                  </div>
-                  <div class="mt-1">
-                    <%= render UI::ProgressBarComponent.new(
-                      value: progress[:downloaded],
-                      max: progress[:total],
-                      color: progress[:downloaded] == progress[:total] ? :success : :info,
-                      size: :xs
-                    ) %>
-                  </div>
-                </div>
-              <% end %>
-              <div class="absolute right-2 top-2 flex items-center gap-1">
-                <% if params[:status] == "following" && @unread_counts&.dig(series.library_series_id).to_i > 0 %>
-                  <% unread = @unread_counts[series.library_series_id] %>
-                  <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
-                    <%= unread > 9 ? "9+" : unread %>
-                  </span>
-                <% end %>
-                <% if @followed_library_series_ids.include?(series.library_series_id) %>
-                  <span class="rounded bg-accent/80 px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground backdrop-blur-sm" title="Following">
-                    <%= icon "eye", class: "inline h-3 w-3" %>
-                  </span>
-                <% end %>
-                <% if source %>
-                  <span class="rounded bg-background/70 px-1.5 py-0.5 text-[10px] font-medium text-muted backdrop-blur-sm">
-                    <%= source.name %>
-                  </span>
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
-
-          <div class="mt-2">
-            <h3 class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">
-              <%= series.canonical_title %>
-            </h3>
-            <% if series.display_author.present? %>
-              <p class="truncate text-xs text-muted-2"><%= series.display_author %></p>
-            <% end %>
-            <% if params[:status] == "following" && @last_checked&.dig(series.id) %>
-              <p class="truncate text-xs text-muted-2">
-                Checked <%= time_ago_in_words(@last_checked[series.id]) %> ago
-              </p>
-            <% end %>
-          </div>
-        <% end %>
-      <% end %>
+  <%= turbo_frame_tag "library-content" do %>
+    <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <p class="text-sm text-muted-2"><%= @series.total_count %> series</p>
+      <%= render UI::DropdownComponent.new(
+        label: @sort_options[@sort_by],
+        turbo_frame: "library-content",
+        items: @sort_options.map { |key, label|
+          {
+            label: label,
+            href: library_path(status: params[:status], q: params[:q], sort_by: key),
+            selected: @sort_by == key
+          }
+        }
+      ) %>
     </div>
 
-    <%= render UI::PaginationComponent.new(
-      collection: @series,
-      base_path: library_path,
-      params: { status: params[:status], q: params[:q], sort_by: params[:sort_by] }
-    ) %>
+    <% if @series.empty? %>
+      <% has_filters = params[:q].present? || params[:status].present? %>
+      <%= render UI::EmptyStateComponent.new(
+        title: has_filters ? "No series match your filters" : "Your library is empty",
+        description: has_filters ? nil : "Import series from a source to get started."
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "book-open", class: "h-6 w-6" %>
+        <% end %>
+        <% empty.with_action do %>
+          <% if has_filters %>
+            <%= link_to "Clear filters", library_path, class: "text-sm text-info hover:text-info" %>
+          <% else %>
+            <%= link_to "Browse sources", root_path, class: "text-sm text-info hover:text-info" %>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <!-- Grid of series -->
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <% @series.each do |series| %>
+          <% progress = series.download_progress %>
+          <% source = series.primary_source %>
+          <% series_source = series.primary_series_source %>
+          <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
+
+          <%= link_to series_path, class: "group block", data: { turbo_preload: "" } do %>
+            <%= render UI::SeriesCoverComponent.new(
+              url: series.cover_image_url,
+              alt: series.canonical_title,
+              size: :full,
+              aspect: "2/3",
+              rounded: :lg,
+              image_class: "transition group-hover:scale-105",
+              class: "relative border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors"
+            ) do |cover| %>
+              <% cover.with_fallback do %>
+                <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
+                  <%= icon "book-open", class: "h-12 w-12 text-muted-2", stroke_width: "1.5" %>
+                </div>
+              <% end %>
+              <% cover.with_overlay do %>
+                <% if progress[:total] > 0 %>
+                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
+                        <%= progress[:downloaded] %>/<%= progress[:total] %>
+                      </span>
+                      <% if progress[:downloading] > 0 %>
+                        <span class="flex items-center gap-1 text-warning">
+                          <%= render UI::SpinnerComponent.new(size: :xs, class: "text-warning") %>
+                          <%= progress[:downloading] %>
+                        </span>
+                      <% end %>
+                    </div>
+                    <div class="mt-1">
+                      <%= render UI::ProgressBarComponent.new(
+                        value: progress[:downloaded],
+                        max: progress[:total],
+                        color: progress[:downloaded] == progress[:total] ? :success : :info,
+                        size: :xs
+                      ) %>
+                    </div>
+                  </div>
+                <% end %>
+                <div class="absolute right-2 top-2 flex items-center gap-1">
+                  <% if params[:status] == "following" && @unread_counts&.dig(series.library_series_id).to_i > 0 %>
+                    <% unread = @unread_counts[series.library_series_id] %>
+                    <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                      <%= unread > 9 ? "9+" : unread %>
+                    </span>
+                  <% end %>
+                  <% if @followed_library_series_ids.include?(series.library_series_id) %>
+                    <span class="rounded bg-accent/80 px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground backdrop-blur-sm" title="Following">
+                      <%= icon "eye", class: "inline h-3 w-3" %>
+                    </span>
+                  <% end %>
+                  <% if source %>
+                    <span class="rounded bg-background/70 px-1.5 py-0.5 text-[10px] font-medium text-muted backdrop-blur-sm">
+                      <%= source.name %>
+                    </span>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+
+            <div class="mt-2">
+              <h3 class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">
+                <%= series.canonical_title %>
+              </h3>
+              <% if series.display_author.present? %>
+                <p class="truncate text-xs text-muted-2"><%= series.display_author %></p>
+              <% end %>
+              <% if params[:status] == "following" && @last_checked&.dig(series.id) %>
+                <p class="truncate text-xs text-muted-2">
+                  Checked <%= time_ago_in_words(@last_checked[series.id]) %> ago
+                </p>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%= render UI::PaginationComponent.new(
+        collection: @series,
+        base_path: library_path,
+        params: { status: params[:status], q: params[:q], sort_by: params[:sort_by] }
+      ) %>
+    <% end %>
+    </div>
   <% end %>
 </div>

@@ -5,43 +5,62 @@
     breadcrumb_text: @source.name || @source.key
   ) %>
 
-  <% if @series.any? %>
-    <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <% @series.each do |series| %>
-        <%= link_to source_series_path(
-                      source_slug: @source.slug,
-                      series_slug: series.to_param
-                    ),
-                    class: "group rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors" do %>
-          <div class="flex gap-4">
-            <%= render UI::SeriesCoverComponent.new(url: series.cover_image_url, alt: "#{series.canonical_title} cover", size: :lg, class: "shrink-0") %>
-            <div class="flex flex-col min-w-0">
-              <h2 class="text-lg font-semibold text-balance line-clamp-2 group-hover:text-accent transition-colors"><%= series.canonical_title %></h2>
-              <% if series.display_author.present? %>
-                <p class="text-sm text-muted mt-1">by <%= series.display_author %></p>
-              <% end %>
-              <p class="text-xs text-muted-2 mt-auto"><%= series.chapters_count %> chapters</p>
+  <%= turbo_frame_tag "series-content" do %>
+    <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <p class="text-sm text-muted-2"><%= @series.size %> series</p>
+      <%= render UI::DropdownComponent.new(
+        label: @sort_options[@sort_by],
+        turbo_frame: "series-content",
+        items: @sort_options.map { |key, label|
+          {
+            label: label,
+            href: source_series_index_path(source_slug: @source.slug, sort_by: key),
+            selected: @sort_by == key
+          }
+        }
+      ) %>
+    </div>
+
+    <% if @series.any? %>
+      <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <% @series.each do |series| %>
+          <%= link_to source_series_path(
+                        source_slug: @source.slug,
+                        series_slug: series.to_param
+                      ),
+                      class: "group rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors" do %>
+            <div class="flex gap-4">
+              <%= render UI::SeriesCoverComponent.new(url: series.cover_image_url, alt: "#{series.canonical_title} cover", size: :lg, class: "shrink-0") %>
+              <div class="flex flex-col min-w-0">
+                <h2 class="text-lg font-semibold text-balance line-clamp-2 group-hover:text-accent transition-colors"><%= series.canonical_title %></h2>
+                <% if series.display_author.present? %>
+                  <p class="text-sm text-muted mt-1">by <%= series.display_author %></p>
+                <% end %>
+                <p class="text-xs text-muted-2 mt-auto"><%= series.chapters_count %> chapters</p>
+              </div>
             </div>
-          </div>
+          <% end %>
         <% end %>
-      <% end %>
-    </section>
-  <% else %>
-    <%= render UI::EmptyStateComponent.new(
-      title: "No series imported yet",
-      description: "Search the source and import series to get started."
-    ) do |empty| %>
-      <% empty.with_icon do %>
-        <%= icon "book-open", class: "h-6 w-6" %>
-      <% end %>
-      <% empty.with_action do %>
-        <%= render UI::ButtonComponent.new(
-          variant: :primary,
-          href: source_search_path(source_slug: @source.slug)
-        ) do %>
-          Search this source
+      </section>
+    <% else %>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No series imported yet",
+        description: "Search the source and import series to get started."
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "book-open", class: "h-6 w-6" %>
+        <% end %>
+        <% empty.with_action do %>
+          <%= render UI::ButtonComponent.new(
+            variant: :primary,
+            href: source_search_path(source_slug: @source.slug)
+          ) do %>
+            Search this source
+          <% end %>
         <% end %>
       <% end %>
     <% end %>
+    </div>
   <% end %>
 </div>

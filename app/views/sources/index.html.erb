@@ -4,55 +4,74 @@
     description: "Pick a source to browse or search for series."
   ) %>
 
-  <% if @sources.any? %>
-    <section class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-      <% @sources.each do |source| %>
-        <div class="group rounded-lg border border-border/80 bg-surface/40 p-5 hover:border-accent/40 transition-colors">
-          <div class="space-y-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <%= icon "globe", class: "h-4 w-4 text-accent" %>
-                <h2 class="text-lg font-semibold text-balance"><%= source.name || source.key %></h2>
+  <%= turbo_frame_tag "sources-content" do %>
+    <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <p class="text-sm text-muted-2"><%= @sources.length %> sources</p>
+      <%= render UI::DropdownComponent.new(
+        label: @sort_options[@sort_by],
+        turbo_frame: "sources-content",
+        items: @sort_options.map { |key, label|
+          {
+            label: label,
+            href: root_path(sort_by: key),
+            selected: @sort_by == key
+          }
+        }
+      ) %>
+    </div>
+
+    <% if @sources.any? %>
+      <section class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+        <% @sources.each do |source| %>
+          <div class="group rounded-lg border border-border/80 bg-surface/40 p-5 hover:border-accent/40 transition-colors">
+            <div class="space-y-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <%= icon "globe", class: "h-4 w-4 text-accent" %>
+                  <h2 class="text-lg font-semibold text-balance"><%= source.name || source.key %></h2>
+                </div>
+                <p class="text-sm text-muted-2 truncate"><%= source.base_url %></p>
               </div>
-              <p class="text-sm text-muted-2 truncate"><%= source.base_url %></p>
-            </div>
-            <div class="flex items-center gap-2">
-              <%= render UI::ButtonComponent.new(
-                variant: :primary,
-                size: :sm,
-                href: source_browse_path(source_slug: source.slug)
-              ) do %>
-                <%= icon "compass", class: "h-3.5 w-3.5" %>
-                Discover
-              <% end %>
-              <%= render UI::ButtonComponent.new(
-                variant: :secondary,
-                size: :sm,
-                href: source_series_index_path(source_slug: source.slug)
-              ) do %>
-                Series
-              <% end %>
-              <%= render UI::ButtonComponent.new(
-                variant: :ghost,
-                size: :sm,
-                href: source_search_path(source_slug: source.slug)
-              ) do %>
-                <%= icon "search", class: "h-3.5 w-3.5" %>
-                Search
-              <% end %>
+              <div class="flex items-center gap-2">
+                <%= render UI::ButtonComponent.new(
+                  variant: :primary,
+                  size: :sm,
+                  href: source_browse_path(source_slug: source.slug)
+                ) do %>
+                  <%= icon "compass", class: "h-3.5 w-3.5" %>
+                  Discover
+                <% end %>
+                <%= render UI::ButtonComponent.new(
+                  variant: :secondary,
+                  size: :sm,
+                  href: source_series_index_path(source_slug: source.slug)
+                ) do %>
+                  Series
+                <% end %>
+                <%= render UI::ButtonComponent.new(
+                  variant: :ghost,
+                  size: :sm,
+                  href: source_search_path(source_slug: source.slug)
+                ) do %>
+                  <%= icon "search", class: "h-3.5 w-3.5" %>
+                  Search
+                <% end %>
+              </div>
             </div>
           </div>
-        </div>
-      <% end %>
-    </section>
-  <% else %>
-    <%= render UI::EmptyStateComponent.new(
-      title: "No sources configured yet",
-      description: "Sources are automatically registered when the application starts."
-    ) do |empty| %>
-      <% empty.with_icon do %>
-        <%= icon "globe", class: "h-6 w-6" %>
+        <% end %>
+      </section>
+    <% else %>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No sources configured yet",
+        description: "Sources are automatically registered when the application starts."
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "globe", class: "h-6 w-6" %>
+        <% end %>
       <% end %>
     <% end %>
+    </div>
   <% end %>
 </div>

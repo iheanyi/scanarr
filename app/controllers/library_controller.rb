@@ -1,7 +1,21 @@
 class LibraryController < ApplicationController
+  SORT_OPTIONS = {
+    "alphabetical" => "A–Z",
+    "reverse_alpha" => "Z–A",
+    "recently_added" => "Recently Added",
+    "chapter_count" => "Most Chapters"
+  }.freeze
+
+  FOLLOWING_SORT_OPTIONS = {
+    "recently_updated" => "Recently Updated",
+    "alphabetical" => "A–Z",
+    "reverse_alpha" => "Z–A",
+    "most_unread" => "Most Unread",
+    "chapter_count" => "Most Chapters"
+  }.freeze
+
   def index
-    base_scope = Series.includes(:cover_attachment, :sources, :series_sources)
-                       .order(canonical_title: :asc)
+    base_scope = Series.includes({ cover_attachment: :blob }, :sources, :series_sources)
 
     # Search by title (SQL)
     if params[:q].present?
@@ -15,13 +29,17 @@ class LibraryController < ApplicationController
     # "Following" filter: only show series the user is following
     if params[:status] == "following"
       followed_library_series_ids = current_user.user_series_follows.pluck(:library_series_id)
+      @followed_library_series_ids = Set.new(followed_library_series_ids)
       base_scope = base_scope.where(library_series_id: followed_library_series_ids)
 
       # Sort options for following view
       @sort_by = params[:sort_by].presence || "recently_updated"
+      @sort_options = FOLLOWING_SORT_OPTIONS
       case @sort_by
       when "alphabetical"
         base_scope = base_scope.order(canonical_title: :asc)
+      when "reverse_alpha"
+        base_scope = base_scope.order(canonical_title: :desc)
       when "most_unread"
         # Sort by unread count descending; falls back to alphabetical for ties
         unread_subquery = NewChapterNotification.unread
@@ -34,6 +52,8 @@ class LibraryController < ApplicationController
         base_scope = base_scope
           .joins("LEFT JOIN (#{unread_subquery.to_sql}) AS unread_counts ON unread_counts.ls_id = series.library_series_id")
           .order(Arel.sql("COALESCE(unread_counts.unread_count, 0) DESC, series.canonical_title ASC"))
+      when "chapter_count"
+        base_scope = base_scope.order(chapters_count: :desc, canonical_title: :asc)
       else # recently_updated
         base_scope = base_scope
           .left_joins(:series_sources)
@@ -80,30 +100,57 @@ class LibraryController < ApplicationController
         base_scope = base_scope.where.not(id: any_download_ids)
       end
 
+      @sort_by = params[:sort_by].presence || "alphabetical"
+      @sort_options = SORT_OPTIONS
+      base_scope = apply_sort(base_scope, @sort_by)
       @series = base_scope.page(params[:page]).per(30)
     else
-      # No status filter: paginate at the DB level (much faster)
+      # No status filter
+      @sort_by = params[:sort_by].presence || "alphabetical"
+      @sort_options = SORT_OPTIONS
+      base_scope = apply_sort(base_scope, @sort_by)
       @series = base_scope.page(params[:page]).per(30)
     end
 
     # Pre-compute download progress for displayed series only
     preload_download_progress(@series)
 
-    # Pre-load follow data for library cards
-    if current_user
-      followed_ids = current_user.user_series_follows.pluck(:library_series_id)
-      @followed_library_series_ids = Set.new(followed_ids)
-    else
-      @followed_library_series_ids = Set.new
+    # Pre-load follow data for library cards (reuse if already computed by "following" filter)
+    unless defined?(@followed_library_series_ids) && @followed_library_series_ids
+      if current_user
+        followed_ids = current_user.user_series_follows.pluck(:library_series_id)
+        @followed_library_series_ids = Set.new(followed_ids)
+      else
+        @followed_library_series_ids = Set.new
+      end
     end
 
-    # Stats (single queries, no N+1)
-    @total_series = Series.count
-    @total_chapters = Chapter.count
-    @downloaded_chapters = FileAsset.where(download_status: "complete").count
+    # Stats — single query instead of 3 separate COUNT queries
+    stats = ActiveRecord::Base.connection.select_one(<<~SQL)
+      SELECT
+        (SELECT COUNT(*) FROM series) AS total_series,
+        (SELECT COUNT(*) FROM chapters) AS total_chapters,
+        (SELECT COUNT(*) FROM file_assets WHERE download_status = 'complete') AS downloaded_chapters
+    SQL
+    @total_series = stats["total_series"]
+    @total_chapters = stats["total_chapters"]
+    @downloaded_chapters = stats["downloaded_chapters"]
   end
 
   private
+
+  def apply_sort(scope, sort_by)
+    case sort_by
+    when "reverse_alpha"
+      scope.order(canonical_title: :desc)
+    when "recently_added"
+      scope.order(created_at: :desc)
+    when "chapter_count"
+      scope.order(chapters_count: :desc, canonical_title: :asc)
+    else # alphabetical
+      scope.order(canonical_title: :asc)
+    end
+  end
 
   # Batch-load download progress for a page of series using SQL aggregation
   # instead of loading the entire chapters/releases/file_assets tree

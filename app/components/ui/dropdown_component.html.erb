@@ -8,7 +8,7 @@
   <div class="<%= menu_classes %> hidden" data-dropdown-target="menu">
     <% @items.each do |item| %>
       <% if item[:href].present? %>
-        <%= link_to item[:label], item[:href], class: item_classes(selected: item[:selected]) %>
+        <%= link_to item[:label], item[:href], class: item_classes(selected: item[:selected]), data: item_data(item) %>
       <% else %>
         <button type="button" class="<%= item_classes(selected: item[:selected]) %>" data-value="<%= item[:value] %>">
           <%= item[:label] %>

@@ -1,11 +1,31 @@
 class SeriesController < ApplicationController
   before_action :set_source
 
+  SORT_OPTIONS = {
+    "alphabetical" => "A–Z",
+    "reverse_alpha" => "Z–A",
+    "most_chapters" => "Most Chapters",
+    "recently_added" => "Recently Added"
+  }.freeze
+
   def index
-    @series = Series.joins(:series_sources)
-                    .where(series_sources: { source_id: @source.id })
-                    .includes(:cover_attachment)
-                    .order(:canonical_title)
+    @sort_by = params[:sort_by].presence || "alphabetical"
+    @sort_options = SORT_OPTIONS
+
+    scope = Series.joins(:series_sources)
+                  .where(series_sources: { source_id: @source.id })
+                  .includes(cover_attachment: :blob)
+
+    @series = case @sort_by
+              when "reverse_alpha"
+                scope.order(canonical_title: :desc)
+              when "most_chapters"
+                scope.order(chapters_count: :desc, canonical_title: :asc)
+              when "recently_added"
+                scope.order(created_at: :desc)
+              else # alphabetical
+                scope.order(canonical_title: :asc)
+              end
   end
 
   def show

@@ -2,11 +2,12 @@
 
 module UI
   class DropdownComponent < BaseComponent
-    def initialize(label:, items:, align: :right, **system_arguments)
+    def initialize(label:, items:, align: :right, turbo_frame: nil, **system_arguments)
       super(**system_arguments)
       @label = label
       @items = items
       @align = align
+      @turbo_frame = turbo_frame
     end
 
     def container_classes
@@ -27,6 +28,12 @@ module UI
       else
         "block w-full px-3 py-2 text-left text-xs text-foreground hover:bg-surface-2"
       end
+    end
+
+    def item_data(item)
+      data = item.fetch(:data, {})
+      data[:turbo_frame] = @turbo_frame if @turbo_frame.present?
+      data
     end
 
     def alignment_classes
