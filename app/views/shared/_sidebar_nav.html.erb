@@ -7,7 +7,7 @@
      {
        class: "#{base} #{is_active ? active : inactive}",
        aria: (is_active ? { current: "page" } : nil),
-       data: { action: "click->drawer#close", turbo_preload: "" }
+       data: { action: "click->drawer#close" }
      }.compact
    end %>
 

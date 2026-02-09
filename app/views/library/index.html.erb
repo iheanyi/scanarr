@@ -20,7 +20,7 @@
     <% end %>
   </div>
 
-  <%= turbo_frame_tag "library-content" do %>
+  <%= turbo_frame_tag "library-content", autoscroll: true, data: { autoscroll_block: "start" } do %>
     <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-2"><%= @series.total_count %> series</p>
@@ -56,21 +56,25 @@
       <% end %>
     <% else %>
       <!-- Grid of series -->
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         <% @series.each do |series| %>
           <% progress = series.download_progress %>
           <% source = series.primary_source %>
           <% series_source = series.primary_series_source %>
           <% series_path = source && series_source ? source_series_path(source_slug: source.slug, series_slug: series.to_param) : "#" %>
+          <% followed = @followed_library_series_ids.include?(series.library_series_id) %>
+          <% unread = params[:status] == "following" ? @unread_counts&.dig(series.library_series_id).to_i : 0 %>
 
-          <%= link_to series_path, class: "group block", data: { turbo_preload: "" } do %>
+          <% cache [ series, series.cover_image_url, progress[:downloaded], progress[:total], progress[:downloading], source&.slug, followed, unread, params[:status] ] do %>
+          <%= link_to series_path, class: "group flex min-w-0 flex-col" do %>
+            <%# Cover zone %>
             <%= render UI::SeriesCoverComponent.new(
               url: series.cover_image_url,
               alt: series.canonical_title,
               size: :full,
               aspect: "2/3",
               rounded: :lg,
-              image_class: "transition group-hover:scale-105",
+              image_class: "transition duration-300 group-hover:scale-105",
               class: "relative border-border/80 bg-surface-2 group-hover:border-accent/40 transition-colors"
             ) do |cover| %>
               <% cover.with_fallback do %>
@@ -79,8 +83,22 @@
                 </div>
               <% end %>
               <% cover.with_overlay do %>
+                <%# Hover overlay with title and description %>
+                <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <h3 class="text-sm font-semibold leading-tight text-white line-clamp-2">
+                    <%= series.canonical_title %>
+                  </h3>
+                  <% if series.display_author.present? %>
+                    <p class="mt-0.5 text-xs text-white/70 truncate"><%= series.display_author %></p>
+                  <% end %>
+                  <% if series.description.present? %>
+                    <p class="mt-1 text-xs leading-snug text-white/60 line-clamp-3"><%= strip_tags(series.description) %></p>
+                  <% end %>
+                </div>
+
+                <%# Progress bar (always visible when applicable) %>
                 <% if progress[:total] > 0 %>
-                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8">
+                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-2 pt-8 group-hover:opacity-0 transition-opacity duration-200">
                     <div class="flex items-center justify-between text-xs">
                       <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
                         <%= progress[:downloaded] %>/<%= progress[:total] %>
@@ -102,14 +120,15 @@
                     </div>
                   </div>
                 <% end %>
+
+                <%# Top badges (always visible) %>
                 <div class="absolute right-2 top-2 flex items-center gap-1">
-                  <% if params[:status] == "following" && @unread_counts&.dig(series.library_series_id).to_i > 0 %>
-                    <% unread = @unread_counts[series.library_series_id] %>
+                  <% if params[:status] == "following" && unread > 0 %>
                     <span class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
                       <%= unread > 9 ? "9+" : unread %>
                     </span>
                   <% end %>
-                  <% if @followed_library_series_ids.include?(series.library_series_id) %>
+                  <% if followed %>
                     <span class="rounded bg-accent/80 px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground backdrop-blur-sm" title="Following">
                       <%= icon "eye", class: "inline h-3 w-3" %>
                     </span>
@@ -123,7 +142,8 @@
               <% end %>
             <% end %>
 
-            <div class="mt-2">
+            <%# Meta zone %>
+            <div class="mt-2 min-w-0 space-y-0.5">
               <h3 class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">
                 <%= series.canonical_title %>
               </h3>
@@ -137,9 +157,12 @@
               <% end %>
             </div>
           <% end %>
+          <% end %>
         <% end %>
       </div>
+    <% end %>
 
+    <% unless @series.empty? %>
       <%= render UI::PaginationComponent.new(
         collection: @series,
         base_path: library_path,

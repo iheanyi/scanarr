@@ -25,6 +25,7 @@ Source
 ```
 
 **Common mistakes to avoid:**
+
 - `series.source` ❌ → `series.primary_source` ✅
 - `source.key.tr("_", "-")` ❌ → `source.slug` ✅
 - Forgetting to pass required keywords to jobs
@@ -181,6 +182,7 @@ Page
 ```
 
 **Common query pattern:**
+
 ```ruby
 # Get latest release for a chapter from a source
 chapter.releases.where(source: source).order(created_at: :desc).first
@@ -209,6 +211,7 @@ Test requests use `sign_in_as(user)` / `sign_out` from `SessionTestHelper`.
 ### RuboCop Style (rubocop-rails-omakase + extensions)
 
 Uses `rubocop-rails-omakase` with additional extensions:
+
 - `rubocop-performance` - Performance optimization checks
 - `rubocop-minitest` - Minitest best practices (relaxed max assertions: 20)
 
@@ -241,6 +244,7 @@ bin/erblint -a                   # Auto-correct fixable issues
 ```
 
 Key ERB rules:
+
 - Proper spacing around ERB tags (`<%= %>` not `<%=  %>`)
 - No trailing whitespace
 - Final newline at end of file
@@ -249,6 +253,7 @@ Key ERB rules:
 ### Test Fixtures Gotchas
 
 **Fixture ordering matters for queries with `order(:created_at)`:**
+
 ```yaml
 # Fixtures load in alphabetical order by name
 # releases.yml: "one" loads before "three"
@@ -256,6 +261,7 @@ Key ERB rules:
 ```
 
 **Ensure fixtures don't conflict:**
+
 - Check if multiple fixtures share the same foreign keys
 - Latest release queries pick the most recently created fixture
 - Add explicit test setup to control which records are used
@@ -321,3 +327,14 @@ Key ERB rules:
 - **No Laziness**: Find root causes. No temporary fixes. Senior software engineer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
 - **No Unrequested Images**: Do not generate images unless explicitly asked.
+
+## Browser Automation
+
+Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
+
+Core workflow:
+
+1. `agent-browser open <url>` - Navigate to page
+2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
+3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
+4. Re-snapshot after page changes

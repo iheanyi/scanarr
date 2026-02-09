@@ -1,6 +1,15 @@
-<div class="<%= container_classes %>">
+<div class="<%= container_classes %> relative" data-cover-container>
   <% if has_cover? %>
-    <%= image_tag url, alt: alt, class: image_classes, loading: loading %>
+    <%= image_tag url, alt: alt, class: image_classes, loading: loading,
+        onerror: "var f=this.parentElement.querySelector('[data-cover-fallback]');this.style.display='none';if(f)f.style.display='flex'",
+        onload: "if(this.naturalWidth===0){var f=this.parentElement.querySelector('[data-cover-fallback]');this.style.display='none';if(f)f.style.display='flex'}" %>
+    <div class="absolute inset-0 hidden items-center justify-center" data-cover-fallback>
+      <% if fallback? %>
+        <%= fallback %>
+      <% else %>
+        <span class="text-xs uppercase text-muted-2">No cover</span>
+      <% end %>
+    </div>
   <% elsif fallback? %>
     <%= fallback %>
   <% else %>

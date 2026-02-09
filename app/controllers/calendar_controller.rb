@@ -29,7 +29,7 @@ class CalendarController < ApplicationController
 
     # Query chapters — use published_at (actual release date), fall back to created_at
     date_range = @start_date.beginning_of_day..@end_date.end_of_day
-    chapters_scope = Chapter.includes(:source, series: [ { cover_attachment: :blob }, :sources, :series_sources ], releases: :file_asset)
+    chapters_scope = Chapter.includes(:source, series: { cover_attachment: :blob }, releases: :file_asset)
       .where(series_id: followed_series_ids)
       .where("COALESCE(chapters.published_at, chapters.created_at) BETWEEN ? AND ?", date_range.first, date_range.last)
       .order(Arel.sql("COALESCE(chapters.published_at, chapters.created_at) DESC"))

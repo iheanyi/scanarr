@@ -18,24 +18,31 @@ class TachiyomiExportService
     Zlib.gzip(encoded)
   end
 
-  # Return stats without generating the full backup
+  # Return stats without generating the full backup (SQL-only, no eager loading)
   def preview
-    follows = load_follows
-    exportable = follows.count { |f| exportable_follow?(f) }
+    exportable_keys = YAML.load_file(Rails.root.join("config", "tachiyomi_source_map.yml"))["export_ids"].keys
+    followed_ls_ids = @user.user_series_follows.select(:library_series_id)
 
-    chapter_count = follows.sum do |follow|
-      follow.library_series&.series&.sum { |s| s.chapters.size } || 0
-    end
+    exportable_series_ids = Series
+      .where(library_series_id: followed_ls_ids)
+      .joins(:sources)
+      .where(sources: { key: exportable_keys })
+      .distinct
+      .pluck(:id)
 
-    source_keys = follows.flat_map do |follow|
-      follow.library_series&.series&.flat_map { |s| s.sources.map(&:key) } || []
-    end.uniq.select { |k| TachiyomiSourceMapper.tachiyomi_id_for(k) }
+    chapter_count = Chapter.where(series_id: exportable_series_ids).count
+
+    source_keys = Source.joins(:series_sources)
+      .where(series_sources: { series_id: exportable_series_ids })
+      .where(key: exportable_keys)
+      .distinct
+      .pluck(:key)
 
     {
-      series: exportable,
+      series: exportable_series_ids.size,
       chapters: chapter_count,
       sources: source_keys.size,
-      source_names: source_keys.map { |k| Source.find_by(key: k)&.name }.compact
+      source_names: Source.where(key: source_keys).pluck(:name)
     }
   end
 
@@ -162,16 +169,6 @@ class TachiyomiExportService
       next unless tachi_id && @source_ids_used&.include?(tachi_id)
 
       Tachiyomi::BackupSource.new(name: source.name, sourceId: tachi_id)
-    end
-  end
-
-  def exportable_follow?(follow)
-    ls = follow.library_series
-    return false unless ls
-
-    ls.series.any? do |series|
-      source = series.primary_source
-      source && TachiyomiSourceMapper.tachiyomi_id_for(source.key)
     end
   end
 
