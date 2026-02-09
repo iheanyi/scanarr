@@ -50,8 +50,7 @@
         </p>
       </div>
 
-      <%= form_with url: import_library_path, method: :post, multipart: true, class: "space-y-4",
-                    data: { turbo_confirm: "Import this library? A safety backup will be created automatically." } do |f| %>
+      <%= form_with url: preview_library_path, method: :post, multipart: true, class: "space-y-4" do |f| %>
         <div>
           <label for="file" class="text-sm font-medium text-foreground mb-0">Import File</label>
           <%= f.file_field :file, accept: ".scanarr",
@@ -85,7 +84,7 @@
           </div>
         </div>
 
-        <%= f.submit "Import",
+        <%= f.submit "Preview Import",
                       class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer" %>
       <% end %>
     </section>

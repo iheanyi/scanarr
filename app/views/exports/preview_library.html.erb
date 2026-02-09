@@ -1,0 +1,146 @@
+<div class="space-y-8 max-w-4xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Preview Library Import",
+    description: "Review what's in your .scanarr backup before importing."
+  ) do |header|
+    header.with_breadcrumb do %>
+      <%= link_to export_path, class: "inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors" do %>
+        <%= icon "arrow-left", class: "h-4 w-4" %>
+        Back to Export & Import
+      <% end %>
+    <% end
+  end %>
+
+  <%# Summary Stats %>
+  <div class="grid gap-4 grid-cols-2 sm:grid-cols-4">
+    <%= render UI::StatCardComponent.new(label: "Library Series", value: @preview[:total_library_series], color: :accent) %>
+    <%= render UI::StatCardComponent.new(label: "Total Chapters", value: @preview[:total_chapters], color: :accent) %>
+    <%= render UI::StatCardComponent.new(label: "Reading Progress", value: @preview[:total_progress], color: :info) %>
+    <%= render UI::StatCardComponent.new(label: "Follows", value: @preview[:total_follows], color: :info) %>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <%# What will happen %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <h2 class="text-lg font-semibold">What Will Happen</h2>
+
+      <div class="rounded-md bg-surface-2 p-4 space-y-2">
+        <dl class="grid grid-cols-2 gap-2 text-sm">
+          <dt class="text-muted">New series</dt>
+          <dd class="font-semibold text-success"><%= @preview[:new_series] %></dd>
+          <dt class="text-muted">Already exist</dt>
+          <dd class="font-semibold text-warning"><%= @preview[:existing_series] %></dd>
+          <dt class="text-muted">Sources available</dt>
+          <dd class="font-semibold"><%= @preview[:available_sources] %></dd>
+          <% if @preview[:unavailable_sources] > 0 %>
+            <dt class="text-muted">Sources missing</dt>
+            <dd class="font-semibold text-danger"><%= @preview[:unavailable_sources] %></dd>
+          <% end %>
+        </dl>
+      </div>
+
+      <% if @preview[:exported_at].present? %>
+        <p class="text-xs text-muted-2">
+          Exported on <%= Time.zone.parse(@preview[:exported_at]).strftime("%B %d, %Y at %I:%M %p") rescue @preview[:exported_at] %>
+        </p>
+      <% end %>
+    </section>
+
+    <%# Import settings + submit %>
+    <div class="space-y-6">
+      <% if @preview[:unavailable_sources] > 0 %>
+        <div class="flex gap-3 rounded-lg border border-warning/30 bg-warning-soft/50 p-4">
+          <%= icon "alert-triangle", class: "h-5 w-5 text-warning shrink-0 mt-0.5" %>
+          <div class="space-y-1">
+            <p class="text-sm font-semibold text-warning">Some sources aren't available</p>
+            <p class="text-sm text-muted">
+              Chapters from
+              <%= @preview[:unavailable_source_keys].first(5).join(", ") %>
+              <% if @preview[:unavailable_source_keys].size > 5 %>
+                and <%= @preview[:unavailable_source_keys].size - 5 %> more
+              <% end %>
+              may not be fully restored because those sources aren't configured in Scanarr.
+              Series metadata and reading progress will still be imported.
+            </p>
+          </div>
+        </div>
+      <% end %>
+
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+        <h2 class="text-lg font-semibold">Import Settings</h2>
+
+        <%= form_with url: import_library_path, method: :post, class: "space-y-4" do |f| %>
+          <div>
+            <span class="text-sm font-medium text-foreground">Conflict Strategy</span>
+            <div class="mt-2 space-y-2">
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.radio_button :strategy, "merge", checked: @strategy == "merge", class: "accent-accent" %>
+                <span>
+                  <span class="font-medium">Merge</span>
+                  <span class="text-muted"> — Add new data, keep newer progress</span>
+                </span>
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.radio_button :strategy, "overwrite", checked: @strategy == "overwrite", class: "accent-accent" %>
+                <span>
+                  <span class="font-medium">Overwrite</span>
+                  <span class="text-muted"> — Replace existing data with import</span>
+                </span>
+              </label>
+              <label class="flex items-center gap-2 text-sm">
+                <%= f.radio_button :strategy, "skip", checked: @strategy == "skip", class: "accent-accent" %>
+                <span>
+                  <span class="font-medium">Skip</span>
+                  <span class="text-muted"> — Only add new, never update existing</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <%= render UI::ButtonComponent.new(label: nil, variant: :primary, type: "submit") do %>
+              <%= icon "upload", class: "h-4 w-4" %>
+              Confirm Import
+            <% end %>
+            <%= render UI::ButtonComponent.new(label: "Cancel", variant: :ghost, href: export_path) %>
+          </div>
+        <% end %>
+      </section>
+    </div>
+  </div>
+
+  <%# Series breakdown %>
+  <% if @preview[:series_details].any? %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-semibold">Series in Backup (<%= @preview[:series_details].size %>)</h2>
+        <p class="text-sm text-muted mt-1">
+          <%= @preview[:new_series] %> new, <%= @preview[:existing_series] %> already exist.
+        </p>
+      </div>
+
+      <div class="divide-y divide-border">
+        <% @preview[:series_details].sort_by { |s| s[:exists] ? 1 : 0 }.each do |series| %>
+          <div class="flex items-center justify-between gap-4 py-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-foreground truncate"><%= series[:title] %></span>
+              </div>
+              <div class="flex gap-3 mt-0.5 text-xs text-muted-2">
+                <span><%= series[:chapter_count] %> chapters</span>
+                <% if series[:source_names].any? %>
+                  <span><%= series[:source_names].join(", ") %></span>
+                <% end %>
+              </div>
+            </div>
+            <% if series[:exists] %>
+              <%= render UI::BadgeComponent.new(label: "Exists", variant: :warning) %>
+            <% else %>
+              <%= render UI::BadgeComponent.new(label: "New", variant: :success) %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>
