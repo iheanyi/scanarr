@@ -120,10 +120,11 @@ class Series < ApplicationRecord
     "#{public_id}-#{slug}"
   end
 
-  # Class method to find by public_id from URL param (ignores slug portion)
+  # Class method to find by public_id from URL param (ignores slug portion).
+  # Falls back to slug lookup so bare slugs like "lookism" also work.
   def self.find_by_param!(param)
     public_id = param.to_s.split("-").first
-    find_by_public_id!(public_id)
+    find_by_public_id(public_id) || find_by!(slug: param.to_s)
   end
 
   private
