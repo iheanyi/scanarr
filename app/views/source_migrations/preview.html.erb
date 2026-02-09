@@ -1,0 +1,69 @@
+<div class="space-y-8 max-w-4xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Migration Preview",
+    description: "Review what will happen when migrating from #{@from_source.name} to #{@to_source.name}."
+  ) %>
+
+  <%# Summary %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <h2 class="text-lg font-semibold">Migration Summary</h2>
+
+    <div class="rounded-md bg-surface-2 p-4">
+      <dl class="grid grid-cols-2 gap-2 text-sm">
+        <dt class="text-muted">From</dt>
+        <dd class="font-semibold"><%= @from_source.name %></dd>
+        <dt class="text-muted">To</dt>
+        <dd class="font-semibold"><%= @to_source.name %></dd>
+        <dt class="text-muted">Already on target</dt>
+        <dd class="font-semibold text-success"><%= @result.already_on_target.size %></dd>
+        <dt class="text-muted">No match on target</dt>
+        <dd class="font-semibold text-warning"><%= @result.no_match.size %></dd>
+      </dl>
+    </div>
+  </section>
+
+  <% if @result.already_on_target.any? %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <h2 class="text-lg font-semibold text-success">Will Migrate (<%= @result.already_on_target.size %>)</h2>
+      <p class="text-sm text-muted">These series exist on both sources. Source priority will be updated.</p>
+
+      <div class="divide-y divide-border">
+        <% @result.already_on_target.each do |series| %>
+          <div class="py-2">
+            <span class="text-sm font-medium text-foreground"><%= series.canonical_title %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @result.no_match.any? %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <h2 class="text-lg font-semibold text-warning">Cannot Migrate (<%= @result.no_match.size %>)</h2>
+      <p class="text-sm text-muted">These series don't exist on the target source. They will remain on the current source.</p>
+
+      <div class="divide-y divide-border">
+        <% @result.no_match.each do |series| %>
+          <div class="py-2">
+            <span class="text-sm font-medium text-foreground"><%= series.canonical_title %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <div class="flex items-center gap-3">
+    <% if @result.already_on_target.any? %>
+      <%= form_with url: source_migrations_path, method: :post do |f| %>
+        <%= f.hidden_field :from_source_id, value: @from_source.id %>
+        <%= f.hidden_field :to_source_id, value: @to_source.id %>
+        <%= f.submit "Execute Migration",
+                      class: "inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong cursor-pointer",
+                      data: { turbo_confirm: "Migrate #{@result.already_on_target.size} series from #{@from_source.name} to #{@to_source.name}?" } %>
+      <% end %>
+    <% end %>
+
+    <%= link_to "Back", source_migrations_path,
+                class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80" %>
+  </div>
+</div>

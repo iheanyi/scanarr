@@ -1,0 +1,108 @@
+# Tachiyomi/Mihon Source ID Mapping
+#
+# Source IDs are int64 generated from MD5("${name.lowercase()}/$lang/$versionId")
+# first 8 bytes as a Long with sign bit cleared.
+# A few legacy sources have hardcoded IDs (MangaSee=9, MangaHere=2).
+#
+# Import direction: many Tachiyomi IDs → one Scanarr key (dead/renamed domains)
+# Export direction: one Scanarr key → one primary Tachiyomi ID
+
+# Tachiyomi source ID → Scanarr adapter key (import: many-to-one)
+sources:
+  2499283573021220255: mangadex
+  2131019126180322627: weeb_central
+  9: weeb_central                       # MangaSee legacy hardcoded ID
+  7798162483793432927: weeb_central     # MangaLife (shut down)
+  6247824327199706550: asura_scans
+  8448310129093543312: manga_pill
+  4972933717624256217: comick           # comick.live
+  2971557565147974499: comick           # comick.fun (DMCA'd)
+  5589185334583680787: comick           # computed "comick/en/1"
+  1435116756378369709: tcb_scans
+  2528986671771677900: manga_kakalot
+  6491120161556233904: manga_kakalot   # MangaKakalot.fun alt domain
+  8531542650987673943: flame_comics     # versionId=2
+  1001157238479601077: flame_comics     # FlameScans.lol alt
+  7890050626002177109: batoto
+  4531444389842992129: batoto           # all-lang variant
+  2: manga_here                         # legacy hardcoded
+  3901872639081578162: manga_here       # MangaHere.onl alt domain
+  5214196327345905951: manga_clash
+  5020395055978987501: manga_buddy
+  6757297486232346876: zero_scans
+  9030178752551947945: manhua_plus
+  2873205829711053655: isekai_scan
+  5190569675461947007: toonily
+  1581110056159285576: toonily          # Toonily.me alt domain
+  8284219650954312474: drake_scans      # versionId=2
+  6236979603959140497: like_manga       # likemanga.ink
+  828698548689586603: like_manga        # LikeManga.in alt domain
+  1201694572804778862: manga_freak
+  8850383356117730479: manga_read       # mangaread.co
+  2681651342533848540: manga_read       # MangaRead.org alt domain
+  734865402529567092: manga_geko        # overridden from mangarawclub
+  1901763227259218891: manhwa18
+  4841602236575491202: manhwa18         # Manhwa18.cc alt domain
+  687150405919946955: manhwa18          # Manhwa18.net alt domain
+  1024627298672457456: manga_nato       # from "manganelo/en/1"
+  6084907896154116083: manga_fire
+  3513496926715498819: manga_see        # MangaSee (computed)
+
+# Scanarr adapter key → primary Tachiyomi source ID (export: one-to-one)
+export_ids:
+  mangadex: 2499283573021220255
+  weeb_central: 2131019126180322627
+  asura_scans: 6247824327199706550
+  manga_pill: 8448310129093543312
+  comick: 4972933717624256217
+  tcb_scans: 1435116756378369709
+  manga_kakalot: 2528986671771677900
+  flame_comics: 8531542650987673943
+  batoto: 7890050626002177109
+  manga_here: 2
+  manga_clash: 5214196327345905951
+  manga_buddy: 5020395055978987501
+  zero_scans: 6757297486232346876
+  manhua_plus: 9030178752551947945
+  isekai_scan: 2873205829711053655
+  toonily: 5190569675461947007
+  drake_scans: 8284219650954312474
+  like_manga: 6236979603959140497
+  manga_freak: 1201694572804778862
+  manga_read: 8850383356117730479
+  manga_geko: 734865402529567092
+  manhwa18: 1901763227259218891
+  manga_nato: 1024627298672457456
+  manga_fire: 6084907896154116083
+  manga_see: 9
+
+# Known Tachiyomi sources we don't have adapters for (logged during import)
+# Sources with null values are recognized but have no Scanarr adapter yet
+future_sources:
+  # --- Popular sources found in user backups ---
+  1998944621602463790: manga_plus          # MANGA Plus by SHUEISHA (37 manga in user backup)
+  3170561626848540385: manga_katana        # MangaKatana (329 manga in user backup)
+  4215511432986138970: mangabat            # Mangabat (64 manga in user backup)
+  2292947733994124621: manga_park          # MangaPark (81 manga in user backup)
+  6484561431658238800: manga_fox           # MangaFox/Fanfox (12 manga in user backup)
+  789561949979941461: manga_reader         # MangaReader.to (5 manga in user backup)
+  6311653253665366075: hive_scans          # Hive Scans (1 manga in user backup)
+  9193816653713258037: manga_kakalots      # Mangakakalots (unoriginal) — variant of manga_kakalot
+  4994699950662723787: manga_plus_creators # MANGA Plus Creators by SHUEISHA (9 manga in user backup)
+  6422096666751316291: infernal_void_scans # Infernal Void Scans (20 manga in user backup)
+  4722346859737894698: death_toll_scans    # Death Toll Scans (2 manga in user backup)
+  5160001879976399540: raven_scans         # Raven Scans (1 manga in user backup)
+  # --- Known sources without adapters (not yet seen in backups) ---
+  4758858684982406533: manga_hub           # MangaHub.io
+  669095474988166464: dynasty_scans        # Dynasty Scans
+  2522335540328470744: webtoons            # Webtoons.com
+  4709139914729853090: all_manga           # AllManga
+  7570643086791062929: coffee_manga        # CoffeeManga
+  6458420328066857684: mangamo             # Mangamo
+  8143442163119480220: k_manga             # K Manga (Kodansha)
+  5983175010393979119: azuki               # Azuki
+  7689478295161479290: manga_up            # Manga UP! (Square Enix)
+  6338219619148105941: cubari              # Cubari
+  1702911211040495914: global_comix        # GlobalComix
+  3064755045370217842: hiperdex            # Hiperdex
+

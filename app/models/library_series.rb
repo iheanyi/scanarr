@@ -10,7 +10,7 @@ class LibrarySeries < ApplicationRecord
 
   validates :canonical_title, presence: true
 
-  enum :status, { ongoing: 0, completed: 1, hiatus: 2, cancelled: 3 }
+  enum :status, { ongoing: 0, completed: 1, hiatus: 2, cancelled: 3, publishing_finished: 4, licensed: 5 }
 
   # Override to_param for pretty URLs: /public_id-slug
   def to_param

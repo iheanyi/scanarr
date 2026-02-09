@@ -1,0 +1,89 @@
+<div class="space-y-8 max-w-4xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Source Migration",
+    description: "Monitor source health and migrate your library between sources."
+  ) %>
+
+  <%# Source Health Dashboard %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <h2 class="text-lg font-semibold">Source Health</h2>
+
+    <div class="divide-y divide-border">
+      <% @sources.each do |source| %>
+        <% health = @source_health[source.id] %>
+        <div class="flex items-center justify-between gap-4 py-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-foreground"><%= source.name %></span>
+              <% if source.rate_limited? %>
+                <%= render UI::BadgeComponent.new(label: "Rate Limited", variant: :warning) %>
+              <% end %>
+              <% if !source.enabled %>
+                <%= render UI::BadgeComponent.new(label: "Disabled", variant: :default) %>
+              <% end %>
+            </div>
+            <% if health %>
+              <div class="flex gap-3 mt-1 text-xs">
+                <span class="text-success"><%= health.healthy_count %> healthy</span>
+                <% if health.attention_count.to_i > 0 %>
+                  <span class="text-warning"><%= health.attention_count %> needs attention</span>
+                <% end %>
+                <% if health.stale_count.to_i > 0 %>
+                  <span class="text-danger"><%= health.stale_count %> stale</span>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="text-xs text-muted-2">No series tracked</p>
+            <% end %>
+          </div>
+
+          <% if health && health.stale_count.to_i > 0 %>
+            <%= render UI::BadgeComponent.new(label: "Stale", variant: :danger) %>
+          <% elsif health && health.attention_count.to_i > 0 %>
+            <%= render UI::BadgeComponent.new(label: "Degraded", variant: :warning) %>
+          <% elsif health %>
+            <%= render UI::BadgeComponent.new(label: "Healthy", variant: :success) %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Migration Tool %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Migrate Source</h2>
+      <p class="text-sm text-muted mt-1">
+        Move your followed series from one source to another. Only series you follow
+        that exist on both sources will be migrated.
+      </p>
+    </div>
+
+    <%= form_with url: preview_source_migrations_path, method: :post, class: "space-y-4" do |f| %>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="block text-sm font-medium text-foreground mb-1">From Source</label>
+          <select name="from_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
+            <option value="">Select source...</option>
+            <% @sources.each do |source| %>
+              <option value="<%= source.id %>"><%= source.name %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-foreground mb-1">To Source</label>
+          <select name="to_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
+            <option value="">Select source...</option>
+            <% @sources.each do |source| %>
+              <option value="<%= source.id %>"><%= source.name %></option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+
+      <%= f.submit "Preview Migration",
+                    class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer" %>
+    <% end %>
+  </section>
+</div>

@@ -99,6 +99,7 @@ Rails.application.routes.draw do
   # Library Export/Import
   get "/export", to: "exports#show", as: :export
   post "/export", to: "exports#create"
+  post "/import/preview", to: "exports#preview_library", as: :preview_library
   post "/import", to: "exports#import_library", as: :import_library
   post "/import/tachiyomi/preview", to: "exports#preview_tachiyomi", as: :preview_tachiyomi
   post "/import/tachiyomi", to: "exports#import_tachiyomi", as: :import_tachiyomi

@@ -182,6 +182,10 @@ class Series < ApplicationRecord
       :ongoing
     when "completed", "finished"
       :completed
+    when "publishing_finished", "pub_finished"
+      :publishing_finished
+    when "licensed"
+      :licensed
     when "hiatus"
       :hiatus
     when "cancelled", "canceled"

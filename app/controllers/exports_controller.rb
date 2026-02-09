@@ -13,15 +13,52 @@ class ExportsController < ApplicationController
               disposition: "attachment"
   end
 
-  def import_library
+  def preview_library
     unless params[:file].present?
       flash[:alert] = "Please select a .scanarr export file."
       redirect_to export_path
       return
     end
 
-    file = params[:file]
-    data = file.read
+    # Save uploaded file to tmp so it persists across the preview → import flow
+    tmp_dir = Rails.root.join("tmp", "imports")
+    FileUtils.mkdir_p(tmp_dir)
+    tmp_path = tmp_dir.join("#{SecureRandom.hex}.scanarr").to_s
+    File.open(tmp_path, "wb") { |f| f.write(params[:file].read) }
+    session[:library_import_file] = tmp_path
+
+    data = File.read(tmp_path)
+    @preview = LibraryImportPreviewService.new(data: data, user: current_user).preview
+    @strategy = params[:strategy]&.to_s || "merge"
+
+    render :preview_library, status: :unprocessable_entity
+  rescue => e
+    flash[:alert] = "Could not parse export file: #{e.message}"
+    cleanup_library_import_file
+    redirect_to export_path
+  end
+
+  def import_library
+    # Support both direct file upload and temp file from preview flow
+    if params[:file].present?
+      data = params[:file].read
+    elsif session[:library_import_file].present?
+      tmp_path = session[:library_import_file]
+      unless File.exist?(tmp_path)
+        flash[:alert] = "Preview expired. Please upload the file again."
+        redirect_to export_path
+        return
+      end
+      data = File.read(tmp_path)
+      # Clean up temp file and session
+      File.delete(tmp_path) if File.exist?(tmp_path)
+      session.delete(:library_import_file)
+    else
+      flash[:alert] = "Please select a .scanarr export file."
+      redirect_to export_path
+      return
+    end
+
     strategy = params[:strategy]&.to_sym || :merge
 
     result = LibraryImportService.new(
@@ -56,6 +93,8 @@ class ExportsController < ApplicationController
     file = File.open(tmp_path, "rb")
     @preview = TachiyomiImportService.new(user: current_user, file: file).preview
     file.close
+
+    render :preview_tachiyomi, status: :unprocessable_entity
   rescue => e
     flash[:alert] = "Could not parse backup file: #{e.message}"
     cleanup_temp_import_file
@@ -103,6 +142,13 @@ class ExportsController < ApplicationController
   end
 
   private
+
+  def cleanup_library_import_file
+    if session[:library_import_file].present?
+      File.delete(session[:library_import_file]) if File.exist?(session[:library_import_file])
+      session.delete(:library_import_file)
+    end
+  end
 
   def cleanup_temp_import_file
     if session[:tachiyomi_import_file].present?
