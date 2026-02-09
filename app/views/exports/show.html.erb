@@ -5,7 +5,7 @@
   ) %>
 
   <div class="grid gap-6 md:grid-cols-2">
-    <%# Export Section %>
+    <%# Scanarr Export %>
     <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
       <div>
         <h2 class="text-lg font-semibold">Export Library</h2>
@@ -40,7 +40,7 @@
       <% end %>
     </section>
 
-    <%# Import Section %>
+    <%# Scanarr Import %>
     <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
       <div>
         <h2 class="text-lg font-semibold">Import Library</h2>
@@ -50,7 +50,8 @@
         </p>
       </div>
 
-      <%= form_with url: import_library_path, method: :post, multipart: true, class: "space-y-4" do |f| %>
+      <%= form_with url: import_library_path, method: :post, multipart: true, class: "space-y-4",
+                    data: { turbo_confirm: "Import this library? A safety backup will be created automatically." } do |f| %>
         <div>
           <label for="file" class="text-sm font-medium text-foreground mb-0">Import File</label>
           <%= f.file_field :file, accept: ".scanarr",
@@ -85,8 +86,92 @@
         </div>
 
         <%= f.submit "Import",
-                      class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer",
-                      data: { turbo_confirm: "Import this library? A safety backup will be created automatically." } %>
+                      class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer" %>
+      <% end %>
+    </section>
+
+    <%# Mihon/Tachiyomi Import %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-semibold">Import from Mihon / Tachiyomi</h2>
+        <p class="text-sm text-muted mt-1">
+          Import your library from a Mihon, TachiJ2K, Yokai, or Tachiyomi backup file.
+          Series, chapters, reading progress, and AniList/MAL tracking will be imported.
+        </p>
+      </div>
+
+      <%= form_with url: import_tachiyomi_path, method: :post, multipart: true, class: "space-y-4",
+                    data: { turbo_confirm: "Import from Mihon backup? Unmapped sources will be skipped." } do |f| %>
+        <div>
+          <label for="file" class="text-sm font-medium text-foreground mb-0">Backup File</label>
+          <%= f.file_field :file, accept: ".tachibk,.proto.gz",
+                           class: "mt-2 block w-full text-sm text-muted file:mr-4 file:rounded-md file:border file:border-border file:bg-surface-2 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground hover:file:bg-surface-2/80" %>
+          <p class="text-xs text-muted-2 mt-1">Accepts .tachibk and .proto.gz files</p>
+        </div>
+
+        <div>
+          <span class="text-sm font-medium text-foreground">Conflict Strategy</span>
+          <div class="mt-2 space-y-2">
+            <label class="flex items-center gap-2 text-sm">
+              <%= f.radio_button :strategy, "merge", checked: true, class: "accent-accent" %>
+              <span>
+                <span class="font-medium">Merge</span>
+                <span class="text-muted"> — Add new data, keep existing progress</span>
+              </span>
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <%= f.radio_button :strategy, "overwrite", class: "accent-accent" %>
+              <span>
+                <span class="font-medium">Overwrite</span>
+                <span class="text-muted"> — Replace existing with Mihon data</span>
+              </span>
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <%= f.radio_button :strategy, "skip", class: "accent-accent" %>
+              <span>
+                <span class="font-medium">Skip</span>
+                <span class="text-muted"> — Only import new series</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <%= f.submit "Import from Mihon",
+                      class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer" %>
+      <% end %>
+    </section>
+
+    <%# Mihon/Tachiyomi Export %>
+    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-semibold">Export for Mihon / Tachiyomi</h2>
+        <p class="text-sm text-muted mt-1">
+          Export your Scanarr library as a .tachibk file that Mihon, TachiJ2K, and Yokai
+          can restore. Full round-trip compatible.
+        </p>
+      </div>
+
+      <div class="rounded-md bg-surface-2 p-4 space-y-2">
+        <h3 class="text-xs uppercase tracking-wider text-muted-2">What will be exported</h3>
+        <dl class="grid grid-cols-2 gap-2 text-sm">
+          <dt class="text-muted">Series</dt>
+          <dd class="font-semibold"><%= @tachiyomi_preview[:series] %></dd>
+          <dt class="text-muted">Chapters</dt>
+          <dd class="font-semibold"><%= @tachiyomi_preview[:chapters] %></dd>
+          <dt class="text-muted">Sources</dt>
+          <dd class="font-semibold"><%= @tachiyomi_preview[:sources] %></dd>
+        </dl>
+        <% if @tachiyomi_preview[:source_names].any? %>
+          <p class="text-xs text-muted-2 mt-1">
+            Sources: <%= @tachiyomi_preview[:source_names].join(", ") %>
+          </p>
+        <% end %>
+      </div>
+
+      <%= button_to export_tachiyomi_path, method: :post,
+                    class: "inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong" do %>
+        <%= icon "download", class: "h-4 w-4" %>
+        Export .tachibk File
       <% end %>
     </section>
   </div>
