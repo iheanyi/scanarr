@@ -34,11 +34,14 @@ class SearchController < ApplicationController
       futures.each_with_index do |future, index|
         source = sources[index]
         payload = future.value!(SEARCH_TIMEOUT_SECONDS)
+        if payload.nil?
+          @errors << { source: source, message: "Search timed out" }
+          Rails.logger.warn "Search timed out for #{source.key}"
+          next
+        end
+
         @results.concat(payload[:results])
         @errors << payload[:error] if payload[:error]
-      rescue Concurrent::TimeoutError
-        @errors << { source: source, message: "Search timed out" }
-        Rails.logger.warn "Search timed out for #{source.key}"
       rescue StandardError => e
         @errors << { source: source, message: e.message.truncate(100) }
         Rails.logger.warn "Search failed for #{source.key}: #{e.class} - #{e.message}"

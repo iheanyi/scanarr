@@ -40,6 +40,11 @@ class SourceMigrationDiscoveryService
       futures.each_with_index do |future, index|
         source = sources[index]
         worker_result = future.value!(SEARCH_TIMEOUT_SECONDS)
+        if worker_result.nil?
+          errors << "#{source.name}: search timed out"
+          next
+        end
+
         unless worker_result.is_a?(WorkerResult)
           errors << "#{source.name}: unexpected empty result"
           next
@@ -47,8 +52,6 @@ class SourceMigrationDiscoveryService
 
         candidates << worker_result.candidate if worker_result.candidate.present?
         errors << worker_result.error if worker_result.error.present?
-      rescue Concurrent::TimeoutError
-        errors << "#{source.name}: search timed out"
       rescue StandardError => e
         errors << "#{source.name}: #{e.message.truncate(100)}"
       end
