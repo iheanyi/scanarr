@@ -73,7 +73,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/browse-comics/?filter=Views&results=1" => browse_popular_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -123,11 +123,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("knight")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   def test_search_handles_invalid_json_gracefully
@@ -135,11 +135,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/ajax/manga/search/suggest?keyword=test" => "not valid json {{{}"
     }
     http = FakeHttpClient.new(mapping: bad_json_fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.search("test")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   def test_search_handles_false_status_gracefully
@@ -147,11 +147,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/ajax/manga/search/suggest?keyword=test" => { "status" => false }.to_json
     }
     http = FakeHttpClient.new(mapping: false_status_fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.search("test")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -228,16 +228,16 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/item/test-updating/" => series_fixture_updating_alt
     }
     http = FakeHttpClient.new(mapping: fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     series = adapter.series("#{@base_url}/manga/item/test-updating/")
 
-    assert_equal [], series.alt_titles
+    assert_empty series.alt_titles
   end
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/item/nonexistent/")
 
@@ -262,6 +262,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/item/#{@series_slug}/")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1.0
     assert_includes numbers, 2.0
     assert_includes numbers, 3.0
@@ -271,6 +272,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/item/#{@series_slug}/")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -295,6 +297,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/item/#{@series_slug}/")
 
     ch = chapters.find { |c| c.number == "3" }
+
     assert_not_nil ch
     # chapter_number "3-eng-li" should extract just "3"
     assert_equal "3", ch.number
@@ -304,6 +307,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/item/#{@series_slug}/")
 
     ch = chapters.find { |c| c.number == "1" }
+
     assert_equal "eternally-regressing-knight-chapter-1-eng-li", ch.id
   end
 
@@ -311,6 +315,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/item/#{@series_slug}/")
 
     decimal = chapters.find { |ch| ch.number == "1.5" }
+
     assert_not_nil decimal, "Should handle decimal chapter numbers"
   end
 
@@ -324,11 +329,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/item/nonexistent/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   def test_chapters_handles_missing_manga_id
@@ -336,11 +341,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/item/no-id-series/" => series_fixture_no_manga_id
     }
     http = FakeHttpClient.new(mapping: no_id_fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     result = adapter.chapters("#{@base_url}/manga/item/no-id-series/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   def test_chapters_handles_empty_chapters_array
@@ -349,11 +354,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/get/chapters/?manga_id=6070" => { "chapters" => [] }.to_json
     }
     http = FakeHttpClient.new(mapping: empty_chapters_fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     result = adapter.chapters("#{@base_url}/manga/item/#{@series_slug}/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests ---
@@ -375,7 +380,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -392,6 +397,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/chapter/en/#{@chapter_slug}/")
 
     webp_page = pages.find { |p| p.url.end_with?(".webp") }
+
     assert_not_nil webp_page
     assert_equal "image/webp", webp_page.mime_type
   end
@@ -406,11 +412,11 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/chapter/en/nonexistent/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   def test_pages_falls_back_to_generic_data_src_images
@@ -418,7 +424,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapter/en/fallback-chapter/" => pages_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/chapter/en/fallback-chapter/")
 
@@ -431,7 +437,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapter/en/filter-chapter/" => pages_with_non_page_images_fixture
     }
     http = FakeHttpClient.new(mapping: filter_fixtures, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/chapter/en/filter-chapter/")
 
@@ -445,7 +451,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_sort_options
@@ -455,7 +461,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
   def test_browse_latest_returns_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
@@ -463,7 +469,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
     results = @adapter.browse(sort: "latest", page: 1)
 
     results.each do |result|
-      assert result.title.present?
+      assert_predicate result.title, :present?
     end
   end
 
@@ -478,18 +484,18 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
   def test_browse_popular_returns_results
     results = @adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
     assert_equal "One Piece", results.first.title
   end
 
   def test_browse_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.browse(sort: "latest", page: 1)
 
-    assert_equal [], results
+    assert_empty results
   end
 
   def test_browse_result_extracts_slug_as_id
@@ -537,7 +543,7 @@ class MangaGekoAdapterTest < ActiveSupport::TestCase
       "GET #{custom_url}/ajax/manga/search/suggest?keyword=test" => search_fixture
     }
     http = FakeHttpClient.new(mapping: custom_fixtures, base_url: custom_url)
-    adapter = MangaGeko::Adapter.new(config: { "base_url" => custom_url }, http: http)
+    adapter = Scrapers::MangaGeko::Adapter.new(config: { "base_url" => custom_url }, http: http)
 
     results = adapter.search("test")
 

@@ -1,6 +1,6 @@
 <div>
   <% if label.present? %>
-    <label class="text-sm font-medium text-foreground">
+    <label class="text-sm font-medium text-foreground" for="<%= input_id %>">
       <%= label %>
       <% if required %>
         <span class="text-error">*</span>
@@ -15,10 +15,10 @@
   <% end %>
 
   <% if hint.present? && error.blank? %>
-    <p class="mt-1.5 text-xs text-muted-2"><%= hint %></p>
+    <p id="<%= hint_id %>" class="mt-1.5 text-xs text-muted-2"><%= hint %></p>
   <% end %>
 
   <% if error.present? %>
-    <p class="mt-1.5 text-xs text-error"><%= error %></p>
+    <p id="<%= error_id %>" class="mt-1.5 text-xs text-error" role="alert"><%= error %></p>
   <% end %>
 </div>

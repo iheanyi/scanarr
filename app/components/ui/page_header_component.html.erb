@@ -7,7 +7,9 @@
   <div class="flex items-end justify-between gap-4">
     <div class="space-y-1">
       <h1 class="text-3xl font-semibold text-balance"><%= title %></h1>
-      <% if description.present? %>
+      <% if description_content? %>
+        <%= description_content %>
+      <% elsif description.present? %>
         <p class="text-muted text-pretty"><%= description %></p>
       <% end %>
     </div>

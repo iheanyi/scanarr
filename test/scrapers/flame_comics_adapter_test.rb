@@ -62,7 +62,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     }
 
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = FlameComics::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::FlameComics::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search ---
@@ -165,6 +165,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters(@series_id.to_s)
 
     ch = chapters.find { |c| c.number == "179" }
+
     assert_not_nil ch
     assert_equal "abc123token", ch.id
     assert_equal "The Final Battle", ch.title
@@ -176,6 +177,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters(@series_id.to_s)
 
     numbers = chapters.map(&:number)
+
     assert_includes numbers, "179"
     assert_includes numbers, "178"
   end
@@ -190,6 +192,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters(@series_id.to_s)
 
     ch = chapters.find { |c| c.number == "179" }
+
     assert_equal "#{@base_url}/series/42/abc123token", ch.url
   end
 
@@ -197,6 +200,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters(@series_id.to_s)
 
     ch = chapters.find { |c| c.number == "179" }
+
     assert_not_nil ch.published_at
     assert_match(/2024-01-15/, ch.published_at)
   end
@@ -205,6 +209,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters(@series_id.to_s)
 
     numbers = chapters.map { |c| c.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -226,6 +231,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/series/#{@series_id}/abc123token")
 
     indices = pages.map(&:index)
+
     assert_equal [ 0, 1, 2 ], indices
   end
 
@@ -244,7 +250,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
   # --- Browse ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_sort_options
@@ -285,6 +291,7 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     results = @adapter.browse(sort: "popular", page: 1, limit: 10)
 
     completed_result = results.find { |r| r.title == "Solo Leveling" }
+
     assert_equal "completed", completed_result.status
   end
 

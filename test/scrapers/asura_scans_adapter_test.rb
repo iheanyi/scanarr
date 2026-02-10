@@ -2,26 +2,26 @@ require "test_helper"
 
 class AsuraScansAdapterTest < ActiveSupport::TestCase
   def setup
-    @adapter = AsuraScans::Adapter.new(config: {}, http: nil)
+    @adapter = Scrapers::AsuraScans::Adapter.new(config: {}, http: nil)
   end
 
   # Test the CHAPTER_NUMBER_PATTERN constant directly
   test "CHAPTER_NUMBER_PATTERN matches integer chapter numbers" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
 
     assert_match(/#{pattern}/, "123")
     assert_equal "123", "123"[/#{pattern}/, 1]
   end
 
   test "CHAPTER_NUMBER_PATTERN matches decimal chapter numbers" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
 
     assert_match(/#{pattern}/, "123.5")
     assert_equal "123.5", "123.5"[/#{pattern}/, 1]
   end
 
   test "CHAPTER_NUMBER_PATTERN matches various decimal formats" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
 
     # Single decimal digit
     assert_equal "1.5", "1.5"[/#{pattern}/, 1]
@@ -35,7 +35,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
 
   # Test URL-based chapter number extraction
   test "extracts integer chapter number from URL" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
     url = "/series/some-manga/chapter/123"
 
     chapter_num = url[/\/chapter\/#{pattern}/, 1]
@@ -44,7 +44,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
   end
 
   test "extracts decimal chapter number from URL" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
     url = "/series/some-manga/chapter/123.5"
 
     chapter_num = url[/\/chapter\/#{pattern}/, 1]
@@ -53,7 +53,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
   end
 
   test "extracts decimal chapter number with multiple decimal places from URL" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
     url = "/series/some-manga/chapter/45.75"
 
     chapter_num = url[/\/chapter\/#{pattern}/, 1]
@@ -100,7 +100,7 @@ class AsuraScansAdapterTest < ActiveSupport::TestCase
 
   # Integration test: verify URL extraction takes precedence and works correctly
   test "URL extraction and text extraction are consistent for decimals" do
-    pattern = AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
+    pattern = Scrapers::AsuraScans::Adapter::CHAPTER_NUMBER_PATTERN
 
     # Simulate the actual extraction logic from the chapters method
     test_cases = [

@@ -8,7 +8,7 @@
 | **Keiyoushi Reference** | N/A (newer site, no Keiyoushi extension) |
 | **Type** | HTML Scraping |
 | **Status** | ✅ Implemented |
-| **Adapter Path** | `app/scrapers/weeb_central/adapter.rb` |
+| **Adapter Path** | `app/lib/scrapers/weeb_central/adapter.rb` |
 
 WeebCentral is a newer manga aggregator that uses modern web techniques including HTMX for dynamic content loading. Unlike API-based sources, this adapter parses HTML responses.
 

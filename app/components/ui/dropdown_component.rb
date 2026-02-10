@@ -39,5 +39,13 @@ module UI
     def alignment_classes
       @align.to_sym == :left ? "left-0" : "right-0"
     end
+
+    def trigger_id
+      @trigger_id ||= "dropdown_trigger_#{object_id}"
+    end
+
+    def menu_id
+      @menu_id ||= "dropdown_menu_#{object_id}"
+    end
   end
 end

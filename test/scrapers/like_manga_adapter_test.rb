@@ -70,7 +70,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/?act=searchadvance&f%5Bsortby%5D=lastest-chap" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -106,11 +106,11 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -158,7 +158,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/nonexistent/")
 
@@ -183,6 +183,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1092.0
     assert_includes numbers, 1093.0
     assert_includes numbers, 1094.0
@@ -192,6 +193,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -215,16 +217,17 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     dated_chapter = chapters.find { |ch| ch.published_at.present? }
+
     assert_not_nil dated_chapter
   end
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/nonexistent/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests (Token method) ---
@@ -246,7 +249,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -261,11 +264,11 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/some-chapter/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Fallback Tests ---
@@ -275,7 +278,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/#{@chapter_slug}-fallback/" => pages_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/#{@chapter_slug}-fallback/")
 
@@ -286,13 +289,13 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
@@ -300,7 +303,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     results = @adapter.browse(sort: "latest", page: 1)
 
     results.each do |result|
-      assert result.title.present?
+      assert_predicate result.title, :present?
     end
   end
 
@@ -342,7 +345,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/solo-leveling/" => series_manhwa_fixture
     }
     http = FakeHttpClient.new(mapping: manhwa_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     series = adapter.series("#{@base_url}/solo-leveling/")
 
@@ -356,7 +359,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/titled-series/" => series_with_titled_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: title_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/titled-series/")
     titled = chapters.find { |ch| ch.number == "5" }
@@ -380,13 +383,14 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/?act=ajax&chap_id=0&code=load_list_chapter&keyword=&manga_id=12345&page_num=2" => ajax_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: ajax_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     # Should have chapters from both page 1 (3 chapters) and AJAX page 2 (2 chapters)
     assert_equal 5, chapters.size
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_includes numbers, 1090.0
     assert_includes numbers, 1094.0
   end
@@ -398,11 +402,11 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/?act=searchadvance&f%5Bsortby%5D=top-manga" => browse_fixture
     }
     http = FakeHttpClient.new(mapping: popular_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
@@ -416,11 +420,11 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
   def test_browse_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.browse(sort: "latest", page: 1)
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Pages Token CDN URL Tests ---
@@ -444,31 +448,31 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
   # --- Status Parsing Tests ---
 
   def test_status_complete
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "completed", adapter.normalize_status("Complete")
   end
 
   def test_status_in_process
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "ongoing", adapter.normalize_status("In process")
   end
 
   def test_status_pause
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "hiatus", adapter.normalize_status("Pause")
   end
 
   def test_status_unknown_defaults_to_ongoing
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "ongoing", adapter.normalize_status("SomeRandomStatus")
   end
 
   def test_status_nil_defaults_to_ongoing
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     assert_equal "ongoing", adapter.normalize_status(nil)
   end
@@ -480,7 +484,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/datasrc-chapter/" => pages_datasrc_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::LikeManga::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/datasrc-chapter/")
 
@@ -494,6 +498,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/#{@chapter_slug}/")
 
     webp_page = pages.find { |p| p.url.end_with?(".webp") }
+
     assert_not_nil webp_page
     assert_equal "image/webp", webp_page.mime_type
   end
@@ -502,6 +507,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/#{@chapter_slug}/")
 
     jpg_page = pages.find { |p| p.url.end_with?(".jpg") }
+
     assert_not_nil jpg_page
     assert_equal "image/jpeg", jpg_page.mime_type
   end

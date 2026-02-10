@@ -9,7 +9,7 @@
 | **Keiyoushi Reference** | [extensions-source/src/all/mangadex](https://github.com/keiyoushi/extensions-source/tree/main/src/all/mangadex) |
 | **Type** | REST API (JSON) |
 | **Status** | ✅ Implemented |
-| **Adapter Path** | `app/scrapers/mangadex/adapter.rb` |
+| **Adapter Path** | `app/lib/scrapers/mangadex/adapter.rb` |
 
 MangaDex is the largest free manga aggregator with a well-documented public API. Unlike most sources, it doesn't require HTML scraping—all data is available via JSON endpoints.
 

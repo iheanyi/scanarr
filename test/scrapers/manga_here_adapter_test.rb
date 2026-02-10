@@ -67,7 +67,7 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/directory/1.htm?latest" => browse_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -103,11 +103,11 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -155,7 +155,7 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent/")
 
@@ -180,6 +180,7 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1.0
     assert_includes numbers, 2.0
     assert_includes numbers, 3.0
@@ -189,6 +190,7 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -204,6 +206,7 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     vol_chapter = chapters.find { |ch| ch.volume.present? }
+
     assert_not_nil vol_chapter
     assert_equal "98", vol_chapter.volume
   end
@@ -212,16 +215,17 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     dated_chapter = chapters.find { |ch| ch.published_at.present? }
+
     assert_not_nil dated_chapter
   end
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests ---
@@ -229,7 +233,7 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
   def test_pages_returns_results
     pages = @adapter.pages("#{@base_url}/manga/#{@series_slug}/c001/1.html")
 
-    assert pages.size > 0
+    assert_operator pages.size, :>, 0
   end
 
   def test_pages_returns_page_structs
@@ -257,37 +261,37 @@ class MangaHereAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaHere::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/manga/nonexistent/c001/1.html")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_browse_results
     results = @adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
   def test_browse_latest
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
   end
 
   def test_browse_extracts_titles
     results = @adapter.browse(sort: "popular", page: 1)
 
     results.each do |result|
-      assert result.title.present?
+      assert_predicate result.title, :present?
     end
   end
 

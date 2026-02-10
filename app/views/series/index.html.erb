@@ -5,30 +5,34 @@
     breadcrumb_text: @source.name || @source.key
   ) %>
 
-  <%= turbo_frame_tag "series-content" do %>
+  <%= turbo_frame_tag "series-content", class: "has-loading-overlay" do %>
     <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-2"><%= @series.size %> series</p>
-      <%= render UI::DropdownComponent.new(
-        label: @sort_options[@sort_by],
-        turbo_frame: "series-content",
-        items: @sort_options.map { |key, label|
-          {
-            label: label,
-            href: source_series_index_path(source_slug: @source.slug, sort_by: key),
-            selected: @sort_by == key
-          }
-        }
-      ) %>
+      <%= form_with url: source_series_index_path(source_slug: @source.slug),
+                    method: :get,
+                    data: { turbo_frame: "series-content" } do |f| %>
+        <div data-controller="auto-submit">
+          <%= render UI::SelectComponent.new(
+            form: f,
+            method: :sort_by,
+            options: @sort_options.map { |key, label| [ label, key ] },
+            selected: @sort_by,
+            full_width: false,
+            label: nil,
+            class: "h-9 w-44",
+            aria: { label: "Sort series" },
+            data: { action: "change->auto-submit#submit" }
+          ) %>
+        </div>
+      <% end %>
     </div>
 
     <% if @series.any? %>
       <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <% @series.each do |series| %>
-          <%= link_to source_series_path(
-                        source_slug: @source.slug,
-                        series_slug: series.to_param
-                      ),
+          <%= link_to library_series_path(series_slug: series.to_param),
+                      data: { turbo_frame: "_top" },
                       class: "group rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors" do %>
             <div class="flex gap-4">
               <%= render UI::SeriesCoverComponent.new(url: series.cover_image_url, alt: "#{series.canonical_title} cover", size: :lg, class: "shrink-0") %>

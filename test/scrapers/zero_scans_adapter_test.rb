@@ -66,7 +66,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/swordflake/comic/#{@series_slug}/chapters/#{@chapter_id}" => pages_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -95,7 +95,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
   def test_search_filters_by_name
     results = @adapter.search("nonexistent manga xyz")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   def test_search_is_case_insensitive
@@ -107,11 +107,11 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("solo")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   def test_search_builds_url_with_id
@@ -159,7 +159,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/comics/nonexistent")
 
@@ -190,6 +190,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/comics/#{@series_slug}?id=#{@series_id}")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1.0
     assert_includes numbers, 2.0
     assert_includes numbers, 3.0
@@ -199,6 +200,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/comics/#{@series_slug}?id=#{@series_id}")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -214,17 +216,18 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/comics/#{@series_slug}?id=#{@series_id}")
 
     chapter_with_group = chapters.find { |ch| ch.group.present? }
+
     assert_not_nil chapter_with_group
     assert_equal "Zero Scans", chapter_with_group.group
   end
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/comics/nonexistent?id=99999")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests ---
@@ -246,7 +249,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -254,7 +257,7 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/comics/#{@series_slug}/#{@chapter_id}")
 
     # Our fixture has high_quality URLs with "high" in them
-    assert pages.first.url.include?("high"), "Should prefer high quality images"
+    assert_includes pages.first.url, "high", "Should prefer high quality images"
   end
 
   def test_pages_falls_back_to_good_quality
@@ -263,21 +266,21 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/swordflake/comic/#{@series_slug}/chapters/#{@chapter_id}" => pages_fixture_good_quality_only
     }
     http = FakeHttpClient.new(mapping: good_quality_fixture, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/comics/#{@series_slug}/#{@chapter_id}")
 
     assert_equal 3, pages.size
-    assert pages.first.url.include?("good"), "Should fall back to good quality"
+    assert_includes pages.first.url, "good", "Should fall back to good quality"
   end
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::ZeroScans::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/comics/solo-leveling/99999")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   def test_pages_includes_mime_type
@@ -292,20 +295,20 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_browse_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
   def test_browse_popular_sorts_by_views
     results = @adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     # The most viewed should come first
     assert_equal "One Piece", results.first.title
   end
@@ -313,8 +316,9 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
   def test_browse_alphabetical
     results = @adapter.browse(sort: "alphabetical", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     titles = results.map(&:title)
+
     assert_equal titles.sort_by(&:downcase), titles
   end
 
@@ -322,14 +326,16 @@ class ZeroScansAdapterTest < ActiveSupport::TestCase
     results = @adapter.browse(sort: "latest", page: 1)
 
     result_with_chapters = results.find { |r| r.chapter_count.present? }
+
     assert_not_nil result_with_chapters
-    assert result_with_chapters.chapter_count > 0
+    assert_operator result_with_chapters.chapter_count, :>, 0
   end
 
   def test_browse_includes_status
     results = @adapter.browse(sort: "latest", page: 1)
 
     result_with_status = results.find { |r| r.status.present? }
+
     assert_not_nil result_with_status
     assert_includes %w[ongoing completed hiatus cancelled], result_with_status.status
   end

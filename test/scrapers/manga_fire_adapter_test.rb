@@ -71,7 +71,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/read/#{@manga_slug}/en/chapter-#{@chapter_number}" => html_pages_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -118,7 +118,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("solo leveling")
 
@@ -193,7 +193,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/manga/nonexistent.xyz")
 
@@ -267,7 +267,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent.xyz")
 
@@ -282,7 +282,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/#{@manga_slug}" => series_with_chapters_fixture
     }
     http = FakeHttpClient.new(mapping: html_only_fixtures, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     chapters = adapter.chapters("#{@base_url}/manga/#{@manga_slug}")
 
@@ -332,7 +332,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/read/#{@manga_slug}/en/chapter-999")
 
@@ -347,7 +347,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/read/#{@manga_slug}/en/chapter-1" => html_pages_fixture
     }
     http = FakeHttpClient.new(mapping: html_only_fixtures, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/read/#{@manga_slug}/en/chapter-1")
 
@@ -386,7 +386,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
 
   def test_browse_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.browse(sort: "latest", page: 1)
 
@@ -423,7 +423,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
   # --- Manga ID Extraction Tests ---
 
   def test_extract_manga_id_from_url
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     id = adapter.send(:extract_manga_id, "/manga/one-piecee.dkw")
 
@@ -435,7 +435,7 @@ class MangaFireAdapterTest < ActiveSupport::TestCase
   end
 
   def test_extract_chapter_number_from_url
-    adapter = MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::MangaFire::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     num = adapter.send(:extract_chapter_number, "/read/solo-leveling.38y/en/chapter-200")
 

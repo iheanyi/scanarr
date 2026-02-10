@@ -145,7 +145,7 @@ DownloadChapterJob.perform_later(
 
 ### Adapter Patterns
 
-Adapters in `app/scrapers/<source_name>/adapter.rb` inherit from `BaseAdapter`:
+Adapters in `app/lib/scrapers/<source_name>/adapter.rb` inherit from `BaseAdapter`:
 
 ```ruby
 # Must implement:
@@ -309,6 +309,12 @@ Key ERB rules:
 - Point at logs, errors, failing tests -> then resolve them
 - Zero context switching required from the user
 - Go fix failing CI tests without being told how
+
+### 7. Local Dev Data Safety
+
+- Never do ad-hoc local DB mutations for test access during profiling/debug work.
+- Use the documented development seed user flow in `db/seeds.rb` (`SCANARR_DEV_*`, `SCANARR_SEED_DEV_USER`).
+- For one-off setup, use an idempotent `bin/rails runner` upsert command rather than manual console edits.
 
 ## Task Management (Tasuku)
 

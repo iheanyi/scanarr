@@ -1,0 +1,22 @@
+<div id="follow-preferences" class="my-1 align-middle">
+  <% if user_follow %>
+    <%= form_with model: user_follow, url: helpers.follow_path(user_follow), method: :patch, class: "inline-flex items-center" do |f| %>
+      <%= render UI::ToggleSwitchComponent.new(
+        form: f,
+        method: :download_policy,
+        label: "Download new chapters",
+        on_value: "auto_download",
+        off_value: "notify_only",
+        auto_submit: true,
+        size: :md,
+        label_tone: :muted,
+        class: "items-center gap-2 leading-none"
+      ) %>
+    <% end %>
+  <% else %>
+    <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5">
+      <%= helpers.icon "download", class: "h-3.5 w-3.5 text-muted-2" %>
+      <span class="text-xs text-muted-2">Follow to auto-download new chapters</span>
+    </div>
+  <% end %>
+</div>

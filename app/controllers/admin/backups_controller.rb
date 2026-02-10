@@ -27,9 +27,10 @@ module Admin
 
     def download
       @backup = BackupRecord.find(params[:id])
+      backup_path = resolved_backup_path(@backup)
 
-      if @backup.file_exists?
-        send_file @backup.path,
+      if backup_path
+        send_file backup_path,
                   filename: @backup.filename,
                   type: "application/zip",
                   disposition: "attachment"
@@ -41,7 +42,8 @@ module Admin
 
     def destroy
       @backup = BackupRecord.find(params[:id])
-      File.delete(@backup.path) if @backup.file_exists?
+      backup_path = resolved_backup_path(@backup)
+      File.delete(backup_path) if backup_path
       @backup.destroy!
 
       flash[:notice] = "Backup deleted."
@@ -63,6 +65,17 @@ module Admin
       end
 
       redirect_to admin_backups_path
+    end
+
+    private
+
+    def resolved_backup_path(backup)
+      root = Backup::DatabaseBackupService::BACKUP_DIR.expand_path
+      candidate = root.join(backup.filename).expand_path
+      return nil unless candidate.to_s.start_with?("#{root}/")
+      return nil unless File.file?(candidate)
+
+      candidate.to_s
     end
   end
 end

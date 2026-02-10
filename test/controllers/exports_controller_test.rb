@@ -36,10 +36,10 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "scanarr_library_export", parsed["format"]
     assert_equal 1, parsed["version"]
-    assert parsed["sources"].is_a?(Array)
-    assert parsed["library_series"].is_a?(Array)
-    assert parsed["reading_progress"].is_a?(Array)
-    assert parsed["follows"].is_a?(Array)
+    assert_kind_of Array, parsed["sources"]
+    assert_kind_of Array, parsed["library_series"]
+    assert_kind_of Array, parsed["reading_progress"]
+    assert_kind_of Array, parsed["follows"]
   end
 
   def test_import_without_file_redirects_with_alert

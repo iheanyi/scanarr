@@ -1,4 +1,4 @@
-<div id="design-system" class="relative overflow-hidden rounded-[32px] bg-background p-6 text-foreground">
+<div id="design-system" class="relative overflow-hidden rounded-[28px] bg-background p-4 text-foreground sm:rounded-[32px] sm:p-6">
   <div class="pointer-events-none absolute inset-0">
     <div class="absolute inset-0 ds-radial-1"></div>
     <div class="absolute inset-0 ds-radial-2"></div>
@@ -10,7 +10,7 @@
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-[0.35em] text-muted-2">Scanarr Design System</p>
-          <h1 class="mt-3 text-4xl font-semibold tracking-tight text-foreground">Design language for scanners and readers.</h1>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Design language for scanners and readers.</h1>
           <p class="mt-3 max-w-2xl text-sm text-muted">
             A restrained system inspired by Geist and SpineFind. Built for clarity, speed, and a calm reading
             experience across every surface in Scanarr.
@@ -21,7 +21,7 @@
             <span class="rounded-full border border-border bg-surface-2 px-2.5 py-1 leading-4">Readable hierarchy</span>
           </div>
         </div>
-        <div class="min-w-[220px] space-y-3 text-xs text-muted">
+        <div class="w-full space-y-3 text-xs text-muted sm:min-w-[220px] sm:w-auto">
           <div class="flex items-center justify-between rounded-2xl border border-border bg-surface-2 px-4 py-3">
             <span class="uppercase tracking-[0.25em] text-muted-2">Status</span>
             <span class="text-foreground">v0.1</span>
@@ -65,7 +65,7 @@
 
       <div class="space-y-16">
         <section id="overview" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-2xl font-semibold text-foreground">Overview</h2>
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Principles</span>
           </div>
@@ -94,7 +94,7 @@
         </section>
 
         <section id="tokens" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-2xl font-semibold text-foreground">Tokens</h2>
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Color / Type / Space</span>
           </div>
@@ -359,7 +359,7 @@
         </section>
 
         <section id="components" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-2xl font-semibold text-foreground">Components</h2>
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Preview</span>
           </div>
@@ -456,25 +456,50 @@
               </div>
             </div>
           </div>
-          <div class="rounded-2xl border border-border bg-surface p-6">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-foreground">Multi-select</h3>
-              <span class="text-xs text-muted-2">UI::MultiSelect</span>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Multi-select</h3>
+                <span class="text-xs text-muted-2">UI::MultiSelect</span>
+              </div>
+              <p class="mt-2 text-xs text-muted">Dropdown-style multi-select for compact filter toolbars.</p>
+              <div class="mt-3">
+                <%= render UI::MultiSelectComponent.new(
+                  name: "sources",
+                  label: "Sources",
+                  options: [
+                    [ "MangaDex", "mangadex" ],
+                    [ "WeebCentral", "weebcentral" ],
+                    [ "MangaPill", "mangapill" ],
+                    [ "MangaSee", "mangasee" ]
+                  ],
+                  selected: [ "mangadex", "weebcentral" ],
+                  filter_placeholder: "Filter sources",
+                  all_label: "All sources"
+                ) %>
+              </div>
             </div>
-            <div class="mt-3">
-              <%= render UI::MultiSelectComponent.new(
-                name: "sources",
-                label: "Sources",
-                options: [
-                  [ "MangaDex", "mangadex" ],
-                  [ "WeebCentral", "weebcentral" ],
-                  [ "MangaPill", "mangapill" ],
-                  [ "MangaSee", "mangasee" ]
-                ],
-                selected: [ "mangadex", "weebcentral" ],
-                filter_placeholder: "Filter sources",
-                all_label: "All sources"
-              ) %>
+            <div class="rounded-2xl border border-border bg-surface p-6">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-foreground">Filterable Multi-select</h3>
+                <span class="text-xs text-muted-2">UI::FilterableMultiSelect</span>
+              </div>
+              <p class="mt-2 text-xs text-muted">Chip-heavy variant for forms that benefit from more visual selection context.</p>
+              <div class="mt-3">
+                <%= render UI::FilterableMultiSelectComponent.new(
+                  name: "sources-filterable",
+                  label: "Sources",
+                  options: [
+                    [ "MangaDex", "mangadex" ],
+                    [ "WeebCentral", "weebcentral" ],
+                    [ "MangaPill", "mangapill" ],
+                    [ "MangaSee", "mangasee" ]
+                  ],
+                  selected: [ "mangadex", "weebcentral" ],
+                  filter_placeholder: "Filter sources",
+                  all_label: "All sources"
+                ) %>
+              </div>
             </div>
           </div>
           <div class="grid gap-6 lg:grid-cols-2">
@@ -649,7 +674,7 @@
                 <span class="text-xs text-muted-2">UI::SeriesCover</span>
               </div>
               <p class="mt-2 text-xs text-muted">Cover image with "No cover" fallback. Multiple sizes.</p>
-              <div class="mt-4 flex items-end gap-4">
+              <div class="mt-4 flex flex-wrap items-end gap-4">
                 <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover xs", size: :xs, rounded: :sm) %>
                 <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover sm", size: :sm, rounded: :sm) %>
                 <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover md", size: :md) %>
@@ -689,12 +714,12 @@
                 <h3 class="text-sm font-semibold text-foreground">Toast</h3>
                 <span class="text-xs text-muted-2">UI::Toast</span>
               </div>
-              <p class="mt-2 text-xs text-muted">Auto-dismissing notifications with semantic variants. Appended to toast container via Turbo Stream.</p>
+              <p class="mt-2 text-xs text-muted">Persistent examples with semantic variants. In app flows these are usually shown via Turbo Stream.</p>
               <div class="mt-4 space-y-3">
-                <%= render UI::ToastComponent.new(message: "Series imported successfully.", variant: :success) %>
-                <%= render UI::ToastComponent.new(message: "Failed to fetch chapters.", variant: :danger) %>
-                <%= render UI::ToastComponent.new(message: "Source may be rate-limited.", variant: :warning) %>
-                <%= render UI::ToastComponent.new(message: "3 new chapters available.", variant: :info) %>
+                <%= render UI::ToastComponent.new(message: "Series imported successfully.", variant: :success, auto_dismiss: false) %>
+                <%= render UI::ToastComponent.new(message: "Failed to fetch chapters.", variant: :danger, auto_dismiss: false) %>
+                <%= render UI::ToastComponent.new(message: "Source may be rate-limited.", variant: :warning, auto_dismiss: false) %>
+                <%= render UI::ToastComponent.new(message: "3 new chapters available.", variant: :info, auto_dismiss: false) %>
               </div>
             </div>
             <div class="rounded-2xl border border-border bg-surface p-6">
@@ -729,15 +754,14 @@
               </div>
               <p class="mt-2 text-xs text-muted">Windowed page navigation for Kaminari collections. Auto-hides when single page.</p>
               <div class="mt-4 rounded-xl border border-border-soft bg-background p-4">
-                <nav class="flex items-center justify-center gap-1">
-                  <span class="px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2 cursor-pointer">Previous</span>
-                  <span class="px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2 cursor-pointer">1</span>
-                  <span class="px-3 py-2 text-sm font-semibold text-accent bg-accent-ghost rounded-md">2</span>
-                  <span class="px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2 cursor-pointer">3</span>
-                  <span class="px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2 cursor-pointer">4</span>
-                  <span class="px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2 cursor-pointer">5</span>
-                  <span class="px-3 py-2 text-sm text-muted hover:text-foreground rounded-md hover:bg-surface-2 cursor-pointer">Next</span>
-                </nav>
+                <% pagination_demo_collection = Kaminari.paginate_array((1..120).to_a).page(4).per(10) %>
+                <div class="min-w-0 overflow-x-auto">
+                  <%= render UI::PaginationComponent.new(
+                    collection: pagination_demo_collection,
+                    base_path: "#",
+                    params: { status: "active" }
+                  ) %>
+                </div>
               </div>
               <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;%= render UI::PaginationComponent.new(collection: @items, base_path: items_path, params: { status: "active" }) %&gt;</code></pre>
             </div>
@@ -890,7 +914,7 @@
         </section>
 
         <section id="patterns" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-2xl font-semibold text-foreground">Patterns</h2>
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Interaction</span>
           </div>
@@ -954,7 +978,7 @@
         </section>
 
         <section id="guidelines" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-2xl font-semibold text-foreground">Guidelines</h2>
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Usage</span>
           </div>
@@ -1029,7 +1053,7 @@
         </section>
 
         <section id="roadmap" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-2xl font-semibold text-foreground">Roadmap</h2>
             <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Phases</span>
           </div>

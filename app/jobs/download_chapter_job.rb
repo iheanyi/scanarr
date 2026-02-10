@@ -34,6 +34,7 @@ class DownloadChapterJob < ApplicationJob
     @release_id = release_id
     @adapter = adapter
     @http = http
+    @skip_download = false
 
     step :setup_download do
       setup_entities
@@ -101,6 +102,7 @@ class DownloadChapterJob < ApplicationJob
       @release = Release.find_by(id: @release_id)
       unless @release
         Rails.logger.info "DownloadChapterJob: Release #{@release_id} no longer exists, skipping"
+        @skip_download = true
         return # Release was deleted, nothing to do
       end
       @chapter = @release.chapter
@@ -177,12 +179,18 @@ class DownloadChapterJob < ApplicationJob
   end
 
   def fetch_pages
+    ensure_runtime_entities!
+    return if skip_download?
+
     @pages = current_adapter.pages(@chapter_url)
     @file_asset.update!(pages_expected: @pages.size)
     broadcast_chapter_update(@chapter, @source)
   end
 
   def download_pages_with_cursor(step)
+    ensure_runtime_entities!
+    return if skip_download?
+
     # Resume from cursor (page index we left off at)
     start_idx = step.cursor || 0
 
@@ -243,6 +251,9 @@ class DownloadChapterJob < ApplicationJob
   end
 
   def finalize
+    ensure_runtime_entities!
+    return if skip_download?
+
     pages = @file_asset.pages.includes(image_attachment: :blob).order(:position)
     page_count = pages.count
 
@@ -321,7 +332,7 @@ class DownloadChapterJob < ApplicationJob
   end
 
   def adapter_for(source_key)
-    AdapterRegistry.for(source_key.to_s)
+    Scrapers::AdapterRegistry.for(source_key.to_s)
   end
 
   def find_or_create_series(source:, series_title:, source_series_id:)
@@ -343,5 +354,34 @@ class DownloadChapterJob < ApplicationJob
     series = Series.create!(canonical_title: series_title)
     SeriesSource.create!(series: series, source: source, source_series_id: source_series_id)
     series
+  end
+
+  # ActiveJob::Continuable persists step cursors, but not arbitrary runtime ivars.
+  # On resume/retry, later steps can run with nil @file_asset/@release unless we
+  # explicitly rebuild that context.
+  def ensure_runtime_entities!
+    return if skip_download?
+    return if runtime_entities_ready?
+
+    setup_entities
+    return if skip_download?
+    return if runtime_entities_ready?
+
+    missing = []
+    missing << "@source" unless @source
+    missing << "@series" unless @series
+    missing << "@chapter" unless @chapter
+    missing << "@release" unless @release
+    missing << "@file_asset" unless @file_asset
+
+    raise "DownloadChapterJob: Runtime rehydration incomplete (missing #{missing.join(', ')})"
+  end
+
+  def runtime_entities_ready?
+    @source && @series && @chapter && @release && @file_asset
+  end
+
+  def skip_download?
+    @skip_download == true
   end
 end

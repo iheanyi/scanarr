@@ -7,14 +7,18 @@
       <% if fallback? %>
         <%= fallback %>
       <% else %>
-        <span class="text-xs uppercase text-muted-2">No cover</span>
+        <div class="flex h-full w-full items-center justify-center">
+          <%= helpers.icon "book-open", class: "h-5 w-5 text-muted-2", stroke_width: "1.75" %>
+        </div>
       <% end %>
     </div>
   <% elsif fallback? %>
     <%= fallback %>
   <% else %>
     <div class="flex h-full w-full items-center justify-center">
-      <span class="text-xs uppercase text-muted-2">No cover</span>
+      <div class="flex h-full w-full items-center justify-center">
+        <%= helpers.icon "book-open", class: "h-5 w-5 text-muted-2", stroke_width: "1.75" %>
+      </div>
     </div>
   <% end %>
   <% if overlay? %>

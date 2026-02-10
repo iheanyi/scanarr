@@ -42,7 +42,7 @@ class RefreshAllCoversJob < ApplicationJob
   private
 
   def adapter_for(source)
-    AdapterRegistry.for(source)
+    Scrapers::AdapterRegistry.for(source)
   end
 
   def download_cover(series, cover_url)

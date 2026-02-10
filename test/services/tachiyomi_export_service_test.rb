@@ -8,12 +8,13 @@ class TachiyomiExportServiceTest < ActiveSupport::TestCase
   def test_export_produces_valid_gzipped_protobuf
     data = TachiyomiExportService.new(user: @user).perform
 
-    assert data.is_a?(String)
+    assert_kind_of String, data
     assert_equal "\x1f\x8b".b, data.byteslice(0, 2), "Expected gzip magic bytes"
 
     # Should be parseable
     backup = Tachiyomi::Parser.new.parse(StringIO.new(data))
-    assert backup.is_a?(Tachiyomi::Backup)
+
+    assert_kind_of Tachiyomi::Backup, backup
   end
 
   def test_export_includes_followed_series
@@ -26,7 +27,7 @@ class TachiyomiExportServiceTest < ActiveSupport::TestCase
     # Should include followed series (if source is mapped)
     # Note: fixtures use weeb_central which has a tachiyomi mapping
     if titles.any?
-      assert titles.first.is_a?(String)
+      assert_kind_of String, titles.first
     end
   end
 
@@ -46,7 +47,7 @@ class TachiyomiExportServiceTest < ActiveSupport::TestCase
     if backup.backupManga.any?
       assert_operator backup.backupSources.size, :>=, 1
       backup.backupSources.each do |source|
-        assert source.name.present?, "Source name should not be empty"
+        assert_predicate source.name, :present?, "Source name should not be empty"
         assert_operator source.sourceId, :>, 0, "Source ID should be positive"
       end
     end
@@ -59,7 +60,7 @@ class TachiyomiExportServiceTest < ActiveSupport::TestCase
     assert preview.key?(:chapters)
     assert preview.key?(:sources)
     assert preview.key?(:source_names)
-    assert preview[:source_names].is_a?(Array)
+    assert_kind_of Array, preview[:source_names]
   end
 
   def test_round_trip_import_export

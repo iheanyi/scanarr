@@ -14,13 +14,13 @@ class RefreshAllMetadataJob < ApplicationJob
         source = series_source.source
         next unless series_source.source_series_id.present?
 
-        unless AdapterRegistry.registered?(source.key)
+        unless Scrapers::AdapterRegistry.registered?(source.key)
           skipped += 1
           next
         end
 
         begin
-          adapter = AdapterRegistry.for(source)
+          adapter = Scrapers::AdapterRegistry.for(source)
           importer = SeriesImporter.new(source: source, adapter: adapter)
           importer.import!(series_source.source_series_id)
           refreshed += 1

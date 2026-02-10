@@ -54,7 +54,7 @@ class ComickAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/api/chapters/latest" => browse_latest_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = Comick::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::Comick::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   def test_search_returns_results
@@ -143,7 +143,7 @@ class ComickAdapterTest < ActiveSupport::TestCase
   end
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_popular
@@ -162,15 +162,17 @@ class ComickAdapterTest < ActiveSupport::TestCase
   end
 
   def test_extract_slug_from_various_formats
-    adapter = Comick::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    adapter = Scrapers::Comick::Adapter.new(config: { "base_url" => @base_url }, http: @http)
 
     # These test the private extract_slug method indirectly via series()
     # Test with plain slug
     series = adapter.series("one-piece")
+
     assert_equal "One Piece", series.title
 
     # Test with full URL
     series = adapter.series("https://comick.live/comic/one-piece")
+
     assert_equal "One Piece", series.title
   end
 

@@ -40,3 +40,17 @@
 end
 
 puts "Seeded #{Source.count} sources"
+
+if Rails.env.development? && ENV.fetch("SCANARR_SEED_DEV_USER", "1") == "1"
+  dev_username = ENV.fetch("SCANARR_DEV_USERNAME", "perfuser")
+  dev_email = ENV.fetch("SCANARR_DEV_EMAIL", "perfuser@local.scanarr")
+  dev_password = ENV.fetch("SCANARR_DEV_PASSWORD", "password123")
+
+  user = User.find_or_initialize_by(username: dev_username)
+  user.email = dev_email
+  user.password = dev_password if user.new_record? || user.password_digest.blank?
+  user.role = :admin if user.respond_to?(:role)
+  user.save!
+
+  puts "Seeded development user: #{dev_username} (override with SCANARR_DEV_* env vars)"
+end

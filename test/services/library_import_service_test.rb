@@ -15,7 +15,7 @@ class LibraryImportServiceTest < ActiveSupport::TestCase
     ).perform
 
     assert result.success
-    assert result.errors.empty?
+    assert_empty result.errors
   end
 
   def test_import_from_raw_json

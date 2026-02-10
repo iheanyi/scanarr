@@ -17,16 +17,16 @@ class SearchController < ApplicationController
   private
 
   def search_source(source)
-    unless AdapterRegistry.registered?(source.key)
+    unless Scrapers::AdapterRegistry.registered?(source.key)
       @errors << { source: source, message: "Adapter not implemented" }
       return
     end
 
-    adapter = AdapterRegistry.for(source)
+    adapter = Scrapers::AdapterRegistry.for(source)
     adapter.search(@query).each do |result|
       @results << { source: source, result: result }
     end
-  rescue AdapterRegistry::UnknownSourceError => e
+  rescue Scrapers::AdapterRegistry::UnknownSourceError => e
     @errors << { source: source, message: "Source not configured" }
     Rails.logger.warn "Search skipped for #{source.key}: #{e.message}"
   rescue StandardError => e

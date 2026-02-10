@@ -18,7 +18,7 @@ class SiteSettingTest < ActiveSupport::TestCase
   def test_registration_enabled_defaults_to_true
     SiteSetting.delete_all
 
-    assert SiteSetting.registration_enabled?
+    assert_predicate SiteSetting, :registration_enabled?
   end
 
   def test_registration_enabled_can_be_toggled_off

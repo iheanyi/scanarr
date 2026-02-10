@@ -41,13 +41,13 @@ class ChaptersController < ApplicationController
       if source_url.present?
         begin
           @source_pages = adapter_for(@source).pages(source_url)
-        rescue BaseAdapter::ChapterNotFoundError => e
+        rescue Scrapers::Errors::ChapterNotFoundError => e
           @source_error = "This chapter is no longer available on the source. It may have been removed or replaced."
           Rails.logger.warn "Chapter not found: #{@chapter.id} - #{e.message}"
-        rescue BaseAdapter::RateLimitError => e
+        rescue Scrapers::Errors::RateLimitError => e
           @source_error = "The source is rate limiting requests. Please try again in a few minutes."
           Rails.logger.warn "Rate limited: #{@chapter.id} - #{e.message}"
-        rescue BaseAdapter::SourceUnavailableError, BaseAdapter::ScraperError => e
+        rescue Scrapers::Errors::SourceUnavailableError, Scrapers::Errors::ScraperError => e
           @source_error = "Unable to load pages from source: #{e.message}"
           Rails.logger.error "Scraper error for chapter #{@chapter.id}: #{e.class} - #{e.message}"
         end
@@ -162,10 +162,7 @@ class ChaptersController < ApplicationController
 
     respond_to do |format|
       format.html do
-        redirect_to source_series_path(
-          source_slug: source_slug(@source),
-          series_slug: @series.to_param
-        )
+        redirect_to library_series_path(series_slug: @series.to_param)
       end
       format.turbo_stream do
         render turbo_stream: [
@@ -207,10 +204,7 @@ class ChaptersController < ApplicationController
 
     respond_to do |format|
       format.html do
-        redirect_to source_series_path(
-          source_slug: source_slug(@source),
-          series_slug: @series.to_param
-        )
+        redirect_to library_series_path(series_slug: @series.to_param)
       end
       format.turbo_stream do
         render turbo_stream: [
@@ -344,7 +338,7 @@ class ChaptersController < ApplicationController
   end
 
   def adapter_for(source)
-    AdapterRegistry.for(source)
+    Scrapers::AdapterRegistry.for(source)
   end
 
   def source_slug(source)

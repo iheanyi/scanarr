@@ -29,7 +29,7 @@ module UI
 
     def container_classes
       cn(
-        "flex overflow-hidden rounded-lg border border-border",
+        "inline-flex max-w-full flex-nowrap overflow-x-auto rounded-lg border border-border",
         @size == :sm ? "text-xs" : "text-sm",
         @size == :sm ? "bg-surface-2/60" : "bg-surface-2/60",
         system_arguments[:class]
@@ -41,6 +41,7 @@ module UI
       variant = (item[:variant] || :default).to_sym
       cn(
         @size == :sm ? "px-2.5 py-1" : "px-3 py-1.5",
+        "shrink-0 whitespace-nowrap",
         "transition-colors",
         index > 0 ? "border-l border-border" : nil,
         active ? (ACTIVE_VARIANTS[variant] || ACTIVE_VARIANTS[:default]) : INACTIVE_CLASSES

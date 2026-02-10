@@ -57,7 +57,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga-list/hot-manga" => browse_popular_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # ===== Search Tests =====
@@ -101,7 +101,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
 
   def test_search_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     results = adapter.search("nonexistent")
 
@@ -180,7 +180,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
 
   def test_series_returns_nil_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_nil adapter.series("nonexistent")
   end
@@ -263,7 +263,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
 
   def test_chapters_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_empty adapter.chapters("nonexistent")
   end
@@ -309,7 +309,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/#{@slug}/#{@chapter_slug}" => pages_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/manga/#{@slug}/#{@chapter_slug}")
 
@@ -322,7 +322,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/manga/#{@slug}/#{@chapter_slug}" => pages_fallback_fixture
     }
     http = FakeHttpClient.new(mapping: fallback_fixtures, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/manga/#{@slug}/#{@chapter_slug}")
 
@@ -331,7 +331,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
 
   def test_pages_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_empty adapter.pages("#{@base_url}/manga/foo/chapter-1")
   end
@@ -378,7 +378,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
 
   def test_browse_returns_empty_on_error
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::MangaNato::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     assert_empty adapter.browse(sort: "latest")
   end
@@ -394,7 +394,7 @@ class MangaNatoAdapterTest < ActiveSupport::TestCase
 
   def test_uses_config_base_url
     custom_url = "https://custom.natomanga.com"
-    adapter = MangaNato::Adapter.new(
+    adapter = Scrapers::MangaNato::Adapter.new(
       config: { "base_url" => custom_url },
       http: FakeHttpClient.new(mapping: {}, base_url: custom_url)
     )

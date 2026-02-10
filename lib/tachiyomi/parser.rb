@@ -9,13 +9,13 @@ module Tachiyomi
 
     def parse(file_or_path)
       raw = case file_or_path
-            when String then File.binread(file_or_path)
-            when IO, StringIO, Tempfile, ActionDispatch::Http::UploadedFile
+      when String then File.binread(file_or_path)
+      when IO, StringIO, Tempfile, ActionDispatch::Http::UploadedFile
               file_or_path.rewind if file_or_path.respond_to?(:rewind)
               file_or_path.read
-            else
+      else
               raise ArgumentError, "Expected a file path (String), IO, or UploadedFile"
-            end
+      end
 
       data = gzipped?(raw) ? Zlib.gunzip(raw) : raw
       Tachiyomi::Backup.decode(data)

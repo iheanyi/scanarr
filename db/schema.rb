@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_08_232240) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_014500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -68,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_232240) do
     t.bigint "user_id", null: false
     t.index ["chapter_id"], name: "index_chapter_progresses_on_chapter_id"
     t.index ["user_id", "chapter_id"], name: "index_chapter_progresses_on_user_id_and_chapter_id", unique: true
+    t.index ["user_id", "status"], name: "index_chapter_progresses_on_user_id_and_status"
     t.index ["user_id"], name: "index_chapter_progresses_on_user_id"
   end
 
@@ -230,11 +232,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_232240) do
     t.string "slug", null: false
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index "lower((canonical_title)::text) gin_trgm_ops", name: "index_series_on_lower_canonical_title_trgm", using: :gin
+    t.index "lower((localized_title)::text) gin_trgm_ops", name: "index_series_on_lower_localized_title_trgm", where: "(localized_title IS NOT NULL)", using: :gin
     t.index ["artist_name"], name: "index_series_on_artist_name"
     t.index ["author_name"], name: "index_series_on_author_name"
     t.index ["canonical_title"], name: "index_series_on_canonical_title"
     t.index ["deleted_at"], name: "index_series_on_deleted_at"
     t.index ["library_series_id"], name: "index_series_on_library_series_id"
+    t.index ["normalized_categories"], name: "index_series_on_normalized_categories_gin", using: :gin
     t.index ["public_id"], name: "index_series_on_public_id", unique: true
     t.index ["reading_style"], name: "index_series_on_reading_style"
     t.index ["slug"], name: "index_series_on_slug", unique: true
@@ -252,6 +257,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_08_232240) do
     t.bigint "source_id", null: false
     t.string "source_series_id"
     t.datetime "updated_at", null: false
+    t.index ["series_id", "last_checked_at"], name: "index_series_sources_on_series_id_and_last_checked_at"
     t.index ["series_id", "source_id"], name: "index_series_sources_on_series_id_and_source_id", unique: true
     t.index ["series_id"], name: "index_series_sources_on_series_id"
     t.index ["source_id", "source_series_id"], name: "index_series_sources_on_source_id_and_source_series_id"

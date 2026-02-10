@@ -44,6 +44,6 @@ class ScraperSmokeJob < ApplicationJob
   private
 
   def adapter_for(source)
-    AdapterRegistry.for(source)
+    Scrapers::AdapterRegistry.for(source)
   end
 end

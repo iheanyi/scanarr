@@ -4,7 +4,7 @@
     description: "Pick a source to browse or search for series."
   ) %>
 
-  <%= turbo_frame_tag "sources-content" do %>
+  <%= turbo_frame_tag "sources-content", class: "has-loading-overlay" do %>
     <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-2"><%= @sources.length %> sources</p>
@@ -37,7 +37,8 @@
                 <%= render UI::ButtonComponent.new(
                   variant: :primary,
                   size: :sm,
-                  href: source_browse_path(source_slug: source.slug)
+                  href: source_browse_path(source_slug: source.slug),
+                  data: { turbo_frame: "_top" }
                 ) do %>
                   <%= icon "compass", class: "h-3.5 w-3.5" %>
                   Discover
@@ -45,14 +46,16 @@
                 <%= render UI::ButtonComponent.new(
                   variant: :secondary,
                   size: :sm,
-                  href: source_series_index_path(source_slug: source.slug)
+                  href: source_series_index_path(source_slug: source.slug),
+                  data: { turbo_frame: "_top" }
                 ) do %>
                   Series
                 <% end %>
                 <%= render UI::ButtonComponent.new(
                   variant: :ghost,
                   size: :sm,
-                  href: source_search_path(source_slug: source.slug)
+                  href: source_search_path(source_slug: source.slug),
+                  data: { turbo_frame: "_top" }
                 ) do %>
                   <%= icon "search", class: "h-3.5 w-3.5" %>
                   Search

@@ -1,0 +1,237 @@
+<% page_count = @source_pages.length %>
+<% initial_page_index = @initial_page_index || (page_count.positive? ? 1 : 0) %>
+<% if page_count.positive? %>
+  <% initial_page_index = [ [ initial_page_index, page_count ].min, 1 ].max %>
+<% else %>
+  <% initial_page_index = 0 %>
+<% end %>
+<% progress_percent = page_count.positive? ? ((initial_page_index.to_f / page_count) * 100.0) : 0 %>
+<% is_horizontal = @reading_style == "left_to_right" || @reading_style == "right_to_left" %>
+<% is_rtl = @reading_style == "right_to_left" %>
+<% is_long_strip = @reading_style == "long_strip" %>
+<% next_chapter_url = @next_chapter ? source_preview_read_path(source_slug: source_slug(@source), series_url: @series_url, chapter_url: @next_chapter.url) : nil %>
+<% next_chapter_title = @next_chapter ? "Chapter #{@next_chapter.number || "?"}" : nil %>
+<% chapter_number = @chapter&.number.presence || "?" %>
+
+<% if @error.present? %>
+  <div class="space-y-4">
+    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
+    <div class="flex flex-wrap gap-2">
+      <% if @series_url.present? %>
+        <%= link_to "Back to Preview",
+                    source_preview_path(source_slug: source_slug(@source), series_url: @series_url),
+                    class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" %>
+      <% end %>
+      <%= link_to "Back to Browse",
+                  source_browse_path(source_slug: source_slug(@source)),
+                  class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-surface-2" %>
+    </div>
+  </div>
+<% else %>
+  <main data-controller="reader"
+        data-reader-style-value="<%= @reading_style %>"
+        data-reader-page-count-value="<%= page_count %>"
+        data-reader-initial-page-index-value="<%= initial_page_index %>"
+        <% if next_chapter_url %>
+        data-reader-next-chapter-url-value="<%= next_chapter_url %>"
+        data-reader-next-chapter-title-value="<%= next_chapter_title %>"
+        <% end %>
+        class="space-y-6">
+    <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
+      <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground", data: { turbo_preload: "" } %>
+      <span class="text-muted-2">/</span>
+      <%= link_to "Preview", source_preview_path(source_slug: source_slug(@source), series_url: @series_url), class: "hover:text-foreground", data: { turbo_preload: "" } %>
+      <span class="text-muted-2">/</span>
+      <span class="text-foreground truncate max-w-xs">Ch. <%= chapter_number %></span>
+    </nav>
+
+    <header class="space-y-3">
+      <div>
+        <h1 class="text-2xl font-semibold text-balance"><%= @series.title %></h1>
+        <% if @series.author.present? || @series.artist.present? %>
+          <p class="text-sm text-muted">
+            <% if @series.author.present? && @series.artist.present? && @series.author != @series.artist %>
+              by <%= @series.author %> · Art by <%= @series.artist %>
+            <% elsif @series.author.present? %>
+              by <%= @series.author %>
+            <% elsif @series.artist.present? %>
+              by <%= @series.artist %>
+            <% end %>
+          </p>
+        <% end %>
+      </div>
+      <div class="border-t border-border pt-3">
+        <h2 class="text-xl font-medium text-foreground">Chapter <%= chapter_number %></h2>
+        <% if @chapter&.title.present? %>
+          <p class="text-muted text-pretty"><%= @chapter.title %></p>
+        <% end %>
+      </div>
+    </header>
+
+    <% if page_count.positive? %>
+      <div class="sticky top-4 z-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
+        <div class="flex items-center justify-between text-xs text-foreground">
+          <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
+          <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
+        </div>
+        <div class="mt-2 h-1 w-full rounded-full bg-surface-2">
+          <div data-reader-target="progressBar"
+               class="h-1 rounded-full bg-accent transition-[width] duration-200"
+               style="width: <%= progress_percent %>%"></div>
+        </div>
+      </div>
+    <% end %>
+
+    <nav class="flex flex-wrap items-center gap-2">
+      <% if is_horizontal %>
+        <%= render UI::ButtonComponent.new(
+          variant: :ghost,
+          size: :sm,
+          data: { action: "click->reader#toggleLightbox" }
+        ) do %>
+          Lightbox
+        <% end %>
+      <% end %>
+      <% if @previous_chapter %>
+        <%= render UI::ButtonComponent.new(
+          variant: :ghost,
+          size: :sm,
+          href: source_preview_read_path(
+            source_slug: source_slug(@source),
+            series_url: @series_url,
+            chapter_url: @previous_chapter.url,
+            reading_style: @reading_style
+          ),
+          data: { turbo_preload: "" }
+        ) do %>
+          Previous Chapter
+        <% end %>
+      <% end %>
+      <% if @next_chapter %>
+        <%= render UI::ButtonComponent.new(
+          variant: :ghost,
+          size: :sm,
+          href: source_preview_read_path(
+            source_slug: source_slug(@source),
+            series_url: @series_url,
+            chapter_url: @next_chapter.url,
+            reading_style: @reading_style
+          ),
+          data: { turbo_preload: "" }
+        ) do %>
+          Next Chapter
+        <% end %>
+      <% end %>
+      <%= button_to "Import to Library",
+                    source_import_path(source_slug: source_slug(@source)),
+                    method: :post,
+                    params: { series_url: @series_url },
+                    class: "rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong",
+                    data: { turbo_submits_with: "Importing..." } %>
+      <%= form_with url: source_preview_read_path(source_slug: source_slug(@source)),
+                    method: :get,
+                    local: true,
+                    data: { turbo_submits_with: "Updating..." } do |form| %>
+        <%= hidden_field_tag :series_url, @series_url %>
+        <%= hidden_field_tag :chapter_url, @chapter_url %>
+        <%= render UI::AutoSelectComponent.new(
+          form: form,
+          method: :reading_style,
+          options: [
+            [ "Left to Right", "left_to_right" ],
+            [ "Right to Left", "right_to_left" ],
+            [ "Long Strip", "long_strip" ],
+            [ "Webcomic", "webcomic" ]
+          ],
+          selected: @reading_style,
+          size: :sm,
+          full_width: false
+        ) %>
+      <% end %>
+    </nav>
+
+    <% viewport_class = if is_horizontal
+                          base = "flex overflow-x-auto snap-x snap-mandatory w-full"
+                          is_rtl ? "#{base} flex-row-reverse" : base
+       elsif is_long_strip
+                          "flex flex-col items-center"
+       else
+                          "flex flex-col items-center gap-4"
+       end %>
+    <% page_class = if is_horizontal
+                      "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
+       elsif is_long_strip
+                      "w-full max-w-3xl cursor-pointer"
+       else
+                      "w-full max-w-2xl cursor-pointer"
+       end %>
+    <% image_class = if is_long_strip
+                       "w-full max-w-full object-contain pointer-events-none"
+       else
+                       "max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none"
+       end %>
+
+    <section data-reader-target="viewport"
+             class="<%= viewport_class %>"
+             data-reader-rtl="<%= is_rtl %>">
+      <% if @source_error.present? %>
+        <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-screen flex flex-col items-center justify-center" : "" %>">
+          <div class="flex items-center gap-2 text-danger">
+            <%= icon "circle-alert", class: "h-5 w-5" %>
+            <span class="font-medium">Unable to load chapter</span>
+          </div>
+          <p class="text-sm text-danger text-pretty"><%= @source_error %></p>
+          <div class="flex gap-2">
+            <%= link_to "Back to preview",
+                        source_preview_path(source_slug: source_slug(@source), series_url: @series_url),
+                        class: "inline-flex items-center rounded-md border border-danger/30 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger-soft" %>
+            <%= link_to "Try again",
+                        source_preview_read_path(source_slug: source_slug(@source), series_url: @series_url, chapter_url: @chapter_url, reading_style: @reading_style),
+                        class: "inline-flex items-center rounded-md bg-danger-soft px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/30" %>
+          </div>
+        </div>
+      <% elsif @source_pages.empty? %>
+        <%= render UI::EmptyStateComponent.new(
+          title: "Streaming from source",
+          description: "This source chapter did not return any readable pages.",
+          compact: true,
+          class: is_horizontal ? "shrink-0 w-screen" : nil
+        ) do |empty| %>
+          <% empty.with_icon do %>
+            <%= icon "wifi", class: "h-6 w-6" %>
+          <% end %>
+        <% end %>
+      <% end %>
+      <% @source_pages.each_with_index do |page, idx| %>
+        <article data-reader-target="page"
+                 data-action="click->reader#openLightboxForPage"
+                 class="<%= page_class %>">
+          <%= image_tag source_preview_image_path(source_slug: source_slug(@source), token: preview_image_token_for(page.url)), alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
+        </article>
+      <% end %>
+    </section>
+
+    <div data-reader-target="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-6">
+      <button type="button"
+              class="absolute right-6 top-6 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2"
+              data-action="click->reader#closeLightbox">
+        Close
+      </button>
+      <button type="button"
+              class="absolute left-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
+              data-action="click->reader#lightboxPrev"
+              aria-label="Previous page">
+        &larr;
+      </button>
+      <button type="button"
+              class="absolute right-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
+              data-action="click->reader#lightboxNext"
+              aria-label="Next page">
+        &rarr;
+      </button>
+      <img data-reader-target="lightboxImage"
+           class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
+           alt="Reader page">
+    </div>
+  </main>
+<% end %>

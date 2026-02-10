@@ -9,7 +9,7 @@ class BackupRecordTest < ActiveSupport::TestCase
       size: 1024
     )
 
-    assert record.valid?
+    assert_predicate record, :valid?
   end
 
   def test_requires_filename
@@ -35,21 +35,25 @@ class BackupRecordTest < ActiveSupport::TestCase
 
   def test_human_size
     record = BackupRecord.new(size: 1_048_576)
+
     assert_equal "1 MB", record.human_size
   end
 
   def test_human_size_nil_when_no_size
     record = BackupRecord.new(size: nil)
+
     assert_nil record.human_size
   end
 
   def test_file_exists_false_when_no_path
     record = BackupRecord.new(path: nil)
+
     assert_not record.file_exists?
   end
 
   def test_file_exists_false_when_path_missing
     record = BackupRecord.new(path: "/nonexistent/file.zip")
+
     assert_not record.file_exists?
   end
 

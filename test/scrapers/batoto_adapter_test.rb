@@ -69,7 +69,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/v3x-search?sort=views_a&page=1" => search_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)
-    @adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: @http)
+    @adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: @http)
   end
 
   # --- Search Tests ---
@@ -97,11 +97,11 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_search_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     results = adapter.search("one piece")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -149,7 +149,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_series_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.series("#{@base_url}/title/99999")
 
@@ -174,6 +174,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/title/#{@series_slug}")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1.0
     assert_includes numbers, 2.0
     assert_includes numbers, 3.0
@@ -183,6 +184,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/title/#{@series_slug}")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -198,17 +200,18 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/title/#{@series_slug}")
 
     titled_chapter = chapters.find { |ch| ch.title.present? }
+
     assert_not_nil titled_chapter
     assert_equal "Romance Dawn", titled_chapter.title
   end
 
   def test_chapters_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.chapters("#{@base_url}/title/99999")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests ---
@@ -231,7 +234,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -240,7 +243,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
       "GET #{@base_url}/chapter/cdn-test" => pages_fixture_cdn
     )
     http = FakeHttpClient.new(mapping: cdn_fixtures, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
     pages = adapter.pages("#{@base_url}/chapter/cdn-test")
 
@@ -252,11 +255,11 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
   def test_pages_handles_error_gracefully
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
-    adapter = Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: error_http)
 
     result = adapter.pages("#{@base_url}/chapter/99999")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   def test_pages_includes_mime_type
@@ -271,20 +274,20 @@ class BatotoAdapterTest < ActiveSupport::TestCase
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_browse_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
   def test_browse_popular
     results = @adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
