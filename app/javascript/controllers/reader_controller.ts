@@ -30,6 +30,12 @@ export function resolveLightboxTapZoneAction(
   return "close"
 }
 
+export function observerThresholdForStyle(style: string): number {
+  if (style === "left_to_right" || style === "right_to_left" || style === "vertical") return 0.5
+  if (style === "webtoon") return 0
+  return 0.3
+}
+
 export default class extends Controller {
   static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "nextChapterOverlay", "nextChapterCountdown"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
@@ -343,8 +349,8 @@ export default class extends Controller {
     const usesViewportRoot = this.isHorizontal() || this.isPagedVertical()
     const root = usesViewportRoot && this.hasViewportTarget ? this.viewportTarget : null
     
-    // Paged modes prioritize the most-visible page; continuous mode tracks the first page entering view.
-    const threshold = this.isHorizontal() || this.isPagedVertical() ? 0.5 : 0.3
+    const threshold = observerThresholdForStyle(this.styleValue)
+    const minVerticalIntersectionRatio = this.styleValue === "webtoon" ? 0 : 0.3
     
     this.observer = new IntersectionObserver(
       (entries) => {
@@ -376,7 +382,7 @@ export default class extends Controller {
           let topmostTop = Infinity
 
           for (const entry of entries) {
-            if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
+            if (entry.isIntersecting && entry.intersectionRatio >= minVerticalIntersectionRatio) {
               const rect = entry.boundingClientRect
               if (rect.top < topmostTop) {
                 topmostTop = rect.top
