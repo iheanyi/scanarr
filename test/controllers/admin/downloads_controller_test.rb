@@ -27,4 +27,33 @@ class Admin::DownloadsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match />complete</, @response.body.downcase
   end
+
+  def test_cancel_queued_download_uses_public_id_route_param
+    file_asset = file_assets(:one)
+    file_asset.update!(download_status: "queued", download_error: nil)
+
+    post admin_download_cancel_path(file_asset)
+
+    assert_redirected_to admin_downloads_path
+    assert_equal "Download cancelled", flash[:notice]
+
+    file_asset.reload
+
+    assert_equal "cancelled", file_asset.download_status
+  end
+
+  def test_restart_failed_download_uses_public_id_route_param
+    file_asset = file_assets(:one)
+    file_asset.update!(download_status: "failed", download_error: "network error")
+
+    post admin_download_restart_path(file_asset)
+
+    assert_redirected_to admin_downloads_path
+    assert_equal "Download restarted successfully", flash[:notice]
+
+    file_asset.reload
+
+    assert_equal "queued", file_asset.download_status
+    assert_nil file_asset.download_error
+  end
 end

@@ -1,6 +1,7 @@
 module Admin
   class DownloadsController < ApplicationController
     before_action :require_admin
+    before_action :set_download, only: %i[restart cancel]
 
     # Custom ordering: downloading first, then queued, then complete, then failed
     STATUS_ORDER = Arel.sql(<<~SQL.squish)
@@ -15,7 +16,7 @@ module Admin
     SQL
 
     def index
-      @statuses = %w[queued downloading complete failed]
+      @statuses = %w[queued pending downloading complete failed]
 
       @downloads = FileAsset.includes(release: { chapter: :series })
                             .where.not(download_status: %w[pending cancelled])
@@ -65,8 +66,6 @@ module Admin
     end
 
     def restart
-      @download = FileAsset.find(params[:id])
-
       if @download.download_status.in?(%w[failed downloading cancelled])
         @download.update!(
           download_status: "queued",
@@ -85,8 +84,6 @@ module Admin
     end
 
     def cancel
-      @download = FileAsset.find(params[:id])
-
       if @download.download_status.in?(%w[queued pending downloading])
         @download.archive.purge if @download.archive.attached?
         @download.pages.includes(image_attachment: :blob).each { |page| page.image.purge if page.image.attached? }
@@ -153,6 +150,12 @@ module Admin
     end
 
     private
+
+    def set_download
+      @download = FileAsset.find_by(public_id: params[:id]) || FileAsset.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      redirect_to admin_downloads_path(status: params[:status]), alert: "Download not found"
+    end
 
     def enqueue_download_job(file_asset)
       release = file_asset.release
