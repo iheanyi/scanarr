@@ -40,6 +40,12 @@ export function usesVerticalLightboxForStyle(style: string): boolean {
   return style === "vertical" || style === "webtoon"
 }
 
+export function navigationScrollBehaviorForStyle(style: string, prefersReducedMotion: boolean): ScrollBehavior {
+  if (prefersReducedMotion) return "instant"
+  if (style === "left_to_right" || style === "right_to_left" || style === "vertical") return "smooth"
+  return "instant"
+}
+
 export default class extends Controller {
   static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "lightboxScroll", "lightboxStrip", "lightboxHint", "lightboxProgressText", "nextChapterOverlay", "nextChapterCountdown"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
@@ -323,6 +329,7 @@ export default class extends Controller {
   next() {
     this.hasInteracted = true
     const nextIndex = this.currentIndex + 1
+    const navigationBehavior = this.navigationScrollBehavior()
     if (nextIndex >= this.pageTargets.length) {
       // Past last page — trigger next chapter flow
       if (this.lightboxOpen) this.closeLightbox()
@@ -330,19 +337,20 @@ export default class extends Controller {
       return
     }
     if (this.lightboxOpen && this.usesVerticalLightbox()) {
-      this.scrollVerticalLightboxToIndex(nextIndex, "smooth")
+      this.scrollVerticalLightboxToIndex(nextIndex, navigationBehavior)
       return
     }
-    this.scrollToIndex(nextIndex)
+    this.scrollToIndex(nextIndex, navigationBehavior)
   }
 
   previous() {
     this.hasInteracted = true
+    const navigationBehavior = this.navigationScrollBehavior()
     if (this.lightboxOpen && this.usesVerticalLightbox()) {
-      this.scrollVerticalLightboxToIndex(this.currentIndex - 1, "smooth")
+      this.scrollVerticalLightboxToIndex(this.currentIndex - 1, navigationBehavior)
       return
     }
-    this.scrollToIndex(this.currentIndex - 1)
+    this.scrollToIndex(this.currentIndex - 1, navigationBehavior)
   }
 
   private scrollToIndex(index: number, behavior: ScrollBehavior = "instant") {
@@ -386,6 +394,14 @@ export default class extends Controller {
 
   private usesVerticalLightbox() {
     return usesVerticalLightboxForStyle(this.styleValue)
+  }
+
+  private navigationScrollBehavior(): ScrollBehavior {
+    return navigationScrollBehaviorForStyle(this.styleValue, this.prefersReducedMotion())
+  }
+
+  private prefersReducedMotion(): boolean {
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
   }
 
   private showVerticalLightboxHint() {

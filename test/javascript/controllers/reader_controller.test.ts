@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
+  navigationScrollBehaviorForStyle,
   observerThresholdForStyle,
   resolveLightboxSwipeAction,
   resolveLightboxTapZoneAction,
@@ -143,6 +144,25 @@ describe('Vertical Lightbox Style Logic', () => {
   it('does not use vertical lightbox for horizontal styles', () => {
     expect(usesVerticalLightboxForStyle('left_to_right')).toBe(false)
     expect(usesVerticalLightboxForStyle('right_to_left')).toBe(false)
+  })
+})
+
+describe('Navigation Scroll Behavior Logic', () => {
+  it('uses smooth behavior for paged styles by default', () => {
+    expect(navigationScrollBehaviorForStyle('left_to_right', false)).toBe('smooth')
+    expect(navigationScrollBehaviorForStyle('right_to_left', false)).toBe('smooth')
+    expect(navigationScrollBehaviorForStyle('vertical', false)).toBe('smooth')
+  })
+
+  it('uses instant behavior for continuous style by default', () => {
+    expect(navigationScrollBehaviorForStyle('webtoon', false)).toBe('instant')
+  })
+
+  it('uses instant behavior for all styles when reduced motion is preferred', () => {
+    expect(navigationScrollBehaviorForStyle('left_to_right', true)).toBe('instant')
+    expect(navigationScrollBehaviorForStyle('right_to_left', true)).toBe('instant')
+    expect(navigationScrollBehaviorForStyle('vertical', true)).toBe('instant')
+    expect(navigationScrollBehaviorForStyle('webtoon', true)).toBe('instant')
   })
 })
 
