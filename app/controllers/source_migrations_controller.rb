@@ -26,6 +26,7 @@ class SourceMigrationsController < ApplicationController
     @from_source = from_source
     @to_source = to_source
     @result = result
+    @series_chapter_counts = build_chapter_count_map(result)
 
     render :preview, status: :unprocessable_entity
   end
@@ -125,5 +126,15 @@ class SourceMigrationsController < ApplicationController
     series_source = @series.series_sources.find_or_initialize_by(source: @to_source)
     series_source.source_series_id = source_series_id
     series_source.save!
+  end
+
+  def build_chapter_count_map(result)
+    series_ids = (result.already_on_target + result.no_match).map(&:id).uniq
+    return {} if series_ids.empty?
+
+    source_ids = [ @from_source.id, @to_source.id ]
+    Chapter.where(series_id: series_ids, source_id: source_ids)
+           .group(:series_id, :source_id)
+           .count
   end
 end
