@@ -1,5 +1,35 @@
 import { Controller } from "@hotwired/stimulus"
 
+export function resolveLightboxSwipeAction(
+  deltaX: number,
+  deltaY: number,
+  threshold = 56
+): "next" | "previous" | null {
+  const absX = Math.abs(deltaX)
+  const absY = Math.abs(deltaY)
+
+  if (absX < threshold || absX <= absY) return null
+  return deltaX < 0 ? "next" : "previous"
+}
+
+export function resolveLightboxTapZoneAction(
+  clientX: number,
+  left: number,
+  width: number,
+  edgeZoneRatio = 0.34
+): "next" | "previous" | "close" | null {
+  if (width <= 0) return null
+
+  const relativeX = clientX - left
+  if (relativeX < 0 || relativeX > width) return null
+
+  const edgeWidth = width * edgeZoneRatio
+  if (relativeX <= edgeWidth) return "previous"
+  if (relativeX >= width - edgeWidth) return "next"
+
+  return "close"
+}
+
 export default class extends Controller {
   static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "nextChapterOverlay", "nextChapterCountdown"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
@@ -38,6 +68,11 @@ export default class extends Controller {
   private nextChapterCountdownInterval?: ReturnType<typeof setInterval>
   private nextChapterCountdownValue = 5
   private hasInteracted = false // Don't auto-advance on initial page load
+  private lightboxSwipePointerId: number | null = null
+  private lightboxSwipeStartX = 0
+  private lightboxSwipeStartY = 0
+  private lightboxSwipeDeltaX = 0
+  private lightboxSwipeDeltaY = 0
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -136,6 +171,7 @@ export default class extends Controller {
     event?.preventDefault()
     if (!this.hasLightboxTarget) return
     this.lightboxOpen = false
+    this.resetLightboxSwipe()
     this.lightboxTarget.classList.add("hidden")
     this.lightboxTarget.classList.remove("flex")
     document.body.style.overflow = ""
@@ -153,6 +189,76 @@ export default class extends Controller {
     event?.stopPropagation()
     // In RTL mode, the "prev" button (left arrow) goes to next page
     this.isRtl() ? this.next() : this.previous()
+  }
+
+  lightboxPointerDown(event: PointerEvent) {
+    if (!this.lightboxOpen || event.pointerType !== "touch") return
+
+    this.lightboxSwipePointerId = event.pointerId
+    this.lightboxSwipeStartX = event.clientX
+    this.lightboxSwipeStartY = event.clientY
+    this.lightboxSwipeDeltaX = 0
+    this.lightboxSwipeDeltaY = 0
+  }
+
+  lightboxPointerMove(event: PointerEvent) {
+    if (!this.isTrackingLightboxSwipe(event)) return
+
+    this.lightboxSwipeDeltaX = event.clientX - this.lightboxSwipeStartX
+    this.lightboxSwipeDeltaY = event.clientY - this.lightboxSwipeStartY
+  }
+
+  lightboxPointerUp(event: PointerEvent) {
+    if (!this.isTrackingLightboxSwipe(event)) return
+
+    const swipeAction = resolveLightboxSwipeAction(this.lightboxSwipeDeltaX, this.lightboxSwipeDeltaY)
+    const isTap = Math.abs(this.lightboxSwipeDeltaX) < 14 && Math.abs(this.lightboxSwipeDeltaY) < 14
+    this.resetLightboxSwipe()
+
+    if (swipeAction) {
+      event.preventDefault()
+      event.stopPropagation()
+      swipeAction === "next" ? this.lightboxNext() : this.lightboxPrev()
+      return
+    }
+
+    if (!isTap) return
+
+    const tapAction = this.resolveTouchTapZoneAction(event)
+    if (!tapAction) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    if (tapAction === "next") {
+      this.lightboxNext()
+    } else if (tapAction === "previous") {
+      this.lightboxPrev()
+    } else {
+      this.closeLightbox()
+    }
+  }
+
+  lightboxPointerCancel(_event: PointerEvent) {
+    this.resetLightboxSwipe()
+  }
+
+  private isTrackingLightboxSwipe(event: PointerEvent) {
+    return this.lightboxSwipePointerId !== null && event.pointerId === this.lightboxSwipePointerId
+  }
+
+  private resetLightboxSwipe() {
+    this.lightboxSwipePointerId = null
+    this.lightboxSwipeDeltaX = 0
+    this.lightboxSwipeDeltaY = 0
+  }
+
+  private resolveTouchTapZoneAction(event: PointerEvent) {
+    // Let explicit controls (close/arrow buttons) handle their own clicks.
+    if (event.target instanceof HTMLElement && event.target.closest("button, a")) return null
+    if (!this.hasLightboxTarget) return null
+
+    const rect = this.lightboxTarget.getBoundingClientRect()
+    return resolveLightboxTapZoneAction(event.clientX, rect.left, rect.width)
   }
 
   private resolveInitialIndex() {
@@ -197,7 +303,7 @@ export default class extends Controller {
     this.isScrolling = true
     this.currentIndex = index
     
-    const block = this.isHorizontal() ? "nearest" : "start"
+    const block = (this.isHorizontal() || this.isPagedVertical()) ? "nearest" : "start"
     const inline = this.isHorizontal() ? "center" : "nearest"
     
     this.pageTargets[index].scrollIntoView({ behavior, block, inline })
@@ -216,6 +322,10 @@ export default class extends Controller {
     return this.styleValue === "left_to_right" || this.styleValue === "right_to_left"
   }
 
+  private isPagedVertical() {
+    return this.styleValue === "vertical"
+  }
+
   private isRtl() {
     // Check both the style value and the data attribute on viewport
     if (this.styleValue === "right_to_left") return true
@@ -228,20 +338,21 @@ export default class extends Controller {
   private observePages() {
     if (this.pageTargets.length === 0) return
     
-    // For horizontal modes, observe against the scrolling viewport container
+    // For horizontal + paged-vertical modes, observe against the scrolling viewport container
     // For vertical modes, use browser viewport (null) since the whole page scrolls
-    const root = this.isHorizontal() && this.hasViewportTarget ? this.viewportTarget : null
+    const usesViewportRoot = this.isHorizontal() || this.isPagedVertical()
+    const root = usesViewportRoot && this.hasViewportTarget ? this.viewportTarget : null
     
-    // Use lower threshold for vertical (first page that enters view) vs horizontal (centered page)
-    const threshold = this.isHorizontal() ? 0.5 : 0.3
+    // Paged modes prioritize the most-visible page; continuous mode tracks the first page entering view.
+    const threshold = this.isHorizontal() || this.isPagedVertical() ? 0.5 : 0.3
     
     this.observer = new IntersectionObserver(
       (entries) => {
         // Skip if we're in the middle of a programmatic scroll
         if (this.isScrolling) return
         
-        if (this.isHorizontal()) {
-          // Horizontal: find the most visible page (center)
+        if (this.isHorizontal() || this.isPagedVertical()) {
+          // Paged modes: find the most visible page panel.
           let bestEntry: IntersectionObserverEntry | null = null
           for (const entry of entries) {
             if (entry.isIntersecting) {

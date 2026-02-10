@@ -14,6 +14,7 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 8 }, if: -> { password.present? }
 
   before_save :generate_api_key
+  before_validation :normalize_default_reading_style
 
   # JSONB preferences with typed accessors
   store_accessor :preferences,
@@ -46,12 +47,7 @@ class User < ApplicationRecord
     [ "Turkish", "tr" ]
   ].freeze
 
-  READING_STYLE_OPTIONS = [
-    [ "Left to Right", "left_to_right" ],
-    [ "Right to Left", "right_to_left" ],
-    [ "Long Strip", "long_strip" ],
-    [ "Webcomic", "webcomic" ]
-  ].freeze
+  READING_STYLE_OPTIONS = ReadingStyles::OPTIONS
 
   DOWNLOAD_POLICY_OPTIONS = [
     [ "Notify Only", "notify_only" ],
@@ -67,7 +63,7 @@ class User < ApplicationRecord
   ].freeze
 
   def effective_reading_style
-    default_reading_style.presence || "left_to_right"
+    self.class.normalize_reading_style(default_reading_style)
   end
 
   def effective_download_policy
@@ -100,7 +96,17 @@ class User < ApplicationRecord
     update!(api_key: self.class.generate_api_key)
   end
 
+  def self.normalize_reading_style(value)
+    ReadingStyles.normalize(value)
+  end
+
   private
+
+  def normalize_default_reading_style
+    return if default_reading_style.blank?
+
+    self.default_reading_style = self.class.normalize_reading_style(default_reading_style)
+  end
 
   def generate_api_key
     self.api_key ||= self.class.generate_api_key

@@ -165,6 +165,11 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       assert_select "a", text: "Previous Chapter", count: 1
       assert_select "a", text: "Next Chapter", count: 1
       assert_select "h2", text: "Chapter 2"
+      assert_includes @response.body, "reader#lightboxPointerDown"
+      assert_includes @response.body, "reader#lightboxPointerMove"
+      assert_includes @response.body, "reader#lightboxPointerUp"
+      assert_includes @response.body, "lightbox-nav-arrow absolute left-6"
+      assert_includes @response.body, "lightbox-nav-arrow absolute right-6"
     end
   end
 

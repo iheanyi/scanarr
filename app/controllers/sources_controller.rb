@@ -9,7 +9,6 @@ class SourcesController < ApplicationController
     "most_series" => "Most Series"
   }.freeze
   PREVIEW_CHAPTER_LIMIT = 50
-  READING_STYLES = %w[left_to_right right_to_left long_strip webcomic].freeze
   PREVIEW_IMAGE_TOKEN_PURPOSE = "source_preview_image".freeze
   PREVIEW_IMAGE_TOKEN_TTL = 6.hours
 
@@ -256,8 +255,7 @@ class SourcesController < ApplicationController
   end
 
   def preview_reading_style(value)
-    style = value.to_s
-    READING_STYLES.include?(style) ? style : "left_to_right"
+    ReadingStyles.normalize(value)
   end
 
   def preview_initial_page_index(value)

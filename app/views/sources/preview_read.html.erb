@@ -8,7 +8,8 @@
 <% progress_percent = page_count.positive? ? ((initial_page_index.to_f / page_count) * 100.0) : 0 %>
 <% is_horizontal = @reading_style == "left_to_right" || @reading_style == "right_to_left" %>
 <% is_rtl = @reading_style == "right_to_left" %>
-<% is_long_strip = @reading_style == "long_strip" %>
+<% is_webtoon = @reading_style == "webtoon" %>
+<% is_paged_vertical = @reading_style == "vertical" %>
 <% next_chapter_url = @next_chapter ? source_preview_read_path(source_slug: source_slug(@source), series_url: @series_url, chapter_url: @next_chapter.url) : nil %>
 <% next_chapter_title = @next_chapter ? "Chapter #{@next_chapter.number || "?"}" : nil %>
 <% chapter_number = @chapter&.number.presence || "?" %>
@@ -137,12 +138,7 @@
         <%= render UI::AutoSelectComponent.new(
           form: form,
           method: :reading_style,
-          options: [
-            [ "Left to Right", "left_to_right" ],
-            [ "Right to Left", "right_to_left" ],
-            [ "Long Strip", "long_strip" ],
-            [ "Webcomic", "webcomic" ]
-          ],
+          options: User::READING_STYLE_OPTIONS,
           selected: @reading_style,
           size: :sm,
           full_width: false
@@ -153,19 +149,23 @@
     <% viewport_class = if is_horizontal
                           base = "flex overflow-x-auto snap-x snap-mandatory w-full"
                           is_rtl ? "#{base} flex-row-reverse" : base
-       elsif is_long_strip
+       elsif is_webtoon
                           "flex flex-col items-center"
+       elsif is_paged_vertical
+                          "flex h-[82vh] flex-col items-center overflow-y-auto snap-y snap-mandatory overscroll-contain"
        else
                           "flex flex-col items-center gap-4"
        end %>
     <% page_class = if is_horizontal
                       "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
-       elsif is_long_strip
+       elsif is_webtoon
                       "w-full max-w-3xl cursor-pointer"
+       elsif is_paged_vertical
+                      "snap-start min-h-[82vh] w-full max-w-2xl flex items-center justify-center px-2 py-2 cursor-pointer"
        else
                       "w-full max-w-2xl cursor-pointer"
        end %>
-    <% image_class = if is_long_strip
+    <% image_class = if is_webtoon
                        "w-full max-w-full object-contain pointer-events-none"
        else
                        "max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none"
@@ -211,20 +211,22 @@
       <% end %>
     </section>
 
-    <div data-reader-target="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-6">
+    <div data-reader-target="lightbox"
+         data-action="pointerdown->reader#lightboxPointerDown pointermove->reader#lightboxPointerMove pointerup->reader#lightboxPointerUp pointercancel->reader#lightboxPointerCancel"
+         class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-6">
       <button type="button"
               class="absolute right-6 top-6 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2"
               data-action="click->reader#closeLightbox">
         Close
       </button>
       <button type="button"
-              class="absolute left-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
+              class="lightbox-nav-arrow absolute left-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
               data-action="click->reader#lightboxPrev"
               aria-label="Previous page">
         &larr;
       </button>
       <button type="button"
-              class="absolute right-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
+              class="lightbox-nav-arrow absolute right-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
               data-action="click->reader#lightboxNext"
               aria-label="Next page">
         &rarr;

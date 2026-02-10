@@ -71,7 +71,7 @@ class UserPreferencesTest < ActiveSupport::TestCase
 
     reloaded = User.find(@user.id)
 
-    assert_equal "webcomic", reloaded.default_reading_style
+    assert_equal "vertical", reloaded.default_reading_style
     assert_equal "auto_download", reloaded.default_download_policy
     assert_not reloaded.notifications_enabled?
   end

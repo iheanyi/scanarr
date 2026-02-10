@@ -310,7 +310,11 @@ class SeriesController < ApplicationController
   end
 
   def series_params
-    params.require(:series).permit(:reading_style)
+    permitted = params.require(:series).permit(:reading_style)
+    if permitted[:reading_style].present?
+      permitted[:reading_style] = ReadingStyles.normalize(permitted[:reading_style])
+    end
+    permitted
   end
 
   def adapter_for(source)

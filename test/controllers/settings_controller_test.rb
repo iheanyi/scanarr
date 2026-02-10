@@ -47,6 +47,8 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "Settings saved"
+    user = User.find_by(email: "admin@scanarr.local")
+    assert_equal "webtoon", user.default_reading_style
   end
 
   def test_update_source_enable
