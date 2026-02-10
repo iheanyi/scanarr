@@ -66,7 +66,7 @@
           <select name="from_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
             <option value="">Select source...</option>
             <% @sources.each do |source| %>
-              <option value="<%= source.id %>"><%= source.name %></option>
+              <option value="<%= source.id %>" <%= "selected" if params[:from_source_id].to_s == source.id.to_s %>><%= source.name %></option>
             <% end %>
           </select>
         </div>
@@ -76,7 +76,7 @@
           <select name="to_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
             <option value="">Select source...</option>
             <% @sources.each do |source| %>
-              <option value="<%= source.id %>"><%= source.name %></option>
+              <option value="<%= source.id %>" <%= "selected" if params[:to_source_id].to_s == source.id.to_s %>><%= source.name %></option>
             <% end %>
           </select>
         </div>

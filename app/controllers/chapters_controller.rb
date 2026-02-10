@@ -162,10 +162,7 @@ class ChaptersController < ApplicationController
 
     respond_to do |format|
       format.html do
-        redirect_to source_series_path(
-          source_slug: source_slug(@source),
-          series_slug: @series.to_param
-        )
+        redirect_to library_series_path(series_slug: @series.to_param)
       end
       format.turbo_stream do
         render turbo_stream: [
@@ -207,10 +204,7 @@ class ChaptersController < ApplicationController
 
     respond_to do |format|
       format.html do
-        redirect_to source_series_path(
-          source_slug: source_slug(@source),
-          series_slug: @series.to_param
-        )
+        redirect_to library_series_path(series_slug: @series.to_param)
       end
       format.turbo_stream do
         render turbo_stream: [

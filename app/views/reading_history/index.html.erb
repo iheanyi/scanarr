@@ -50,7 +50,6 @@
         <% series = chapter&.series %>
         <% source = chapter&.source %>
         <% chapter_path = source && series ? source_series_chapter_path(source.slug, series.to_param, chapter.chapter_number) : "#" %>
-        <% series_path_url = source && series ? source_series_path(source.slug, series.to_param) : "#" %>
 
         <%= link_to chapter_path, class: "group flex items-center gap-4 rounded-lg border border-border/60 bg-surface p-3 transition-colors hover:border-accent/40 hover:bg-surface-2/60" do %>
           <%= render UI::SeriesCoverComponent.new(url: series&.cover_image_url, alt: series&.canonical_title || "", size: :sm, rounded: :sm) %>

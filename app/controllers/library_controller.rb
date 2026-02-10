@@ -1,4 +1,13 @@
 class LibraryController < ApplicationController
+  STATUS_OPTIONS = [
+    [ "All", "" ],
+    [ "Downloaded", "downloaded" ],
+    [ "In Progress", "in_progress" ],
+    [ "Not Started", "not_started" ],
+    [ "Completed", "completed" ],
+    [ "Following", "following" ]
+  ].freeze
+
   SORT_OPTIONS = {
     "alphabetical" => "A–Z",
     "reverse_alpha" => "Z–A",
@@ -15,19 +24,31 @@ class LibraryController < ApplicationController
   }.freeze
 
   def index
+    @status = normalized_status_param
+    @source_ids = normalized_source_ids
+    @genres = normalized_genres
+    @status_options = STATUS_OPTIONS
+    @source_options = Source.joins(:series_sources).distinct.order(:name, :key).map do |source|
+      [ source.name.presence || source.key, source.id.to_s ]
+    end
+    @genre_options = ActiveRecord::Base.connection.select_values(<<~SQL)
+      SELECT DISTINCT jsonb_array_elements_text(normalized_categories) AS genre
+      FROM series
+      WHERE jsonb_typeof(normalized_categories) = 'array'
+        AND jsonb_array_length(normalized_categories) > 0
+      ORDER BY genre ASC
+      LIMIT 200
+    SQL
+
     base_scope = Series.includes({ cover_attachment: :blob }, :sources, :series_sources)
 
     # Search by title (SQL)
-    if params[:q].present?
-      query = "%#{params[:q]}%"
-      base_scope = base_scope.where(
-        "LOWER(canonical_title) LIKE LOWER(:q) OR LOWER(localized_title) LIKE LOWER(:q)",
-        q: query
-      )
-    end
+    base_scope = apply_search_filter(base_scope)
+    base_scope = apply_source_filter(base_scope)
+    base_scope = apply_genre_filter(base_scope)
 
     # "Following" filter: only show series the user is following
-    if params[:status] == "following"
+    if @status == "following"
       followed_library_series_ids = current_user.user_series_follows.pluck(:library_series_id)
       @followed_library_series_ids = Set.new(followed_library_series_ids)
       base_scope = base_scope.where(library_series_id: followed_library_series_ids)
@@ -77,28 +98,9 @@ class LibraryController < ApplicationController
         .where(series_id: series_ids)
         .group(:series_id)
         .maximum(:last_checked_at)
-    elsif params[:status].present?
+    elsif @status.present?
       # Status filtering via SQL subqueries (avoids loading all series into memory)
-      case params[:status]
-      when "downloaded"
-        downloaded_ids = FileAsset.where(download_status: "complete")
-                                  .joins(release: { chapter: :series })
-                                  .select("series.id")
-                                  .distinct
-        base_scope = base_scope.where(id: downloaded_ids)
-      when "in_progress"
-        in_progress_ids = FileAsset.where(download_status: %w[downloading queued pending])
-                                   .joins(release: { chapter: :series })
-                                   .select("series.id")
-                                   .distinct
-        base_scope = base_scope.where(id: in_progress_ids)
-      when "not_downloaded"
-        any_download_ids = FileAsset.where(download_status: %w[complete downloading queued pending])
-                                    .joins(release: { chapter: :series })
-                                    .select("series.id")
-                                    .distinct
-        base_scope = base_scope.where.not(id: any_download_ids)
-      end
+      base_scope = apply_status_filter(base_scope, @status)
 
       @sort_by = params[:sort_by].presence || "alphabetical"
       @sort_options = SORT_OPTIONS
@@ -137,7 +139,121 @@ class LibraryController < ApplicationController
     @downloaded_chapters = stats["downloaded_chapters"]
   end
 
+  def random
+    status = normalized_status_param
+    source_ids = normalized_source_ids
+    genres = normalized_genres
+    scope = Series.includes(:sources, :series_sources)
+    scope = apply_search_filter(scope)
+    scope = apply_source_filter(scope, source_ids)
+    scope = apply_genre_filter(scope, genres)
+    scope = apply_status_filter(scope, status) if status.present?
+
+    selected = scope.reorder(Arel.sql("RANDOM()")).first
+    if selected
+      redirect_to library_series_path(series_slug: selected.to_param)
+    else
+      redirect_to library_path(
+        status: status.presence,
+        q: params[:q],
+        sort_by: params[:sort_by],
+        source_ids: source_ids.presence,
+        genres: genres.presence
+      ),
+                  alert: "No series found for current filters"
+    end
+  end
+
   private
+
+  def normalized_status_param
+    status = params[:status].to_s
+    return "not_started" if status == "not_downloaded"
+
+    valid = STATUS_OPTIONS.map { |(_, value)| value }.reject(&:blank?)
+    valid.include?(status) ? status : ""
+  end
+
+  def normalized_source_ids
+    ids = Array(params[:source_ids]).map { |value| value.to_s.strip }
+    ids.select! { |value| value.match?(/\A\d+\z/) }
+    ids.uniq!
+    return [] if ids.empty?
+
+    allowed_ids = Source.where(id: ids.map(&:to_i)).pluck(:id).map(&:to_s)
+    ids & allowed_ids
+  end
+
+  def normalized_genres
+    Array(params[:genres]).filter_map do |genre|
+      normalized = genre.to_s.strip.downcase.first(80)
+      normalized if normalized.present?
+    end.uniq
+  end
+
+  def apply_search_filter(scope)
+    return scope unless params[:q].present?
+
+    query = "%#{params[:q]}%"
+    scope.where(
+      "LOWER(canonical_title) LIKE LOWER(:q) OR LOWER(localized_title) LIKE LOWER(:q)",
+      q: query
+    )
+  end
+
+  def apply_source_filter(scope, source_ids = @source_ids)
+    return scope if source_ids.blank?
+
+    source_series_ids = SeriesSource.where(source_id: source_ids).select(:series_id)
+    scope.where(id: source_series_ids)
+  end
+
+  def apply_genre_filter(scope, genres = @genres)
+    return scope if genres.blank?
+
+    genre_list = genres.map { |genre| ActiveRecord::Base.connection.quote(genre) }.join(",")
+    scope.where("series.normalized_categories ?| ARRAY[#{genre_list}]")
+  end
+
+  def apply_status_filter(scope, status)
+    case status
+    when "downloaded"
+      downloaded_ids = FileAsset.where(download_status: "complete")
+                                .joins(release: { chapter: :series })
+                                .select("series.id")
+                                .distinct
+      scope.where(id: downloaded_ids)
+    when "in_progress"
+      in_progress_ids = FileAsset.where(download_status: %w[downloading queued pending])
+                                 .joins(release: { chapter: :series })
+                                 .select("series.id")
+                                 .distinct
+      scope.where(id: in_progress_ids)
+    when "not_started"
+      return scope unless current_user
+
+      started_series_ids = ChapterProgress.where(user: current_user)
+                                          .joins(chapter: :series)
+                                          .select("series.id")
+                                          .distinct
+      scope.where.not(id: started_series_ids)
+    when "completed"
+      return scope.none unless current_user
+
+      completed_series_ids = ChapterProgress.where(user: current_user, status: "completed")
+                                            .joins(chapter: :series)
+                                            .select("series.id")
+                                            .distinct
+      scope.where(id: completed_series_ids)
+    when "following"
+      return scope.none unless current_user
+
+      followed_ids = current_user.user_series_follows.select(:library_series_id)
+      scope.where(library_series_id: followed_ids)
+    else
+      scope
+    end
+  end
 
   def apply_sort(scope, sort_by)
     case sort_by

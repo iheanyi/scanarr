@@ -20,6 +20,7 @@ module UI
 
     def button_attributes
       attributes = system_arguments.except(:class).merge(class: button_classes)
+      attributes = with_default_turbo_frame_target(attributes) if link?
       attributes[:disabled] = true if @disabled && !link?
       attributes
     end
@@ -43,7 +44,7 @@ module UI
       when :ghost
         "border border-border text-foreground hover:bg-surface-2 hover:border-border-soft"
       when :danger
-        "bg-error text-foreground hover:bg-error/90"
+        "bg-danger text-foreground hover:bg-danger/90"
       else
         "bg-accent text-accent-foreground hover:bg-accent-strong"
       end
@@ -58,6 +59,12 @@ module UI
       else
         "h-9 px-4 text-sm"
       end
+    end
+
+    def with_default_turbo_frame_target(attributes)
+      data_attributes = (attributes[:data] || {}).to_h.deep_symbolize_keys
+      data_attributes[:turbo_frame] ||= "_top"
+      attributes.merge(data: data_attributes)
     end
   end
 end

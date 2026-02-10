@@ -13,7 +13,18 @@ class UI::ButtonComponentTest < ComponentTestCase
 
     assert_includes rendered.to_html, "<a"
     assert_includes rendered.to_html, "href=\"/docs\""
+    assert_includes rendered.to_html, "data-turbo-frame=\"_top\""
     assert_includes rendered.to_html, "Docs"
+  end
+
+  def test_preserves_explicit_turbo_frame_data
+    rendered = render_inline UI::ButtonComponent.new(
+      label: "Open",
+      href: "/docs",
+      data: { turbo_frame: "library-content" }
+    )
+
+    assert_includes rendered.to_html, "data-turbo-frame=\"library-content\""
   end
 
   def test_supports_block_content

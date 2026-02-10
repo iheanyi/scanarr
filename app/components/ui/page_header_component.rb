@@ -6,6 +6,7 @@ module UI
   class PageHeaderComponent < BaseComponent
     renders_one :actions
     renders_one :breadcrumb
+    renders_one :description_content
 
     def initialize(title:, description: nil, breadcrumb_text: nil, **system_arguments)
       super(**system_arguments)

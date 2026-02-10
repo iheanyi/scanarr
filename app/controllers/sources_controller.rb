@@ -121,10 +121,7 @@ class SourcesController < ApplicationController
     end
 
     flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}."
-    redirect_to source_series_path(
-      source_slug: source_slug(@source),
-      series_slug: series.to_param
-    )
+    redirect_to library_series_path(series_slug: series.to_param)
   rescue Scrapers::Errors::ScraperError, StandardError => e
     Rails.logger.error "Import failed for #{series_url}: #{e.class} - #{e.message}"
     redirect_to search_path(q: params[:q]), alert: "Import failed: #{e.message}"

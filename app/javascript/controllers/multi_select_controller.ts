@@ -100,6 +100,11 @@ export default class extends Controller {
     this.updateEmptyState(selected.length)
   }
 
+  changed() {
+    this.update()
+    this.element.dispatchEvent(new Event("change", { bubbles: true }))
+  }
+
   remove(event: Event) {
     event.preventDefault()
     event.stopPropagation()

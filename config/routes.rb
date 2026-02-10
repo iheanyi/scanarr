@@ -22,6 +22,8 @@ Rails.application.routes.draw do
 
   root "sources#index"
   get "/library", to: "library#index", as: :library
+  get "/library/random", to: "library#random", as: :library_random
+  get "/library/:series_slug", to: "series#show_from_library", as: :library_series
   get "/calendar", to: "calendar#index", as: :calendar
   get "/stats", to: "stats#show", as: :stats
   get "/history", to: "reading_history#index", as: :reading_history

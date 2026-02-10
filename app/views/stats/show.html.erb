@@ -93,9 +93,7 @@
       <h2 class="text-xl font-semibold">Recently Read</h2>
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         <% @recently_read.each do |series| %>
-          <% source = series.primary_source %>
-          <% next unless source %>
-          <%= link_to source_series_path(source_slug: source.slug, series_slug: series.to_param),
+          <%= link_to library_series_path(series_slug: series.to_param),
                       class: "group space-y-2" do %>
             <%= render UI::SeriesCoverComponent.new(
               url: series.cover_image_url,

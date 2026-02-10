@@ -11,7 +11,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "One Piece"
-    assert_includes @response.body, "/sources/weeb-central/#{series_url(series)}"
+    assert_includes @response.body, library_series_path(series_slug: series.to_param)
   end
 
   def test_index_series_links_escape_turbo_frame
@@ -19,16 +19,47 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     get "/sources/weeb-central"
 
     assert_response :success
-    assert_select %(turbo-frame#series-content a[href="/sources/weeb-central/#{series_url(series)}"][data-turbo-frame="_top"]), minimum: 1
+    assert_select %(turbo-frame#series-content a[href="#{library_series_path(series_slug: series.to_param)}"][data-turbo-frame="_top"]), minimum: 1
   end
 
-  def test_show_returns_success
+  def test_series_turbo_frame_links_always_declare_navigation_target
+    get "/sources/weeb-central"
+
+    assert_response :success
+    assert_select "turbo-frame#series-content a[href]:not([href^='#']):not([data-turbo-frame])", 0
+  end
+
+  def test_show_redirects_to_library_canonical_path
     series = series(:one)
     get "/sources/weeb-central/#{series_url(series)}"
+
+    assert_redirected_to library_series_path(series_slug: series.to_param)
+  end
+
+  def test_show_from_library_route_reuses_series_template
+    series = series(:one)
+    get library_series_path(series_slug: series.to_param)
 
     assert_response :success
     assert_includes @response.body, "Chapter 1"
     assert_includes @response.body, "/sources/weeb-central/#{series_url(series)}/chapters/1"
+  end
+
+  def test_show_empty_state_suggests_source_migration_when_no_chapters
+    source = sources(:one)
+    series = Series.create!(
+      canonical_title: "No Chapters Yet",
+      public_id: "seriespub999",
+      slug: "no-chapters-yet"
+    )
+    SeriesSource.create!(series: series, source: source, source_series_id: "NO_CHAPTERS_001")
+
+    get library_series_path(series_slug: series.to_param)
+
+    assert_response :success
+    assert_includes @response.body, "No chapters available from this source yet"
+    assert_includes @response.body, source_migrations_path(from_source_id: source.id)
+    assert_includes @response.body, source_search_path(source_slug: source.slug, q: series.canonical_title)
   end
 
   def test_show_orders_chapters_numerically
@@ -38,7 +69,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     Chapter.create!(series: series, source: source, chapter_number: "10.5", title: "Chapter 10.5")
     Chapter.create!(series: series, source: source, chapter_number: "Extra", title: "Chapter 10 Extra")
 
-    get "/sources/weeb-central/#{series_url(series)}"
+    get library_series_path(series_slug: series.to_param)
 
     assert_response :success
     body = @response.body
@@ -63,7 +94,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
       progressed_at: Time.current
     )
 
-    get "/sources/weeb-central/#{series_url(series)}"
+    get library_series_path(series_slug: series.to_param)
 
     assert_response :success
     assert_includes @response.body, "In Progress"
@@ -71,7 +102,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
 
   def test_show_displays_download_all_button
     series = series(:one)
-    get "/sources/weeb-central/#{series_url(series)}"
+    get library_series_path(series_slug: series.to_param)
 
     assert_response :success
     assert_includes @response.body, "Download All"
@@ -88,7 +119,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_with(job: DownloadAllJob) do
       post "/sources/weeb-central/#{series_url(series)}/download_all"
     end
-    assert_redirected_to "/sources/weeb-central/#{series_url(series)}"
+    assert_redirected_to library_series_path(series_slug: series.to_param)
     follow_redirect!
 
     assert_includes @response.body, "Queuing"
@@ -104,7 +135,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_enqueued_jobs(only: DownloadChapterJob) do
       post "/sources/weeb-central/#{series_url(series)}/download_all"
     end
-    assert_redirected_to "/sources/weeb-central/#{series_url(series)}"
+    assert_redirected_to library_series_path(series_slug: series.to_param)
   end
 
   def test_refresh_cover_redirects
@@ -113,7 +144,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
 
     post "/sources/weeb-central/#{series_url(series)}/refresh_cover"
 
-    assert_redirected_to "/sources/weeb-central/#{series_url(series)}"
+    assert_redirected_to library_series_path(series_slug: series.to_param)
   end
 
   def test_to_param_format

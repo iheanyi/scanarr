@@ -25,10 +25,7 @@
     <% if @series.any? %>
       <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <% @series.each do |series| %>
-          <%= link_to source_series_path(
-                        source_slug: @source.slug,
-                        series_slug: series.to_param
-                      ),
+          <%= link_to library_series_path(series_slug: series.to_param),
                       data: { turbo_frame: "_top" },
                       class: "group rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors" do %>
             <div class="flex gap-4">

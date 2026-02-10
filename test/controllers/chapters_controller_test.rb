@@ -233,7 +233,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     delete "/sources/weeb-central/#{series_url}/chapters/#{chapter.chapter_number}/download"
 
-    assert_redirected_to "/sources/weeb-central/#{series_url}"
+    assert_redirected_to library_series_path(series_slug: @series.to_param)
     assert_not FileAsset.exists?(file_asset.id)
   end
 
@@ -242,7 +242,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     delete "/sources/weeb-central/#{series_url}/chapters/#{chapter.chapter_number}/download"
 
-    assert_redirected_to "/sources/weeb-central/#{series_url}"
+    assert_redirected_to library_series_path(series_slug: @series.to_param)
     follow_redirect!
 
     assert_includes @response.body, "Download removed"
@@ -256,7 +256,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     post "/sources/weeb-central/#{series_url}/chapters/#{chapter.chapter_number}/cancel_download"
 
-    assert_redirected_to "/sources/weeb-central/#{series_url}"
+    assert_redirected_to library_series_path(series_slug: @series.to_param)
     file_asset.reload
 
     assert_equal "cancelled", file_asset.download_status
@@ -271,7 +271,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
     post "/sources/weeb-central/#{series_url}/chapters/#{chapter.chapter_number}/cancel_download"
 
-    assert_redirected_to "/sources/weeb-central/#{series_url}"
+    assert_redirected_to library_series_path(series_slug: @series.to_param)
     file_asset.reload
 
     assert_equal "cancelled", file_asset.download_status

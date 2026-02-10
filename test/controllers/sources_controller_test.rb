@@ -41,6 +41,13 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select %(turbo-frame#sources-content a[data-turbo-frame="_top"]), minimum: 3
   end
 
+  def test_sources_turbo_frame_links_always_declare_navigation_target
+    get "/"
+
+    assert_response :success
+    assert_select "turbo-frame#sources-content a[href]:not([href^='#']):not([data-turbo-frame])", 0
+  end
+
   def test_search_shows_results
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/search", params: { q: "one piece" }
@@ -57,7 +64,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       # Find the newly created series to get its public_id-slug format
       series = Series.find_by(canonical_title: "One Piece")
 
-      assert_redirected_to "/sources/weeb-central/#{series.to_param}"
+      assert_redirected_to library_series_path(series_slug: series.to_param)
     end
   end
 

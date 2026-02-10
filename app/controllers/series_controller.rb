@@ -1,5 +1,5 @@
 class SeriesController < ApplicationController
-  before_action :set_source
+  before_action :set_source, except: :show_from_library
 
   SORT_OPTIONS = {
     "alphabetical" => "A–Z",
@@ -17,81 +17,29 @@ class SeriesController < ApplicationController
                   .includes(cover_attachment: :blob)
 
     @series = case @sort_by
-              when "reverse_alpha"
+    when "reverse_alpha"
                 scope.order(canonical_title: :desc)
-              when "most_chapters"
+    when "most_chapters"
                 scope.order(chapters_count: :desc, canonical_title: :asc)
-              when "recently_added"
+    when "recently_added"
                 scope.order(created_at: :desc)
-              else # alphabetical
+    else # alphabetical
                 scope.order(canonical_title: :asc)
-              end
+    end
   end
 
   def show
     @series = find_series_by_param!
-    # Deduplicate chapters by (chapter_number_value, chapter_number), keeping newest per group.
-    # DISTINCT ON requires matching leading ORDER BY, so we pick rows in a subquery
-    # then re-sort for display.
-    deduped_ids = @series.chapters
-                         .where(source: @source)
-                         .select("DISTINCT ON (chapter_number_value, chapter_number) id")
-                         .order(
-                           Arel.sql("chapter_number_value ASC NULLS LAST"),
-                           :chapter_number,
-                           Arel.sql("created_at DESC")
-                         )
-    @chapters = @series.chapters
-                       .where(id: deduped_ids)
-                       .includes(releases: :file_asset)
-                       .order(
-                         Arel.sql("chapter_number_value ASC NULLS LAST"),
-                         Arel.sql("title ASC NULLS LAST"),
-                         :chapter_number,
-                         :id
-                       )
+    redirect_to library_series_path(series_slug: @series.to_param), status: :moved_permanently
+  end
 
-    # Pre-compute latest release per chapter via SQL to avoid N+1
-    # Uses the already-preloaded releases association for in-memory lookup
-    @latest_release_map = {}
-    @chapters.each do |chapter|
-      @latest_release_map[chapter.id] = chapter.releases.to_a.max_by(&:created_at)
-    end
+  def show_from_library
+    @series = Series.find_by_param!(params[:series_slug])
+    @source = @series.primary_source || @series.sources.first
+    raise ActiveRecord::RecordNotFound, "No source found for series" unless @source
 
-    # Pre-compute chapter stats
-    @downloadable_count = 0
-    @downloaded_count = 0
-    @in_progress_count = 0
-    @chapters.each do |chapter|
-      release = @latest_release_map[chapter.id]
-      status = release&.file_asset&.download_status
-      if status == "complete"
-        @downloaded_count += 1
-      elsif status.in?(%w[queued pending downloading])
-        @in_progress_count += 1
-      elsif chapter.source_url.present?
-        @downloadable_count += 1
-      end
-    end
-
-    if current_user
-      @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
-                                              .index_by(&:chapter_id)
-
-      # Ensure library series exists so the follow button is always available
-      @series.ensure_library_series! if @series.library_series.blank?
-
-      # Load follow data for current user
-      if @series.library_series
-        @user_follow = current_user.user_series_follows.find_by(library_series: @series.library_series)
-      end
-    else
-      @chapter_progress_map = {}
-    end
-
-    # Load error state for the current source
-    @series_source = @series.series_sources.find_by(source: @source)
-    @check_error = @series_source if @series_source&.check_failing?
+    load_show_data
+    render :show
   end
 
   def update
@@ -99,7 +47,7 @@ class SeriesController < ApplicationController
     @series.update!(series_params)
 
     respond_to do |format|
-      format.html { redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param) }
+      format.html { redirect_to library_series_path(series_slug: @series.to_param) }
       format.turbo_stream do
         render turbo_stream: turbo_stream.append("toast-container",
           UI::ToastComponent.new(message: "Reading style updated", variant: :success))
@@ -116,7 +64,7 @@ class SeriesController < ApplicationController
     respond_to do |format|
       format.html do
         flash[:notice] = "Queuing downloads in background..."
-        redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+        redirect_to library_series_path(series_slug: @series.to_param)
       end
       format.turbo_stream do
         render turbo_stream: turbo_stream.append(
@@ -139,7 +87,7 @@ class SeriesController < ApplicationController
       flash[:alert] = "No cover URL available to refresh"
     end
 
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    redirect_to library_series_path(series_slug: @series.to_param)
   end
 
   def remove_all_downloads
@@ -164,7 +112,7 @@ class SeriesController < ApplicationController
     end
 
     flash[:notice] = "Removed #{removed} download(s)"
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    redirect_to library_series_path(series_slug: @series.to_param)
   end
 
   def cancel_all_downloads
@@ -174,7 +122,7 @@ class SeriesController < ApplicationController
     CancelAllDownloadsJob.perform_later(@series.id, @source.id)
 
     flash[:notice] = "Cancelling downloads in background..."
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    redirect_to library_series_path(series_slug: @series.to_param)
   end
 
   def bulk_action
@@ -238,7 +186,7 @@ class SeriesController < ApplicationController
       flash[:notice] = "Marked #{marked} chapter(s) as read"
     end
 
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    redirect_to library_series_path(series_slug: @series.to_param)
   end
 
   def refresh_metadata
@@ -247,7 +195,7 @@ class SeriesController < ApplicationController
     series_source = @series.series_sources.find_by(source: @source)
     unless series_source&.source_series_id.present?
       flash[:alert] = "No source URL available to refresh metadata"
-      redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+      redirect_to library_series_path(series_slug: @series.to_param)
       return
     end
 
@@ -257,13 +205,78 @@ class SeriesController < ApplicationController
     importer.import!(series_source.source_series_id)
 
     flash[:notice] = "Metadata refreshed successfully"
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    redirect_to library_series_path(series_slug: @series.to_param)
   rescue StandardError => e
     flash[:alert] = "Failed to refresh metadata: #{e.message}"
-    redirect_to source_series_path(source_slug: @source.slug, series_slug: @series.to_param)
+    redirect_to library_series_path(series_slug: @series.to_param)
   end
 
   private
+
+  def load_show_data
+    # Deduplicate chapters by (chapter_number_value, chapter_number), keeping newest per group.
+    # DISTINCT ON requires matching leading ORDER BY, so we pick rows in a subquery
+    # then re-sort for display.
+    deduped_ids = @series.chapters
+                         .where(source: @source)
+                         .select("DISTINCT ON (chapter_number_value, chapter_number) id")
+                         .order(
+                           Arel.sql("chapter_number_value ASC NULLS LAST"),
+                           :chapter_number,
+                           Arel.sql("created_at DESC")
+                         )
+    @chapters = @series.chapters
+                       .where(id: deduped_ids)
+                       .includes(releases: :file_asset)
+                       .order(
+                         Arel.sql("chapter_number_value ASC NULLS LAST"),
+                         Arel.sql("title ASC NULLS LAST"),
+                         :chapter_number,
+                         :id
+                       )
+
+    # Pre-compute latest release per chapter via SQL to avoid N+1
+    # Uses the already-preloaded releases association for in-memory lookup
+    @latest_release_map = {}
+    @chapters.each do |chapter|
+      @latest_release_map[chapter.id] = chapter.releases.to_a.max_by(&:created_at)
+    end
+
+    # Pre-compute chapter stats
+    @downloadable_count = 0
+    @downloaded_count = 0
+    @in_progress_count = 0
+    @chapters.each do |chapter|
+      release = @latest_release_map[chapter.id]
+      status = release&.file_asset&.download_status
+      if status == "complete"
+        @downloaded_count += 1
+      elsif status.in?(%w[queued pending downloading])
+        @in_progress_count += 1
+      elsif chapter.source_url.present?
+        @downloadable_count += 1
+      end
+    end
+
+    if current_user
+      @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
+                                              .index_by(&:chapter_id)
+
+      # Ensure library series exists so the follow button is always available
+      @series.ensure_library_series! if @series.library_series.blank?
+
+      # Load follow data for current user
+      if @series.library_series
+        @user_follow = current_user.user_series_follows.find_by(library_series: @series.library_series)
+      end
+    else
+      @chapter_progress_map = {}
+    end
+
+    # Load error state for the current source
+    @series_source = @series.series_sources.find_by(source: @source)
+    @check_error = @series_source if @series_source&.check_failing?
+  end
 
   def series_params
     params.require(:series).permit(:reading_style)
