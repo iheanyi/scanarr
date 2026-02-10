@@ -11,6 +11,7 @@ _Auto-synced from .tasuku/context/learnings.md_
 - Always avoid ad-hoc local DB mutations during profiling/debug runs. Use an explicit, idempotent development seed user or a one-line rails console upsert, and document the workflow so user data/setup remains predictable.
 - Always ensure Turbo navigational links/buttons rendered inside a page-scoped turbo frame target `_top` when the destination is a full-page response without that frame; otherwise users hit Turbo 'Content missing' errors.
 - When namespacing classes under Scrapers, always reference `Scrapers::AdapterRegistry` directly in app code; relying on a top-level alias can fail autoload timing and cause NameError in runtime paths.
+- Always default link-style UI::ButtonComponent instances to data-turbo-frame="_top" unless an explicit target is provided; this prevents Turbo Frame 'Content missing' navigation traps from omitted attributes.
 
 ## Insights
 
