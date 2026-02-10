@@ -42,6 +42,7 @@ Rails.application.routes.draw do
   get "/sources/:source_slug/search", to: "sources#search", as: :source_search
   get "/sources/:source_slug/browse", to: "sources#browse", as: :source_browse
   get "/sources/:source_slug/preview", to: "sources#preview", as: :source_preview
+  get "/sources/:source_slug/preview/read", to: "sources#preview_read", as: :source_preview_read
   post "/sources/:source_slug/import", to: "sources#import", as: :source_import
   get "/sources/:source_slug", to: "series#index", as: :source_series_index
   get "/sources/:source_slug/:series_slug", to: "series#show", as: :source_series

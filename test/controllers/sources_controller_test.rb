@@ -43,7 +43,17 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
     def chapters(_series_url)
       [
-        ResultTypes::Chapter.new(id: "ch-1", title: "Chapter 1", number: "1", url: "https://weebcentral.com/chapters/01CHAPTER")
+        ResultTypes::Chapter.new(id: "ch-1", title: "Chapter 1", number: "1", url: "https://weebcentral.com/chapters/01CHAPTER"),
+        ResultTypes::Chapter.new(id: "ch-2", title: "Chapter 2", number: "2", url: "https://weebcentral.com/chapters/02CHAPTER"),
+        ResultTypes::Chapter.new(id: "ch-3", title: "Chapter 3", number: "3", url: "https://weebcentral.com/chapters/03CHAPTER")
+      ]
+    end
+
+    def pages(chapter_url)
+      chapter_id = chapter_url.split("/").last
+      [
+        ResultTypes::Page.new(index: 1, url: "https://img.example.com/#{chapter_id}-1.jpg", mime_type: "image/jpeg"),
+        ResultTypes::Page.new(index: 2, url: "https://img.example.com/#{chapter_id}-2.jpg", mime_type: "image/jpeg")
       ]
     end
   end
@@ -111,6 +121,34 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       assert_no_enqueued_jobs(only: DownloadAllJob) do
         post "/sources/weeb-central/import", params: { series_url: "https://weebcentral.com/series/OP" }
       end
+    end
+  end
+
+  def test_preview_shows_read_links_for_chapters
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/preview", params: { series_url: "https://weebcentral.com/series/OP" }
+
+      assert_response :success
+      assert_select "a[href*='/sources/weeb-central/preview/read'][href*='chapter_url=']", minimum: 1
+      assert_select "a", text: "Read", minimum: 1
+    end
+  end
+
+  def test_preview_read_renders_source_pages_and_navigation
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/preview/read",
+          params: {
+            series_url: "https://weebcentral.com/series/OP",
+            chapter_url: "https://weebcentral.com/chapters/02CHAPTER"
+          }
+
+      assert_response :success
+      assert_select "main[data-controller='reader']"
+      assert_select "img[src='https://img.example.com/02CHAPTER-1.jpg']"
+      assert_select "img[src='https://img.example.com/02CHAPTER-2.jpg']"
+      assert_select "a", text: "Previous Chapter", count: 1
+      assert_select "a", text: "Next Chapter", count: 1
+      assert_select "h2", text: "Chapter 2"
     end
   end
 

@@ -117,9 +117,17 @@
                         </p>
                       <% end %>
                     </div>
-                    <% if chapter.volume.present? %>
-                      <span class="text-xs text-muted-2">Vol. <%= chapter.volume %></span>
-                    <% end %>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <% if chapter.volume.present? %>
+                        <span class="text-xs text-muted-2">Vol. <%= chapter.volume %></span>
+                      <% end %>
+                      <% if chapter.url.present? %>
+                        <%= link_to "Read",
+                                    source_preview_read_path(source_slug: source_slug(@source), series_url: @series_url, chapter_url: chapter.url),
+                                    class: "inline-flex items-center rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-2",
+                                    data: { turbo_preload: "" } %>
+                      <% end %>
+                    </div>
                   </div>
                 </li>
               <% end %>

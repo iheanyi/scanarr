@@ -48,7 +48,7 @@ class MangadexAdapterTest < ActiveSupport::TestCase
     @fixtures = {
       "GET #{@base_url}/manga" => search_fixture,
       "GET #{@base_url}/manga/#{@manga_id}" => manga_fixture,
-      "GET #{@base_url}/chapter" => chapter_fixture,
+      "GET #{@base_url}/manga/#{@manga_id}/feed" => chapter_fixture,
       "GET #{@base_url}/at-home/server/#{@chapter_id}" => pages_fixture
     }
     @http = FakeHttpClient.new(mapping: @fixtures, base_url: @base_url)

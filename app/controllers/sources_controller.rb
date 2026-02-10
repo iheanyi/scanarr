@@ -1,5 +1,5 @@
 class SourcesController < ApplicationController
-  before_action :set_source, only: %i[search browse preview import]
+  before_action :set_source, only: %i[search browse preview preview_read import]
 
   helper_method :source_slug
 
@@ -8,6 +8,8 @@ class SourcesController < ApplicationController
     "name_desc" => "Name Z–A",
     "most_series" => "Most Series"
   }.freeze
+  PREVIEW_CHAPTER_LIMIT = 50
+  READING_STYLES = %w[left_to_right right_to_left long_strip webcomic].freeze
 
   def index
     @sort_by = params[:sort_by].presence || "name_asc"
@@ -80,6 +82,52 @@ class SourcesController < ApplicationController
     Rails.logger.warn "Preview failed for #{@source.key}: #{e.class} - #{e.message}"
   end
 
+  def preview_read
+    @series_url = params[:series_url].to_s
+    @chapter_url = params[:chapter_url].to_s
+    @series = nil
+    @chapters = []
+    @chapter = nil
+    @previous_chapter = nil
+    @next_chapter = nil
+    @source_pages = []
+    @source_error = nil
+    @error = nil
+    @reading_style = preview_reading_style(params[:reading_style])
+    @initial_page_index = preview_initial_page_index(params[:page])
+
+    if @series_url.blank? || @chapter_url.blank?
+      @error = "Series URL and chapter URL are required"
+      return
+    end
+
+    unless Scrapers::AdapterRegistry.registered?(@source.key)
+      @error = "This source doesn't have an adapter yet"
+      return
+    end
+
+    adapter = Scrapers::AdapterRegistry.for(@source)
+    @series = adapter.series(@series_url)
+    @chapters = adapter.chapters(@series_url).first(PREVIEW_CHAPTER_LIMIT)
+    @chapter = @chapters.find { |chapter| chapter.url == @chapter_url } || build_preview_chapter_fallback(@chapter_url)
+    @previous_chapter, @next_chapter = preview_navigation_for(@chapters, @chapter)
+    @source_pages = adapter.pages(@chapter_url)
+  rescue Scrapers::Errors::SeriesNotFoundError => e
+    @error = "Series not found: #{e.message}"
+  rescue Scrapers::Errors::ChapterNotFoundError => e
+    @source_error = "This chapter is no longer available on the source. It may have been removed or replaced."
+    Rails.logger.warn "Preview read chapter not found for #{@source.key}: #{e.class} - #{e.message}"
+  rescue Scrapers::Errors::RateLimitError => e
+    @source_error = "The source is rate limiting requests. Please try again in a few minutes."
+    Rails.logger.warn "Preview read rate limited for #{@source.key}: #{e.class} - #{e.message}"
+  rescue Scrapers::Errors::SourceUnavailableError, Scrapers::Errors::ScraperError => e
+    @source_error = "Unable to load pages from source: #{e.message}"
+    Rails.logger.warn "Preview read failed for #{@source.key}: #{e.class} - #{e.message}"
+  rescue StandardError => e
+    @error = "Failed to load chapter preview: #{e.message}"
+    Rails.logger.warn "Preview read failed for #{@source.key}: #{e.class} - #{e.message}"
+  end
+
   def search
     @query = params[:q].to_s.strip
     @results = []
@@ -133,6 +181,36 @@ class SourcesController < ApplicationController
   end
 
   private
+
+  def preview_navigation_for(chapters, chapter)
+    return [ nil, nil ] if chapter.nil? || chapter.url.blank?
+
+    index = chapters.find_index { |entry| entry.url == chapter.url }
+    return [ nil, nil ] unless index
+
+    previous_chapter = index.positive? ? chapters[index - 1] : nil
+    next_chapter = index < chapters.length - 1 ? chapters[index + 1] : nil
+    [ previous_chapter, next_chapter ]
+  end
+
+  def build_preview_chapter_fallback(chapter_url)
+    ResultTypes::Chapter.new(
+      id: chapter_url,
+      title: nil,
+      number: nil,
+      url: chapter_url
+    )
+  end
+
+  def preview_reading_style(value)
+    style = value.to_s
+    READING_STYLES.include?(style) ? style : "left_to_right"
+  end
+
+  def preview_initial_page_index(value)
+    page = value.to_i
+    page.positive? ? page : 1
+  end
 
   def set_source
     @source = Source.find_by!(slug: params[:source_slug])
