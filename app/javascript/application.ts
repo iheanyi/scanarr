@@ -5,6 +5,15 @@ import "./controllers"
 
 TurboPower.initialize(Turbo.StreamActions)
 
+// Register a service worker for installability/offline support.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+      console.warn("Service worker registration failed:", error)
+    })
+  })
+}
+
 // Clean up ephemeral UI state before Turbo caches the page.
 // Prevents stale dropdowns/modals from appearing on back navigation.
 document.addEventListener("turbo:before-cache", () => {

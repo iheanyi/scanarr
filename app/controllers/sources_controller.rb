@@ -1,5 +1,6 @@
 class SourcesController < ApplicationController
   before_action :set_source, only: %i[search browse preview preview_read preview_image import]
+  layout "reader", only: :preview_read
 
   helper_method :source_slug, :preview_image_token_for
 

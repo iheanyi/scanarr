@@ -53,11 +53,11 @@ module UI
     def size_classes
       case @size.to_sym
       when :sm
-        "h-8 px-3 text-xs"
+        "h-10 sm:h-8 px-3 text-xs"
       when :lg
         "h-11 px-5 text-sm"
       else
-        "h-9 px-4 text-sm"
+        "h-10 sm:h-9 px-4 text-sm"
       end
     end
 

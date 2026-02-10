@@ -1,5 +1,6 @@
 class ChaptersController < ApplicationController
   before_action :load_context, only: %i[show enqueue_download update_progress remove_download cancel_download]
+  layout "reader", only: :show
   # Authentication handled by ApplicationController
 
   helper_method :source_slug

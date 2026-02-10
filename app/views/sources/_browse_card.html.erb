@@ -32,7 +32,7 @@
       </div>
     <% end %>
 
-    <div class="pointer-events-none invisible absolute right-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+    <div class="pointer-events-none visible absolute right-2 top-2 z-20 opacity-100 transition-opacity duration-200 sm:invisible sm:opacity-0 sm:group-hover:visible sm:group-hover:opacity-100 sm:group-focus-within:visible sm:group-focus-within:opacity-100">
       <%= button_to "Import",
                     source_import_path(source_slug: source_slug(@source)),
                     method: :post,
@@ -43,7 +43,7 @@
     </div>
 
     <% if result.respond_to?(:status) && result.status.present? %>
-      <div class="pointer-events-none invisible absolute left-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+      <div class="pointer-events-none visible absolute left-2 top-2 z-20 opacity-100 transition-opacity duration-200 sm:invisible sm:opacity-0 sm:group-hover:visible sm:group-hover:opacity-100 sm:group-focus-within:visible sm:group-focus-within:opacity-100">
         <%= render UI::StatusBadgeComponent.new(
           status: result.status,
           bordered: true,

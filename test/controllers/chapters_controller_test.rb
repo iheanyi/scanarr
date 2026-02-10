@@ -140,6 +140,18 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_includes_touch_navigation_actions
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/#{series_url}/chapters/1"
+
+      assert_response :success
+      assert_includes @response.body, "pointerdown->reader#pointerDown"
+      assert_includes @response.body, "pointerup->reader#pointerUp"
+      assert_includes @response.body, "Save Offline"
+      assert_includes @response.body, "toggleFullscreen"
+    end
+  end
+
   def test_show_uses_saved_progress_for_initial_page
     # Auto-create admin user for progress tracking
     admin = User.find_or_create_by!(email: "admin@scanarr.local")

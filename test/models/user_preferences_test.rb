@@ -15,8 +15,8 @@ class UserPreferencesTest < ActiveSupport::TestCase
     assert_equal "right_to_left", @user.effective_reading_style
   end
 
-  def test_effective_download_policy_defaults_to_notify_only
-    assert_equal "notify_only", @user.effective_download_policy
+  def test_effective_download_policy_defaults_to_auto_download
+    assert_equal "auto_download", @user.effective_download_policy
   end
 
   def test_effective_download_policy_returns_set_value

@@ -1,0 +1,31 @@
+<% tab_link_classes = lambda do |active|
+     base = "inline-flex min-h-11 flex-col items-center justify-center gap-1 rounded-md px-3 py-2 text-xs font-medium transition-colors"
+     active ? "#{base} text-accent" : "#{base} text-muted hover:text-foreground"
+   end %>
+
+<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 backdrop-blur lg:hidden" aria-label="Mobile navigation">
+  <div class="mx-auto grid max-w-6xl grid-cols-4 items-stretch gap-1">
+    <%= link_to library_path, class: tab_link_classes.call(current_page?(library_path)), data: { turbo_preload: "" } do %>
+      <%= icon "book-open", class: "h-5 w-5", aria: { hidden: true } %>
+      <span>Library</span>
+    <% end %>
+
+    <%= link_to root_path, class: tab_link_classes.call(current_page?(root_path)), data: { turbo_preload: "" } do %>
+      <%= icon "globe", class: "h-5 w-5", aria: { hidden: true } %>
+      <span>Browse</span>
+    <% end %>
+
+    <%= link_to reading_history_path, class: tab_link_classes.call(current_page?(reading_history_path)), data: { turbo_preload: "" } do %>
+      <%= icon "history", class: "h-5 w-5", aria: { hidden: true } %>
+      <span>History</span>
+    <% end %>
+
+    <button type="button"
+            class="<%= tab_link_classes.call(false) %> w-full"
+            data-action="click->drawer#open"
+            aria-label="Open more navigation options">
+      <%= icon "menu", class: "h-5 w-5", aria: { hidden: true } %>
+      <span>More</span>
+    </button>
+  </div>
+</nav>

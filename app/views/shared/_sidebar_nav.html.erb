@@ -1,5 +1,5 @@
 <% nav_link_attributes = lambda do |path|
-     base = "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors"
+     base = "flex min-h-11 items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors sm:min-h-0"
      active = "bg-surface-2 text-foreground font-semibold"
      inactive = "text-muted hover:text-foreground hover:bg-surface-2/60"
      is_active = current_page?(path)
@@ -93,7 +93,7 @@
       <div class="relative" data-controller="dropdown">
         <button type="button"
                 data-action="click->dropdown#toggle"
-                class="relative inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-muted hover:text-foreground"
+                class="relative inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-muted hover:text-foreground sm:min-h-0"
                 aria-label="Open notifications">
           <%= icon "bell", class: "h-4 w-4", aria: { hidden: true } %>
           <span>Notifications</span>
@@ -135,7 +135,7 @@
         </div>
       </div>
 
-      <%= button_to logout_path, method: :delete, class: "inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-muted hover:text-foreground", title: "Logout", aria: { label: "Logout" }, data: { turbo_confirm: "Log out?" } do %>
+      <%= button_to logout_path, method: :delete, class: "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-muted hover:text-foreground sm:min-h-0 sm:min-w-0", title: "Logout", aria: { label: "Logout" }, data: { turbo_confirm: "Log out?" } do %>
         <%= icon "log-out", class: "h-4 w-4", aria: { hidden: true } %>
       <% end %>
     </div>

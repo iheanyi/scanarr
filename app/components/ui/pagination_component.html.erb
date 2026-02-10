@@ -3,12 +3,12 @@
     <%# Left: Previous button %>
     <div class="w-full sm:flex-1">
       <% if @collection.first_page? %>
-        <span class="inline-flex items-center gap-1 rounded-md px-2 py-2 text-xs text-muted-2 cursor-not-allowed sm:px-3 sm:text-sm" aria-disabled="true">
+        <span class="inline-flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-xs text-muted-2 cursor-not-allowed sm:min-h-0 sm:px-3 sm:text-sm" aria-disabled="true">
           <%= helpers.icon "chevron-left", class: "h-4 w-4" %>
           Previous
         </span>
       <% else %>
-        <%= link_to page_url(@collection.prev_page), class: "inline-flex items-center gap-1 rounded-md px-2 py-2 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-foreground sm:gap-1.5 sm:px-3 sm:text-sm", data: link_data do %>
+        <%= link_to page_url(@collection.prev_page), class: "inline-flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-foreground sm:min-h-0 sm:gap-1.5 sm:px-3 sm:text-sm", data: link_data do %>
           <%= helpers.icon "chevron-left", class: "h-4 w-4" %>
           Previous
         <% end %>
@@ -22,9 +22,9 @@
           <% if item == :gap %>
             <span class="shrink-0 px-1.5 py-2 text-sm text-muted-2">&hellip;</span>
           <% elsif item == current_page %>
-            <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-accent text-sm font-medium text-accent-foreground" aria-current="page"><%= item %></span>
+            <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent text-sm font-medium text-accent-foreground sm:h-8 sm:w-8" aria-current="page"><%= item %></span>
           <% else %>
-            <%= link_to item, page_url(item), class: "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-sm text-muted transition-colors hover:bg-surface-2 hover:text-foreground", data: link_data %>
+            <%= link_to item, page_url(item), class: "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-sm text-muted transition-colors hover:bg-surface-2 hover:text-foreground sm:h-8 sm:w-8", data: link_data %>
           <% end %>
         <% end %>
       </div>
@@ -33,12 +33,12 @@
     <%# Right: Next button %>
     <div class="flex w-full justify-end sm:flex-1">
       <% if @collection.last_page? %>
-        <span class="inline-flex items-center gap-1 rounded-md px-2 py-2 text-xs text-muted-2 cursor-not-allowed sm:px-3 sm:text-sm" aria-disabled="true">
+        <span class="inline-flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-xs text-muted-2 cursor-not-allowed sm:min-h-0 sm:px-3 sm:text-sm" aria-disabled="true">
           Next
           <%= helpers.icon "chevron-right", class: "h-4 w-4" %>
         </span>
       <% else %>
-        <%= link_to page_url(@collection.next_page), class: "inline-flex items-center gap-1 rounded-md px-2 py-2 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-foreground sm:gap-1.5 sm:px-3 sm:text-sm", data: link_data do %>
+        <%= link_to page_url(@collection.next_page), class: "inline-flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-foreground sm:min-h-0 sm:gap-1.5 sm:px-3 sm:text-sm", data: link_data do %>
           Next
           <%= helpers.icon "chevron-right", class: "h-4 w-4" %>
         <% end %>

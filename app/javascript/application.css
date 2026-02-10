@@ -337,6 +337,24 @@
  * @layer components has lower priority than @layer utilities in CSS cascade.
  * ═══════════════════════════════════════════════════════════════════════════ */
 @layer utilities {
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .reader-chrome-transition {
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+
+  .reader-chrome-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.4rem);
+  }
+
   /* When any checkbox is checked, keep all checkboxes visible */
   .selecting .bulk-checkbox {
     opacity: 1;
@@ -345,6 +363,13 @@
   /* A checked checkbox is always visible so it can be deselected */
   .bulk-checkbox:has(input:checked) {
     opacity: 1;
+  }
+}
+
+@media (pointer: coarse) {
+  [data-controller~="reader"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-x pan-y;
   }
 }
 

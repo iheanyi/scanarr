@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { normalizeProgressQueue, resolveTapZoneAction } from '../../../app/javascript/controllers/reader_controller'
 
 /**
  * Unit tests for ReaderController URL handling logic.
@@ -181,6 +182,43 @@ describe('Initial Page Index Resolution Logic', () => {
   it('handles single page chapters', () => {
     expect(resolveInitialIndex(null, 1, 1)).toBe(0)
     expect(resolveInitialIndex(5, 1, 1)).toBe(0) // Clamps to 1
+  })
+})
+
+describe('Tap Zone Resolution', () => {
+  it('toggles chrome when tapping top menu area', () => {
+    expect(resolveTapZoneAction(0.2, 0.1, true, false)).toBe('toggle')
+  })
+
+  it('uses LTR horizontal zones for prev/next', () => {
+    expect(resolveTapZoneAction(0.1, 0.5, true, false)).toBe('previous')
+    expect(resolveTapZoneAction(0.9, 0.5, true, false)).toBe('next')
+  })
+
+  it('mirrors edge actions in RTL horizontal mode', () => {
+    expect(resolveTapZoneAction(0.1, 0.5, true, true)).toBe('next')
+    expect(resolveTapZoneAction(0.9, 0.5, true, true)).toBe('previous')
+  })
+
+  it('toggles chrome from center tap', () => {
+    expect(resolveTapZoneAction(0.5, 0.6, true, false)).toBe('toggle')
+  })
+})
+
+describe('Progress Queue Normalization', () => {
+  it('keeps only valid queue entries', () => {
+    const result = normalizeProgressQueue([
+      { pageIndex: 3, pageCount: 20, progressUrl: '/progress' },
+      { pageIndex: 'x', pageCount: 20, progressUrl: '/progress' },
+      { foo: 'bar' }
+    ])
+
+    expect(result).toEqual([{ pageIndex: 3, pageCount: 20, progressUrl: '/progress' }])
+  })
+
+  it('returns empty array for non-array input', () => {
+    expect(normalizeProgressQueue({ pageIndex: 1 })).toEqual([])
+    expect(normalizeProgressQueue(null)).toEqual([])
   })
 })
 

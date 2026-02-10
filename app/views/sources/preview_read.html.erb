@@ -32,12 +32,13 @@
         data-reader-style-value="<%= @reading_style %>"
         data-reader-page-count-value="<%= page_count %>"
         data-reader-initial-page-index-value="<%= initial_page_index %>"
+        data-action="pointerdown->reader#pointerDown pointermove->reader#pointerMove pointerup->reader#pointerUp"
         <% if next_chapter_url %>
         data-reader-next-chapter-url-value="<%= next_chapter_url %>"
         data-reader-next-chapter-title-value="<%= next_chapter_title %>"
         <% end %>
         class="space-y-6">
-    <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
+    <nav class="reader-chrome-transition flex items-center gap-2 text-sm text-muted" data-reader-target="chrome" data-reader-ignore-tap-zones aria-label="Breadcrumb">
       <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground", data: { turbo_preload: "" } %>
       <span class="text-muted-2">/</span>
       <%= link_to "Preview", source_preview_path(source_slug: source_slug(@source), series_url: @series_url), class: "hover:text-foreground", data: { turbo_preload: "" } %>
@@ -45,7 +46,7 @@
       <span class="text-foreground truncate max-w-xs">Ch. <%= chapter_number %></span>
     </nav>
 
-    <header class="space-y-3">
+    <header class="reader-chrome-transition space-y-3" data-reader-target="chrome" data-reader-ignore-tap-zones>
       <div>
         <h1 class="text-2xl font-semibold text-balance"><%= @series.title %></h1>
         <% if @series.author.present? || @series.artist.present? %>
@@ -69,7 +70,7 @@
     </header>
 
     <% if page_count.positive? %>
-      <div class="sticky top-4 z-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
+      <div class="reader-chrome-transition sticky top-3 z-20 rounded-lg border border-border bg-background/90 p-3 backdrop-blur" data-reader-target="chrome" data-reader-ignore-tap-zones>
         <div class="flex items-center justify-between text-xs text-foreground">
           <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
           <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
@@ -82,7 +83,7 @@
       </div>
     <% end %>
 
-    <nav class="flex flex-wrap items-center gap-2">
+    <nav class="reader-chrome-transition flex flex-wrap items-center gap-2" data-reader-target="chrome" data-reader-ignore-tap-zones>
       <% if is_horizontal %>
         <%= render UI::ButtonComponent.new(
           variant: :ghost,
@@ -122,6 +123,21 @@
           Next Chapter
         <% end %>
       <% end %>
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        data: { action: "click->reader#toggleFullscreen" }
+      ) do %>
+        <span data-reader-target="fullscreenLabel">Fullscreen</span>
+      <% end %>
+      <%= render UI::ButtonComponent.new(
+        variant: :ghost,
+        size: :sm,
+        data: { action: "click->reader#saveOffline" }
+      ) do %>
+        Save Offline
+      <% end %>
+      <span data-reader-target="offlineStatus" class="text-xs text-muted">Tap to cache this chapter offline</span>
       <%= button_to "Import to Library",
                     source_import_path(source_slug: source_slug(@source)),
                     method: :post,
@@ -204,7 +220,7 @@
       <% end %>
       <% @source_pages.each_with_index do |page, idx| %>
         <article data-reader-target="page"
-                 data-action="click->reader#openLightboxForPage"
+                 data-action="dblclick->reader#openLightboxForPage"
                  class="<%= page_class %>">
           <%= image_tag source_preview_image_path(source_slug: source_slug(@source), token: preview_image_token_for(page.url)), alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
         </article>

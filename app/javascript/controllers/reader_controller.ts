@@ -1,7 +1,38 @@
 import { Controller } from "@hotwired/stimulus"
 
+export type TapZoneAction = "next" | "previous" | "toggle"
+
+export function resolveTapZoneAction(xRatio: number, yRatio: number, isHorizontal: boolean, isRtl: boolean): TapZoneAction {
+  if (yRatio <= 0.18) return "toggle"
+
+  const isRtlHorizontal = isHorizontal && isRtl
+  if (xRatio <= 0.33) return isRtlHorizontal ? "next" : "previous"
+  if (xRatio >= 0.67) return isRtlHorizontal ? "previous" : "next"
+  return "toggle"
+}
+
+type ProgressQueueItem = {
+  pageIndex: number
+  pageCount: number
+  progressUrl: string
+  createdAt?: number
+}
+
+export function normalizeProgressQueue(raw: unknown): ProgressQueueItem[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter((item): item is ProgressQueueItem => {
+    if (!item || typeof item !== "object") return false
+    const value = item as Partial<ProgressQueueItem>
+    return (
+      typeof value.pageIndex === "number" &&
+      typeof value.pageCount === "number" &&
+      typeof value.progressUrl === "string"
+    )
+  })
+}
+
 export default class extends Controller {
-  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "nextChapterOverlay", "nextChapterCountdown"]
+  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "nextChapterOverlay", "nextChapterCountdown", "chrome", "offlineStatus", "fullscreenLabel"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
   declare readonly pageTargets: HTMLElement[]
   declare readonly viewportTarget: HTMLElement
@@ -20,6 +51,12 @@ export default class extends Controller {
   declare readonly nextChapterCountdownTarget: HTMLElement
   declare readonly hasNextChapterOverlayTarget: boolean
   declare readonly hasNextChapterCountdownTarget: boolean
+  declare readonly chromeTargets: HTMLElement[]
+  declare readonly hasChromeTarget: boolean
+  declare readonly offlineStatusTarget: HTMLElement
+  declare readonly hasOfflineStatusTarget: boolean
+  declare readonly fullscreenLabelTarget: HTMLElement
+  declare readonly hasFullscreenLabelTarget: boolean
   declare readonly styleValue: string
   declare readonly pageCountValue: number
   declare readonly initialPageIndexValue: number
@@ -36,12 +73,27 @@ export default class extends Controller {
   private pendingProgressSave?: ReturnType<typeof setTimeout>
   private isScrolling = false // Lock to prevent observer interference during programmatic scroll
   private nextChapterCountdownInterval?: ReturnType<typeof setInterval>
+  private chromeHideTimeout?: ReturnType<typeof setTimeout>
   private nextChapterCountdownValue = 5
+  private chromeVisible = true
   private hasInteracted = false // Don't auto-advance on initial page load
+  private pointerStartX?: number
+  private pointerStartY?: number
+  private pointerStartedAt = 0
+  private pointerMoved = false
+  private wakeLock?: { release: () => Promise<void> }
+  private nextChapterPrefetched = false
+  private readonly progressQueueStorageKey = "scanarr:reader-progress-queue"
+  private readonly pointerTapDistance = 12
+  private readonly pointerTapDurationMs = 350
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
     window.addEventListener("keydown", this.handleKeydown)
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
+    this.flushProgressQueue = this.flushProgressQueue.bind(this)
+    document.addEventListener("visibilitychange", this.handleVisibilityChange)
+    window.addEventListener("online", this.flushProgressQueue)
     
     if (this.pageTargets.length > 0) {
       this.currentIndex = this.resolveInitialIndex()
@@ -51,13 +103,22 @@ export default class extends Controller {
       // Force initial state sync after scroll
       requestAnimationFrame(() => this.syncState())
     }
+
+    this.requestWakeLock()
+    this.flushProgressQueue()
+    this.showChrome()
+    this.updateFullscreenLabel()
   }
 
   disconnect() {
     window.removeEventListener("keydown", this.handleKeydown)
     this.observer?.disconnect()
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
+    if (this.chromeHideTimeout) clearTimeout(this.chromeHideTimeout)
     this.clearNextChapterCountdown()
+    window.removeEventListener("online", this.flushProgressQueue)
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange)
+    this.releaseWakeLock()
   }
 
   private handleKeydown(event: KeyboardEvent) {
@@ -66,6 +127,12 @@ export default class extends Controller {
     
     if (event.key === "Escape" && this.lightboxOpen) {
       this.closeLightbox()
+      return
+    }
+
+    if (event.key === "f" || event.key === "F") {
+      event.preventDefault()
+      this.toggleFullscreen()
       return
     }
     
@@ -190,7 +257,7 @@ export default class extends Controller {
     this.scrollToIndex(this.currentIndex - 1)
   }
 
-  private scrollToIndex(index: number, behavior: ScrollBehavior = "instant") {
+  private scrollToIndex(index: number, behavior: ScrollBehavior = "smooth") {
     if (index < 0 || index >= this.pageTargets.length) return
     
     // Lock to prevent observer from interfering
@@ -316,7 +383,14 @@ export default class extends Controller {
       if (img && img.loading === "lazy") {
         img.loading = "eager"
       }
+      const preloadUrl = img?.currentSrc || img?.src
+      if (preloadUrl) {
+        const preloader = new Image()
+        preloader.src = preloadUrl
+      }
     }
+
+    this.maybePrefetchNextChapter()
   }
 
   private updateProgressUI() {
@@ -397,9 +471,15 @@ export default class extends Controller {
         "X-CSRF-Token": token || ""
       },
       body: JSON.stringify({ page_index: pageIndex, page_count: pageCount })
-    }).catch((error) => {
-      console.warn("Failed to save reading progress:", error)
     })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Progress save failed with status ${response.status}`)
+        return this.flushProgressQueue()
+      })
+      .catch((error) => {
+        this.queueProgressSave(pageIndex, pageCount)
+        console.warn("Failed to save reading progress, queued for retry:", error)
+      })
   }
 
   // Check if we're on the last page and should show next chapter prompt
@@ -481,5 +561,248 @@ export default class extends Controller {
   cancelNextChapter(event?: Event) {
     event?.preventDefault()
     this.hideNextChapterOverlay()
+  }
+
+  pointerDown(event: PointerEvent) {
+    if (!this.shouldHandlePointerEvent(event)) return
+    this.pointerStartX = event.clientX
+    this.pointerStartY = event.clientY
+    this.pointerStartedAt = Date.now()
+    this.pointerMoved = false
+  }
+
+  pointerMove(event: PointerEvent) {
+    if (this.pointerStartX === undefined || this.pointerStartY === undefined) return
+    const movedX = Math.abs(event.clientX - this.pointerStartX)
+    const movedY = Math.abs(event.clientY - this.pointerStartY)
+    if (movedX > this.pointerTapDistance || movedY > this.pointerTapDistance) {
+      this.pointerMoved = true
+    }
+  }
+
+  pointerUp(event: PointerEvent) {
+    if (!this.shouldHandlePointerEvent(event)) return
+    if (this.pointerStartX === undefined || this.pointerStartY === undefined) return
+
+    const movedX = Math.abs(event.clientX - this.pointerStartX)
+    const movedY = Math.abs(event.clientY - this.pointerStartY)
+    const duration = Date.now() - this.pointerStartedAt
+    this.resetPointerState()
+
+    if (this.pointerMoved || movedX > this.pointerTapDistance || movedY > this.pointerTapDistance || duration > this.pointerTapDurationMs) {
+      return
+    }
+
+    const viewport = this.hasViewportTarget ? this.viewportTarget : (this.element as HTMLElement)
+    const rect = viewport.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+
+    const xRatio = (event.clientX - rect.left) / rect.width
+    const yRatio = (event.clientY - rect.top) / rect.height
+    this.handleTapZone(xRatio, yRatio)
+  }
+
+  toggleChrome(event?: Event) {
+    event?.preventDefault()
+    if (this.chromeVisible) {
+      this.hideChrome()
+    } else {
+      this.showChrome()
+    }
+  }
+
+  toggleFullscreen(event?: Event) {
+    event?.preventDefault()
+    const doc = document as Document & {
+      webkitExitFullscreen?: () => Promise<void>
+    }
+    const root = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>
+    }
+
+    if (document.fullscreenElement) {
+      const exit = document.exitFullscreen?.bind(document) || doc.webkitExitFullscreen?.bind(doc)
+      Promise.resolve(exit?.())
+        .catch(() => undefined)
+        .finally(() => this.updateFullscreenLabel())
+      return
+    }
+
+    const request = root.requestFullscreen?.bind(root) || root.webkitRequestFullscreen?.bind(root)
+    Promise.resolve(request?.())
+      .catch(() => undefined)
+      .finally(() => this.updateFullscreenLabel())
+  }
+
+  saveOffline(event?: Event) {
+    event?.preventDefault()
+    const urls = this.pageTargets
+      .map((page) => {
+        const img = page.querySelector("img") as HTMLImageElement | null
+        return img?.currentSrc || img?.src || null
+      })
+      .filter((url): url is string => !!url)
+
+    if (urls.length === 0) return
+
+    if (this.hasOfflineStatusTarget) {
+      this.offlineStatusTarget.textContent = "Saving offline..."
+    }
+
+    const payload = { type: "PREFETCH_CHAPTER", urls }
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage(payload)
+    } else if (navigator.serviceWorker?.ready) {
+      navigator.serviceWorker.ready.then((registration) => registration.active?.postMessage(payload))
+    }
+
+    window.setTimeout(() => {
+      if (this.hasOfflineStatusTarget) this.offlineStatusTarget.textContent = "Saved for offline"
+    }, 1200)
+  }
+
+  private shouldHandlePointerEvent(event: Event) {
+    const target = event.target as HTMLElement | null
+    if (!target) return false
+    return !target.closest("a,button,input,select,textarea,label,[data-reader-ignore-tap-zones]")
+  }
+
+  private resetPointerState() {
+    this.pointerStartX = undefined
+    this.pointerStartY = undefined
+    this.pointerStartedAt = 0
+    this.pointerMoved = false
+  }
+
+  private handleTapZone(xRatio: number, yRatio: number) {
+    const action = resolveTapZoneAction(xRatio, yRatio, this.isHorizontal(), this.isRtl())
+    if (action === "next") {
+      this.next()
+    } else if (action === "previous") {
+      this.previous()
+    } else {
+      this.toggleChrome()
+    }
+  }
+
+  private showChrome() {
+    this.chromeVisible = true
+    this.chromeTargets.forEach((element) => element.classList.remove("reader-chrome-hidden"))
+    this.scheduleChromeAutoHide()
+  }
+
+  private hideChrome() {
+    if (this.lightboxOpen) return
+    this.chromeVisible = false
+    this.chromeTargets.forEach((element) => element.classList.add("reader-chrome-hidden"))
+    if (this.chromeHideTimeout) clearTimeout(this.chromeHideTimeout)
+  }
+
+  private scheduleChromeAutoHide() {
+    if (this.chromeHideTimeout) clearTimeout(this.chromeHideTimeout)
+    this.chromeHideTimeout = setTimeout(() => this.hideChrome(), 2600)
+  }
+
+  private updateFullscreenLabel() {
+    if (!this.hasFullscreenLabelTarget) return
+    this.fullscreenLabelTarget.textContent = document.fullscreenElement ? "Exit fullscreen" : "Fullscreen"
+  }
+
+  private maybePrefetchNextChapter() {
+    if (this.nextChapterPrefetched || !this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
+    const remainingPages = this.pageTargets.length - (this.currentIndex + 1)
+    if (remainingPages > 3) return
+
+    const link = document.createElement("link")
+    link.rel = "prefetch"
+    link.as = "document"
+    link.href = this.nextChapterUrlValue
+    document.head.appendChild(link)
+    this.nextChapterPrefetched = true
+  }
+
+  private queueProgressSave(pageIndex: number, pageCount: number) {
+    if (!this.hasProgressUrlValue || !this.progressUrlValue) return
+    const queue = this.progressQueue()
+    queue.push({
+      pageIndex,
+      pageCount,
+      progressUrl: this.progressUrlValue,
+      createdAt: Date.now()
+    })
+    localStorage.setItem(this.progressQueueStorageKey, JSON.stringify(queue.slice(-100)))
+  }
+
+  private async flushProgressQueue() {
+    if (!this.hasProgressUrlValue || !this.progressUrlValue || !navigator.onLine) return
+    const queue = this.progressQueue()
+    if (queue.length === 0) return
+
+    const token = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content")
+
+    const remaining: typeof queue = []
+    for (const item of queue) {
+      try {
+        const response = await fetch(item.progressUrl, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "X-CSRF-Token": token || ""
+          },
+          body: JSON.stringify({ page_index: item.pageIndex, page_count: item.pageCount })
+        })
+        if (!response.ok) throw new Error(`Queue flush failed: ${response.status}`)
+      } catch (_) {
+        remaining.push(item)
+      }
+    }
+
+    localStorage.setItem(this.progressQueueStorageKey, JSON.stringify(remaining))
+  }
+
+  private progressQueue() {
+    try {
+      const raw = localStorage.getItem(this.progressQueueStorageKey)
+      if (!raw) return []
+      return normalizeProgressQueue(JSON.parse(raw))
+    } catch (_) {
+      return []
+    }
+  }
+
+  private handleVisibilityChange() {
+    if (document.visibilityState === "visible") {
+      this.requestWakeLock()
+      this.flushProgressQueue()
+    } else {
+      this.releaseWakeLock()
+    }
+  }
+
+  private async requestWakeLock() {
+    if (!("wakeLock" in navigator)) return
+    try {
+      this.wakeLock = await (navigator as Navigator & {
+        wakeLock: {
+          request: (type: "screen") => Promise<{ release: () => Promise<void> }>
+        }
+      }).wakeLock.request("screen")
+    } catch (_) {
+      // Wake lock is best-effort; failures are expected in unsupported contexts.
+    }
+  }
+
+  private async releaseWakeLock() {
+    if (!this.wakeLock) return
+    try {
+      await this.wakeLock.release()
+    } catch (_) {
+      // Ignore wake lock release errors.
+    } finally {
+      this.wakeLock = undefined
+    }
   }
 }

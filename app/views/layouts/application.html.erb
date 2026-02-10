@@ -2,7 +2,14 @@
 <html lang="en">
   <head>
     <title>Scanarr</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Scanarr">
+    <link rel="manifest" href="<%= pwa_manifest_path %>">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <% if Rails.env.development? %>
       <meta name="turbo-prefetch" content="false">
     <% end %>
@@ -48,7 +55,7 @@
             <%= render UI::FlashMessageComponent.new(variant: :danger, message: flash[:alert], dismissible: true) %>
           </div>
         <% end %>
-        <main id="main-content" class="mx-auto w-full max-w-6xl px-4 py-8">
+        <main id="main-content" class="mx-auto w-full max-w-6xl px-4 py-8 pb-24 lg:pb-8">
           <%= yield %>
         </main>
       </div>
@@ -59,7 +66,9 @@
       <% end %>
 
       <%# Toast container for Turbo Stream notifications %>
-      <div id="toast-container" data-turbo-permanent class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-80 max-w-[calc(100vw-2rem)]"></div>
+      <div id="toast-container" data-turbo-permanent class="fixed right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 bottom-[calc(env(safe-area-inset-bottom)+1rem)]"></div>
+
+      <%= render "shared/mobile_tab_bar" %>
 
       <dialog data-drawer-target="dialog"
               data-action="click->drawer#closeOnBackdrop"

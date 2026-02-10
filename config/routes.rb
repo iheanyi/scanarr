@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
+  # Progressive Web App assets
+  get "/manifest.webmanifest", to: "pwa#manifest", as: :pwa_manifest
+  get "/service-worker.js", to: "pwa#service_worker", as: :pwa_service_worker
+  get "/offline", to: "pwa#offline", as: :pwa_offline
+
   # Setup wizard
   get "/setup", to: "setup#new", as: :setup
   post "/setup", to: "setup#create"
