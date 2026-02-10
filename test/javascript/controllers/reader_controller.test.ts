@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   observerThresholdForStyle,
   resolveLightboxSwipeAction,
-  resolveLightboxTapZoneAction
+  resolveLightboxTapZoneAction,
+  usesVerticalLightboxForStyle
 } from '../../../app/javascript/controllers/reader_controller'
 
 /**
@@ -127,6 +128,21 @@ describe('Intersection Observer Threshold Logic', () => {
 
   it('uses paged threshold for vertical paged mode', () => {
     expect(observerThresholdForStyle('vertical')).toBe(0.5)
+  })
+})
+
+describe('Vertical Lightbox Style Logic', () => {
+  it('uses vertical lightbox for vertical style', () => {
+    expect(usesVerticalLightboxForStyle('vertical')).toBe(true)
+  })
+
+  it('uses vertical lightbox for webtoon style', () => {
+    expect(usesVerticalLightboxForStyle('webtoon')).toBe(true)
+  })
+
+  it('does not use vertical lightbox for horizontal styles', () => {
+    expect(usesVerticalLightboxForStyle('left_to_right')).toBe(false)
+    expect(usesVerticalLightboxForStyle('right_to_left')).toBe(false)
   })
 })
 

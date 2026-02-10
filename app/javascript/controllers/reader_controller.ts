@@ -36,8 +36,12 @@ export function observerThresholdForStyle(style: string): number {
   return 0.3
 }
 
+export function usesVerticalLightboxForStyle(style: string): boolean {
+  return style === "vertical" || style === "webtoon"
+}
+
 export default class extends Controller {
-  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "nextChapterOverlay", "nextChapterCountdown"]
+  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "lightboxScroll", "lightboxStrip", "lightboxHint", "lightboxProgressText", "nextChapterOverlay", "nextChapterCountdown"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
   declare readonly pageTargets: HTMLElement[]
   declare readonly viewportTarget: HTMLElement
@@ -52,6 +56,14 @@ export default class extends Controller {
   declare readonly lightboxImageTarget: HTMLImageElement
   declare readonly hasLightboxTarget: boolean
   declare readonly hasLightboxImageTarget: boolean
+  declare readonly lightboxScrollTarget: HTMLElement
+  declare readonly lightboxStripTarget: HTMLElement
+  declare readonly hasLightboxScrollTarget: boolean
+  declare readonly hasLightboxStripTarget: boolean
+  declare readonly lightboxHintTarget: HTMLElement
+  declare readonly lightboxProgressTextTarget: HTMLElement
+  declare readonly hasLightboxHintTarget: boolean
+  declare readonly hasLightboxProgressTextTarget: boolean
   declare readonly nextChapterOverlayTarget: HTMLElement
   declare readonly nextChapterCountdownTarget: HTMLElement
   declare readonly hasNextChapterOverlayTarget: boolean
@@ -79,6 +91,9 @@ export default class extends Controller {
   private lightboxSwipeStartY = 0
   private lightboxSwipeDeltaX = 0
   private lightboxSwipeDeltaY = 0
+  private verticalLightboxObserver?: IntersectionObserver
+  private verticalLightboxPagesByIndex: Array<HTMLElement | undefined> = []
+  private lightboxHintFadeTimeout?: ReturnType<typeof setTimeout>
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -97,6 +112,8 @@ export default class extends Controller {
   disconnect() {
     window.removeEventListener("keydown", this.handleKeydown)
     this.observer?.disconnect()
+    this.teardownVerticalLightbox()
+    if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
     this.clearNextChapterCountdown()
   }
@@ -165,40 +182,54 @@ export default class extends Controller {
 
   openLightbox(event?: Event) {
     event?.preventDefault()
-    if (!this.hasLightboxTarget || !this.hasLightboxImageTarget) return
+    if (!this.hasLightboxTarget) return
     this.lightboxOpen = true
     this.lightboxTarget.classList.remove("hidden")
     this.lightboxTarget.classList.add("flex")
-    this.updateLightboxImage()
+
+    if (this.usesVerticalLightbox()) {
+      this.setupVerticalLightbox()
+      this.scrollVerticalLightboxToIndex(this.currentIndex, "instant")
+      this.showVerticalLightboxHint()
+    } else {
+      this.updateLightboxImage()
+    }
+
     document.body.style.overflow = "hidden"
   }
 
   closeLightbox(event?: Event) {
     event?.preventDefault()
     if (!this.hasLightboxTarget) return
+    const shouldSyncVerticalFocus = this.usesVerticalLightbox()
     this.lightboxOpen = false
     this.resetLightboxSwipe()
     this.lightboxTarget.classList.add("hidden")
     this.lightboxTarget.classList.remove("flex")
     document.body.style.overflow = ""
+    if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
+    if (shouldSyncVerticalFocus) {
+      this.teardownVerticalLightbox()
+      this.scrollToIndex(this.currentIndex, "instant")
+    }
   }
 
   lightboxNext(event?: Event) {
     event?.preventDefault()
     event?.stopPropagation()
     // In RTL mode, the "next" button (right arrow) goes to previous page
-    this.isRtl() ? this.previous() : this.next()
+    this.isHorizontal() && this.isRtl() ? this.previous() : this.next()
   }
 
   lightboxPrev(event?: Event) {
     event?.preventDefault()
     event?.stopPropagation()
     // In RTL mode, the "prev" button (left arrow) goes to next page
-    this.isRtl() ? this.next() : this.previous()
+    this.isHorizontal() && this.isRtl() ? this.next() : this.previous()
   }
 
   lightboxPointerDown(event: PointerEvent) {
-    if (!this.lightboxOpen || event.pointerType !== "touch") return
+    if (!this.lightboxOpen || event.pointerType !== "touch" || this.usesVerticalLightbox()) return
 
     this.lightboxSwipePointerId = event.pointerId
     this.lightboxSwipeStartX = event.clientX
@@ -216,6 +247,10 @@ export default class extends Controller {
 
   lightboxPointerUp(event: PointerEvent) {
     if (!this.isTrackingLightboxSwipe(event)) return
+    if (this.usesVerticalLightbox()) {
+      this.resetLightboxSwipe()
+      return
+    }
 
     const swipeAction = resolveLightboxSwipeAction(this.lightboxSwipeDeltaX, this.lightboxSwipeDeltaY)
     const isTap = Math.abs(this.lightboxSwipeDeltaX) < 14 && Math.abs(this.lightboxSwipeDeltaY) < 14
@@ -261,7 +296,7 @@ export default class extends Controller {
   private resolveTouchTapZoneAction(event: PointerEvent) {
     // Let explicit controls (close/arrow buttons) handle their own clicks.
     if (event.target instanceof HTMLElement && event.target.closest("button, a")) return null
-    if (!this.hasLightboxTarget) return null
+    if (!this.hasLightboxTarget || this.usesVerticalLightbox()) return null
 
     const rect = this.lightboxTarget.getBoundingClientRect()
     return resolveLightboxTapZoneAction(event.clientX, rect.left, rect.width)
@@ -294,11 +329,19 @@ export default class extends Controller {
       this.checkEndOfChapter()
       return
     }
+    if (this.lightboxOpen && this.usesVerticalLightbox()) {
+      this.scrollVerticalLightboxToIndex(nextIndex, "smooth")
+      return
+    }
     this.scrollToIndex(nextIndex)
   }
 
   previous() {
     this.hasInteracted = true
+    if (this.lightboxOpen && this.usesVerticalLightbox()) {
+      this.scrollVerticalLightboxToIndex(this.currentIndex - 1, "smooth")
+      return
+    }
     this.scrollToIndex(this.currentIndex - 1)
   }
 
@@ -339,6 +382,111 @@ export default class extends Controller {
       return this.viewportTarget.dataset.readerRtl === "true"
     }
     return false
+  }
+
+  private usesVerticalLightbox() {
+    return usesVerticalLightboxForStyle(this.styleValue)
+  }
+
+  private showVerticalLightboxHint() {
+    if (!this.hasLightboxHintTarget) return
+
+    if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
+    this.lightboxHintTarget.classList.remove("opacity-0")
+
+    this.lightboxHintFadeTimeout = setTimeout(() => {
+      this.lightboxHintTarget.classList.add("opacity-0")
+    }, 2200)
+  }
+
+  private setupVerticalLightbox() {
+    if (!this.hasLightboxScrollTarget || !this.hasLightboxStripTarget) return
+
+    this.teardownVerticalLightbox()
+    this.lightboxStripTarget.innerHTML = ""
+    this.verticalLightboxPagesByIndex = []
+
+    this.pageTargets.forEach((page, index) => {
+      const sourceImage = page.querySelector("img") as HTMLImageElement | null
+      if (!sourceImage) return
+
+      const figure = document.createElement("figure")
+      figure.className = "mx-auto w-full max-w-4xl"
+      figure.dataset.readerLightboxIndex = index.toString()
+
+      const image = document.createElement("img")
+      image.src = sourceImage.currentSrc || sourceImage.src
+      image.alt = sourceImage.alt || `Reader page ${index + 1}`
+      image.className = "w-full max-w-full object-contain rounded-md shadow-2xl"
+      image.loading = Math.abs(index - this.currentIndex) <= 1 ? "eager" : "lazy"
+      image.decoding = "async"
+
+      figure.appendChild(image)
+      this.lightboxStripTarget.appendChild(figure)
+      this.verticalLightboxPagesByIndex[index] = figure
+    })
+
+    this.verticalLightboxObserver = new IntersectionObserver(
+      (entries) => {
+        if (!this.lightboxOpen || this.isScrolling || !this.hasLightboxScrollTarget) return
+
+        const rootTop = this.lightboxScrollTarget.getBoundingClientRect().top
+        let bestEntry: IntersectionObserverEntry | null = null
+        let bestDistance = Infinity
+
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const distance = Math.abs(entry.boundingClientRect.top - rootTop)
+          if (distance < bestDistance) {
+            bestDistance = distance
+            bestEntry = entry
+          }
+        }
+
+        if (!bestEntry) return
+
+        const rawIndex = (bestEntry.target as HTMLElement).dataset.readerLightboxIndex
+        const index = Number.parseInt(rawIndex || "", 10)
+        if (!Number.isFinite(index) || index === this.currentIndex) return
+
+        this.hasInteracted = true
+        this.currentIndex = index
+        this.syncState()
+      },
+      { root: this.lightboxScrollTarget, threshold: 0 }
+    )
+
+    this.verticalLightboxPagesByIndex.forEach((page) => {
+      if (page) this.verticalLightboxObserver?.observe(page)
+    })
+  }
+
+  private teardownVerticalLightbox() {
+    this.verticalLightboxObserver?.disconnect()
+    this.verticalLightboxObserver = undefined
+    this.verticalLightboxPagesByIndex = []
+
+    if (this.hasLightboxStripTarget) {
+      this.lightboxStripTarget.innerHTML = ""
+    }
+  }
+
+  private scrollVerticalLightboxToIndex(index: number, behavior: ScrollBehavior = "smooth") {
+    if (index < 0 || index >= this.pageTargets.length) return
+
+    const target = this.verticalLightboxPagesByIndex[index]
+    if (!target) return
+
+    this.isScrolling = true
+    this.currentIndex = index
+
+    target.scrollIntoView({ behavior, block: "start", inline: "nearest" })
+    this.syncState()
+
+    const unlockDelay = behavior === "smooth" ? 500 : 50
+    setTimeout(() => {
+      this.isScrolling = false
+    }, unlockDelay)
   }
 
   private observePages() {
@@ -452,8 +600,11 @@ export default class extends Controller {
     if (this.hasProgressBarTarget) {
       this.progressBarTarget.style.width = `${percent}%`
     }
+    if (this.hasLightboxProgressTextTarget) {
+      this.lightboxProgressTextTarget.textContent = `Page ${pageIndex} / ${pageCount} (${percent}%)`
+    }
 
-    if (this.lightboxOpen) {
+    if (this.lightboxOpen && !this.usesVerticalLightbox()) {
       this.updateLightboxImage()
     }
   }

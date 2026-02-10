@@ -69,7 +69,7 @@
   <% end %>
 
   <nav class="flex flex-wrap items-center gap-2">
-    <% if is_horizontal %>
+    <% if page_count.positive? %>
       <%= render UI::ButtonComponent.new(
         variant: :ghost,
         size: :sm,
@@ -249,27 +249,44 @@
   <%# Lightbox overlay - must be inside controller scope %>
   <div data-reader-target="lightbox"
        data-action="pointerdown->reader#lightboxPointerDown pointermove->reader#lightboxPointerMove pointerup->reader#lightboxPointerUp pointercancel->reader#lightboxPointerCancel"
-       class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-6">
+       class="fixed inset-0 z-50 hidden bg-black/90 <%= is_horizontal ? "items-center justify-center p-6" : "items-stretch justify-stretch" %>">
     <button type="button"
             class="absolute right-6 top-6 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2"
             data-action="click->reader#closeLightbox">
       Close
     </button>
-    <button type="button"
-            class="lightbox-nav-arrow absolute left-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
-            data-action="click->reader#lightboxPrev"
-            aria-label="Previous page">
-      &larr;
-    </button>
-    <button type="button"
-            class="lightbox-nav-arrow absolute right-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
-            data-action="click->reader#lightboxNext"
-            aria-label="Next page">
-      &rarr;
-    </button>
-    <img data-reader-target="lightboxImage"
-         class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
-         alt="Reader page">
+    <div data-reader-target="lightboxProgressText"
+         class="pointer-events-none absolute left-4 top-4 rounded-full border border-border bg-surface/80 px-3 py-1 text-xs font-medium text-foreground shadow-sm">
+      Page <%= initial_page_index %> / <%= page_count %> (<%= progress_percent.round %>%)
+    </div>
+    <% if is_horizontal %>
+      <button type="button"
+              class="lightbox-nav-arrow absolute left-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
+              data-action="click->reader#lightboxPrev"
+              aria-label="Previous page">
+        &larr;
+      </button>
+      <button type="button"
+              class="lightbox-nav-arrow absolute right-6 top-1/2 -translate-y-1/2 rounded-full border border-border bg-surface/80 px-4 py-3 text-xl text-foreground hover:bg-surface-2"
+              data-action="click->reader#lightboxNext"
+              aria-label="Next page">
+        &rarr;
+      </button>
+      <img data-reader-target="lightboxImage"
+           class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
+           alt="Reader page">
+    <% else %>
+      <div data-reader-target="lightboxHint"
+           class="pointer-events-none absolute left-1/2 top-5 -translate-x-1/2 rounded-full border border-border bg-surface/70 px-3 py-1 text-xs text-foreground transition-opacity duration-700">
+        Focus mode: scroll vertically
+      </div>
+      <div data-reader-target="lightboxScroll"
+           class="h-full w-full overflow-y-auto overscroll-contain px-4 pb-10 pt-20">
+        <div data-reader-target="lightboxStrip"
+             class="mx-auto flex w-full max-w-4xl flex-col gap-4">
+        </div>
+      </div>
+    <% end %>
   </div>
 
   <%# Next Chapter overlay - shows when reaching end of chapter %>
