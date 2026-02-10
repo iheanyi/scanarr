@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { resolveLightboxSwipeAction, resolveLightboxTapZoneAction } from '../../../app/javascript/controllers/reader_controller'
 
 /**
  * Unit tests for ReaderController URL handling logic.
@@ -99,14 +100,53 @@ describe('Reading Style Detection Logic', () => {
     expect(isRtl('right_to_left')).toBe(true)
   })
 
-  it('detects vertical mode for long_strip', () => {
-    expect(isHorizontal('long_strip')).toBe(false)
-    expect(isRtl('long_strip')).toBe(false)
+  it('detects paged vertical mode for vertical', () => {
+    expect(isHorizontal('vertical')).toBe(false)
+    expect(isRtl('vertical')).toBe(false)
   })
 
-  it('detects vertical mode for webcomic', () => {
-    expect(isHorizontal('webcomic')).toBe(false)
-    expect(isRtl('webcomic')).toBe(false)
+  it('detects continuous vertical mode for webtoon', () => {
+    expect(isHorizontal('webtoon')).toBe(false)
+    expect(isRtl('webtoon')).toBe(false)
+  })
+})
+
+describe('Lightbox Swipe Logic', () => {
+  it('maps a left swipe to next page', () => {
+    expect(resolveLightboxSwipeAction(-96, 14)).toBe('next')
+  })
+
+  it('maps a right swipe to previous page', () => {
+    expect(resolveLightboxSwipeAction(96, 10)).toBe('previous')
+  })
+
+  it('ignores short swipes below threshold', () => {
+    expect(resolveLightboxSwipeAction(24, 2)).toBeNull()
+    expect(resolveLightboxSwipeAction(-30, 5)).toBeNull()
+  })
+
+  it('ignores gestures that are mostly vertical', () => {
+    expect(resolveLightboxSwipeAction(90, 120)).toBeNull()
+    expect(resolveLightboxSwipeAction(-120, 140)).toBeNull()
+  })
+})
+
+describe('Lightbox Tap Zone Logic', () => {
+  it('maps left edge taps to previous page', () => {
+    expect(resolveLightboxTapZoneAction(20, 0, 360)).toBe('previous')
+  })
+
+  it('maps right edge taps to next page', () => {
+    expect(resolveLightboxTapZoneAction(350, 0, 360)).toBe('next')
+  })
+
+  it('maps center taps to close', () => {
+    expect(resolveLightboxTapZoneAction(180, 0, 360)).toBe('close')
+  })
+
+  it('handles shifted container offsets', () => {
+    expect(resolveLightboxTapZoneAction(40, 10, 300)).toBe('previous')
+    expect(resolveLightboxTapZoneAction(290, 10, 300)).toBe('next')
   })
 })
 

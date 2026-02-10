@@ -147,13 +147,8 @@
               <%= render UI::AutoSelectComponent.new(
                 form: form,
                 method: :reading_style,
-                options: [
-                  [ "Left to Right", "left_to_right" ],
-                  [ "Right to Left", "right_to_left" ],
-                  [ "Long Strip", "long_strip" ],
-                  [ "Webcomic", "webcomic" ]
-                ],
-                selected: @series.reading_style || "left_to_right",
+                options: User::READING_STYLE_OPTIONS,
+                selected: User.normalize_reading_style(@series.reading_style),
                 size: :sm,
                 full_width: false,
                 aria: { label: "Reading style" },

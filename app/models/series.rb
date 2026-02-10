@@ -3,6 +3,7 @@ class Series < ApplicationRecord
 
   before_validation :generate_slug, on: :create
   before_validation :update_slug_if_title_changed, on: :update
+  before_validation :normalize_reading_style
   after_create :auto_link_library_series
 
   belongs_to :library_series, optional: true
@@ -134,6 +135,12 @@ class Series < ApplicationRecord
   end
 
   private
+
+  def normalize_reading_style
+    return if reading_style.blank?
+
+    self.reading_style = ReadingStyles.normalize(reading_style)
+  end
 
   def generate_slug
     return if slug.present?

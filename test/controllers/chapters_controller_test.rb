@@ -180,6 +180,19 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_uses_swipe_actions_and_hides_lightbox_arrows_on_mobile
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/#{series_url}/chapters/1"
+
+      assert_response :success
+      assert_includes @response.body, "reader#lightboxPointerDown"
+      assert_includes @response.body, "reader#lightboxPointerMove"
+      assert_includes @response.body, "reader#lightboxPointerUp"
+      assert_includes @response.body, "lightbox-nav-arrow absolute left-6"
+      assert_includes @response.body, "lightbox-nav-arrow absolute right-6"
+    end
+  end
+
   def test_show_renders_lightbox_inside_reader_controller
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"

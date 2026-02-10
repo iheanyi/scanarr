@@ -17,6 +17,6 @@ class SeriesCategoryNormalizerTest < ActiveSupport::TestCase
     normalizer = SeriesCategoryNormalizer.new
     result = normalizer.normalize_with_style(tags: [ "Manhwa" ], series_type: "manhwa")
 
-    assert_equal "long_strip", result.fetch(:reading_style)
+    assert_equal "webtoon", result.fetch(:reading_style)
   end
 end

@@ -71,7 +71,7 @@
         form: f,
         method: :default_reading_style,
         options: User::READING_STYLE_OPTIONS,
-        selected: @user.default_reading_style,
+        selected: User.normalize_reading_style(@user.default_reading_style),
         label: "Default Reading Style",
         hint: "Used when a series has no reading style set."
       ) %>

@@ -127,7 +127,7 @@ class SettingsController < ApplicationController
   end
 
   def user_preferences_params
-    params.require(:user).permit(
+    permitted = params.require(:user).permit(
       :default_reading_style,
       :default_language,
       :default_download_policy,
@@ -135,5 +135,11 @@ class SettingsController < ApplicationController
       :notifications_enabled,
       :notification_auto_cleanup_days
     )
+
+    if permitted[:default_reading_style].present?
+      permitted[:default_reading_style] = ReadingStyles.normalize(permitted[:default_reading_style])
+    end
+
+    permitted
   end
 end

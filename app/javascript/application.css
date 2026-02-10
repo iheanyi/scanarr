@@ -383,3 +383,10 @@
   background-color: var(--ds-accent);
   height: 3px;
 }
+
+/* Hide lightbox arrow controls on touch devices; swipe is the primary affordance. */
+@media (pointer: coarse) {
+  .lightbox-nav-arrow {
+    display: none;
+  }
+}

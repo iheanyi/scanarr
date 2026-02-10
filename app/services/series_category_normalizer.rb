@@ -15,9 +15,9 @@ class SeriesCategoryNormalizer
   ].freeze
 
   STYLE_BY_CATEGORY = {
-    "manhwa" => "long_strip",
-    "manhua" => "long_strip",
-    "webtoon" => "long_strip",
+    "manhwa" => "webtoon",
+    "manhua" => "webtoon",
+    "webtoon" => "webtoon",
     "manga" => "left_to_right",
     "comic" => "left_to_right"
   }.freeze
@@ -42,6 +42,6 @@ class SeriesCategoryNormalizer
       return STYLE_BY_CATEGORY[category] if STYLE_BY_CATEGORY.key?(category)
     end
 
-    series_type.to_s.strip.downcase.in?(%w[manhwa manhua webtoon]) ? "long_strip" : "left_to_right"
+    series_type.to_s.strip.downcase.in?(%w[manhwa manhua webtoon]) ? "webtoon" : "left_to_right"
   end
 end
