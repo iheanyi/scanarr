@@ -45,7 +45,8 @@ module Scrapers
       %w[latest popular]
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       normalized = normalize_query(query)
       response = http.get("#{base_url}/search/story/#{normalized}")
       return [] unless response.status == 200
@@ -209,7 +210,8 @@ module Scrapers
       []
     end
 
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       path = case sort.to_s.downcase
       when "popular"
         "/manga-list/hot-manga"

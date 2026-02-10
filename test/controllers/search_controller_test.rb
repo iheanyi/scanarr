@@ -1,6 +1,16 @@
 require "test_helper"
 
 class SearchControllerTest < ActionDispatch::IntegrationTest
+  class FakeSearchAdapter
+    def initialize(results:)
+      @results = results
+    end
+
+    def search(_query)
+      @results
+    end
+  end
+
   def test_index_returns_success
     get search_path
 
@@ -59,5 +69,61 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_no_match /Results/, @response.body
+  end
+
+  def test_index_shows_advanced_filter_controls
+    get search_path
+
+    assert_response :success
+    assert_includes @response.body, "Advanced filters"
+    assert_includes @response.body, "Genres"
+    assert_includes @response.body, 'name="status"'
+  end
+
+  def test_index_filters_results_by_genre_for_imported_series
+    source = sources(:one)
+    series(:one).update!(normalized_categories: [ "action", "adventure" ])
+    adapter = FakeSearchAdapter.new(results: [ search_result(id: "SERIES123", title: "One Piece"), search_result(id: "NOT_MATCHED", title: "Other Title") ])
+
+    with_fake_adapter(adapter) do
+      get search_path, params: { q: "piece", sources: [ source.id ], genres: [ "action" ] }
+
+      assert_response :success
+      assert_includes @response.body, "One Piece"
+      assert_not_includes @response.body, "Other Title"
+    end
+  end
+
+  def test_index_filters_results_by_following_status
+    source = sources(:one)
+    adapter = FakeSearchAdapter.new(results: [ search_result(id: "SERIES123", title: "One Piece"), search_result(id: "NOT_MATCHED", title: "Other Title") ])
+
+    with_fake_adapter(adapter) do
+      get search_path, params: { q: "piece", sources: [ source.id ], status: "following" }
+
+      assert_response :success
+      assert_includes @response.body, "One Piece"
+      assert_not_includes @response.body, "Other Title"
+      assert_includes @response.body, "Status: Following"
+    end
+  end
+
+  private
+
+  def search_result(id:, title:)
+    ResultTypes::SearchResult.new(
+      id: id,
+      title: title,
+      url: "https://example.test/series/#{id}",
+      cover_url: "https://example.test/cover/#{id}.jpg"
+    )
+  end
+
+  def with_fake_adapter(adapter)
+    original_for = Scrapers::AdapterRegistry.method(:for)
+    Scrapers::AdapterRegistry.define_singleton_method(:for) { |_source| adapter }
+    yield
+  ensure
+    Scrapers::AdapterRegistry.define_singleton_method(:for, original_for)
   end
 end

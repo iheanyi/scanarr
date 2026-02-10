@@ -23,7 +23,8 @@ module Scrapers
       30
     end
 
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       case sort
       when "popular"
         browse_popular(page: page, limit: limit)
@@ -34,7 +35,8 @@ module Scrapers
       end
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       response = http.get("/api/search", params: { q: query, type: "comic", limit: 20 })
       payload = JSON.parse(response.body)
 

@@ -34,7 +34,8 @@ module Scrapers
     # @param page [Integer] 1-indexed page number
     # @param limit [Integer] ignored (server controls page size)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       sort_param = sort.to_s.downcase == "popular" ? "most-view" : "latest"
       response = http.get("#{base_url}/manga-list", params: { page: page, sort: sort_param })
       return [] unless response.status == 200
@@ -49,7 +50,8 @@ module Scrapers
     # Search via the /tim-kiem endpoint.
     # @param query [String]
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       response = http.get("#{base_url}/tim-kiem", params: { q: query })
       return [] unless response.status == 200
 

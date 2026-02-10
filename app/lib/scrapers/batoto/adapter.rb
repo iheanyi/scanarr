@@ -30,7 +30,8 @@ module Scrapers
     # @param page [Integer] Page number
     # @param limit [Integer] Ignored (uses site default)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       path = case sort.to_s.downcase
       when "popular"
                "/v3x-search?sort=views_a&page=#{page}"
@@ -64,7 +65,8 @@ module Scrapers
     # Search for manga by title
     # @param query [String] Search term
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       encoded_query = CGI.escape(query)
       response = http.get("#{base_url}/v3x-search?word=#{encoded_query}")
       return [] unless response.status == 200

@@ -3,8 +3,21 @@ require "json"
 module Scrapers
   module Mangadex
   class Adapter < Scrapers::BaseAdapter
-    def search(query)
-      response = http.get("/manga", params: { title: query, limit: 20, includes: [ "cover_art", "author" ] })
+    STATUS_FILTER_OPTIONS = [
+      [ "Ongoing", "ongoing" ],
+      [ "Completed", "completed" ],
+      [ "Hiatus", "hiatus" ],
+      [ "Cancelled", "cancelled" ]
+    ].freeze
+    FILTER_OPTIONS_CACHE_KEY = "scrapers/mangadex/filter_options".freeze
+    FILTER_OPTIONS_CACHE_TTL = 12.hours
+
+    def search(query, filters: {})
+      response = http.get("/manga", params: {
+        title: query,
+        limit: 20,
+        includes: [ "cover_art", "author" ]
+      }.merge(mangadex_filter_params(filters)))
       payload = JSON.parse(response.body)
       payload.fetch("data", []).map do |item|
         attrs = item.fetch("attributes", {})
@@ -26,11 +39,26 @@ module Scrapers
       true
     end
 
+    def supports_server_side_filters?
+      true
+    end
+
+    def search_filter_options
+      {
+        genres: genre_filter_options,
+        statuses: STATUS_FILTER_OPTIONS
+      }
+    end
+
+    def browse_filter_options
+      search_filter_options
+    end
+
     def browse_page_size
       48
     end
 
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
       order = case sort
       when "popular"
         { followedCount: "desc" }
@@ -47,7 +75,7 @@ module Scrapers
         limit: limit,
         offset: offset,
         includes: [ "cover_art", "author" ]
-      })
+      }.merge(mangadex_filter_params(filters)))
 
       payload = JSON.parse(response.body)
       payload.fetch("data", []).map do |item|
@@ -192,6 +220,49 @@ module Scrapers
     end
 
     private
+
+    def mangadex_filter_params(filters)
+      return {} unless filters.is_a?(Hash)
+
+      params = {}
+      selected_genres = filter_values(filters, :genres)
+      selected_statuses = filter_values(filters, :statuses) & STATUS_FILTER_OPTIONS.map(&:last)
+
+      if selected_genres.present?
+        params[:includedTags] = selected_genres
+        params[:includedTagsMode] = "OR"
+      end
+      params[:status] = selected_statuses if selected_statuses.present?
+      params
+    end
+
+    def genre_filter_options
+      Rails.cache.fetch(FILTER_OPTIONS_CACHE_KEY, expires_in: FILTER_OPTIONS_CACHE_TTL) do
+        response = http.get("/manga/tag")
+        payload = JSON.parse(response.body)
+        payload.fetch("data", []).filter_map do |tag|
+          attributes = tag.fetch("attributes", {})
+          next unless attributes["group"] == "genre"
+
+          id = tag.fetch("id", "").to_s
+          label = pick_title(attributes.fetch("name", {}))
+          next if id.blank? || label.blank?
+
+          [ label, id ]
+        end.sort_by { |(label, _)| label.downcase }
+      end
+    rescue StandardError => e
+      Rails.logger.warn "[Mangadex] Failed to fetch filter options: #{e.class} - #{e.message}"
+      []
+    end
+
+    def filter_values(filters, key)
+      raw_values = filters[key] || filters[key.to_s]
+      Array(raw_values).filter_map do |value|
+        normalized = value.to_s.strip
+        normalized if normalized.present?
+      end.uniq
+    end
 
     def pick_title(title_hash)
       return nil if title_hash.nil?

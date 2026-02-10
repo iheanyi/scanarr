@@ -21,7 +21,8 @@ module Scrapers
       false
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       projects = fetch_all_projects
       projects.select { |p| p.title.downcase.include?(query.downcase) }
     rescue StandardError => e

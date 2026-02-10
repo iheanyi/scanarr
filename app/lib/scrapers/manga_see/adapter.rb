@@ -7,7 +7,8 @@ module Scrapers
   class Adapter < Scrapers::BaseAdapter
     BASE_URL = "https://mangasee123.com"
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       # MangaSee uses a JSON directory for search
       response = http.get("#{BASE_URL}/_search.php")
       return [] unless response.status == 200

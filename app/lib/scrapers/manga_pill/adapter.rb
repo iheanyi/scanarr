@@ -28,7 +28,8 @@ module Scrapers
     # @param page [Integer] Ignored (no pagination support)
     # @param limit [Integer] Ignored (returns all available from homepage)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       response = http.get(BASE_URL)
       return [] unless response.status == 200
 
@@ -45,7 +46,8 @@ module Scrapers
       []
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       # MangaPill uses a simple search query param
       encoded_query = CGI.escape(query)
       response = http.get("#{BASE_URL}/search", params: { q: encoded_query })

@@ -2,6 +2,8 @@ require "test_helper"
 
 class SourcesControllerTest < ActionDispatch::IntegrationTest
   class FakeAdapter
+    attr_reader :last_browse_filters, :last_search_filters
+
     class FakeHttpClient
       Response = Struct.new(:status, :body, :headers, :url, keyword_init: true)
 
@@ -15,8 +17,27 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
+    def supports_search?
+      true
+    end
+
     def supports_browse?
       true
+    end
+
+    def supports_server_side_filters?
+      true
+    end
+
+    def search_filter_options
+      {
+        genres: [ [ "Action", "action" ], [ "Romance", "romance" ] ],
+        statuses: [ [ "Ongoing", "ongoing" ], [ "Completed", "completed" ] ]
+      }
+    end
+
+    def browse_filter_options
+      search_filter_options
     end
 
     def browse_page_size
@@ -27,7 +48,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       %w[latest popular alphabetical]
     end
 
-    def browse(sort:, page:, limit:)
+    def browse(sort:, page:, limit:, filters: {})
+      @last_browse_filters = filters
       [
         ResultTypes::BrowseResult.new(
           id: "browse-#{sort}-#{page}-#{limit}",
@@ -38,7 +60,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       ]
     end
 
-    def search(_query)
+    def search(_query, filters: {})
+      @last_search_filters = filters
       [
         ResultTypes::SearchResult.new(
           id: "series-123",
@@ -132,6 +155,49 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select "turbo-frame#browse-content form select[name='sort'][data-action='change->auto-submit#submit']"
       assert_select "turbo-frame#browse-content button", text: "Apply", count: 0
+    end
+  end
+
+  def test_search_renders_advanced_filter_controls_when_source_supports_them
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/search"
+
+      assert_response :success
+      assert_includes @response.body, "Advanced filters"
+      assert_includes @response.body, 'name="genres[]"'
+      assert_includes @response.body, 'name="statuses[]"'
+    end
+  end
+
+  def test_search_passes_selected_filters_to_adapter
+    adapter = FakeAdapter.new
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/search", params: {
+        q: "one piece",
+        genres: [ "action" ],
+        statuses: [ "ongoing" ]
+      }
+
+      assert_response :success
+      assert_equal({ genres: [ "action" ], statuses: [ "ongoing" ] }, adapter.last_search_filters)
+    end
+  end
+
+  def test_browse_passes_selected_filters_to_adapter_and_preserves_pagination_params
+    adapter = FakeAdapter.new
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/browse", params: {
+        sort: "latest",
+        genres: [ "action" ],
+        statuses: [ "ongoing" ]
+      }
+
+      assert_response :success
+      assert_equal({ genres: [ "action" ], statuses: [ "ongoing" ] }, adapter.last_browse_filters)
+      assert_includes @response.body, "genres%5B%5D=action"
+      assert_includes @response.body, "statuses%5B%5D=ongoing"
     end
   end
 

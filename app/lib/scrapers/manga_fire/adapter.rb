@@ -39,7 +39,8 @@ module Scrapers
     # @param page [Integer] Page number (1-indexed)
     # @param limit [Integer] Ignored (site uses fixed page size)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       sort_param = sort_value(sort)
 
       response = http.get("#{base_url}/filter", params: {
@@ -75,7 +76,8 @@ module Scrapers
     # we don't have it, results may be empty.
     # @param query [String] Search term
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       encoded_query = query.to_s.strip
       return [] if encoded_query.empty?
 
