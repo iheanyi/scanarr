@@ -249,7 +249,7 @@
   <%# Lightbox overlay - must be inside controller scope %>
   <div data-reader-target="lightbox"
        data-action="pointerdown->reader#lightboxPointerDown pointermove->reader#lightboxPointerMove pointerup->reader#lightboxPointerUp pointercancel->reader#lightboxPointerCancel"
-       class="fixed inset-0 z-50 hidden bg-black/90 opacity-0 transition-opacity duration-200 ease-out <%= is_horizontal ? "items-center justify-center p-6" : "items-stretch justify-stretch" %>">
+       class="fixed left-0 top-0 h-dvh w-dvw z-50 hidden bg-black/95 backdrop-blur-sm opacity-0 transition-opacity duration-200 ease-out <%= is_horizontal ? "items-center justify-center p-6" : "items-stretch justify-stretch" %>">
     <button type="button"
             class="absolute right-6 top-6 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2"
             data-action="click->reader#closeLightbox">

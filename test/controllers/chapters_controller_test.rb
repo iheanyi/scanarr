@@ -176,7 +176,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_includes @response.body, "data-reader-target=\"lightbox\""
-      assert_includes @response.body, "data-reader-target=\"lightboxImage\""
+      assert_includes @response.body, "data-reader-target=\"lightboxImage lightboxPanel\""
     end
   end
 
