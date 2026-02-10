@@ -2,6 +2,29 @@ require "test_helper"
 
 class SourcesControllerTest < ActionDispatch::IntegrationTest
   class FakeAdapter
+    def supports_browse?
+      true
+    end
+
+    def browse_page_size
+      20
+    end
+
+    def browse_sort_options
+      %w[latest popular alphabetical]
+    end
+
+    def browse(sort:, page:, limit:)
+      [
+        ResultTypes::BrowseResult.new(
+          id: "browse-#{sort}-#{page}-#{limit}",
+          title: "Browse Series",
+          url: "https://weebcentral.com/series/BROWSE",
+          cover_url: "https://img.example.com/browse-cover.jpg"
+        )
+      ]
+    end
+
     def search(_query)
       [
         ResultTypes::SearchResult.new(
@@ -58,13 +81,36 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  def test_import_creates_series
+  def test_browse_sort_control_auto_submits_without_apply_button
     with_adapter(FakeAdapter.new) do
-      post "/sources/weeb-central/import", params: { series_url: "https://weebcentral.com/series/OP" }
-      # Find the newly created series to get its public_id-slug format
+      get "/sources/weeb-central/browse", params: { sort: "latest" }
+
+      assert_response :success
+      assert_select "turbo-frame#browse-content form select[name='sort'][data-action='change->auto-submit#submit']"
+      assert_select "turbo-frame#browse-content button", text: "Apply", count: 0
+    end
+  end
+
+  def test_import_creates_series
+    user_series_follows(:one).update!(download_policy: :auto_download)
+
+    with_adapter(FakeAdapter.new) do
+      assert_enqueued_with(job: DownloadAllJob) do
+        post "/sources/weeb-central/import", params: { series_url: "https://weebcentral.com/series/OP" }
+      end
       series = Series.find_by(canonical_title: "One Piece")
 
       assert_redirected_to library_series_path(series_slug: series.to_param)
+    end
+  end
+
+  def test_import_respects_notify_only_policy_without_queuing_downloads
+    user_series_follows(:one).update!(download_policy: :notify_only)
+
+    with_adapter(FakeAdapter.new) do
+      assert_no_enqueued_jobs(only: DownloadAllJob) do
+        post "/sources/weeb-central/import", params: { series_url: "https://weebcentral.com/series/OP" }
+      end
     end
   end
 

@@ -273,9 +273,40 @@ class SeriesController < ApplicationController
       @chapter_progress_map = {}
     end
 
+    build_reading_cta
+
     # Load error state for the current source
     @series_source = @series.series_sources.find_by(source: @source)
     @check_error = @series_source if @series_source&.check_failing?
+  end
+
+  def build_reading_cta
+    @reading_cta_path = nil
+    @reading_cta_label = nil
+    return if @chapters.empty?
+
+    started_reading = current_user && @chapter_progress_map.any?
+    target_chapter = reading_target_chapter(started_reading: started_reading)
+    return unless target_chapter
+
+    @reading_cta_path = source_series_chapter_path(
+      source_slug: @source.slug,
+      series_slug: @series.to_param,
+      chapter_identifier: chapter_identifier(target_chapter)
+    )
+    @reading_cta_label = started_reading ? "Continue reading" : "Start reading"
+  end
+
+  def reading_target_chapter(started_reading:)
+    return @chapters.first unless started_reading
+
+    in_progress = @chapter_progress_map.values
+                                    .select { |progress| progress.status == "in_progress" }
+                                    .max_by(&:progressed_at)
+    return @chapter_progress_map.key(in_progress)&.then { |id| @chapters.find { |chapter| chapter.id == id } } if in_progress
+
+    first_unread = @chapters.find { |chapter| @chapter_progress_map[chapter.id]&.status != "completed" }
+    first_unread || @chapters.first
   end
 
   def series_params

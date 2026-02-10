@@ -8,7 +8,7 @@ class FollowsController < ApplicationController
   def create
     @follow = current_user.user_series_follows.build(
       library_series: @library_series,
-      download_policy: params[:download_policy] || :notify_only
+      download_policy: params[:download_policy] || :auto_download
     )
 
     if @follow.save
@@ -77,6 +77,8 @@ class FollowsController < ApplicationController
     streams = []
     streams << turbo_stream.replace("follow-controls",
       UI::FollowControlsComponent.new(series: @series, user_follow: user_follow))
+    streams << turbo_stream.replace("follow-preferences",
+      UI::FollowPreferencesComponent.new(user_follow: user_follow))
     streams << turbo_stream.append("toast-container",
       UI::ToastComponent.new(message: notice, variant: :success)) if notice.present?
     streams

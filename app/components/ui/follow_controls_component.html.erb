@@ -1,4 +1,4 @@
-<div class="flex flex-wrap items-center gap-3" id="follow-controls">
+<div class="flex flex-wrap items-center gap-2" id="follow-controls">
   <% if user_follow %>
     <%= render UI::ToggleButtonComponent.new(
       active: true,
@@ -9,27 +9,6 @@
       method: :delete,
       data: { turbo_confirm: "Unfollow this series?" }
     ) %>
-    <%= form_with model: user_follow, url: helpers.follow_path(user_follow), method: :patch do |f| %>
-      <%= render UI::ToggleSwitchComponent.new(
-        form: f,
-        method: :download_policy,
-        label: "Auto-download",
-        on_value: "auto_download",
-        off_value: "notify_only",
-        auto_submit: true
-      ) %>
-    <% end %>
-    <%= form_with model: user_follow, url: helpers.follow_path(user_follow), method: :patch, class: "flex items-center gap-1.5" do |f| %>
-      <%= helpers.icon "clock", class: "h-3.5 w-3.5 text-muted-2" %>
-      <%= render UI::AutoSelectComponent.new(
-        form: f,
-        method: :check_interval_minutes,
-        options: interval_options,
-        selected: user_follow.check_interval_minutes,
-        size: :sm,
-        full_width: false
-      ) %>
-    <% end %>
   <% else %>
     <% if series.library_series %>
       <%= form_with url: helpers.follows_path, method: :post do |f| %>

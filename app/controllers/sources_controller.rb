@@ -116,11 +116,16 @@ class SourcesController < ApplicationController
     series.ensure_library_series!
 
     # Auto-follow for the importing user
-    current_user.user_series_follows.find_or_create_by!(library_series: series.library_series) do |follow|
+    follow = current_user.user_series_follows.find_or_create_by!(library_series: series.library_series) do |follow|
       follow.download_policy = current_user.effective_download_policy
     end
 
-    flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}."
+    if follow.auto_download?
+      DownloadAllJob.perform_later(series.id, @source.id)
+      flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)} and queued downloads."
+    else
+      flash[:notice] = "Imported \"#{series.canonical_title}\" with #{chapter_count} #{'chapter'.pluralize(chapter_count)}."
+    end
     redirect_to library_series_path(series_slug: series.to_param)
   rescue Scrapers::Errors::ScraperError, StandardError => e
     Rails.logger.error "Import failed for #{series_url}: #{e.class} - #{e.message}"

@@ -208,10 +208,125 @@
   }
 
   /* Turbo Frame loading states -- visual feedback while frames fetch content */
-  turbo-frame[busy] {
+  turbo-frame[busy]:not(.has-loading-overlay) {
     opacity: 0.5;
     pointer-events: none;
     transition: opacity 0.15s ease;
+  }
+
+  turbo-frame.has-loading-overlay {
+    --loading-overlay-spinner-size: 1.5rem;
+    --loading-overlay-spinner-border: 3px;
+    position: relative;
+    isolation: isolate;
+  }
+
+  turbo-frame.has-loading-overlay.loading-overlay-sm {
+    --loading-overlay-spinner-size: 1rem;
+    --loading-overlay-spinner-border: 2px;
+  }
+
+  turbo-frame.has-loading-overlay.loading-overlay-lg {
+    --loading-overlay-spinner-size: 2rem;
+    --loading-overlay-spinner-border: 3px;
+  }
+
+  turbo-frame.has-loading-overlay[busy] {
+    pointer-events: none;
+  }
+
+  turbo-frame.has-loading-overlay[busy]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: rgba(11, 15, 20, 0.46);
+  }
+
+  turbo-frame.has-loading-overlay[busy]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--loading-overlay-spinner-size);
+    height: var(--loading-overlay-spinner-size);
+    margin-left: calc(var(--loading-overlay-spinner-size) * -0.5);
+    margin-top: calc(var(--loading-overlay-spinner-size) * -0.5);
+    border: var(--loading-overlay-spinner-border) solid rgba(154, 166, 184, 0.25);
+    border-top-color: var(--ds-accent);
+    border-radius: 9999px;
+    animation: spin 0.65s linear infinite;
+    z-index: 21;
+  }
+
+  /* Toggle switch: first-principles state styling based on input checked */
+  .ui-toggle-track {
+    --toggle-shift: 1.25rem;
+  }
+
+  .ui-toggle-track-sm {
+    --toggle-shift: 1rem;
+  }
+
+  .ui-toggle-track-md {
+    --toggle-shift: 1.25rem;
+  }
+
+  .ui-toggle-track-bg {
+    border: 1px solid var(--ds-border);
+    background: var(--ds-surface-2);
+    box-shadow: inset 0 0 0 1px rgba(44, 56, 73, 0.5);
+    transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out;
+  }
+
+  .ui-toggle-knob {
+    background: var(--ds-surface);
+    box-shadow: var(--ds-shadow-sm);
+    border: 1px solid rgba(44, 56, 73, 0.6);
+    transition: transform 200ms ease-in-out, background-color 200ms ease-in-out, border-color 200ms ease-in-out;
+  }
+
+  .ui-toggle-icon-off {
+    color: var(--ds-muted-2);
+    opacity: 1;
+    transition: opacity 200ms ease-in-out;
+  }
+
+  .ui-toggle-icon-on {
+    color: var(--ds-bg);
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+  }
+
+  .ui-toggle-input:focus-visible + .ui-toggle-track-bg {
+    outline: 2px solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ui-toggle-input:checked + .ui-toggle-track-bg {
+    border-color: rgba(111, 227, 181, 0.72);
+    background: var(--ds-success-soft);
+  }
+
+  .ui-toggle-input:checked ~ .ui-toggle-knob {
+    transform: translateX(var(--toggle-shift));
+    background: var(--ds-success);
+    border-color: rgba(111, 227, 181, 0.8);
+  }
+
+  .ui-toggle-input:checked ~ .ui-toggle-knob .ui-toggle-icon-off {
+    opacity: 0;
+  }
+
+  .ui-toggle-input:checked ~ .ui-toggle-knob .ui-toggle-icon-on {
+    opacity: 1;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in;
+  }
+
+  .ui-toggle-input:disabled + .ui-toggle-track-bg,
+  .ui-toggle-input:disabled ~ .ui-toggle-knob {
+    opacity: 0.6;
   }
 }
 

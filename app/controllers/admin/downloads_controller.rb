@@ -3,16 +3,26 @@ module Admin
     before_action :require_admin
     before_action :set_download, only: %i[restart cancel]
 
-    # Custom ordering: downloading first, then queued, then complete, then failed
+    # Custom ordering:
+    #   1) downloading (sorted by progress)
+    #   2) queued
+    #   3) complete
+    #   4) everything else
     STATUS_ORDER = Arel.sql(<<~SQL.squish)
       CASE download_status
         WHEN 'downloading' THEN 1
         WHEN 'queued' THEN 2
-        WHEN 'pending' THEN 3
-        WHEN 'complete' THEN 4
-        WHEN 'failed' THEN 5
-        ELSE 6
+        WHEN 'complete' THEN 3
+        ELSE 4
       END
+    SQL
+
+    DOWNLOAD_PROGRESS_ORDER = Arel.sql(<<~SQL.squish)
+      CASE
+        WHEN download_status = 'downloading'
+          THEN COALESCE(CAST(pages_downloaded AS FLOAT) / NULLIF(pages_expected, 0), 0)
+        ELSE NULL
+      END DESC
     SQL
 
     def index
@@ -20,13 +30,13 @@ module Admin
 
       @downloads = FileAsset.includes(release: { chapter: :series })
                             .where.not(download_status: %w[pending cancelled])
-                            .order(STATUS_ORDER, updated_at: :desc)
+                            .order(STATUS_ORDER, DOWNLOAD_PROGRESS_ORDER, updated_at: :desc)
 
       # Allow filtering by specific status, including cancelled if explicitly requested
       if params[:status].present?
         @downloads = FileAsset.includes(release: { chapter: :series })
                               .where(download_status: params[:status])
-                              .order(updated_at: :desc)
+                              .order(STATUS_ORDER, DOWNLOAD_PROGRESS_ORDER, updated_at: :desc)
       end
 
       @downloads = @downloads.page(params[:page]).per(25)
@@ -66,7 +76,7 @@ module Admin
     end
 
     def restart
-      if @download.download_status.in?(%w[failed downloading cancelled])
+      if @download.download_status.in?(%w[failed cancelled])
         @download.update!(
           download_status: "queued",
           download_error: nil,
@@ -77,7 +87,7 @@ module Admin
 
         flash[:notice] = "Download restarted successfully"
       else
-        flash[:alert] = "Can only restart failed, stuck, or cancelled downloads"
+        flash[:alert] = "Can only restart failed or cancelled downloads"
       end
 
       redirect_to admin_downloads_path(status: params[:status])

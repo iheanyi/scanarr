@@ -114,32 +114,56 @@
         </div>
       <% end %>
 
-      <div class="flex flex-wrap items-center gap-3 mt-4">
+      <div class="mt-4 flex flex-col gap-y-2 items-start">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <% if @reading_cta_path.present? %>
+            <%= render UI::ButtonComponent.new(
+              variant: :secondary,
+              size: :sm,
+              href: @reading_cta_path,
+              data: { turbo_frame: "_top" }
+            ) do %>
+              <%= @reading_cta_label %>
+              <%= icon "chevron-right", class: "h-4 w-4" %>
+            <% end %>
+          <% end %>
+
+          <% if user_signed_in? %>
+            <%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %>
+          <% end %>
+
+          <%= form_with model: @series,
+                        url: source_series_update_path(source_slug: @source.slug, series_slug: @series.to_param),
+                        method: :patch,
+                        class: "inline-flex min-w-0 items-center leading-none",
+                        data: { controller: "auto-submit", turbo_submits_with: "Updating..." } do |form| %>
+            <div class="relative inline-flex items-center">
+              <span class="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-2.5">
+                <%= icon "book-open", class: "h-4 w-4 text-muted" %>
+              </span>
+              <%= render UI::AutoSelectComponent.new(
+                form: form,
+                method: :reading_style,
+                options: [
+                  [ "Left to Right", "left_to_right" ],
+                  [ "Right to Left", "right_to_left" ],
+                  [ "Long Strip", "long_strip" ],
+                  [ "Webcomic", "webcomic" ]
+                ],
+                selected: @series.reading_style || "left_to_right",
+                size: :sm,
+                full_width: false,
+                aria: { label: "Reading style" },
+                class: "h-8 w-auto rounded-md border-border/80 bg-surface pl-8 pr-8 text-xs font-medium shadow-sm hover:border-muted"
+              ) %>
+            </div>
+          <% end %>
+        </div>
+
         <% if user_signed_in? %>
-          <%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %>
-        <% end %>
-
-        <span class="hidden sm:block h-5 w-px bg-border"></span>
-
-        <%= form_with model: @series,
-                      url: source_series_update_path(source_slug: @source.slug, series_slug: @series.to_param),
-                      method: :patch,
-                      class: "flex items-center gap-2",
-                      data: { turbo_submits_with: "Updating..." } do |form| %>
-          <%= icon "book-open", class: "h-3.5 w-3.5 text-muted-2" %>
-          <%= render UI::AutoSelectComponent.new(
-            form: form,
-            method: :reading_style,
-            options: [
-              [ "Left to Right", "left_to_right" ],
-              [ "Right to Left", "right_to_left" ],
-              [ "Long Strip", "long_strip" ],
-              [ "Webcomic", "webcomic" ]
-            ],
-            selected: @series.reading_style || "left_to_right",
-            full_width: false,
-            size: :sm
-          ) %>
+          <div class="mt-1 flex items-center">
+            <%= render UI::FollowPreferencesComponent.new(user_follow: @user_follow) %>
+          </div>
         <% end %>
       </div>
     </div>
@@ -191,10 +215,9 @@
                   turbo_submits_with: "Queuing..."
                 }
               ) do %>
-                <svg data-loading-button-target="spinner" xmlns="http://www.w3.org/2000/svg" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <span class="hidden" data-loading-button-target="spinner">
+                  <%= render UI::SpinnerComponent.new(size: :sm, class: "text-current") %>
+                </span>
                 <%= icon "download", class: "h-4 w-4", data: { loading_button_target: "icon" } %>
                 <span data-loading-button-target="text">Download All</span>
                 <% if @downloadable_count > 0 %>

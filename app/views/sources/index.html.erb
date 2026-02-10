@@ -4,7 +4,7 @@
     description: "Pick a source to browse or search for series."
   ) %>
 
-  <%= turbo_frame_tag "sources-content" do %>
+  <%= turbo_frame_tag "sources-content", class: "has-loading-overlay" do %>
     <div class="space-y-4">
     <div class="flex items-center justify-between">
       <p class="text-sm text-muted-2"><%= @sources.length %> sources</p>

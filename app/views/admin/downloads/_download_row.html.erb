@@ -1,7 +1,7 @@
 <% chapter = download.release&.chapter %>
 <% series = chapter&.series %>
 <% progress_pct = download.pages_expected.to_i > 0 ? (download.pages_downloaded.to_f / download.pages_expected * 100).round : 0 %>
-<% can_restart = download.download_status.in?(%w[failed downloading cancelled]) %>
+<% can_restart = download.download_status.in?(%w[failed cancelled]) %>
 <% is_stuck = download.download_status == "downloading" && download.updated_at < 10.minutes.ago %>
 <tr id="<%= dom_id(download) %>">
   <td class="px-4 py-3">
@@ -56,12 +56,14 @@
         ) %>
       <% end %>
       <% if download.download_status.in?(%w[queued pending downloading]) %>
+        <% cancel_target = series && chapter ? "#{series.canonical_title} • Chapter #{chapter.chapter_number}" : "this download" %>
+        <% cancel_confirm = download.download_status == "downloading" ? "Cancel download for #{cancel_target}? Any partial progress will stop and can be restarted later." : "Remove #{cancel_target} from the queue?" %>
         <%= render UI::ConfirmButtonComponent.new(
           label: "Cancel",
           url: admin_download_cancel_path(download, status: params[:status]),
           method: :post,
           variant: :danger,
-          confirm: "Cancel this download?",
+          confirm: cancel_confirm,
           icon: "x",
           compact: true
         ) %>
