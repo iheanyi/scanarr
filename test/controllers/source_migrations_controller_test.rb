@@ -17,14 +17,12 @@ class SourceMigrationsControllerTest < ActionDispatch::IntegrationTest
       )
     end
 
-    Scrapers::AdapterRegistry.stub(:registered?, true) do
-      Scrapers::AdapterRegistry.stub(:for, fake_adapter) do
-        post library_series_migrate_path(series_slug: series.to_param), params: {
-          from_source_id: from_source.id,
-          to_source_id: to_source.id,
-          target_series_url: "https://example.com/one-piece"
-        }
-      end
+    with_stubbed_adapter_registry(registered: true, adapter: fake_adapter) do
+      post library_series_migrate_path(series_slug: series.to_param), params: {
+        from_source_id: from_source.id,
+        to_source_id: to_source.id,
+        target_series_url: "https://example.com/one-piece"
+      }
     end
 
     assert_redirected_to library_series_path(series_slug: series.to_param)
@@ -64,18 +62,35 @@ class SourceMigrationsControllerTest < ActionDispatch::IntegrationTest
       )
     end
 
-    Scrapers::AdapterRegistry.stub(:registered?, true) do
-      Scrapers::AdapterRegistry.stub(:for, fake_adapter) do
-        post library_series_migrate_path(series_slug: series.to_param), params: {
-          from_source_id: from_source.id,
-          to_source_id: to_source.id,
-          target_series_url: "https://example.com/one-piece"
-        }
-      end
+    with_stubbed_adapter_registry(registered: true, adapter: fake_adapter) do
+      post library_series_migrate_path(series_slug: series.to_param), params: {
+        from_source_id: from_source.id,
+        to_source_id: to_source.id,
+        target_series_url: "https://example.com/one-piece"
+      }
     end
 
     assert_redirected_to library_series_migration_path(series_slug: series.to_param, from_source_id: from_source.id)
     assert_includes flash[:alert], "Failed to link/migrate"
     assert_nil SeriesSource.find_by(series: series, source: to_source)
+  end
+
+  private
+
+  def with_stubbed_adapter_registry(registered:, adapter:)
+    original_registered = Scrapers::AdapterRegistry.method(:registered?)
+    original_for = Scrapers::AdapterRegistry.method(:for)
+
+    Scrapers::AdapterRegistry.define_singleton_method(:registered?) do |_source_key|
+      registered
+    end
+    Scrapers::AdapterRegistry.define_singleton_method(:for) do |_source|
+      adapter
+    end
+
+    yield
+  ensure
+    Scrapers::AdapterRegistry.define_singleton_method(:registered?, original_registered)
+    Scrapers::AdapterRegistry.define_singleton_method(:for, original_for)
   end
 end
