@@ -1,7 +1,7 @@
 class SourcesController < ApplicationController
-  before_action :set_source, only: %i[search browse preview preview_read import]
+  before_action :set_source, only: %i[search browse preview preview_read preview_image import]
 
-  helper_method :source_slug
+  helper_method :source_slug, :preview_image_token_for
 
   SORT_OPTIONS = {
     "name_asc" => "Name A–Z",
@@ -10,6 +10,8 @@ class SourcesController < ApplicationController
   }.freeze
   PREVIEW_CHAPTER_LIMIT = 50
   READING_STYLES = %w[left_to_right right_to_left long_strip webcomic].freeze
+  PREVIEW_IMAGE_TOKEN_PURPOSE = "source_preview_image".freeze
+  PREVIEW_IMAGE_TOKEN_TTL = 6.hours
 
   def index
     @sort_by = params[:sort_by].presence || "name_asc"
@@ -128,6 +130,34 @@ class SourcesController < ApplicationController
     Rails.logger.warn "Preview read failed for #{@source.key}: #{e.class} - #{e.message}"
   end
 
+  def preview_image
+    token_payload = preview_image_payload(params[:token])
+    return head :forbidden if token_payload.blank?
+
+    page_url = token_payload.fetch("page_url", "").to_s
+    source_slug = token_payload.fetch("source_slug", "").to_s
+    return head :forbidden if page_url.blank? || source_slug != @source.slug
+
+    unless Scrapers::AdapterRegistry.registered?(@source.key)
+      return head :not_found
+    end
+
+    adapter = Scrapers::AdapterRegistry.for(@source)
+    response = adapter.http.get(page_url)
+
+    unless response.status.to_i == 200
+      Rails.logger.warn "Preview image proxy failed for #{@source.key}: status=#{response.status} url=#{page_url}"
+      return head :bad_gateway
+    end
+
+    content_type = response.headers["content-type"].to_s
+    content_type = "application/octet-stream" if content_type.blank?
+    send_data response.body, type: content_type, disposition: "inline"
+  rescue StandardError => e
+    Rails.logger.warn "Preview image proxy error for #{@source.key}: #{e.class} - #{e.message}"
+    head :bad_gateway
+  end
+
   def search
     @query = params[:q].to_s.strip
     @results = []
@@ -181,6 +211,29 @@ class SourcesController < ApplicationController
   end
 
   private
+
+  def preview_image_token_for(page_url)
+    return "" if page_url.blank?
+
+    preview_image_verifier.generate(
+      {
+        source_slug: @source.slug,
+        page_url: page_url
+      },
+      purpose: PREVIEW_IMAGE_TOKEN_PURPOSE,
+      expires_in: PREVIEW_IMAGE_TOKEN_TTL
+    )
+  end
+
+  def preview_image_payload(token)
+    return nil if token.blank?
+
+    preview_image_verifier.verified(token, purpose: PREVIEW_IMAGE_TOKEN_PURPOSE)
+  end
+
+  def preview_image_verifier
+    Rails.application.message_verifier(:source_preview_image)
+  end
 
   def preview_navigation_for(chapters, chapter)
     return [ nil, nil ] if chapter.nil? || chapter.url.blank?

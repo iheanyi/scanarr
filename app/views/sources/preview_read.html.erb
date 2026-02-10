@@ -206,7 +206,7 @@
         <article data-reader-target="page"
                  data-action="click->reader#openLightboxForPage"
                  class="<%= page_class %>">
-          <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
+          <%= image_tag source_preview_image_path(source_slug: source_slug(@source), token: preview_image_token_for(page.url)), alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
         </article>
       <% end %>
     </section>

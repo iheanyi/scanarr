@@ -2,6 +2,19 @@ require "test_helper"
 
 class SourcesControllerTest < ActionDispatch::IntegrationTest
   class FakeAdapter
+    class FakeHttpClient
+      Response = Struct.new(:status, :body, :headers, :url, keyword_init: true)
+
+      def get(url)
+        Response.new(
+          status: 200,
+          body: "fake-image-data",
+          headers: { "content-type" => "image/jpeg" },
+          url: url
+        )
+      end
+    end
+
     def supports_browse?
       true
     end
@@ -55,6 +68,10 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
         ResultTypes::Page.new(index: 1, url: "https://img.example.com/#{chapter_id}-1.jpg", mime_type: "image/jpeg"),
         ResultTypes::Page.new(index: 2, url: "https://img.example.com/#{chapter_id}-2.jpg", mime_type: "image/jpeg")
       ]
+    end
+
+    def http
+      @http ||= FakeHttpClient.new
     end
   end
 
@@ -144,11 +161,34 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_select "main[data-controller='reader']"
-      assert_select "img[src='https://img.example.com/02CHAPTER-1.jpg']"
-      assert_select "img[src='https://img.example.com/02CHAPTER-2.jpg']"
+      assert_select "img[src*='/sources/weeb-central/preview/image?token=']", count: 2
       assert_select "a", text: "Previous Chapter", count: 1
       assert_select "a", text: "Next Chapter", count: 1
       assert_select "h2", text: "Chapter 2"
+    end
+  end
+
+  def test_preview_image_proxies_adapter_response
+    token = Rails.application.message_verifier(:source_preview_image).generate(
+      { source_slug: "weeb-central", page_url: "https://img.example.com/02CHAPTER-1.jpg" },
+      purpose: "source_preview_image",
+      expires_in: 6.hours
+    )
+
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/preview/image", params: { token: token }
+
+      assert_response :success
+      assert_equal "image/jpeg", @response.media_type
+      assert_equal "fake-image-data", @response.body
+    end
+  end
+
+  def test_preview_image_rejects_invalid_token
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/preview/image", params: { token: "invalid" }
+
+      assert_response :forbidden
     end
   end
 
