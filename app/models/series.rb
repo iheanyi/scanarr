@@ -30,8 +30,14 @@ class Series < ApplicationRecord
 
   # Returns the cover image URL - prefers local attachment, falls back to remote URL
   def cover_image_url
-    if cover.attached?
-      Rails.application.routes.url_helpers.rails_blob_path(cover, only_path: true)
+    return cover_url unless cover.attached?
+
+    url_helpers = Rails.application.routes.url_helpers
+
+    if url_helpers.respond_to?(:rails_blob_path)
+      url_helpers.rails_blob_path(cover, only_path: true)
+    elsif url_helpers.respond_to?(:rails_storage_proxy_path)
+      url_helpers.rails_storage_proxy_path(cover, only_path: true)
     else
       cover_url
     end
