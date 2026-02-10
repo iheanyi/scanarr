@@ -587,9 +587,10 @@ export default class extends Controller {
     const movedX = Math.abs(event.clientX - this.pointerStartX)
     const movedY = Math.abs(event.clientY - this.pointerStartY)
     const duration = Date.now() - this.pointerStartedAt
+    const pointerMoved = this.pointerMoved
     this.resetPointerState()
 
-    if (this.pointerMoved || movedX > this.pointerTapDistance || movedY > this.pointerTapDistance || duration > this.pointerTapDurationMs) {
+    if (pointerMoved || movedX > this.pointerTapDistance || movedY > this.pointerTapDistance || duration > this.pointerTapDurationMs) {
       return
     }
 
@@ -734,7 +735,7 @@ export default class extends Controller {
   }
 
   private async flushProgressQueue() {
-    if (!this.hasProgressUrlValue || !this.progressUrlValue || !navigator.onLine) return
+    if (!navigator.onLine) return
     const queue = this.progressQueue()
     if (queue.length === 0) return
 
