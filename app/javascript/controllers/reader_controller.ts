@@ -47,7 +47,7 @@ export function navigationScrollBehaviorForStyle(style: string, prefersReducedMo
 }
 
 export default class extends Controller {
-  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "lightboxScroll", "lightboxStrip", "lightboxHint", "lightboxProgressText", "nextChapterOverlay", "nextChapterCountdown"]
+  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "lightboxScroll", "lightboxStrip", "lightboxHint", "lightboxProgressText", "lightboxPanel", "nextChapterOverlay", "nextChapterCountdown"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
   declare readonly pageTargets: HTMLElement[]
   declare readonly viewportTarget: HTMLElement
@@ -70,6 +70,8 @@ export default class extends Controller {
   declare readonly lightboxProgressTextTarget: HTMLElement
   declare readonly hasLightboxHintTarget: boolean
   declare readonly hasLightboxProgressTextTarget: boolean
+  declare readonly lightboxPanelTargets: HTMLElement[]
+  declare readonly hasLightboxPanelTarget: boolean
   declare readonly nextChapterOverlayTarget: HTMLElement
   declare readonly nextChapterCountdownTarget: HTMLElement
   declare readonly hasNextChapterOverlayTarget: boolean
@@ -100,6 +102,8 @@ export default class extends Controller {
   private verticalLightboxObserver?: IntersectionObserver
   private verticalLightboxPagesByIndex: Array<HTMLElement | undefined> = []
   private lightboxHintFadeTimeout?: ReturnType<typeof setTimeout>
+  private lightboxCloseTimeout?: ReturnType<typeof setTimeout>
+  private lightboxImageSwapTimeout?: ReturnType<typeof setTimeout>
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -120,6 +124,8 @@ export default class extends Controller {
     this.observer?.disconnect()
     this.teardownVerticalLightbox()
     if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
+    if (this.lightboxCloseTimeout) clearTimeout(this.lightboxCloseTimeout)
+    if (this.lightboxImageSwapTimeout) clearTimeout(this.lightboxImageSwapTimeout)
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
     this.clearNextChapterCountdown()
   }
@@ -190,8 +196,7 @@ export default class extends Controller {
     event?.preventDefault()
     if (!this.hasLightboxTarget) return
     this.lightboxOpen = true
-    this.lightboxTarget.classList.remove("hidden")
-    this.lightboxTarget.classList.add("flex")
+    this.beginLightboxEnter()
 
     if (this.usesVerticalLightbox()) {
       this.setupVerticalLightbox()
@@ -210,10 +215,10 @@ export default class extends Controller {
     const shouldSyncVerticalFocus = this.usesVerticalLightbox()
     this.lightboxOpen = false
     this.resetLightboxSwipe()
-    this.lightboxTarget.classList.add("hidden")
-    this.lightboxTarget.classList.remove("flex")
+    this.beginLightboxExit()
     document.body.style.overflow = ""
     if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
+    if (this.lightboxImageSwapTimeout) clearTimeout(this.lightboxImageSwapTimeout)
     if (shouldSyncVerticalFocus) {
       this.teardownVerticalLightbox()
       this.scrollToIndex(this.currentIndex, "instant")
@@ -402,6 +407,54 @@ export default class extends Controller {
 
   private prefersReducedMotion(): boolean {
     return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+  }
+
+  private lightboxTransitionDurationMs() {
+    return this.prefersReducedMotion() ? 0 : 220
+  }
+
+  private beginLightboxEnter() {
+    if (!this.hasLightboxTarget) return
+
+    if (this.lightboxCloseTimeout) clearTimeout(this.lightboxCloseTimeout)
+    this.lightboxTarget.classList.remove("hidden")
+    this.lightboxTarget.classList.add("flex")
+
+    if (this.prefersReducedMotion()) {
+      this.lightboxTarget.classList.remove("opacity-0")
+      this.lightboxPanelTargets.forEach((panel) => {
+        panel.classList.remove("opacity-0", "scale-[0.98]", "translate-y-1")
+      })
+      return
+    }
+
+    requestAnimationFrame(() => {
+      this.lightboxTarget.classList.remove("opacity-0")
+      this.lightboxPanelTargets.forEach((panel) => {
+        panel.classList.remove("opacity-0", "scale-[0.98]", "translate-y-1")
+      })
+    })
+  }
+
+  private beginLightboxExit() {
+    if (!this.hasLightboxTarget) return
+
+    if (this.lightboxCloseTimeout) clearTimeout(this.lightboxCloseTimeout)
+
+    this.lightboxTarget.classList.add("opacity-0")
+    this.lightboxPanelTargets.forEach((panel) => {
+      panel.classList.add("opacity-0")
+      if (this.hasLightboxImageTarget && panel === this.lightboxImageTarget) {
+        panel.classList.add("scale-[0.98]")
+      } else {
+        panel.classList.add("translate-y-1")
+      }
+    })
+
+    this.lightboxCloseTimeout = setTimeout(() => {
+      this.lightboxTarget.classList.add("hidden")
+      this.lightboxTarget.classList.remove("flex")
+    }, this.lightboxTransitionDurationMs())
   }
 
   private showVerticalLightboxHint() {
@@ -657,7 +710,21 @@ export default class extends Controller {
     if (!page) return
     const image = page.querySelector("img") as HTMLImageElement | null
     if (!image) return
-    this.lightboxImageTarget.src = image.currentSrc || image.src
+    const nextSrc = image.currentSrc || image.src
+    const currentSrc = this.lightboxImageTarget.currentSrc || this.lightboxImageTarget.src
+
+    if (this.lightboxImageSwapTimeout) clearTimeout(this.lightboxImageSwapTimeout)
+    if (!this.prefersReducedMotion() && currentSrc && currentSrc !== nextSrc) {
+      this.lightboxImageTarget.classList.add("opacity-0")
+      this.lightboxImageSwapTimeout = setTimeout(() => {
+        this.lightboxImageTarget.src = nextSrc
+        this.lightboxImageTarget.classList.remove("opacity-0")
+      }, 90)
+    } else {
+      this.lightboxImageTarget.src = nextSrc
+      this.lightboxImageTarget.classList.remove("opacity-0")
+    }
+
     if (image.alt) {
       this.lightboxImageTarget.alt = image.alt
     }

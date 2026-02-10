@@ -249,7 +249,7 @@
   <%# Lightbox overlay - must be inside controller scope %>
   <div data-reader-target="lightbox"
        data-action="pointerdown->reader#lightboxPointerDown pointermove->reader#lightboxPointerMove pointerup->reader#lightboxPointerUp pointercancel->reader#lightboxPointerCancel"
-       class="fixed inset-0 z-50 hidden bg-black/90 <%= is_horizontal ? "items-center justify-center p-6" : "items-stretch justify-stretch" %>">
+       class="fixed inset-0 z-50 hidden bg-black/90 opacity-0 transition-opacity duration-200 ease-out <%= is_horizontal ? "items-center justify-center p-6" : "items-stretch justify-stretch" %>">
     <button type="button"
             class="absolute right-6 top-6 rounded-full border border-border bg-surface/80 px-3 py-2 text-sm font-semibold text-foreground hover:bg-surface-2"
             data-action="click->reader#closeLightbox">
@@ -272,16 +272,16 @@
               aria-label="Next page">
         &rarr;
       </button>
-      <img data-reader-target="lightboxImage"
-           class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl"
+      <img data-reader-target="lightboxImage lightboxPanel"
+           class="max-h-[90vh] w-auto max-w-[90vw] rounded-lg object-contain shadow-2xl transition-[opacity,transform] duration-200 ease-out opacity-0 scale-[0.98]"
            alt="Reader page">
     <% else %>
       <div data-reader-target="lightboxHint"
            class="pointer-events-none absolute left-1/2 top-5 -translate-x-1/2 rounded-full border border-border bg-surface/70 px-3 py-1 text-xs text-foreground transition-opacity duration-700">
         Focus mode: scroll vertically
       </div>
-      <div data-reader-target="lightboxScroll"
-           class="h-full w-full overflow-y-auto overscroll-contain px-4 pb-10 pt-20">
+      <div data-reader-target="lightboxScroll lightboxPanel"
+           class="h-full w-full overflow-y-auto overscroll-contain px-4 pb-10 pt-20 transition-[opacity,transform] duration-200 ease-out opacity-0 translate-y-1">
         <div data-reader-target="lightboxStrip"
              class="mx-auto flex w-full max-w-4xl flex-col gap-4">
         </div>
