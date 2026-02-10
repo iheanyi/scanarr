@@ -24,6 +24,8 @@ Rails.application.routes.draw do
   get "/library", to: "library#index", as: :library
   get "/library/random", to: "library#random", as: :library_random
   get "/library/:series_slug", to: "series#show_from_library", as: :library_series
+  get "/library/:series_slug/migrate", to: "source_migrations#series_preview", as: :library_series_migration
+  post "/library/:series_slug/migrate", to: "source_migrations#series_create", as: :library_series_migrate
   get "/calendar", to: "calendar#index", as: :calendar
   get "/stats", to: "stats#show", as: :stats
   get "/history", to: "reading_history#index", as: :reading_history

@@ -22,48 +22,72 @@
     </div>
   </section>
 
-  <% if @result.already_on_target.any? %>
-    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
-      <h2 class="text-lg font-semibold text-success">Will Migrate (<%= @result.already_on_target.size %>)</h2>
-      <p class="text-sm text-muted">These series exist on both sources. Source priority will be updated.</p>
+  <%= form_with url: source_migrations_path, method: :post, class: "space-y-6", data: { controller: "selection-toggle" } do |f| %>
+    <%= f.hidden_field :from_source_id, value: @from_source.id %>
+    <%= f.hidden_field :to_source_id, value: @to_source.id %>
+    <%= hidden_field_tag "series_ids[]", "" %>
 
-      <div class="divide-y divide-border">
-        <% @result.already_on_target.each do |series| %>
-          <div class="py-2">
-            <span class="text-sm font-medium text-foreground"><%= series.canonical_title %></span>
-          </div>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
-
-  <% if @result.no_match.any? %>
-    <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
-      <h2 class="text-lg font-semibold text-warning">Cannot Migrate (<%= @result.no_match.size %>)</h2>
-      <p class="text-sm text-muted">These series don't exist on the target source. They will remain on the current source.</p>
-
-      <div class="divide-y divide-border">
-        <% @result.no_match.each do |series| %>
-          <div class="py-2">
-            <span class="text-sm font-medium text-foreground"><%= series.canonical_title %></span>
-          </div>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
-
-  <div class="flex items-center gap-3">
     <% if @result.already_on_target.any? %>
-      <%= form_with url: source_migrations_path, method: :post do |f| %>
-        <%= f.hidden_field :from_source_id, value: @from_source.id %>
-        <%= f.hidden_field :to_source_id, value: @to_source.id %>
-        <%= f.submit "Execute Migration",
-                      class: "inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong cursor-pointer",
-                      data: { turbo_confirm: "Migrate #{@result.already_on_target.size} series from #{@from_source.name} to #{@to_source.name}?" } %>
-      <% end %>
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-success">Will Migrate (<%= @result.already_on_target.size %>)</h2>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-muted" data-selection-toggle-target="count"><%= @result.already_on_target.size %> selected</span>
+            <button type="button"
+                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
+                    data-action="selection-toggle#selectAll">
+              Check all
+            </button>
+            <button type="button"
+                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
+                    data-action="selection-toggle#clearAll">
+              Clear all
+            </button>
+          </div>
+        </div>
+        <p class="text-sm text-muted">Select the series you want to migrate. Source priority will be updated only for selected entries.</p>
+
+        <div class="divide-y divide-border">
+          <% @result.already_on_target.each do |series| %>
+            <label class="flex items-center gap-2 py-2 cursor-pointer">
+              <input type="checkbox"
+                     name="series_ids[]"
+                     value="<%= series.id %>"
+                     checked
+                     data-selection-toggle-target="checkbox"
+                     data-action="change->selection-toggle#toggle"
+                     class="h-4 w-4 rounded border-border text-accent focus:ring-accent">
+              <span class="text-sm font-medium text-foreground"><%= series.canonical_title %></span>
+            </label>
+          <% end %>
+        </div>
+      </section>
     <% end %>
 
-    <%= link_to "Back", source_migrations_path,
-                class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80" %>
-  </div>
+    <% if @result.no_match.any? %>
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+        <h2 class="text-lg font-semibold text-warning">Cannot Migrate (<%= @result.no_match.size %>)</h2>
+        <p class="text-sm text-muted">These series don't exist on the target source. They will remain on the current source.</p>
+
+        <div class="divide-y divide-border">
+          <% @result.no_match.each do |series| %>
+            <div class="py-2">
+              <span class="text-sm font-medium text-foreground"><%= series.canonical_title %></span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <div class="flex items-center gap-3">
+      <% if @result.already_on_target.any? %>
+        <%= f.submit "Execute Migration",
+                     class: "inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong cursor-pointer",
+                     data: { turbo_confirm: "Migrate selected series from #{@from_source.name} to #{@to_source.name}?" } %>
+      <% end %>
+
+      <%= link_to "Back", source_migrations_path,
+                  class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80" %>
+    </div>
+  <% end %>
 </div>

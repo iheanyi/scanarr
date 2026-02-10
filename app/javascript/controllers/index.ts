@@ -46,6 +46,9 @@ application.register("bulk-select", BulkSelectController)
 import LazyFrameController from "./lazy_frame_controller"
 application.register("lazy-frame", LazyFrameController)
 
+import SelectionToggleController from "./selection_toggle_controller"
+application.register("selection-toggle", SelectionToggleController)
+
 // ─── Custom Action Options ──────────────────────────────────────────────────
 // Inline replacements for stimulus-fx. Uses Stimulus's first-party
 // registerActionOption API -- no external dependency needed.

@@ -63,6 +63,13 @@
                     <%= source.name || source.key %>
                   </span>
                   <p class="line-clamp-2 font-semibold text-balance text-foreground"><%= result.title %></p>
+                  <p class="mt-1 text-xs text-muted tabular-nums">
+                    <% if result.respond_to?(:chapter_count) && result.chapter_count.present? %>
+                      <%= result.chapter_count %> <%= "chapter".pluralize(result.chapter_count) %>
+                    <% else %>
+                      Chapter count unavailable
+                    <% end %>
+                  </p>
                   <% if result.respond_to?(:author) && result.author.present? %>
                     <p class="mt-1 text-sm text-muted text-pretty">by <%= result.author %></p>
                   <% end %>
