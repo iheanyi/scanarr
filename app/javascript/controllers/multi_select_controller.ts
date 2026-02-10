@@ -121,7 +121,7 @@ export default class extends Controller {
     if (!checkbox) return
 
     checkbox.checked = false
-    this.update()
+    this.changed()
   }
 
   private updateSummary(selected: HTMLInputElement[]) {
