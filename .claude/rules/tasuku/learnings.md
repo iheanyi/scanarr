@@ -13,6 +13,7 @@ _Auto-synced from .tasuku/context/learnings.md_
 - When namespacing classes under Scrapers, always reference `Scrapers::AdapterRegistry` directly in app code; relying on a top-level alias can fail autoload timing and cause NameError in runtime paths.
 - Always default link-style UI::ButtonComponent instances to data-turbo-frame="_top" unless an explicit target is provided; this prevents Turbo Frame 'Content missing' navigation traps from omitted attributes.
 - Never mutate shared controller/service arrays from inside concurrent futures. Always return per-worker payloads (candidate/error) and aggregate sequentially on the calling thread to avoid dropped writes and racey state.
+- Always verify review-reported method/route names against the current branch before patching; stale diffs can reference actions/helpers that no longer exist and lead to unnecessary changes.
 
 ## Insights
 
