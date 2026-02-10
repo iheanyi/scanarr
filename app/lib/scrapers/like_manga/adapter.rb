@@ -32,7 +32,8 @@ module Scrapers
     # @param page [Integer] Page number (1-indexed)
     # @param limit [Integer] Ignored
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       sort_value = sort == "popular" ? "top-manga" : "lastest-chap"
       params = {
         "act" => "searchadvance",
@@ -53,7 +54,8 @@ module Scrapers
     # Search for manga by title
     # @param query [String] Search term
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       params = {
         "act" => "searchadvance",
         "f[keyword]" => query.strip

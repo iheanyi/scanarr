@@ -30,7 +30,8 @@ module Scrapers
     # @param page [Integer] Page number (1-indexed)
     # @param limit [Integer] Results per page (default 20)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       comics = fetch_comics_data
       return [] if comics.empty?
 
@@ -55,7 +56,8 @@ module Scrapers
     # Search comics by name (client-side filtering of full catalog)
     # @param query [String] Search term
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       comics = fetch_comics_data
       return [] if comics.empty?
 

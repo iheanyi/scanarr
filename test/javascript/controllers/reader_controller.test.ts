@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { resolveLightboxSwipeAction, resolveLightboxTapZoneAction } from '../../../app/javascript/controllers/reader_controller'
+import {
+  observerThresholdForStyle,
+  resolveLightboxSwipeAction,
+  resolveLightboxTapZoneAction
+} from '../../../app/javascript/controllers/reader_controller'
 
 /**
  * Unit tests for ReaderController URL handling logic.
@@ -108,6 +112,21 @@ describe('Reading Style Detection Logic', () => {
   it('detects continuous vertical mode for webtoon', () => {
     expect(isHorizontal('webtoon')).toBe(false)
     expect(isRtl('webtoon')).toBe(false)
+  })
+})
+
+describe('Intersection Observer Threshold Logic', () => {
+  it('uses a low threshold for webtoon mode', () => {
+    expect(observerThresholdForStyle('webtoon')).toBe(0)
+  })
+
+  it('uses paged threshold for horizontal mode', () => {
+    expect(observerThresholdForStyle('left_to_right')).toBe(0.5)
+    expect(observerThresholdForStyle('right_to_left')).toBe(0.5)
+  })
+
+  it('uses paged threshold for vertical paged mode', () => {
+    expect(observerThresholdForStyle('vertical')).toBe(0.5)
   })
 })
 

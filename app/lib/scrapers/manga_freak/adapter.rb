@@ -26,7 +26,8 @@ module Scrapers
     end
 
     # Browse latest releases with pagination
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       url = "#{base_url}/Latest_Releases/#{page}"
       response = http.get(url)
       return [] unless response.status == 200
@@ -40,7 +41,8 @@ module Scrapers
       []
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       normalized = query.strip.gsub(/\s+/, "_")
       url = "#{base_url}/Find/#{normalized}"
       response = http.get(url)

@@ -30,7 +30,8 @@ module Scrapers
       %w[latest popular alphabetical]
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       all_series = fetch_all_series
       return [] if all_series.empty?
 
@@ -127,7 +128,8 @@ module Scrapers
       []
     end
 
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       case sort
       when "popular"
         browse_popular(page: page, limit: limit)

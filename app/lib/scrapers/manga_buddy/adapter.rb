@@ -34,7 +34,8 @@ module Scrapers
     # @param page [Integer] Page number
     # @param limit [Integer] Ignored (uses site default)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       sort_param = sort.to_s.downcase == "popular" ? "views" : "updated_at"
       response = http.get("#{base_url}/search", params: { sort: sort_param, page: page.to_s })
       return [] unless response.status == 200
@@ -62,7 +63,8 @@ module Scrapers
     # Search for manga by title
     # @param query [String] Search term
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       response = http.get("#{base_url}/search", params: { q: query, page: "1" })
       return [] unless response.status == 200
 

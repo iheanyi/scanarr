@@ -10,7 +10,8 @@ module Scrapers
     # Regex pattern for chapter numbers (integers or decimals like 123.5)
     CHAPTER_NUMBER_PATTERN = '(\d+(?:\.\d+)?)'
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       # AsuraScans search via query param
       response = http.get("#{BASE_URL}/series", params: { name: query })
       return [] unless response.status == 200

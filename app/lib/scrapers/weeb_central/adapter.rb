@@ -30,7 +30,8 @@ module Scrapers
       32
     end
 
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       weeb_sort = SORT_MAP.fetch(sort.to_s, "Latest Updates")
       offset = (page - 1) * limit
 
@@ -50,7 +51,8 @@ module Scrapers
       parse_browse_results(doc)
     end
 
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       response = http.post("/search/simple", params: { location: "main" }, body: { text: query })
       doc = Nokogiri::HTML(response.body)
       nodes = doc.css("a").select { |link| link["href"]&.include?("/series/") }

@@ -30,7 +30,8 @@ module Scrapers
     # @param page [Integer] Page number (1-indexed)
     # @param limit [Integer] Ignored (uses site default)
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = filters
       body = {
         "action" => "madara_load_more",
         "page" => (page - 1).to_s,
@@ -57,7 +58,8 @@ module Scrapers
     # Search for manga by title
     # @param query [String] Search term
     # @return [Array<ResultTypes::SearchResult>]
-    def search(query)
+    def search(query, filters: {})
+      _ = filters
       response = http.get(base_url, params: { "s" => query, "post_type" => "wp-manga" })
       return [] unless response.status == 200
 

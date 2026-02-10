@@ -10,7 +10,8 @@ module Scrapers
       @http = http
     end
 
-    def search(_query)
+    def search(_query, filters: {})
+      _ = filters
       raise NotImplementedError, "#{self.class}#search not implemented"
     end
 
@@ -31,13 +32,39 @@ module Scrapers
     # @param page [Integer] Page number (1-indexed)
     # @param limit [Integer] Results per page
     # @return [Array<ResultTypes::BrowseResult>]
-    def browse(sort: "latest", page: 1, limit: 20)
+    def browse(sort: "latest", page: 1, limit: 20, filters: {})
+      _ = sort
+      _ = page
+      _ = limit
+      _ = filters
       raise Scrapers::Errors::BrowseNotSupportedError, "#{self.class} does not support browsing"
+    end
+
+    # Whether this adapter supports search functionality
+    def supports_search?
+      true
     end
 
     # Whether this adapter supports browse functionality
     def supports_browse?
       false
+    end
+
+    # Whether this adapter accepts server-side filter params for search/browse.
+    def supports_server_side_filters?
+      false
+    end
+
+    # Supported browse filters in [label, value] pairs.
+    # Example: { genres: [["Action", "action"]], statuses: [["Ongoing", "ongoing"]] }
+    def browse_filter_options
+      {}
+    end
+
+    # Supported search filters in [label, value] pairs.
+    # Example: { genres: [["Action", "action"]], statuses: [["Ongoing", "ongoing"]] }
+    def search_filter_options
+      {}
     end
 
     # Available sort options for browse (can be overridden by adapters)
