@@ -71,7 +71,7 @@ class User < ApplicationRecord
   end
 
   def effective_download_policy
-    default_download_policy.presence || "auto_download"
+    default_download_policy.presence || "notify_only"
   end
 
   def effective_check_interval_minutes

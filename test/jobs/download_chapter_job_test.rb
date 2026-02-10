@@ -148,7 +148,7 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
 
   def test_ensure_runtime_entities_raises_when_rehydration_is_incomplete
     job = DownloadChapterJob.new
-    job.define_singleton_method(:setup_entities) {}
+    job.define_singleton_method(:setup_entities) { }
 
     error = assert_raises(RuntimeError) do
       job.send(:ensure_runtime_entities!)

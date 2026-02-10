@@ -42,6 +42,7 @@ class SourcesBrowseAutoSubmitTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       form = css_select("turbo-frame#browse-content form").first
+
       assert form, "browse form must exist inside turbo-frame"
       assert_equal "browse-content", form["data-turbo-frame"], "form must target browse-content frame for async replace"
       assert_equal "advance", form["data-turbo-action"], "form should advance history on submit"
@@ -55,6 +56,7 @@ class SourcesBrowseAutoSubmitTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       page_input = css_select("turbo-frame#browse-content form input[name='page'][type='hidden']").first
+
       assert page_input, "form must include hidden page param"
       assert_equal "1", page_input["value"], "sort form must reset to page 1 so URL has sort and page in sync"
     end
