@@ -1,0 +1,94 @@
+<div class="space-y-8 max-w-5xl">
+  <%= render UI::PageHeaderComponent.new(
+    title: "Migrate #{@series.canonical_title}",
+    description: "Compare source chapter counts and choose where this series should migrate."
+  ) %>
+
+  <section class="rounded-lg border border-border bg-surface p-6">
+    <dl class="grid gap-2 text-sm sm:grid-cols-2">
+      <dt class="text-muted">Current source</dt>
+      <dd class="font-semibold text-foreground"><%= @from_source.name %></dd>
+      <dt class="text-muted">Current chapter count</dt>
+      <dd class="font-semibold text-foreground tabular-nums"><%= @current_chapter_count %></dd>
+    </dl>
+  </section>
+
+  <% if @discovery_errors.any? %>
+    <%= render UI::FlashMessageComponent.new(variant: :warning) do %>
+      <p class="font-medium text-pretty">Some sources could not be checked:</p>
+      <ul class="mt-1 space-y-0.5 text-xs text-warning/80">
+        <% @discovery_errors.first(6).each do |error| %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <h2 class="text-lg font-semibold">Target Source Candidates</h2>
+
+    <% if @candidates.any? %>
+      <div class="space-y-3">
+        <% @candidates.each do |candidate| %>
+          <div class="rounded-md border border-border bg-surface-2 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="space-y-1">
+                <p class="font-semibold text-foreground"><%= candidate.source.name %></p>
+                <p class="text-xs text-muted">
+                  Match: <%= candidate.result.title %>
+                  <% if candidate.confidence >= 0.9 %>
+                    (high confidence)
+                  <% elsif candidate.confidence >= 0.7 %>
+                    (medium confidence)
+                  <% else %>
+                    (low confidence)
+                  <% end %>
+                </p>
+                <p class="text-xs text-muted tabular-nums">
+                  <% if candidate.chapter_count.present? %>
+                    <%= candidate.chapter_count %> <%= "chapter".pluralize(candidate.chapter_count) %>
+                  <% else %>
+                    Chapter count unavailable
+                  <% end %>
+                </p>
+              </div>
+
+              <% if candidate.linked %>
+                <%= form_with url: library_series_migrate_path(series_slug: @series.to_param), method: :post do |f| %>
+                  <%= f.hidden_field :from_source_id, value: @from_source.id %>
+                  <%= f.hidden_field :to_source_id, value: candidate.source.id %>
+                  <%= f.submit "Migrate",
+                               class: "inline-flex items-center gap-2 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong cursor-pointer",
+                               data: { turbo_confirm: "Migrate #{@series.canonical_title} from #{@from_source.name} to #{candidate.source.name}?" } %>
+                <% end %>
+              <% else %>
+                <%= form_with url: library_series_migrate_path(series_slug: @series.to_param), method: :post do |f| %>
+                  <%= f.hidden_field :from_source_id, value: @from_source.id %>
+                  <%= f.hidden_field :to_source_id, value: candidate.source.id %>
+                  <%= f.hidden_field :target_series_url, value: candidate.result.url %>
+                  <%= f.submit "Link & Migrate",
+                               class: "inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-surface cursor-pointer",
+                               data: { turbo_confirm: "Link #{@series.canonical_title} to #{candidate.source.name} and migrate?" } %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <%= render UI::EmptyStateComponent.new(
+        title: "No source candidates found",
+        description: "Try again later or import this series from another source first.",
+        compact: true
+      ) do |empty| %>
+        <% empty.with_icon do %>
+          <%= icon "search", class: "h-6 w-6" %>
+        <% end %>
+      <% end %>
+    <% end %>
+  </section>
+
+  <%= link_to "Back to Series",
+              library_series_path(series_slug: @series.to_param),
+              class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80" %>
+</div>

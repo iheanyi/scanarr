@@ -3,10 +3,15 @@
 class SourceMigrationService
   Result = Data.define(:success, :migrated, :no_match, :already_on_target, :errors)
 
-  def initialize(from_source:, to_source:, user:)
+  def initialize(from_source:, to_source:, user:, series_ids: nil)
     @from_source = from_source
     @to_source = to_source
     @user = user
+    @selected_series_ids = if series_ids.nil?
+      nil
+    else
+      Array(series_ids).filter_map { |id| Integer(id, exception: false) }.uniq
+    end
     @migrated = []
     @no_match = []
     @already_on_target = []
@@ -62,12 +67,18 @@ class SourceMigrationService
 
   def affected_series
     @affected_series ||= begin
-      series_ids = @from_source.series
+      followed_series_ids = @from_source.series
         .joins(library_series: :user_series_follows)
         .where(user_series_follows: { user: @user })
         .select("series.id")
         .distinct
         .pluck(:id)
+
+      series_ids = if @selected_series_ids.nil?
+        followed_series_ids
+      else
+        followed_series_ids & @selected_series_ids
+      end
 
       Series.where(id: series_ids).includes(:sources, :series_sources)
     end

@@ -1,6 +1,15 @@
 module Scrapers
   module ResultTypes
-    SearchResult = Struct.new(:id, :title, :url, :cover_url, :language, :author, keyword_init: true)
+    SearchResult = Struct.new(
+      :id,
+      :title,
+      :url,
+      :cover_url,
+      :language,
+      :author,
+      :chapter_count, # Optional chapter count surfaced during search when available
+      keyword_init: true
+    )
 
     # Extended result for browse listings with additional metadata
     BrowseResult = Struct.new(

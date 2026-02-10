@@ -285,7 +285,8 @@ module Scrapers
         title: comic["name"],
         url: build_series_url(comic),
         cover_url: extract_cover_url(comic),
-        author: nil
+        author: nil,
+        chapter_count: comic["chapter_count"]
       )
     end
 
