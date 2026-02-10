@@ -83,13 +83,10 @@ future_sources:
   1998944621602463790: manga_plus          # MANGA Plus by SHUEISHA (37 manga in user backup)
   3170561626848540385: manga_katana        # MangaKatana (329 manga in user backup)
   4215511432986138970: mangabat            # Mangabat (64 manga in user backup)
-  2292947733994124621: manga_park          # MangaPark (81 manga in user backup)
   6484561431658238800: manga_fox           # MangaFox/Fanfox (12 manga in user backup)
   789561949979941461: manga_reader         # MangaReader.to (5 manga in user backup)
   6311653253665366075: hive_scans          # Hive Scans (1 manga in user backup)
-  9193816653713258037: manga_kakalots      # Mangakakalots (unoriginal) — variant of manga_kakalot
   4994699950662723787: manga_plus_creators # MANGA Plus Creators by SHUEISHA (9 manga in user backup)
-  6422096666751316291: infernal_void_scans # Infernal Void Scans (20 manga in user backup)
   4722346859737894698: death_toll_scans    # Death Toll Scans (2 manga in user backup)
   5160001879976399540: raven_scans         # Raven Scans (1 manga in user backup)
   # --- Known sources without adapters (not yet seen in backups) ---
@@ -105,4 +102,10 @@ future_sources:
   6338219619148105941: cubari              # Cubari
   1702911211040495914: global_comix        # GlobalComix
   3064755045370217842: hiperdex            # Hiperdex
+
+# Recognized historical/retired IDs (keep for import diagnostics, but do not prioritize for new adapters)
+retired_sources:
+  2292947733994124621: manga_park          # Not present in current keiyoushi/extensions index
+  9193816653713258037: manga_kakalots      # Not present in current keiyoushi/extensions index
+  6422096666751316291: infernal_void_scans # Replaced by active Hive Scans source ID
 

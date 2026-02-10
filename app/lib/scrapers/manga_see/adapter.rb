@@ -153,7 +153,13 @@ module Scrapers
     end
 
     def extract_slug_from_url(url)
-      url.match(%r{/manga/([^/]+)})[1]
+      manga_match = url.match(%r{/manga/([^/]+)})
+      return manga_match[1] if manga_match
+
+      read_online_match = url.match(%r{/read-online/(.+)-chapter-})
+      return read_online_match[1] if read_online_match
+
+      url
     end
 
     def extract_info(items, label)

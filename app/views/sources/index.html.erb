@@ -7,18 +7,35 @@
   <%= turbo_frame_tag "sources-content", class: "has-loading-overlay" do %>
     <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <p class="text-sm text-muted-2"><%= @sources.length %> sources</p>
-      <%= render UI::DropdownComponent.new(
-        label: @sort_options[@sort_by],
-        turbo_frame: "sources-content",
-        items: @sort_options.map { |key, label|
-          {
-            label: label,
-            href: root_path(sort_by: key),
-            selected: @sort_by == key
+      <div class="flex items-center gap-2 text-sm text-muted-2">
+        <p><%= @sources.length %> sources</p>
+        <% if @hidden_mature_count.positive? %>
+          <span aria-hidden="true">·</span>
+          <p><%= @hidden_mature_count %> 18+ hidden</p>
+        <% end %>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= render UI::ButtonComponent.new(
+          variant: @include_mature ? :secondary : :ghost,
+          size: :sm,
+          href: root_path(sort_by: @sort_by, include_mature: (@include_mature ? nil : "1")),
+          data: { turbo_frame: "sources-content" }
+        ) do %>
+          <%= icon(@include_mature ? "eye-off" : "eye", class: "h-3.5 w-3.5") %>
+          <%= @include_mature ? "Hide 18+" : "Show 18+" %>
+        <% end %>
+        <%= render UI::DropdownComponent.new(
+          label: @sort_options[@sort_by],
+          turbo_frame: "sources-content",
+          items: @sort_options.map { |key, label|
+            {
+              label: label,
+              href: root_path(sort_by: key, include_mature: (@include_mature ? "1" : nil)),
+              selected: @sort_by == key
+            }
           }
-        }
-      ) %>
+        ) %>
+      </div>
     </div>
 
     <% if @sources.any? %>
@@ -29,7 +46,10 @@
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <%= icon "globe", class: "h-4 w-4 text-accent" %>
-                  <h2 class="text-lg font-semibold text-balance"><%= source.name || source.key %></h2>
+                  <h2 class="text-lg font-semibold text-balance"><%= source.display_name %></h2>
+                  <% if source.mature_content? %>
+                    <%= render UI::BadgeComponent.new(label: "18+", variant: :warning, class: "px-2 py-0.5 text-[10px]") %>
+                  <% end %>
                 </div>
                 <p class="text-sm text-muted-2 truncate"><%= source.base_url %></p>
               </div>

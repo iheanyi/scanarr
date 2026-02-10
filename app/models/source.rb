@@ -1,4 +1,7 @@
 class Source < ApplicationRecord
+  MATURE_SOURCE_KEYS = %w[manhwa18 toonily].freeze
+  MATURE_CAPABILITY_KEY = "mature_content".freeze
+
   has_many :series_sources, dependent: :destroy
   has_many :series, through: :series_sources
   has_many :chapters, dependent: :nullify
@@ -35,6 +38,33 @@ class Source < ApplicationRecord
   # Clear any active rate limit
   def clear_rate_limit!
     update!(rate_limited_until: nil) if rate_limited_until.present?
+  end
+
+  def mature_content?
+    capabilities_hash = capabilities.is_a?(Hash) ? capabilities : {}
+    explicit_flag = if capabilities_hash.key?(MATURE_CAPABILITY_KEY)
+      capabilities_hash[MATURE_CAPABILITY_KEY]
+    elsif capabilities_hash.key?(MATURE_CAPABILITY_KEY.to_sym)
+      capabilities_hash[MATURE_CAPABILITY_KEY.to_sym]
+    end
+
+    return ActiveModel::Type::Boolean.new.cast(explicit_flag) unless explicit_flag.nil?
+
+    self.class.mature_source_key?(key)
+  end
+
+  def display_name
+    name.presence || key
+  end
+
+  def display_name_with_content_rating
+    mature_content? ? "#{display_name} (18+)" : display_name
+  end
+
+  class << self
+    def mature_source_key?(source_key)
+      MATURE_SOURCE_KEYS.include?(source_key.to_s)
+    end
   end
 
   private

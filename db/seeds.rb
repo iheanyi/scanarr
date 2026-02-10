@@ -20,23 +20,29 @@
   { key: "zero_scans", name: "Zero Scans", base_url: "https://zscans.com", source_type: "api", default_priority: 90, enabled: true },
   { key: "manhua_plus", name: "ManhuaPlus", base_url: "https://manhuaplus.com", source_type: "html", default_priority: 95, enabled: true },
   { key: "isekai_scan", name: "IsekaiScan", base_url: "https://isekaiscan.top", source_type: "html", default_priority: 100, enabled: true },
-  { key: "toonily", name: "Toonily", base_url: "https://toonily.me", source_type: "html", default_priority: 105, enabled: true },
+  { key: "toonily", name: "Toonily", base_url: "https://toonily.me", source_type: "html", default_priority: 105, enabled: true, capabilities: { mature_content: true } },
   { key: "drake_scans", name: "Drake Scans", base_url: "https://drakecomic.org", source_type: "html", default_priority: 110, enabled: true },
   { key: "like_manga", name: "LikeManga", base_url: "https://likemanga.ink", source_type: "html", default_priority: 115, enabled: true },
   { key: "manga_freak", name: "MangaFreak", base_url: "https://ww2.mangafreak.me", source_type: "html", default_priority: 120, enabled: true },
   { key: "manga_read", name: "MangaRead", base_url: "https://www.mangaread.org", source_type: "html", default_priority: 125, enabled: true },
   { key: "manga_geko", name: "MangaGeko", base_url: "https://www.mgeko.cc", source_type: "html", default_priority: 130, enabled: true },
-  { key: "manhwa18", name: "Manhwa18", base_url: "https://manhwa18.net", source_type: "html", default_priority: 135, enabled: true },
+  { key: "manhwa18", name: "Manhwa18", base_url: "https://manhwa18.net", source_type: "html", default_priority: 135, enabled: true, capabilities: { mature_content: true } },
   { key: "manga_nato", name: "MangaNato", base_url: "https://natomanga.com", source_type: "html", default_priority: 140, enabled: true },
   { key: "manga_fire", name: "MangaFire", base_url: "https://mangafire.to", source_type: "html", default_priority: 145, enabled: true }
 ].each do |attrs|
-  Source.find_or_create_by!(key: attrs[:key]) do |source|
+  source = Source.find_or_create_by!(key: attrs[:key]) do |source|
     source.name = attrs[:name]
     source.base_url = attrs[:base_url]
     source.source_type = attrs[:source_type]
     source.default_priority = attrs[:default_priority]
     source.enabled = attrs[:enabled]
   end
+
+  next unless attrs[:capabilities].present?
+
+  existing_capabilities = source.capabilities.is_a?(Hash) ? source.capabilities.deep_stringify_keys : {}
+  merged_capabilities = existing_capabilities.merge(attrs[:capabilities].deep_stringify_keys)
+  source.update!(capabilities: merged_capabilities) if merged_capabilities != existing_capabilities
 end
 
 puts "Seeded #{Source.count} sources"

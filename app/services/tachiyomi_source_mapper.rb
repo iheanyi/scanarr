@@ -14,7 +14,9 @@ class TachiyomiSourceMapper
 
     # Check if a Tachiyomi source ID is mapped to any Scanarr adapter
     def known?(tachiyomi_id)
-      source_map.key?(tachiyomi_id.to_i) || future_source_map.key?(tachiyomi_id.to_i)
+      source_map.key?(tachiyomi_id.to_i) ||
+        future_source_map.key?(tachiyomi_id.to_i) ||
+        retired_source_map.key?(tachiyomi_id.to_i)
     end
 
     # Returns unmapped source IDs from a parsed backup
@@ -30,6 +32,11 @@ class TachiyomiSourceMapper
     # Returns the future source name if we know it but don't have an adapter
     def future_source_name(tachiyomi_id)
       future_source_map[tachiyomi_id.to_i]
+    end
+
+    # Returns the retired source name if ID is recognized but no longer active.
+    def retired_source_name(tachiyomi_id)
+      retired_source_map[tachiyomi_id.to_i]
     end
 
     private
@@ -48,6 +55,10 @@ class TachiyomiSourceMapper
 
     def future_source_map
       @future_source_map ||= config["future_sources"].transform_keys(&:to_i)
+    end
+
+    def retired_source_map
+      @retired_source_map ||= config.fetch("retired_sources", {}).transform_keys(&:to_i)
     end
   end
 end

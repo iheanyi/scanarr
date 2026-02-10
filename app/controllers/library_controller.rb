@@ -29,7 +29,7 @@ class LibraryController < ApplicationController
     @genres = normalized_genres
     @status_options = STATUS_OPTIONS
     @source_options = Source.joins(:series_sources).distinct.order(:name, :key).map do |source|
-      [ source.name.presence || source.key, source.id.to_s ]
+      [ source.display_name_with_content_rating, source.id.to_s ]
     end
     @genre_options = ActiveRecord::Base.connection.select_values(<<~SQL)
       SELECT DISTINCT jsonb_array_elements_text(normalized_categories) AS genre

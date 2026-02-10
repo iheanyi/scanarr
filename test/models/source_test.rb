@@ -58,6 +58,30 @@ class SourceTest < ActiveSupport::TestCase
     end
   end
 
+  # --- Content Rating ---
+
+  def test_mature_content_defaults_to_false
+    assert_not @source.mature_content?
+  end
+
+  def test_mature_content_uses_capabilities_override
+    @source.update!(capabilities: { mature_content: true })
+
+    assert_predicate @source, :mature_content?
+  end
+
+  def test_mature_content_falls_back_to_known_mature_key
+    source = Source.new(key: "manhwa18", name: "Manhwa18")
+
+    assert_predicate source, :mature_content?
+  end
+
+  def test_display_name_with_content_rating_appends_flag_for_mature_source
+    source = Source.new(key: "manhwa18", name: "Manhwa18")
+
+    assert_equal "Manhwa18 (18+)", source.display_name_with_content_rating
+  end
+
   # --- Slug Generation ---
 
   def test_generates_slug_from_key

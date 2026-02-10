@@ -13,3 +13,12 @@ two:
   slug: example-source
   base_url: https://example.com
   enabled: false
+
+mature:
+  key: manhwa18
+  name: Manhwa18
+  slug: manhwa18
+  base_url: https://manhwa18.net
+  enabled: true
+  capabilities:
+    mature_content: true
