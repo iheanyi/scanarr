@@ -73,32 +73,32 @@
     <% end %>
   </section>
 
-  <% if @selected_genres.present? || @selected_statuses.present? %>
-    <section class="flex flex-wrap items-center gap-2">
-      <% @selected_genres.each do |genre| %>
-        <%= link_to source_search_path(source_search_params(genres: (@selected_genres - [ genre ]).presence)),
-                    class: "inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs text-foreground hover:border-accent/40" do %>
-          <span>Genre: <%= source_filter_label(:genres, genre) %></span>
-          <span aria-hidden="true">&times;</span>
-        <% end %>
-      <% end %>
-
-      <% @selected_statuses.each do |status| %>
-        <%= link_to source_search_path(source_search_params(statuses: (@selected_statuses - [ status ]).presence)),
-                    class: "inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs text-foreground hover:border-accent/40" do %>
-          <span>Status: <%= source_filter_label(:statuses, status) %></span>
-          <span aria-hidden="true">&times;</span>
-        <% end %>
-      <% end %>
-
-      <%= link_to "Clear all filters",
-                  source_search_path(source_search_params(genres: nil, statuses: nil)),
-                  class: "inline-flex items-center rounded-full border border-border px-2.5 py-1 text-xs text-muted hover:text-foreground hover:border-muted" %>
-    </section>
-  <% end %>
-
   <%= turbo_frame_tag "source-search-results", class: "has-loading-overlay" do %>
     <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
+
+    <% if @selected_genres.present? || @selected_statuses.present? %>
+      <section class="flex flex-wrap items-center gap-2">
+        <% @selected_genres.each do |genre| %>
+          <%= link_to source_search_path(source_search_params(genres: (@selected_genres - [ genre ]).presence)),
+                      class: "inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs text-foreground hover:border-accent/40" do %>
+            <span>Genre: <%= source_filter_label(:genres, genre) %></span>
+            <span aria-hidden="true">&times;</span>
+          <% end %>
+        <% end %>
+
+        <% @selected_statuses.each do |status| %>
+          <%= link_to source_search_path(source_search_params(statuses: (@selected_statuses - [ status ]).presence)),
+                      class: "inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs text-foreground hover:border-accent/40" do %>
+            <span>Status: <%= source_filter_label(:statuses, status) %></span>
+            <span aria-hidden="true">&times;</span>
+          <% end %>
+        <% end %>
+
+        <%= link_to "Clear all filters",
+                    source_search_path(source_search_params(genres: nil, statuses: nil)),
+                    class: "inline-flex items-center rounded-full border border-border px-2.5 py-1 text-xs text-muted hover:text-foreground hover:border-muted" %>
+      </section>
+    <% end %>
 
     <% if @query.present? %>
       <section class="space-y-3">
