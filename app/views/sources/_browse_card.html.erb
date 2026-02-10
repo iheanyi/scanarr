@@ -1,45 +1,67 @@
-<div class="group relative overflow-hidden rounded-lg border border-border/80 bg-surface hover:border-accent/40 transition-colors focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-background" data-browse-item>
-  <%= render UI::SeriesCoverComponent.new(
-    url: result.cover_url,
-    alt: "#{result.title} cover",
-    size: :full,
-    aspect: "2/3",
-    rounded: :none,
-    image_class: "transition-transform group-hover:scale-105",
-    class: "border-0"
-  ) %>
-  <div class="p-2">
-    <p class="text-sm font-medium text-foreground line-clamp-2" title="<%= result.title %>">
-      <%= result.title %>
-    </p>
-    <% if result.respond_to?(:author) && result.author.present? %>
-      <p class="mt-0.5 text-xs text-muted-2 truncate"><%= result.author %></p>
+<div class="group flex min-w-0 flex-col" data-browse-item>
+  <div class="relative">
+    <%= link_to source_preview_path(source_slug: source_slug(@source), series_url: result.url),
+                class: "block focus:outline-none",
+                data: { turbo_frame: "_top" } do %>
+      <div class="relative overflow-hidden rounded-lg border border-border/80 bg-surface-2 transition-colors group-hover:border-accent/40 group-focus-within:ring-2 group-focus-within:ring-accent group-focus-within:ring-offset-2 group-focus-within:ring-offset-background">
+        <%= render UI::SeriesCoverComponent.new(
+          url: result.cover_url,
+          alt: "#{result.title} cover",
+          size: :full,
+          aspect: "2/3",
+          rounded: :lg,
+          image_class: "transition duration-300 group-hover:scale-105",
+          class: "border-0"
+        ) do |cover| %>
+          <% cover.with_fallback do %>
+            <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
+              <%= icon "book-open", class: "h-12 w-12 text-muted-2", stroke_width: "1.5" %>
+            </div>
+          <% end %>
+          <% cover.with_overlay do %>
+            <% if result.respond_to?(:description) && result.description.present? %>
+              <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+                <p class="text-xs leading-snug text-white/70 line-clamp-4">
+                  <%= truncate(result.description, length: 220) %>
+                </p>
+              </div>
+            <% end %>
+          <% end %>
+        <% end %>
+
+      </div>
     <% end %>
+
+    <div class="pointer-events-none invisible absolute right-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+      <%= button_to "Import",
+                    source_import_path(source_slug: source_slug(@source)),
+                    method: :post,
+                    params: { series_url: result.url },
+                    class: "pointer-events-auto inline-flex items-center justify-center rounded-md bg-accent px-2 py-1 text-[11px] font-semibold text-accent-foreground shadow-sm hover:bg-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong",
+                    form: { class: "pointer-events-auto", data: { turbo_frame: "_top" } },
+                    data: { turbo_submits_with: "Importing..." } %>
+    </div>
+
     <% if result.respond_to?(:status) && result.status.present? %>
-      <%= render UI::StatusBadgeComponent.new(status: result.status, class: "mt-1") %>
+      <div class="pointer-events-none invisible absolute left-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <%= render UI::StatusBadgeComponent.new(
+          status: result.status,
+          bordered: true,
+          class: "bg-surface text-foreground border-border shadow-sm"
+        ) %>
+      </div>
     <% end %>
   </div>
 
-  <%# Overlay — visible on hover AND focus-within for keyboard/mobile accessibility %>
-  <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background via-background/80 to-transparent opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-    <div class="max-h-[60%] overflow-hidden p-3 space-y-2">
-      <% if result.respond_to?(:description) && result.description.present? %>
-        <p class="text-xs text-foreground line-clamp-4 leading-relaxed">
-          <%= truncate(result.description, length: 200) %>
-        </p>
-      <% end %>
-      <div class="flex gap-2">
-        <%= link_to source_preview_path(source_slug: source_slug(@source), series_url: result.url),
-                    class: "flex-1 rounded-md border border-border px-2 py-1.5 text-center text-xs font-medium text-foreground hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-accent" do %>
-          Details
-        <% end %>
-        <%= button_to "Import",
-                      source_import_path(source_slug: source_slug(@source)),
-                      method: :post,
-                      params: { series_url: result.url },
-                      class: "flex-1 rounded-md bg-accent px-2 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong",
-                      data: { turbo_submits_with: "Importing..." } %>
-      </div>
-    </div>
+  <div class="mt-2 min-w-0 space-y-0.5">
+    <h3 class="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent" title="<%= result.title %>">
+      <%= link_to result.title,
+                  source_preview_path(source_slug: source_slug(@source), series_url: result.url),
+                  data: { turbo_frame: "_top" },
+                  class: "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background rounded-sm" %>
+    </h3>
+    <% if result.respond_to?(:author) && result.author.present? %>
+      <p class="truncate text-xs text-muted-2"><%= result.author %></p>
+    <% end %>
   </div>
 </div>

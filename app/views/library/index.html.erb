@@ -116,7 +116,7 @@
     </details>
   <% end %>
 
-  <%= turbo_frame_tag "library-content", autoscroll: true, data: { autoscroll_block: "start" } do %>
+  <%= turbo_frame_tag "library-content", class: "has-loading-overlay", autoscroll: true, data: { autoscroll_block: "start" } do %>
     <div class="space-y-4">
     <% if @series.empty? %>
       <% has_filters = params[:q].present? || @status.present? || @source_ids.present? || @genres.present? %>

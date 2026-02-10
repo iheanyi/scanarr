@@ -104,18 +104,13 @@ module Scrapers
 
       loop do
         response = http.get(
-          "/chapter",
+          "/manga/#{id}/feed",
           params: {
-            manga: id,
             limit: limit,
             offset: offset,
             translatedLanguage: languages,
             # Include all content ratings to get all chapters
             contentRating: %w[safe suggestive erotica pornographic],
-            # Include chapters scheduled for future publication
-            includeFuturePublishAt: 1,
-            # Include chapters that link to external sites
-            includeExternalUrl: 1,
             order: { chapter: "asc" },
             # Include scanlation group info
             includes: [ "scanlation_group" ]

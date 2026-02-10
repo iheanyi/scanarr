@@ -29,6 +29,13 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#series-content a[href]:not([href^='#']):not([data-turbo-frame])", 0
   end
 
+  def test_index_sort_select_auto_submits_on_change
+    get "/sources/weeb-central"
+
+    assert_response :success
+    assert_select "turbo-frame#series-content form select[name='sort_by'][data-action='change->auto-submit#submit']"
+  end
+
   def test_show_redirects_to_library_canonical_path
     series = series(:one)
     get "/sources/weeb-central/#{series_url(series)}"
@@ -106,6 +113,45 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "Download All"
+  end
+
+  def test_show_displays_start_reading_when_no_progress
+    series = series(:one)
+    chapter = chapters(:one)
+
+    get library_series_path(series_slug: series.to_param)
+
+    assert_response :success
+    assert_includes @response.body, "Start reading"
+    assert_includes @response.body, source_series_chapter_path(
+      source_slug: sources(:one).slug,
+      series_slug: series.to_param,
+      chapter_identifier: chapter.chapter_number
+    )
+  end
+
+  def test_show_displays_continue_reading_when_progress_exists
+    series = series(:one)
+    chapter = chapters(:two)
+    user = users(:admin)
+    ChapterProgress.create!(
+      user: user,
+      chapter: chapter,
+      page_index: 3,
+      page_count: 20,
+      status: "in_progress",
+      progressed_at: Time.current
+    )
+
+    get library_series_path(series_slug: series.to_param)
+
+    assert_response :success
+    assert_includes @response.body, "Continue reading"
+    assert_includes @response.body, source_series_chapter_path(
+      source_slug: sources(:one).slug,
+      series_slug: series.to_param,
+      chapter_identifier: chapter.chapter_number
+    )
   end
 
   def test_download_all_enqueues_job

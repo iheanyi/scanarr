@@ -28,4 +28,27 @@ class UI::SelectComponentTest < ComponentTestCase
     assert_includes rendered.to_html, "Left to Right"
     assert_includes rendered.to_html, "selected=\"selected\""
   end
+
+  def test_supports_leading_icon_addon_style
+    series = DummySeries.new(reading_style: "left_to_right")
+    view_context = ApplicationController.new.view_context
+    form = ActionView::Helpers::FormBuilder.new(:series, series, view_context, {})
+
+    rendered = render_inline(
+      UI::SelectComponent.new(
+        form: form,
+        method: :reading_style,
+        options: [
+          [ "Left to Right", "left_to_right" ],
+          [ "Right to Left", "right_to_left" ]
+        ],
+        selected: series.reading_style,
+        size: :sm,
+        leading_icon: "book-open"
+      )
+    )
+
+    assert_includes rendered.to_html, "pl-8"
+    assert_includes rendered.to_html, "ml-2.5"
+  end
 end
