@@ -6,11 +6,13 @@ module UI
     # @param base_path [String] Base URL path (e.g., reading_history_path)
     # @param params [Hash] Additional query params to preserve
     # @param window [Integer] Number of pages to show on each side of current
-    def initialize(collection:, base_path:, params: {}, window: 2)
+    # @param turbo_frame [String, nil] Turbo Frame ID to target for pagination links
+    def initialize(collection:, base_path:, params: {}, window: 2, turbo_frame: nil)
       @collection = collection
       @base_path = base_path
       @params = params.to_h.symbolize_keys.except(:page)
       @window = window
+      @turbo_frame = turbo_frame
       super()
     end
 
@@ -66,6 +68,12 @@ module UI
     end
 
     private
+
+    def link_data
+      data = { turbo_action: "advance" }
+      data[:turbo_frame] = @turbo_frame if @turbo_frame
+      data
+    end
 
     def page_url(page_num)
       query = @params.compact.merge(page: page_num).to_query
