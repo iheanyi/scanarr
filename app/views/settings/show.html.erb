@@ -132,14 +132,15 @@
 
     <% priority = Array(current_user.default_source_priority) %>
     <% enabled_sources = @sources.select(&:enabled) %>
-    <% ordered_sources = if priority.any?
-      # Sort by priority order, then append any sources not in the priority list
-      prioritized = priority.filter_map { |key| enabled_sources.find { |s| s.key == key } }
-      remaining = enabled_sources.reject { |s| priority.include?(s.key) }
-      prioritized + remaining
-    else
-      enabled_sources
-    end %>
+
+    <% ordered_sources = if priority.any? %>
+      <%# Sort by priority order, then append any sources not in the priority list %>
+      <% prioritized = priority.filter_map { |key| enabled_sources.find { |s| s.key == key } } %>
+      <% remaining = enabled_sources.reject { |s| priority.include?(s.key) } %>
+      <% prioritized + remaining %>
+    <% else %>
+      <% enabled_sources %>
+    <% end %>
 
     <%= form_with url: settings_source_priority_path, method: :patch, data: { controller: "sortable-list" } do |f| %>
       <input type="hidden" name="source_priority" data-sortable-list-target="input"

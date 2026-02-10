@@ -71,11 +71,11 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   private
 
   def with_adapter(adapter)
-    # Stub AdapterRegistry.for to return fake adapter
-    original_for = AdapterRegistry.method(:for)
-    AdapterRegistry.define_singleton_method(:for) { |_source| adapter }
+    # Stub Scrapers::AdapterRegistry.for to return fake adapter
+    original_for = Scrapers::AdapterRegistry.method(:for)
+    Scrapers::AdapterRegistry.define_singleton_method(:for) { |_source| adapter }
     yield
   ensure
-    AdapterRegistry.define_singleton_method(:for, original_for)
+    Scrapers::AdapterRegistry.define_singleton_method(:for, original_for)
   end
 end

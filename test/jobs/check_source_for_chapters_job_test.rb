@@ -337,21 +337,21 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     fake_adapter = Object.new
     fake_adapter.define_singleton_method(:chapters) { |_| chapter_data }
 
-    original_method = AdapterRegistry.method(:for)
-    AdapterRegistry.define_singleton_method(:for) { |_| fake_adapter }
+    original_method = Scrapers::AdapterRegistry.method(:for)
+    Scrapers::AdapterRegistry.define_singleton_method(:for) { |_| fake_adapter }
     yield
   ensure
-    AdapterRegistry.define_singleton_method(:for, original_method)
+    Scrapers::AdapterRegistry.define_singleton_method(:for, original_method)
   end
 
   def with_raising_adapter(error)
     fake_adapter = Object.new
     fake_adapter.define_singleton_method(:chapters) { |_| raise error }
 
-    original_method = AdapterRegistry.method(:for)
-    AdapterRegistry.define_singleton_method(:for) { |_| fake_adapter }
+    original_method = Scrapers::AdapterRegistry.method(:for)
+    Scrapers::AdapterRegistry.define_singleton_method(:for) { |_| fake_adapter }
     yield
   ensure
-    AdapterRegistry.define_singleton_method(:for, original_method)
+    Scrapers::AdapterRegistry.define_singleton_method(:for, original_method)
   end
 end

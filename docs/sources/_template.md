@@ -10,7 +10,7 @@
 | **Keiyoushi Reference** | [extensions-source/src/en/example](https://github.com/keiyoushi/extensions-source/tree/main/src/en/example) |
 | **Type** | API / HTML Scraping |
 | **Status** | 🔲 Planned / 🚧 In Progress / ✅ Implemented |
-| **Adapter Path** | `app/scrapers/source_name/adapter.rb` |
+| **Adapter Path** | `app/lib/scrapers/source_name/adapter.rb` |
 
 ## Configuration
 

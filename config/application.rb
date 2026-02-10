@@ -18,8 +18,6 @@ module Scanarr
 
     config.autoload_paths << Rails.root.join("app/components")
     config.eager_load_paths << Rails.root.join("app/components")
-    config.autoload_paths -= [ Rails.root.join("app/scrapers").to_s ]
-    config.eager_load_paths -= [ Rails.root.join("app/scrapers").to_s ]
 
     # Configuration for the application, engines, and railties goes here.
     #

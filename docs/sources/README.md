@@ -39,7 +39,7 @@ Our adapters are informed by the [Keiyoushi extensions-source](https://github.co
 ### 2. Create the Adapter
 
 ```ruby
-# app/scrapers/<source_name>/adapter.rb
+# app/lib/scrapers/<source_name>/adapter.rb
 module SourceName
   class Adapter < ::BaseAdapter
     def search(query)
@@ -138,4 +138,4 @@ All adapters inherit from `BaseAdapter` and must implement:
 | `chapters(series_url)` | `Array<Chapter>` | Get chapter list |
 | `pages(chapter_url)` | `Array<Page>` | Get page image URLs |
 
-See `app/scrapers/result_types.rb` for the result type definitions.
+See `app/lib/scrapers/result_types.rb` for the result type definitions.

@@ -64,5 +64,3 @@ module Scrapers
     end
   end
 end
-
-AdapterRegistry = Scrapers::AdapterRegistry unless defined?(::AdapterRegistry)

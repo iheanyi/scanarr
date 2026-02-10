@@ -145,7 +145,7 @@ DownloadChapterJob.perform_later(
 
 ### Adapter Patterns
 
-Adapters in `app/scrapers/<source_name>/adapter.rb` inherit from `BaseAdapter`:
+Adapters in `app/lib/scrapers/<source_name>/adapter.rb` inherit from `BaseAdapter`:
 
 ```ruby
 # Must implement:
