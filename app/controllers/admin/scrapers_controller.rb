@@ -58,7 +58,7 @@ module Admin
     end
 
     def adapter_for(source)
-      AdapterRegistry.for(source)
+      Scrapers::AdapterRegistry.for(source)
     end
   end
 end

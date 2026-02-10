@@ -270,7 +270,7 @@ class SeriesController < ApplicationController
   end
 
   def adapter_for(source)
-    AdapterRegistry.for(source)
+    Scrapers::AdapterRegistry.for(source)
   end
 
   def set_source

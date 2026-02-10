@@ -321,7 +321,7 @@ class DownloadChapterJob < ApplicationJob
   end
 
   def adapter_for(source_key)
-    AdapterRegistry.for(source_key.to_s)
+    Scrapers::AdapterRegistry.for(source_key.to_s)
   end
 
   def find_or_create_series(source:, series_title:, source_series_id:)

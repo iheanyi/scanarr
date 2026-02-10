@@ -37,6 +37,25 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_supports_decimal_chapter_identifiers
+    source = sources(:one)
+    Chapter.create!(
+      series: @series,
+      source: source,
+      chapter_number: "262.2",
+      chapter_number_value: 262.2,
+      title: "Chapter 262.2",
+      source_url: "https://weebcentral.com/chapters/262-2"
+    )
+
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/#{series_url}/chapters/262.2"
+
+      assert_response :success
+      assert_includes @response.body, "Chapter 262.2"
+    end
+  end
+
   def test_navigation_orders_chapters_numerically
     source = sources(:one)
     Chapter.create!(series: @series, source: source, chapter_number: "10", title: "Chapter 10")
@@ -47,7 +66,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       get "/sources/weeb-central/#{series_url}/chapters/10"
 
       assert_response :success
-      assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/Extra"
+      assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/10.5"
     end
   end
 

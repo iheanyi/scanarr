@@ -17,7 +17,7 @@ class CheckSourceForChaptersJob < ApplicationJob
     # Double-check rate limit at execution time (may have been set since enqueue)
     return if source.rate_limited?
 
-    adapter = AdapterRegistry.for(source)
+    adapter = Scrapers::AdapterRegistry.for(source)
     series_source = series.series_sources.find_by(source: source)
     source_series_id = series_source&.source_series_id
 

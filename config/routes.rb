@@ -51,20 +51,32 @@ Rails.application.routes.draw do
   post "/sources/:source_slug/:series_slug/bulk_actions", to: "series#bulk_action", as: :source_series_bulk_actions
   post "/sources/:source_slug/:series_slug/refresh_metadata", to: "series#refresh_metadata", as: :source_series_refresh_metadata
   get "/chapters/:public_id", to: "chapters#redirect", as: :chapter_public
-  get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier", to: "chapters#show", as: :source_series_chapter
+  get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier",
+      to: "chapters#show",
+      as: :source_series_chapter,
+      format: false,
+      constraints: { chapter_identifier: /[^\/]+/ }
   patch "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/progress",
         to: "chapters#update_progress",
-        as: :source_series_chapter_progress
+        as: :source_series_chapter_progress,
+        format: false,
+        constraints: { chapter_identifier: /[^\/]+/ }
   post "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/download",
        to: "chapters#enqueue_download",
-       as: :source_series_chapter_download
+       as: :source_series_chapter_download,
+       format: false,
+       constraints: { chapter_identifier: /[^\/]+/ }
   delete "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/download",
          to: "chapters#remove_download",
-         as: :source_series_chapter_remove_download
+         as: :source_series_chapter_remove_download,
+         format: false,
+         constraints: { chapter_identifier: /[^\/]+/ }
 
   post "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/cancel_download",
        to: "chapters#cancel_download",
-       as: :source_series_chapter_cancel_download
+       as: :source_series_chapter_cancel_download,
+       format: false,
+       constraints: { chapter_identifier: /[^\/]+/ }
 
   namespace :admin do
     get "scrapers", to: "scrapers#index", as: :scrapers

@@ -32,12 +32,12 @@ class SourcesController < ApplicationController
     @results = []
     @error = nil
 
-    unless AdapterRegistry.registered?(@source.key)
+    unless Scrapers::AdapterRegistry.registered?(@source.key)
       @error = "This source doesn't have an adapter yet"
       return
     end
 
-    adapter = AdapterRegistry.for(@source)
+    adapter = Scrapers::AdapterRegistry.for(@source)
 
     unless adapter.supports_browse?
       @error = "This source doesn't support browsing yet"
@@ -65,12 +65,12 @@ class SourcesController < ApplicationController
       return
     end
 
-    unless AdapterRegistry.registered?(@source.key)
+    unless Scrapers::AdapterRegistry.registered?(@source.key)
       @error = "This source doesn't have an adapter yet"
       return
     end
 
-    adapter = AdapterRegistry.for(@source)
+    adapter = Scrapers::AdapterRegistry.for(@source)
     @series = adapter.series(@series_url)
     @chapters = adapter.chapters(@series_url).first(10) # Preview first 10 chapters
   rescue Scrapers::Errors::SeriesNotFoundError => e
@@ -87,12 +87,12 @@ class SourcesController < ApplicationController
 
     return if @query.blank?
 
-    unless AdapterRegistry.registered?(@source.key)
+    unless Scrapers::AdapterRegistry.registered?(@source.key)
       @error = "This source doesn't have a search adapter yet"
       return
     end
 
-    @results = AdapterRegistry.for(@source).search(@query)
+    @results = Scrapers::AdapterRegistry.for(@source).search(@query)
   rescue StandardError => e
     @error = "Search failed: #{e.message}"
     Rails.logger.warn "Search failed for #{@source.key}: #{e.class} - #{e.message}"
@@ -104,11 +104,11 @@ class SourcesController < ApplicationController
       redirect_to source_search_path(source_slug: source_slug(@source)), alert: "No series URL provided" and return
     end
 
-    unless AdapterRegistry.registered?(@source.key)
+    unless Scrapers::AdapterRegistry.registered?(@source.key)
       redirect_to search_path, alert: "Import not available for this source" and return
     end
 
-    importer = SeriesImporter.new(source: @source, adapter: AdapterRegistry.for(@source))
+    importer = SeriesImporter.new(source: @source, adapter: Scrapers::AdapterRegistry.for(@source))
     series = importer.import!(series_url)
     chapter_count = series.chapters.where(source: @source).count
 

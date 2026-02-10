@@ -344,7 +344,7 @@ class ChaptersController < ApplicationController
   end
 
   def adapter_for(source)
-    AdapterRegistry.for(source)
+    Scrapers::AdapterRegistry.for(source)
   end
 
   def source_slug(source)
