@@ -1,7 +1,7 @@
 class SourcesController < ApplicationController
   before_action :set_source, only: %i[search browse preview preview_read preview_image import]
 
-  helper_method :source_slug, :preview_image_token_for
+  helper_method :source_slug, :preview_image_token_for, :source_search_params, :source_browse_params, :source_filter_label
 
   SORT_OPTIONS = {
     "name_asc" => "Name A–Z",
@@ -11,13 +11,15 @@ class SourcesController < ApplicationController
   PREVIEW_CHAPTER_LIMIT = 50
   PREVIEW_IMAGE_TOKEN_PURPOSE = "source_preview_image".freeze
   PREVIEW_IMAGE_TOKEN_TTL = 6.hours
+  FILTER_OPTION_KEYS = %i[genres statuses].freeze
 
   def index
     @sort_by = params[:sort_by].presence || "name_asc"
     @sort_options = SORT_OPTIONS
+    @include_mature = ActiveModel::Type::Boolean.new.cast(params[:include_mature])
 
     scope = Source.where(enabled: true)
-    @sources = case @sort_by
+    ordered_sources = case @sort_by
     when "name_desc"
                  scope.order(name: :desc)
     when "most_series"
@@ -26,14 +28,22 @@ class SourcesController < ApplicationController
                       .order(Arel.sql("COUNT(series_sources.id) DESC"), name: :asc)
     else # name_asc
                  scope.order(name: :asc)
-    end
+    end.to_a
+
+    @mature_source_count = ordered_sources.count(&:mature_content?)
+    @sources = @include_mature ? ordered_sources : ordered_sources.reject(&:mature_content?)
+    @hidden_mature_count = @include_mature ? 0 : @mature_source_count
   end
 
   def browse
     @sort = params[:sort].presence || "latest"
-    @page = (params[:page].presence || 1).to_i
+    @page = [ (params[:page].presence || 1).to_i, 1 ].max
     @results = []
     @error = nil
+    @selected_genres = []
+    @selected_statuses = []
+    @browse_filter_options = empty_filter_options
+    @supports_server_side_filters = false
 
     unless Scrapers::AdapterRegistry.registered?(@source.key)
       @error = "This source doesn't have an adapter yet"
@@ -49,7 +59,14 @@ class SourcesController < ApplicationController
 
     @page_size = adapter.browse_page_size
     @sort_options = adapter.browse_sort_options
-    @results = adapter.browse(sort: @sort, page: @page, limit: @page_size)
+    @sort = @sort_options.first unless @sort_options.include?(@sort)
+    configure_browse_filters(adapter)
+    browse_filters = selected_adapter_filters(@selected_genres, @selected_statuses)
+    @results = if @supports_server_side_filters && browse_filters.present?
+      adapter.browse(sort: @sort, page: @page, limit: @page_size, filters: browse_filters)
+    else
+      adapter.browse(sort: @sort, page: @page, limit: @page_size)
+    end
   rescue Scrapers::Errors::BrowseNotSupportedError => e
     @error = e.message
   rescue StandardError => e
@@ -161,15 +178,32 @@ class SourcesController < ApplicationController
     @query = params[:q].to_s.strip
     @results = []
     @error = nil
-
-    return if @query.blank?
+    @selected_genres = []
+    @selected_statuses = []
+    @search_filter_options = empty_filter_options
+    @supports_server_side_filters = false
 
     unless Scrapers::AdapterRegistry.registered?(@source.key)
       @error = "This source doesn't have a search adapter yet"
       return
     end
 
-    @results = Scrapers::AdapterRegistry.for(@source).search(@query)
+    adapter = Scrapers::AdapterRegistry.for(@source)
+    supports_search = adapter.respond_to?(:supports_search?) ? adapter.supports_search? : true
+    unless supports_search
+      @error = "This source doesn't support searching yet"
+      return
+    end
+
+    configure_search_filters(adapter)
+    return if @query.blank?
+
+    search_filters = selected_adapter_filters(@selected_genres, @selected_statuses)
+    @results = if @supports_server_side_filters && search_filters.present?
+      adapter.search(@query, filters: search_filters)
+    else
+      adapter.search(@query)
+    end
   rescue StandardError => e
     @error = "Search failed: #{e.message}"
     Rails.logger.warn "Search failed for #{@source.key}: #{e.class} - #{e.message}"
@@ -210,6 +244,98 @@ class SourcesController < ApplicationController
   end
 
   private
+
+  def configure_search_filters(adapter)
+    @supports_server_side_filters = adapter.respond_to?(:supports_server_side_filters?) && adapter.supports_server_side_filters?
+    raw_options = adapter.respond_to?(:search_filter_options) ? adapter.search_filter_options : {}
+    @search_filter_options = normalized_filter_options(raw_options)
+    @selected_genres = normalized_filter_values(params[:genres], @search_filter_options[:genres])
+    @selected_statuses = normalized_filter_values(params[:statuses], @search_filter_options[:statuses])
+  end
+
+  def configure_browse_filters(adapter)
+    @supports_server_side_filters = adapter.respond_to?(:supports_server_side_filters?) && adapter.supports_server_side_filters?
+    raw_options = adapter.respond_to?(:browse_filter_options) ? adapter.browse_filter_options : {}
+    @browse_filter_options = normalized_filter_options(raw_options)
+    @selected_genres = normalized_filter_values(params[:genres], @browse_filter_options[:genres])
+    @selected_statuses = normalized_filter_values(params[:statuses], @browse_filter_options[:statuses])
+  end
+
+  def normalized_filter_options(raw_options)
+    options = raw_options.is_a?(Hash) ? raw_options.deep_symbolize_keys : {}
+    FILTER_OPTION_KEYS.index_with do |key|
+      normalized_filter_entries(options[key])
+    end
+  end
+
+  def normalized_filter_entries(entries)
+    Array(entries).filter_map do |entry|
+      label, value = if entry.is_a?(Array) && entry.size >= 2
+        [ entry[0], entry[1] ]
+      else
+        normalized_value = entry.to_s.strip
+        [ normalized_value.tr("_-", "  ").squish.titleize, normalized_value ]
+      end
+
+      normalized_label = label.to_s.strip
+      normalized_value = value.to_s.strip
+      next if normalized_label.blank? || normalized_value.blank?
+
+      [ normalized_label, normalized_value ]
+    end.uniq { |(_, value)| value }
+  end
+
+  def normalized_filter_values(values, options)
+    allowed_values = options.map(&:last)
+    return [] if allowed_values.empty?
+
+    Array(values).filter_map do |value|
+      normalized = value.to_s.strip
+      normalized if normalized.present? && allowed_values.include?(normalized)
+    end.uniq
+  end
+
+  def selected_adapter_filters(genres, statuses)
+    {}.tap do |filters|
+      filters[:genres] = genres if genres.present?
+      filters[:statuses] = statuses if statuses.present?
+    end
+  end
+
+  def source_search_params(overrides = {})
+    params_hash = {
+      source_slug: source_slug(@source),
+      q: @query.presence,
+      genres: @selected_genres.presence,
+      statuses: @selected_statuses.presence
+    }.compact
+    params_hash.merge!(overrides)
+    params_hash.delete_if { |_, value| value.blank? }
+    params_hash
+  end
+
+  def source_browse_params(overrides = {})
+    params_hash = {
+      source_slug: source_slug(@source),
+      sort: @sort.presence,
+      page: @page.presence,
+      genres: @selected_genres.presence,
+      statuses: @selected_statuses.presence
+    }.compact
+    params_hash.merge!(overrides)
+    params_hash.delete_if { |_, value| value.blank? }
+    params_hash
+  end
+
+  def source_filter_label(kind, value)
+    option_sets = @search_filter_options.presence || @browse_filter_options.presence || empty_filter_options
+    labels_by_value = option_sets.fetch(kind.to_sym, []).to_h.invert
+    labels_by_value[value.to_s] || value.to_s.tr("_-", " ").titleize
+  end
+
+  def empty_filter_options
+    FILTER_OPTION_KEYS.index_with { [] }
+  end
 
   def preview_image_token_for(page_url)
     return "" if page_url.blank?

@@ -84,6 +84,23 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "application-" # CSS asset
   end
 
+  def test_index_hides_mature_sources_by_default
+    get "/"
+
+    assert_response :success
+    assert_not_includes @response.body, "Manhwa18"
+    assert_includes @response.body, "Show 18+"
+  end
+
+  def test_index_can_include_mature_sources
+    get "/", params: { include_mature: "1" }
+
+    assert_response :success
+    assert_includes @response.body, "Manhwa18"
+    assert_includes @response.body, "18+"
+    assert_includes @response.body, "Hide 18+"
+  end
+
   def test_index_navigation_buttons_escape_turbo_frame
     get "/"
 

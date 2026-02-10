@@ -41,6 +41,11 @@ class TachiyomiSourceMapperTest < ActiveSupport::TestCase
     assert TachiyomiSourceMapper.known?(1998944621602463790)
   end
 
+  def test_known_returns_true_for_retired_source
+    # manga_park is recognized for diagnostics but retired from active swarm targets
+    assert TachiyomiSourceMapper.known?(2292947733994124621)
+  end
+
   def test_known_returns_false_for_unknown_source
     refute TachiyomiSourceMapper.known?(123)
   end
@@ -51,6 +56,14 @@ class TachiyomiSourceMapperTest < ActiveSupport::TestCase
 
   def test_future_source_name_returns_nil_for_mapped_source
     assert_nil TachiyomiSourceMapper.future_source_name(2499283573021220255)
+  end
+
+  def test_future_source_name_returns_nil_for_retired_source
+    assert_nil TachiyomiSourceMapper.future_source_name(2292947733994124621)
+  end
+
+  def test_retired_source_name
+    assert_equal "manga_park", TachiyomiSourceMapper.retired_source_name(2292947733994124621)
   end
 
   def test_unmapped_sources_from_backup

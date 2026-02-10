@@ -13,16 +13,19 @@ Our adapters are informed by the [Keiyoushi extensions-source](https://github.co
 
 ## Target Sources
 
+For current active backlog and missing adapter swarm targets, see
+`tasks/adapter-swarm-missing-extensions.md`.
+
 | Source | Status | Type | Keiyoushi Reference |
 |--------|--------|------|---------------------|
 | [MangaDex](mangadex.md) | ✅ Implemented | API | [extensions-source/src/all/mangadex](https://github.com/keiyoushi/extensions-source/tree/main/src/all/mangadex) |
 | [WeebCentral](weeb_central.md) | ✅ Implemented | HTML | N/A (newer site) |
-| MangaSee | 🔲 Planned | HTML | [extensions-source/src/en/mangasee](https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangasee) |
-| AsuraScans | 🔲 Planned | HTML (Madara) | [lib-multisrc/madara](https://github.com/keiyoushi/extensions-source/tree/main/lib-multisrc/madara) |
+| MangaSee | ✅ Implemented | HTML | [extensions-source/src/en/mangasee](https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangasee) |
+| AsuraScans | ✅ Implemented | HTML (Madara) | [lib-multisrc/madara](https://github.com/keiyoushi/extensions-source/tree/main/lib-multisrc/madara) |
 | ReaperScans | 🔲 Planned | HTML | [extensions-source/src/en/reaperscans](https://github.com/keiyoushi/extensions-source/tree/main/src/en/reaperscans) |
-| FlameScans | 🔲 Planned | HTML | [extensions-source/src/en/flamescans](https://github.com/keiyoushi/extensions-source/tree/main/src/en/flamescans) |
-| MangaKakalot | 🔲 Planned | HTML | [extensions-source/src/en/mangakakalot](https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangakakalot) |
-| TCBScans | 🔲 Planned | HTML | [extensions-source/src/en/tcbscans](https://github.com/keiyoushi/extensions-source/tree/main/src/en/tcbscans) |
+| FlameScans | ✅ Implemented (as FlameComics) | HTML/API | [extensions-source/src/en/flamecomics](https://github.com/keiyoushi/extensions-source/tree/main/src/en/flamecomics) |
+| MangaKakalot | ✅ Implemented | HTML | [extensions-source/src/en/mangakakalot](https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangakakalot) |
+| TCBScans | ✅ Implemented | HTML | [extensions-source/src/en/tcbscans](https://github.com/keiyoushi/extensions-source/tree/main/src/en/tcbscans) |
 
 ## Adding a New Source Adapter
 
