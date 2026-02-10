@@ -9,23 +9,22 @@
     <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
   <% else %>
     <%= turbo_frame_tag "browse-content", class: "has-loading-overlay" do %>
-      <section class="rounded-lg border border-border bg-surface p-5">
-        <%= form_with url: source_browse_path(source_slug: source_slug(@source)),
-                      method: :get,
-                      data: { turbo_frame: "browse-content", turbo_action: "advance" },
-                      class: "flex flex-wrap items-end gap-3" do |form| %>
-          <div data-controller="auto-submit">
-            <%= render UI::SelectComponent.new(
-              form: form,
-              method: :sort,
-              options: @sort_options.map { |s| [ s.titleize, s ] },
-              selected: @sort,
-              label: "Sort by",
-              data: { action: "change->auto-submit#submit" }
-            ) %>
-          </div>
-        <% end %>
-      </section>
+      <%= form_with url: source_browse_path(source_slug: source_slug(@source)),
+                    method: :get,
+                    data: { turbo_frame: "browse-content", turbo_action: "advance" },
+                    class: "flex flex-wrap items-end gap-3" do |form| %>
+        <%= form.hidden_field :page, value: 1 %>
+        <div class="w-fit" data-controller="auto-submit">
+          <%= render UI::SelectComponent.new(
+            form: form,
+            method: :sort,
+            options: @sort_options.map { |s| [ s.titleize, s ] },
+            selected: @sort,
+            label: "Sort by",
+            data: { action: "change->auto-submit#submit" }
+          ) %>
+        </div>
+      <% end %>
 
       <section class="mt-6 space-y-4">
         <h2 class="text-xl font-semibold text-balance">
