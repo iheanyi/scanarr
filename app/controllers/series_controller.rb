@@ -303,7 +303,7 @@ class SeriesController < ApplicationController
     in_progress = @chapter_progress_map.values
                                     .select { |progress| progress.status == "in_progress" }
                                     .max_by(&:progressed_at)
-    return @chapter_progress_map.key(in_progress)&.then { |id| @chapters.find { |chapter| chapter.id == id } } if in_progress
+    return @chapters.find { |chapter| chapter.id == in_progress.chapter_id } if in_progress
 
     first_unread = @chapters.find { |chapter| @chapter_progress_map[chapter.id]&.status != "completed" }
     first_unread || @chapters.first
