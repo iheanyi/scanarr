@@ -46,5 +46,9 @@ module UI
     def icon_classes
       ICON_SIZES[@size]
     end
+
+    def select_id
+      @select_id ||= system_arguments[:id].presence || "redirect_select_#{object_id}"
+    end
   end
 end
