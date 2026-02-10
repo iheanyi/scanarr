@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["filter", "option", "checkbox", "chips", "count", "panel", "trigger", "empty"]
+  static targets = ["filter", "option", "checkbox", "chips", "count", "summary", "panel", "trigger", "empty"]
   static values = {
     allLabel: String,
     maxChips: Number,
+    noneLabel: String,
     open: Boolean
   }
 
@@ -14,11 +15,13 @@ export default class extends Controller {
   declare readonly checkboxTargets: HTMLInputElement[]
   declare readonly chipsTarget: HTMLElement
   declare readonly countTarget: HTMLElement
+  declare readonly summaryTarget: HTMLElement
   declare readonly panelTarget: HTMLElement
   declare readonly triggerTarget: HTMLButtonElement
   declare readonly emptyTarget: HTMLElement
   declare readonly hasChipsTarget: boolean
   declare readonly hasCountTarget: boolean
+  declare readonly hasSummaryTarget: boolean
   declare readonly hasPanelTarget: boolean
   declare readonly hasTriggerTarget: boolean
   declare readonly hasEmptyTarget: boolean
@@ -26,6 +29,8 @@ export default class extends Controller {
   declare readonly allLabelValue: string
   declare readonly hasMaxChipsValue: boolean
   declare readonly maxChipsValue: number
+  declare readonly hasNoneLabelValue: boolean
+  declare readonly noneLabelValue: string
   declare openValue: boolean
 
   private handleDocumentClick = (event: MouseEvent) => {
@@ -95,7 +100,7 @@ export default class extends Controller {
 
   update() {
     const selected = this.checkboxTargets.filter((checkbox) => checkbox.checked)
-    this.updateCount(selected.length)
+    this.updateSummary(selected)
     this.updateChips(selected)
     this.updateEmptyState(selected.length)
   }
@@ -119,17 +124,36 @@ export default class extends Controller {
     this.update()
   }
 
-  private updateCount(count: number) {
-    if (!this.hasCountTarget) return
+  private updateSummary(selected: HTMLInputElement[]) {
+    const count = selected.length
     const total = this.checkboxTargets.length
     const allLabel = this.hasAllLabelValue ? this.allLabelValue : "All"
+    const noneLabel = this.hasNoneLabelValue ? this.noneLabelValue : "None selected"
+
+    if (this.hasSummaryTarget) {
+      if (count === 0) {
+        this.summaryTarget.textContent = noneLabel
+      } else if (count === total) {
+        this.summaryTarget.textContent = allLabel
+      } else {
+        this.summaryTarget.textContent = selected[0]?.dataset.label || selected[0]?.value || ""
+      }
+    }
+
+    if (!this.hasCountTarget) return
 
     if (count === 0) {
-      this.countTarget.textContent = "None selected"
+      this.countTarget.textContent = ""
+      this.countTarget.classList.add("hidden")
     } else if (count === total) {
-      this.countTarget.textContent = allLabel
+      this.countTarget.textContent = ""
+      this.countTarget.classList.add("hidden")
+    } else if (count === 1) {
+      this.countTarget.textContent = ""
+      this.countTarget.classList.add("hidden")
     } else {
-      this.countTarget.textContent = `${count} selected`
+      this.countTarget.textContent = `+${count - 1}`
+      this.countTarget.classList.remove("hidden")
     }
   }
 
