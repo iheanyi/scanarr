@@ -7,6 +7,10 @@ def system!(*args)
   system(*args, exception: true)
 end
 
+def redis_reachable?(url)
+  system({ "SCANARR_CHECK_REDIS_URL" => url }, "bundle exec ruby -rredis -e 'Redis.new(url: ENV.fetch(\"SCANARR_CHECK_REDIS_URL\")).ping'")
+end
+
 FileUtils.chdir APP_ROOT do
   # This script is a way to set up or update your development environment automatically.
   # This script is idempotent, so that you can run it at any time and get an expectable outcome.
@@ -14,6 +18,19 @@ FileUtils.chdir APP_ROOT do
 
   puts "== Installing dependencies =="
   system("bundle check") || system!("bundle install")
+
+  redis_url = ENV.fetch("REDIS_URL", "redis://127.0.0.1:6379/0")
+  sidekiq_redis_url = ENV.fetch("SIDEKIQ_REDIS_URL", "redis://127.0.0.1:6379/1")
+
+  puts "\n== Checking Redis =="
+  unless redis_reachable?(redis_url) && redis_reachable?(sidekiq_redis_url)
+    warn "Redis is required for local development."
+    warn "Expected reachable URLs:"
+    warn "- REDIS_URL=#{redis_url}"
+    warn "- SIDEKIQ_REDIS_URL=#{sidekiq_redis_url}"
+    warn "Start Redis first (for example: brew services start redis or docker run --name scanarr-redis -p 6379:6379 valkey/valkey:8)."
+    exit 1
+  end
 
   # puts "\n== Copying sample files =="
   # unless File.exist?("config/database.yml")

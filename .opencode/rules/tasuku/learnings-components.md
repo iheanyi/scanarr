@@ -1,12 +1,12 @@
 ---
-paths: app/components/**/*.rb
+paths: app/components/**/*.html.erb
 ---
 
 # Tasuku Learnings
 
 _Auto-synced from .tasuku/context/learnings.md_
 
-## Insights
+## Rules
 
-- In Ruby component helpers, avoid `next` inside a `begin` expression used in assignment (`@value ||= begin ... end`); use explicit conditional branches instead to prevent SyntaxError during eager load.
+- ViewComponents cannot call bare helper methods like `icon`. Must use `helpers.icon` instead. Rails will suggest this in the error message.
 

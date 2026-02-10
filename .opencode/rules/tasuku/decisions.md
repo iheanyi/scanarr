@@ -26,3 +26,11 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Proxy mode serves files in 1 HTTP request instead of 2 (no redirect). For a self-hosted app with local disk storage, the extra Rails CPU is negligible. CDN/S3 is overkill for single-instance deployment.
 
+## redis-backed-search-metrics (2026-02-10)
+
+**Chose**: Defer source-performance metrics engine work until Redis/Sidekiq migration is complete
+
+**Over**: Implement source-performance metrics/underperformer reporting immediately on current DB-backed flow, Skip source-performance instrumentation work entirely
+
+**Because**: Redis gives a better foundation for low-overhead aggregation and time-windowed metrics needed for a search metrics engine.
+

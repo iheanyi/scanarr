@@ -23,8 +23,11 @@ Rails.application.configure do
     config.action_controller.perform_caching = false
   end
 
-  # Change to :null_store to avoid any caching.
-  config.cache_store = :memory_store
+  # Use Redis cache store so development behaves closer to production.
+  config.cache_store = :redis_cache_store, {
+    url: ENV.fetch("REDIS_URL", "redis://127.0.0.1:6379/0"),
+    namespace: ENV.fetch("REDIS_CACHE_NAMESPACE", "scanarr:cache:development")
+  }
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
@@ -58,8 +61,8 @@ Rails.application.configure do
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
 
-  # Use SolidQueue for background jobs (same as production)
-  config.active_job.queue_adapter = :solid_queue
+  # Use Sidekiq for background jobs.
+  config.active_job.queue_adapter = :sidekiq
 
   # Highlight code that triggered redirect in logs.
   config.action_dispatch.verbose_redirect_logs = true

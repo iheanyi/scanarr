@@ -1,5 +1,6 @@
 require "test_helper"
 require "base64"
+require "sidekiq/testing"
 require "tmpdir"
 
 class DownloadChapterJobTest < ActiveSupport::TestCase
@@ -112,6 +113,49 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     assert_not_nil release.file_asset
     assert_equal "downloading", release.file_asset.download_status
     assert_equal 2, release.file_asset.pages_expected
+  end
+
+  def test_perform_later_runs_under_sidekiq_adapter_with_continuable_steps
+    chapter_url = "https://weebcentral.com/chapters/sidekiq-#{SecureRandom.hex(4)}"
+    adapter = FakeAdapter.new
+    http = FakeHttpClient.new(
+      "https://img.example.com/page-1.jpg" => tiny_png,
+      "https://img.example.com/page-2.jpg" => tiny_png
+    )
+    previous_adapter = ActiveJob::Base.queue_adapter
+    original_for = Scrapers::AdapterRegistry.method(:for)
+    original_http_new = HttpClient.method(:new)
+
+    ActiveJob::Base.queue_adapter = :sidekiq
+    Scrapers::AdapterRegistry.define_singleton_method(:for) { |_source_key| adapter }
+    HttpClient.define_singleton_method(:new) { |config:| http }
+
+    Sidekiq::Testing.inline! do
+      DownloadChapterJob.perform_later(
+        chapter_url,
+        source_key: "weeb_central",
+        series_title: "One Piece",
+        source_series_id: "SERIES123",
+        chapter_number: "1",
+        chapter_title: "Chapter 1"
+      )
+    end
+
+    release = Release.find_by!(source_url: chapter_url)
+    file_asset = release.file_asset
+
+    assert_equal "complete", file_asset.download_status
+    assert_equal 2, file_asset.page_count
+    assert_equal 2, file_asset.pages_downloaded
+  ensure
+    Sidekiq::Testing.fake!
+    ActiveJob::Base.queue_adapter = previous_adapter
+    Scrapers::AdapterRegistry.define_singleton_method(:for) do |*args, **kwargs, &block|
+      original_for.call(*args, **kwargs, &block)
+    end
+    HttpClient.define_singleton_method(:new) do |*args, **kwargs, &block|
+      original_http_new.call(*args, **kwargs, &block)
+    end
   end
 
   def test_download_and_finalize_rehydrate_entities_when_runtime_state_is_missing
