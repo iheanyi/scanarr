@@ -6,7 +6,7 @@ class SourceMigrationDiscoveryService
   WorkerResult = Data.define(:candidate, :error)
 
   SEARCH_TIMEOUT_SECONDS = 8
-  CHAPTER_COUNT_TIMEOUT_SECONDS = 12
+  CHAPTER_COUNT_TIMEOUT_SECONDS = 5
   MAX_WORKERS = 4
   MIN_CONFIDENCE = 0.45
 
