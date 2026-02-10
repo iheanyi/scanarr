@@ -12,133 +12,134 @@
                   class: "inline-flex items-center gap-2 text-sm text-muted hover:text-foreground" %>
     </div>
   <% elsif @series %>
-    <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <%# Cover and quick actions %>
-      <div class="space-y-4">
-        <%= render UI::SeriesCoverComponent.new(url: @series.cover_url, alt: "#{@series.title} cover", size: :full, aspect: "2/3", rounded: :lg) %>
+    <div class="space-y-6">
+      <header class="space-y-3">
+        <h1 class="text-3xl font-semibold text-balance"><%= @series.title %></h1>
 
-        <%= button_to "Import to Library",
-                      source_import_path(source_slug: source_slug(@source)),
-                      method: :post,
-                      params: { series_url: @series_url },
-                      class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent-strong",
-                      data: { turbo_submits_with: "Importing..." } %>
-
-        <%= link_to @series.url, target: "_blank", rel: "noopener",
-                    class: "flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-surface-2" do %>
-          View on <%= @source.name %>
-          <%= icon "external-link", class: "h-4 w-4" %>
+        <% if @series.alt_titles.present? && @series.alt_titles.any? %>
+          <p class="text-sm text-muted-2">
+            Also known as: <%= @series.alt_titles.first(3).join(", ") %>
+            <% if @series.alt_titles.size > 3 %>
+              <span class="text-muted-2">+<%= @series.alt_titles.size - 3 %> more</span>
+            <% end %>
+          </p>
         <% end %>
-      </div>
 
-      <%# Details %>
-      <div class="space-y-6">
-        <header class="space-y-3">
-          <h1 class="text-3xl font-semibold text-balance"><%= @series.title %></h1>
+        <div class="flex flex-wrap items-center gap-3 text-sm">
+          <% if @series.author.present? %>
+            <span class="text-muted">
+              <span class="text-muted-2">Author:</span> <%= @series.author %>
+            </span>
+          <% end %>
+          <% if @series.artist.present? && @series.artist != @series.author %>
+            <span class="text-muted">
+              <span class="text-muted-2">Artist:</span> <%= @series.artist %>
+            </span>
+          <% end %>
+          <% if @series.status.present? %>
+            <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
+          <% end %>
+          <% if @series.series_type.present? %>
+            <span class="inline-flex rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-foreground">
+              <%= @series.series_type.to_s.titleize %>
+            </span>
+          <% end %>
+        </div>
+      </header>
 
-          <% if @series.alt_titles.present? && @series.alt_titles.any? %>
-            <p class="text-sm text-muted-2">
-              Also known as: <%= @series.alt_titles.first(3).join(", ") %>
-              <% if @series.alt_titles.size > 3 %>
-                <span class="text-muted-2">+<%= @series.alt_titles.size - 3 %> more</span>
-              <% end %>
-            </p>
+      <% if @series.tags.present? && @series.tags.any? %>
+        <div class="flex flex-wrap gap-2">
+          <% @series.tags.first(15).each do |tag| %>
+            <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted">
+              <%= tag %>
+            </span>
+          <% end %>
+          <% if @series.tags.size > 15 %>
+            <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-2">
+              +<%= @series.tags.size - 15 %> more
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+        <%# Cover and quick actions %>
+        <div class="space-y-4">
+          <%= render UI::SeriesCoverComponent.new(url: @series.cover_url, alt: "#{@series.title} cover", size: :xl, aspect: "2/3", rounded: :lg, class: "w-full max-w-[280px] max-h-[60vh]") %>
+
+          <%= button_to "Import to Library",
+                        source_import_path(source_slug: source_slug(@source)),
+                        method: :post,
+                        params: { series_url: @series_url },
+                        class: "w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-accent-foreground hover:bg-accent-strong",
+                        data: { turbo_submits_with: "Importing..." } %>
+
+          <%= link_to @series.url, target: "_blank", rel: "noopener",
+                      class: "flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm text-foreground hover:bg-surface-2" do %>
+            View on <%= @source.name %>
+            <%= icon "external-link", class: "h-4 w-4" %>
+          <% end %>
+        </div>
+
+        <div class="space-y-6">
+          <% if @series.description.present? %>
+            <div class="rounded-lg border border-border bg-surface p-4">
+              <h2 class="mb-2 text-sm font-semibold text-muted">Synopsis</h2>
+              <div class="prose prose-sm prose-invert max-w-none text-foreground leading-relaxed">
+                <%= simple_format(@series.description, class: "space-y-2") %>
+              </div>
+            </div>
           <% end %>
 
-          <div class="flex flex-wrap items-center gap-3 text-sm">
-            <% if @series.author.present? %>
-              <span class="text-muted">
-                <span class="text-muted-2">Author:</span> <%= @series.author %>
-              </span>
-            <% end %>
-            <% if @series.artist.present? && @series.artist != @series.author %>
-              <span class="text-muted">
-                <span class="text-muted-2">Artist:</span> <%= @series.artist %>
-              </span>
-            <% end %>
-            <% if @series.status.present? %>
-              <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
-            <% end %>
-            <% if @series.series_type.present? %>
-              <span class="inline-flex rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-foreground">
-                <%= @series.series_type.to_s.titleize %>
-              </span>
-            <% end %>
-          </div>
-        </header>
-
-        <% if @series.tags.present? && @series.tags.any? %>
-          <div class="flex flex-wrap gap-2">
-            <% @series.tags.first(15).each do |tag| %>
-              <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted">
-                <%= tag %>
-              </span>
-            <% end %>
-            <% if @series.tags.size > 15 %>
-              <span class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-2">
-                +<%= @series.tags.size - 15 %> more
-              </span>
-            <% end %>
-          </div>
-        <% end %>
-
-        <% if @series.description.present? %>
-          <div class="rounded-lg border border-border bg-surface p-4">
-            <h2 class="mb-2 text-sm font-semibold text-muted">Synopsis</h2>
-            <div class="prose prose-sm prose-invert max-w-none text-foreground leading-relaxed">
-              <%= simple_format(@series.description, class: "space-y-2") %>
-            </div>
-          </div>
-        <% end %>
-
-        <% if @chapters.any? %>
-          <div class="rounded-lg border border-border bg-surface p-4">
-            <h2 class="mb-3 text-sm font-semibold text-muted">
-              Recent Chapters
-              <span class="font-normal text-muted-2">(preview)</span>
-            </h2>
-            <ul class="divide-y divide-border">
-              <% @chapters.each do |chapter| %>
-                <li class="py-2 first:pt-0 last:pb-0 -mx-2 px-2 rounded-md transition-colors hover:bg-surface-2/40">
-                  <div class="flex items-center justify-between gap-4">
-                    <div class="min-w-0 flex-1">
-                      <p class="text-sm text-foreground truncate">
-                        <span class="font-medium">Ch. <%= chapter.number %></span>
-                        <% if chapter.title.present? %>
-                          <span class="text-muted-2">-</span>
-                          <span class="text-muted"><%= chapter.title %></span>
-                        <% end %>
-                      </p>
-                      <% if chapter.group.present? || chapter.published_at.present? %>
-                        <p class="text-xs text-muted-2">
-                          <% if chapter.group.present? %><%= chapter.group %><% end %>
-                          <% if chapter.group.present? && chapter.published_at.present? %> · <% end %>
-                          <% if chapter.published_at.present? %><%= time_ago_in_words(chapter.published_at) %> ago<% end %>
+          <% if @chapters.any? %>
+            <div class="rounded-lg border border-border bg-surface p-4">
+              <h2 class="mb-3 text-sm font-semibold text-muted">
+                Recent Chapters
+                <span class="font-normal text-muted-2">(preview)</span>
+              </h2>
+              <ul class="divide-y divide-border">
+                <% @chapters.each do |chapter| %>
+                  <li class="py-2 first:pt-0 last:pb-0 -mx-2 px-2 rounded-md transition-colors hover:bg-surface-2/40">
+                    <div class="flex items-center justify-between gap-4">
+                      <div class="min-w-0 flex-1">
+                        <p class="text-sm text-foreground truncate">
+                          <span class="font-medium">Ch. <%= chapter.number %></span>
+                          <% if chapter.title.present? %>
+                            <span class="text-muted-2">-</span>
+                            <span class="text-muted"><%= chapter.title %></span>
+                          <% end %>
                         </p>
-                      <% end %>
+                        <% if chapter.group.present? || chapter.published_at.present? %>
+                          <p class="text-xs text-muted-2">
+                            <% if chapter.group.present? %><%= chapter.group %><% end %>
+                            <% if chapter.group.present? && chapter.published_at.present? %> · <% end %>
+                            <% if chapter.published_at.present? %><%= time_ago_in_words(chapter.published_at) %> ago<% end %>
+                          </p>
+                        <% end %>
+                      </div>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <% if chapter.volume.present? %>
+                          <span class="text-xs text-muted-2">Vol. <%= chapter.volume %></span>
+                        <% end %>
+                        <% if chapter.url.present? %>
+                          <%= link_to "Read",
+                                      source_preview_read_path(source_slug: source_slug(@source), series_url: @series_url, chapter_url: chapter.url),
+                                      class: "inline-flex items-center rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-2",
+                                      data: { turbo_preload: "" } %>
+                        <% end %>
+                      </div>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                      <% if chapter.volume.present? %>
-                        <span class="text-xs text-muted-2">Vol. <%= chapter.volume %></span>
-                      <% end %>
-                      <% if chapter.url.present? %>
-                        <%= link_to "Read",
-                                    source_preview_read_path(source_slug: source_slug(@source), series_url: @series_url, chapter_url: chapter.url),
-                                    class: "inline-flex items-center rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-2",
-                                    data: { turbo_preload: "" } %>
-                      <% end %>
-                    </div>
-                  </div>
-                </li>
+                  </li>
+                <% end %>
+              </ul>
+              <% if @chapters.size >= 10 %>
+                <p class="mt-3 text-xs text-muted-2 text-center">
+                  Import to see all chapters
+                </p>
               <% end %>
-            </ul>
-            <% if @chapters.size >= 10 %>
-              <p class="mt-3 text-xs text-muted-2 text-center">
-                Import to see all chapters
-              </p>
-            <% end %>
-          </div>
-        <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
   <% end %>
