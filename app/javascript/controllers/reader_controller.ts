@@ -91,6 +91,8 @@ export default class extends Controller {
   private lightboxOpen = false
   private pendingProgressSave?: ReturnType<typeof setTimeout>
   private isScrolling = false // Lock to prevent observer interference during programmatic scroll
+  private readonly nextChapterPromptDelayMs = 500
+  private pendingNextChapterPrompt?: ReturnType<typeof setTimeout>
   private nextChapterCountdownInterval?: ReturnType<typeof setInterval>
   private nextChapterCountdownValue = 5
   private hasInteracted = false // Don't auto-advance on initial page load
@@ -127,6 +129,7 @@ export default class extends Controller {
     if (this.lightboxCloseTimeout) clearTimeout(this.lightboxCloseTimeout)
     if (this.lightboxImageSwapTimeout) clearTimeout(this.lightboxImageSwapTimeout)
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
+    this.clearPendingNextChapterPrompt()
     this.clearNextChapterCountdown()
   }
 
@@ -336,13 +339,19 @@ export default class extends Controller {
     const nextIndex = this.currentIndex + 1
     const navigationBehavior = this.navigationScrollBehavior()
     if (nextIndex >= this.pageTargets.length) {
-      // Past last page — trigger next chapter flow
+      // Past last page — require an explicit next attempt, then prompt.
       if (this.lightboxOpen) this.closeLightbox()
-      this.checkEndOfChapter()
+      this.queueNextChapterOverlay()
       return
     }
     if (this.lightboxOpen && this.usesVerticalLightbox()) {
       this.scrollVerticalLightboxToIndex(nextIndex, navigationBehavior)
+      return
+    }
+    if (this.lightboxOpen) {
+      // Keep keyboard-driven lightbox navigation deterministic; panel animation
+      // is handled by the lightbox image transition itself.
+      this.scrollToIndex(nextIndex, "instant")
       return
     }
     this.scrollToIndex(nextIndex, navigationBehavior)
@@ -353,6 +362,10 @@ export default class extends Controller {
     const navigationBehavior = this.navigationScrollBehavior()
     if (this.lightboxOpen && this.usesVerticalLightbox()) {
       this.scrollVerticalLightboxToIndex(this.currentIndex - 1, navigationBehavior)
+      return
+    }
+    if (this.lightboxOpen) {
+      this.scrollToIndex(this.currentIndex - 1, "instant")
       return
     }
     this.scrollToIndex(this.currentIndex - 1, navigationBehavior)
@@ -573,6 +586,8 @@ export default class extends Controller {
       (entries) => {
         // Skip if we're in the middle of a programmatic scroll
         if (this.isScrolling) return
+        // While lightbox is open, keyboard/lightbox observers own current page state.
+        if (this.lightboxOpen) return
         
         if (this.isHorizontal() || this.isPagedVertical()) {
           // Paged modes: find the most visible page panel.
@@ -753,19 +768,36 @@ export default class extends Controller {
     })
   }
 
-  // Check if we're on the last page and should show next chapter prompt
-  // Only auto-show when user has actively navigated (not on initial load from saved progress)
+  // Keep next-chapter prompt state in sync with current location in chapter.
+  // Showing is gated behind an explicit next-at-end action via queueNextChapterOverlay().
   private checkEndOfChapter() {
     if (!this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
     if (!this.hasInteracted) return
 
     const isLastPage = this.currentIndex === this.pageTargets.length - 1
 
-    if (isLastPage) {
-      this.showNextChapterOverlay()
-    } else {
+    if (!isLastPage) {
       this.hideNextChapterOverlay()
     }
+  }
+
+  private queueNextChapterOverlay() {
+    if (!this.hasNextChapterUrlValue || !this.nextChapterUrlValue) return
+    if (!this.hasInteracted) return
+    if (this.currentIndex !== this.pageTargets.length - 1) return
+    if (this.pendingNextChapterPrompt) return
+
+    if (this.hasNextChapterOverlayTarget && !this.nextChapterOverlayTarget.classList.contains("hidden")) return
+
+    this.pendingNextChapterPrompt = setTimeout(() => {
+      this.pendingNextChapterPrompt = undefined
+
+      // User may have moved away from the end before the delay elapsed.
+      if (this.currentIndex !== this.pageTargets.length - 1) return
+      if (!this.hasInteracted) return
+
+      this.showNextChapterOverlay()
+    }, this.nextChapterPromptDelayMs)
   }
 
   private showNextChapterOverlay() {
@@ -779,12 +811,19 @@ export default class extends Controller {
   }
 
   private hideNextChapterOverlay() {
+    this.clearPendingNextChapterPrompt()
     if (!this.hasNextChapterOverlayTarget) return
     
     this.nextChapterOverlayTarget.classList.add("hidden")
     this.nextChapterOverlayTarget.classList.remove("flex")
     
     this.clearNextChapterCountdown()
+  }
+
+  private clearPendingNextChapterPrompt() {
+    if (!this.pendingNextChapterPrompt) return
+    clearTimeout(this.pendingNextChapterPrompt)
+    this.pendingNextChapterPrompt = undefined
   }
 
   private startNextChapterCountdown() {
