@@ -88,15 +88,21 @@
         <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>
         <% is_complete = file_asset&.download_status == "complete" %>
         <% unless download_in_progress %>
-          <%= button_to is_complete ? "Re-download" : "Download",
-                        source_series_chapter_download_path(
-                          source_slug: source.slug,
-                          series_slug: series.to_param,
-                          chapter_identifier: chapter_identifier(chapter)
-                        ),
-                        method: :post,
-                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent",
-                        data: { turbo_submits_with: "Queuing..." } %>
+          <%= form_with url: source_series_chapter_download_path(
+                        source_slug: source.slug,
+                        series_slug: series.to_param,
+                        chapter_identifier: chapter_identifier(chapter)
+                      ),
+                      method: :post do %>
+            <%= render UI::ButtonComponent.new(
+              type: "submit",
+              variant: :ghost,
+              class: "border-accent/40 text-accent hover:bg-accent-soft",
+              data: { turbo_submits_with: "Queuing..." }
+            ) do %>
+              <%= is_complete ? "Re-download" : "Download" %>
+            <% end %>
+          <% end %>
         <% end %>
       <% end %>
     </div>

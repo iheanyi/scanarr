@@ -60,7 +60,7 @@ module UI
         id: input_id,
         class: input_classes
       }
-      attrs[:value] = @value if @value.present? && !@form
+      attrs[:value] = @value if @value.present?
       attrs[:name] = @name if @name.present? && !@form
       attrs[:aria] = aria_attributes if aria_attributes.present?
       attrs.merge(system_arguments.except(:class))

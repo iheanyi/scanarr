@@ -5,6 +5,8 @@
 
 <div class="space-y-6">
   <nav aria-label="Breadcrumb" class="text-sm text-muted">
+    <%= link_to "Library", library_path, class: "hover:text-foreground", data: { turbo_preload: "" } %>
+    <span class="text-muted-2">/</span>
     <%= link_to @source.name || @source.key, source_series_index_path(source_slug: @source.slug), class: "hover:text-foreground", data: { turbo_preload: "" } %>
     <span class="text-muted-2">/</span>
     <span class="text-foreground"><%= @series.canonical_title %></span>
@@ -22,7 +24,7 @@
       ) do |cover| %>
         <% cover.with_fallback do %>
           <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
-            <span class="text-xs uppercase text-muted-2">No cover</span>
+            <%= icon "book-open", class: "h-6 w-6 text-muted-2", stroke_width: "1.75" %>
             <% if @series.cover_url.present? %>
               <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
                             method: :post,
@@ -180,11 +182,15 @@
             <%= form_with url: source_series_download_all_path(source_slug: @source.slug, series_slug: @series.to_param),
                           method: :post,
                           data: { action: "submit->loading-button#submit" } do %>
-              <button type="submit"
-                      data-loading-button-target="button"
-                      data-turbo-submits-with="Queuing..."
-                      <%= "disabled" if @downloadable_count == 0 %>
-                      class="<%= @downloadable_count > 0 ? "inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong transition-opacity" : "inline-flex items-center gap-1.5 rounded-md bg-surface-2 px-3 py-1.5 text-sm font-semibold text-muted cursor-not-allowed" %>">
+              <%= render UI::ButtonComponent.new(
+                type: "submit",
+                disabled: @downloadable_count == 0,
+                class: @downloadable_count > 0 ? "transition-opacity" : "bg-surface-2 text-muted hover:bg-surface-2 cursor-not-allowed",
+                data: {
+                  loading_button_target: "button",
+                  turbo_submits_with: "Queuing..."
+                }
+              ) do %>
                 <svg data-loading-button-target="spinner" xmlns="http://www.w3.org/2000/svg" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -194,7 +200,7 @@
                 <% if @downloadable_count > 0 %>
                   <span class="rounded-full bg-background/20 px-1.5 py-0.5 text-xs"><%= @downloadable_count %></span>
                 <% end %>
-              </button>
+              <% end %>
             <% end %>
           </div>
         </div>
@@ -235,27 +241,30 @@
                 <span data-bulk-select-target="count" class="text-sm font-medium text-foreground">0 selected</span>
               </div>
               <div class="flex items-center gap-2">
-                <button type="button"
-                        data-action-name="download"
-                        data-action="click->bulk-select#submitAction"
-                        class="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong">
+                <%= render UI::ButtonComponent.new(
+                  type: "button",
+                  data: { action_name: "download", action: "click->bulk-select#submitAction" }
+                ) do %>
                   <%= icon "download", class: "h-4 w-4" %>
                   Download
-                </button>
-                <button type="button"
-                        data-action-name="remove"
-                        data-action="click->bulk-select#submitAction"
-                        class="inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft">
+                <% end %>
+                <%= render UI::ButtonComponent.new(
+                  type: "button",
+                  variant: :danger,
+                  class: "border border-danger/40 bg-transparent text-danger hover:bg-danger-soft",
+                  data: { action_name: "remove", action: "click->bulk-select#submitAction" }
+                ) do %>
                   <%= icon "trash-2", class: "h-4 w-4" %>
                   Remove
-                </button>
-                <button type="button"
-                        data-action-name="mark_read"
-                        data-action="click->bulk-select#submitAction"
-                        class="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-surface-2">
+                <% end %>
+                <%= render UI::ButtonComponent.new(
+                  type: "button",
+                  variant: :ghost,
+                  data: { action_name: "mark_read", action: "click->bulk-select#submitAction" }
+                ) do %>
                   <%= icon "check", class: "h-4 w-4" %>
                   Mark Read
-                </button>
+                <% end %>
               </div>
             </div>
           <% end %>
@@ -263,12 +272,25 @@
       </div>
     <% else %>
       <%= render UI::EmptyStateComponent.new(
-        title: "No chapters imported yet",
-        description: "Check back after importing chapters from the source.",
+        title: "No chapters available from this source yet",
+        description: "You can retry this source now or migrate your followed series to another source that has chapters.",
         compact: true
       ) do |empty| %>
         <% empty.with_icon do %>
           <%= icon "book-open", class: "h-6 w-6" %>
+        <% end %>
+        <% empty.with_action do %>
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <%= link_to "Search source",
+                        source_search_path(source_slug: @source.slug, q: @series.canonical_title),
+                        class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-muted hover:text-foreground hover:border-muted" %>
+            <%= link_to "Browse source",
+                        source_browse_path(source_slug: @source.slug),
+                        class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-muted hover:text-foreground hover:border-muted" %>
+            <%= link_to "Try source migration",
+                        source_migrations_path(from_source_id: @source.id),
+                        class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft" %>
+          </div>
         <% end %>
       <% end %>
     <% end %>

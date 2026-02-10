@@ -12,10 +12,11 @@ module UI
       info: { icon: "info", color: "text-info", border: "border-l-info" }
     }.freeze
 
-    def initialize(message:, variant: :success, **system_arguments)
+    def initialize(message:, variant: :success, auto_dismiss: true, **system_arguments)
       super(**system_arguments)
       @message = message
       @variant = variant.to_sym
+      @auto_dismiss = auto_dismiss
     end
 
     def variant_config
@@ -42,6 +43,10 @@ module UI
         "bg-surface px-4 py-3 shadow-lg backdrop-blur-sm",
         system_arguments[:class]
       )
+    end
+
+    def auto_dismiss?
+      @auto_dismiss
     end
 
     private

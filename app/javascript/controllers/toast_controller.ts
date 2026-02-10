@@ -7,9 +7,13 @@ import { Controller } from "@hotwired/stimulus"
  * and slides out on dismiss. Handles its own lifecycle (removes from DOM).
  */
 export default class ToastController extends Controller {
-  static values = { delay: { type: Number, default: 4000 } }
+  static values = {
+    delay: { type: Number, default: 4000 },
+    autoDismiss: { type: Boolean, default: true }
+  }
 
   declare delayValue: number
+  declare autoDismissValue: boolean
   private timeout: ReturnType<typeof setTimeout> | null = null
 
   connect() {
@@ -21,7 +25,9 @@ export default class ToastController extends Controller {
       el.classList.add("translate-y-0", "opacity-100")
     })
 
-    this.timeout = setTimeout(() => this.dismiss(), this.delayValue)
+    if (this.autoDismissValue) {
+      this.timeout = setTimeout(() => this.dismiss(), this.delayValue)
+    }
   }
 
   disconnect() {
