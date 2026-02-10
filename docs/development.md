@@ -1,5 +1,48 @@
 # Development Workflow
 
+## Sidekiq + Redis local setup
+
+Scanarr now uses Sidekiq for jobs and Redis for both queueing and cache in development.
+
+### Quick start
+
+1. Start Redis locally:
+
+```bash
+# Option A (Homebrew)
+brew services start redis
+
+# Option B (Docker/Valkey)
+docker run --name scanarr-redis -p 6379:6379 valkey/valkey:8
+```
+
+2. Run setup (includes Redis connectivity checks):
+
+```bash
+bin/setup
+```
+
+3. Start app + worker:
+
+```bash
+bin/dev
+```
+
+### Useful queue commands
+
+```bash
+bin/rails queue:health              # Redis + Sidekiq + cron visibility
+bin/rails queue:cron                # list loaded cron jobs
+bin/rails queue:assert_single_worker # dev guard against duplicate workers
+bin/rails queue:clear_dev           # clear queue/retry/dead/scheduled (dev only)
+```
+
+### Notes on job compatibility
+
+- **Recurring/cron jobs** are loaded from `config/sidekiq_schedule.yml` via `sidekiq-cron`.
+- **Continuable jobs** still run through Active Job (`ActiveJob::Continuable`) on Sidekiq.
+- `DownloadChapterJob` explicitly rehydrates runtime entities at each continuation step, which prevents nil-state resume failures across retries/resumes.
+
 ## Local test user policy
 
 To keep local profiling/testing repeatable, use a dedicated development user instead of mutating arbitrary records.

@@ -1,3 +1,3 @@
 web: env ENABLE_YJIT=${ENABLE_YJIT:-1} bin/rails server -p ${PORT:-3000}
 assets: yarn build:watch
-jobs: env ENABLE_YJIT=${ENABLE_YJIT:-1} bin/jobs
+sidekiq: env ENABLE_YJIT=${ENABLE_YJIT:-1} SIDEKIQ_REDIS_URL=${SIDEKIQ_REDIS_URL:-redis://127.0.0.1:6379/1} REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379/0} bundle exec sidekiq -C config/sidekiq.yml -e ${RAILS_ENV:-development} -P tmp/pids/sidekiq.pid

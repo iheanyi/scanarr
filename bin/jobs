@@ -1,6 +1,10 @@
 #!/usr/bin/env ruby
 
 require_relative "../config/environment"
-require "solid_queue/cli"
+require "sidekiq/cli"
 
-SolidQueue::Cli.start(ARGV)
+unless ARGV.any? { |arg| arg == "-C" || arg.start_with?("--config") }
+  ARGV.push("-C", "config/sidekiq.yml")
+end
+
+Sidekiq::CLI.instance.run

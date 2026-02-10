@@ -128,8 +128,13 @@ Rails.application.routes.draw do
     end
   end
 
-  # Mission Control for SolidQueue job monitoring
+  # Mission Control for Active Job monitoring
   mount MissionControl::Jobs::Engine, at: "/admin/jobs"
+
+  if Rails.env.development?
+    require "sidekiq/web"
+    mount Sidekiq::Web => "/admin/sidekiq"
+  end
 
   # Error pages (used by config.exceptions_app = routes)
   match "/404", to: "errors#not_found", via: :all

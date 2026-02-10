@@ -1,0 +1,43 @@
+development:
+  restart_stalled_downloads:
+    class: "RestartStalledDownloadsJob"
+    cron: "* * * * *"
+    queue: default
+  check_new_chapters:
+    class: "CheckNewChaptersJob"
+    cron: "*/30 * * * *"
+    queue: default
+  cleanup_orphaned_downloads:
+    class: "CleanupOrphanedDownloadsJob"
+    cron: "0 3 * * *"
+    queue: default
+  clean_old_notifications:
+    class: "CleanOldNotificationsJob"
+    cron: "0 3 * * *"
+    queue: default
+
+production:
+  restart_stalled_downloads:
+    class: "RestartStalledDownloadsJob"
+    cron: "* * * * *"
+    queue: default
+  check_new_chapters:
+    class: "CheckNewChaptersJob"
+    cron: "*/30 * * * *"
+    queue: default
+  cleanup_orphaned_downloads:
+    class: "CleanupOrphanedDownloadsJob"
+    cron: "0 3 * * *"
+    queue: default
+  clean_old_notifications:
+    class: "CleanOldNotificationsJob"
+    cron: "0 3 * * *"
+    queue: default
+  scheduled_backup:
+    class: "ScheduledBackupJob"
+    cron: "0 3 * * *"
+    queue: default
+  backup_retention_cleanup:
+    class: "BackupRetentionCleanupJob"
+    cron: "0 4 * * *"
+    queue: default
