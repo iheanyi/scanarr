@@ -196,6 +196,5 @@ module Scrapers
       "#{BASE_URL}/read-online/#{slug}-chapter-#{chapter_str}.html"
     end
   end
-end
-
+  end
 end

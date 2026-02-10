@@ -235,6 +235,5 @@ module Scrapers
       "manhwa" # Default for AsuraScans (primarily Korean webtoons)
     end
   end
-end
-
+  end
 end

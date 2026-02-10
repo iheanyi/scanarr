@@ -155,11 +155,11 @@ module Scrapers
     # Fallback browse via HTML page scraping
     def browse_html_fallback(sort, page)
       path = case sort
-             when "popular"
+      when "popular"
                "/manga/?m_orderby=views"
-             else
+      else
                "/manga/?m_orderby=latest"
-             end
+      end
       path += "&page=#{page}" if page > 1
 
       response = http.get("#{base_url}#{path}")
@@ -453,6 +453,5 @@ module Scrapers
       "manga"
     end
   end
-end
-
+  end
 end

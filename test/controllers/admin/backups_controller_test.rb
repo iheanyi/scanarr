@@ -46,6 +46,7 @@ class Admin::BackupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_backups_path
 
     record = BackupRecord.last
+
     assert_equal "manual", record.backup_type
     assert_equal "pending", record.status
   end

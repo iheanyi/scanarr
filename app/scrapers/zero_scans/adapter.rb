@@ -35,13 +35,13 @@ module Scrapers
       return [] if comics.empty?
 
       sorted = case sort.to_s.downcase
-               when "popular"
+      when "popular"
                  comics.sort_by { |c| -(c["view_count"] || 0) }
-               when "alphabetical"
+      when "alphabetical"
                  comics.sort_by { |c| (c["name"] || "").downcase }
-               else # latest — sort by most recently updated (highest ID as proxy)
+      else # latest — sort by most recently updated (highest ID as proxy)
                  comics.sort_by { |c| -(c["id"] || 0) }
-               end
+      end
 
       paginated = sorted.each_slice(limit).to_a
       current_page = paginated[page - 1] || []
@@ -351,6 +351,5 @@ module Scrapers
       end
     end
   end
-end
-
+  end
 end

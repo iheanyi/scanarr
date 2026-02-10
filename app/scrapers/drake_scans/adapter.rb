@@ -424,6 +424,5 @@ module Scrapers
       "manga"
     end
   end
-end
-
+  end
 end

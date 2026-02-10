@@ -62,6 +62,7 @@ class TachiyomiSourceMapperTest < ActiveSupport::TestCase
     )
 
     unmapped = TachiyomiSourceMapper.unmapped_sources(backup)
+
     assert_includes unmapped, 123456789
     refute_includes unmapped, 2499283573021220255
   end

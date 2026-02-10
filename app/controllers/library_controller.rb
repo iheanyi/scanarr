@@ -211,8 +211,12 @@ class LibraryController < ApplicationController
   def apply_genre_filter(scope, genres = @genres)
     return scope if genres.blank?
 
-    genre_list = genres.map { |genre| ActiveRecord::Base.connection.quote(genre) }.join(",")
-    scope.where("series.normalized_categories ?| ARRAY[#{genre_list}]")
+    category_column = Series.arel_table[:normalized_categories]
+    predicate = genres
+      .map { |genre| Arel::Nodes::InfixOperation.new("?", category_column, Arel::Nodes.build_quoted(genre)) }
+      .reduce { |left, right| Arel::Nodes::Or.new(left, right) }
+
+    scope.where(predicate)
   end
 
   def apply_status_filter(scope, status)

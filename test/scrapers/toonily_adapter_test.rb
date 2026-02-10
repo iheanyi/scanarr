@@ -222,7 +222,7 @@ class ToonilyAdapterTest < ActiveSupport::TestCase
   # -- Browse tests --
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_results

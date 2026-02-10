@@ -370,5 +370,5 @@ module Scrapers
       "manga" # default
     end
   end
-end
+  end
 end

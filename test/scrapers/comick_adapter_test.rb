@@ -143,7 +143,7 @@ class ComickAdapterTest < ActiveSupport::TestCase
   end
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_popular
@@ -167,10 +167,12 @@ class ComickAdapterTest < ActiveSupport::TestCase
     # These test the private extract_slug method indirectly via series()
     # Test with plain slug
     series = adapter.series("one-piece")
+
     assert_equal "One Piece", series.title
 
     # Test with full URL
     series = adapter.series("https://comick.live/comic/one-piece")
+
     assert_equal "One Piece", series.title
   end
 

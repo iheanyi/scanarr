@@ -34,11 +34,11 @@ module Scrapers
     # @return [Array<ResultTypes::BrowseResult>]
     def browse(sort: "latest", page: 1, limit: 20)
       path = case sort.to_s.downcase
-             when "latest"
+      when "latest"
                "/directory/#{page}.htm?latest"
-             else
+      else
                "/directory/#{page}.htm"
-             end
+      end
 
       response = http.get("#{base_url}#{path}", headers: default_headers)
       return [] unless response.status == 200
@@ -526,5 +526,5 @@ module Scrapers
       end
     end
   end
-end
+  end
 end

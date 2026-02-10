@@ -96,7 +96,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
 
     results = adapter.search("nonexistent")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # -- Query Normalization --
@@ -104,6 +104,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
   def test_normalize_query_lowercases
     # Test indirectly by checking the adapter doesn't error with uppercase
     results = @adapter.search("One Piece")
+
     assert_equal 2, results.size
   end
 
@@ -176,6 +177,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters(@slug)
 
     numbers = chapters.map(&:number)
+
     assert_includes numbers, "1093"
     assert_includes numbers, "1094"
   end
@@ -212,7 +214,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
     adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
-    assert_equal [], adapter.chapters("nonexistent")
+    assert_empty adapter.chapters("nonexistent")
   end
 
   # -- Pages --
@@ -254,13 +256,13 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
     adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
-    assert_equal [], adapter.pages("#{@base_url}/manga/foo/chapter-1")
+    assert_empty adapter.pages("#{@base_url}/manga/foo/chapter-1")
   end
 
   # -- Browse --
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_latest
@@ -282,7 +284,7 @@ class MangaKakalotAdapterTest < ActiveSupport::TestCase
     http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
     adapter = Scrapers::MangaKakalot::Adapter.new(config: { "base_url" => @base_url }, http: http)
 
-    assert_equal [], adapter.browse(sort: "latest")
+    assert_empty adapter.browse(sort: "latest")
   end
 
   private

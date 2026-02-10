@@ -201,11 +201,11 @@ module Scrapers
 
     def browse(sort: "latest", page: 1, limit: 20)
       path = case sort.to_s.downcase
-             when "popular"
+      when "popular"
                "/manga-list/hot-manga"
-             else
+      else
                "/manga-list/latest-manga"
-             end
+      end
 
       response = http.get("#{base_url}#{path}", params: { page: page })
       return [] unless response.status == 200
@@ -334,5 +334,5 @@ module Scrapers
       end
     end
   end
-end
+  end
 end

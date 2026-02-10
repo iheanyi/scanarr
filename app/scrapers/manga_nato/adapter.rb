@@ -344,5 +344,5 @@ module Scrapers
       end
     end
   end
-end
+  end
 end

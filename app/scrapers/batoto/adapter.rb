@@ -32,11 +32,11 @@ module Scrapers
     # @return [Array<ResultTypes::BrowseResult>]
     def browse(sort: "latest", page: 1, limit: 20)
       path = case sort.to_s.downcase
-             when "popular"
+      when "popular"
                "/v3x-search?sort=views_a&page=#{page}"
-             else
+      else
                "/v3x-search?sort=update&page=#{page}"
-             end
+      end
 
       response = http.get("#{base_url}#{path}")
       return [] unless response.status == 200
@@ -585,5 +585,5 @@ module Scrapers
       end
     end
   end
-end
+  end
 end

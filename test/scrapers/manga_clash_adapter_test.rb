@@ -111,7 +111,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
 
     results = adapter.search("one piece")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -184,6 +184,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1.0
     assert_includes numbers, 2.0
     assert_includes numbers, 3.0
@@ -193,6 +194,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -208,6 +210,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/manga/#{@series_slug}/")
 
     dated_chapter = chapters.find { |ch| ch.published_at.present? }
+
     assert_not_nil dated_chapter
   end
 
@@ -217,7 +220,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
 
     result = adapter.chapters("#{@base_url}/manga/nonexistent/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests ---
@@ -239,7 +242,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -258,19 +261,19 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
 
     result = adapter.pages("#{@base_url}/manga/one-piece/chapter-999/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
@@ -278,7 +281,7 @@ class MangaClashAdapterTest < ActiveSupport::TestCase
     results = @adapter.browse(sort: "latest", page: 1)
 
     results.each do |result|
-      assert result.title.present?
+      assert_predicate result.title, :present?
     end
   end
 

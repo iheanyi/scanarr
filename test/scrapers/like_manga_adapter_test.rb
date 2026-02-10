@@ -110,7 +110,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     results = adapter.search("one piece")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -183,6 +183,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1092.0
     assert_includes numbers, 1093.0
     assert_includes numbers, 1094.0
@@ -192,6 +193,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -215,6 +217,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/#{@series_slug}/")
 
     dated_chapter = chapters.find { |ch| ch.published_at.present? }
+
     assert_not_nil dated_chapter
   end
 
@@ -224,7 +227,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     result = adapter.chapters("#{@base_url}/nonexistent/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests (Token method) ---
@@ -246,7 +249,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -265,7 +268,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     result = adapter.pages("#{@base_url}/some-chapter/")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Fallback Tests ---
@@ -286,13 +289,13 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
@@ -300,7 +303,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     results = @adapter.browse(sort: "latest", page: 1)
 
     results.each do |result|
-      assert result.title.present?
+      assert_predicate result.title, :present?
     end
   end
 
@@ -387,6 +390,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     # Should have chapters from both page 1 (3 chapters) and AJAX page 2 (2 chapters)
     assert_equal 5, chapters.size
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_includes numbers, 1090.0
     assert_includes numbers, 1094.0
   end
@@ -402,7 +406,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     results = adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
@@ -420,7 +424,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
 
     results = adapter.browse(sort: "latest", page: 1)
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Pages Token CDN URL Tests ---
@@ -494,6 +498,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/#{@chapter_slug}/")
 
     webp_page = pages.find { |p| p.url.end_with?(".webp") }
+
     assert_not_nil webp_page
     assert_equal "image/webp", webp_page.mime_type
   end
@@ -502,6 +507,7 @@ class LikeMangaAdapterTest < ActiveSupport::TestCase
     pages = @adapter.pages("#{@base_url}/#{@chapter_slug}/")
 
     jpg_page = pages.find { |p| p.url.end_with?(".jpg") }
+
     assert_not_nil jpg_page
     assert_equal "image/jpeg", jpg_page.mime_type
   end

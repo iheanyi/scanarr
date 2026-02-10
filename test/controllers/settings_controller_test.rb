@@ -100,7 +100,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
     patch settings_site_path, params: { site_setting: { registration_enabled: "true" } }
 
-    assert SiteSetting.registration_enabled?
+    assert_predicate SiteSetting, :registration_enabled?
   end
 
   def test_member_cannot_update_site_settings
@@ -110,7 +110,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     patch settings_site_path, params: { site_setting: { registration_enabled: "false" } }
 
     assert_redirected_to root_path
-    assert SiteSetting.registration_enabled?
+    assert_predicate SiteSetting, :registration_enabled?
   end
 
   def test_update_site_settings_via_turbo_stream

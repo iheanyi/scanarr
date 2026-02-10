@@ -1,10 +1,14 @@
 {
   "ignored_warnings": [
     {
-      "fingerprint": "5836076a07e13c782235c0d9f3b0b620728e157dbe08c5cb80c0b0d51b8784f1",
-      "note": "Intentional SSL fallback for CDNs with certificate issues. Only used for non-sensitive cover image downloads after initial secure attempt fails."
+      "fingerprint": "a8033b907a37d6e77bff977d5d8e5cc02850adbfa34f18887a573e8a66710578",
+      "note": "Backup downloads are constrained to files under storage/backups via resolved_backup_path and require admin authentication."
+    },
+    {
+      "fingerprint": "ea25daf10377f0fd14ad38fbc39c8be428b21c461cb5aa9c90f0b09f7cc3df1d",
+      "note": "Backup deletion is constrained to files under storage/backups via resolved_backup_path and require admin authentication."
     }
   ],
-  "updated": "2026-02-04",
+  "updated": "2026-02-10",
   "brakeman_version": "8.0.1"
 }

@@ -51,6 +51,7 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     assert_includes result.migrated, @series
 
     @follow.reload
+
     assert_equal [ @to_source.key ], @follow.source_priority
   end
 
@@ -78,6 +79,7 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     ).execute!
 
     @follow.reload
+
     assert_equal @to_source.key, @follow.source_priority.first
     refute_includes @follow.source_priority, @from_source.key
   end

@@ -71,6 +71,7 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to login_path
     follow_redirect!
+
     assert_includes @response.body, "Registration is currently disabled"
   end
 

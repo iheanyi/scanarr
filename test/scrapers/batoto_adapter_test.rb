@@ -101,7 +101,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
     results = adapter.search("one piece")
 
-    assert_equal [], results
+    assert_empty results
   end
 
   # --- Series Tests ---
@@ -174,6 +174,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/title/#{@series_slug}")
 
     numbers = chapters.map(&:number).map(&:to_f)
+
     assert_includes numbers, 1.0
     assert_includes numbers, 2.0
     assert_includes numbers, 3.0
@@ -183,6 +184,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/title/#{@series_slug}")
 
     numbers = chapters.map { |ch| ch.number.to_f }
+
     assert_equal numbers.sort, numbers
   end
 
@@ -198,6 +200,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     chapters = @adapter.chapters("#{@base_url}/title/#{@series_slug}")
 
     titled_chapter = chapters.find { |ch| ch.title.present? }
+
     assert_not_nil titled_chapter
     assert_equal "Romance Dawn", titled_chapter.title
   end
@@ -208,7 +211,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
     result = adapter.chapters("#{@base_url}/title/99999")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   # --- Pages Tests ---
@@ -231,7 +234,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
     pages.each do |page|
       assert page.url.start_with?("https://")
-      assert page.url.match?(/\.(jpg|jpeg|png|webp)/i)
+      assert_match /\.(jpg|jpeg|png|webp)/i, page.url
     end
   end
 
@@ -256,7 +259,7 @@ class BatotoAdapterTest < ActiveSupport::TestCase
 
     result = adapter.pages("#{@base_url}/chapter/99999")
 
-    assert_equal [], result
+    assert_empty result
   end
 
   def test_pages_includes_mime_type
@@ -271,20 +274,20 @@ class BatotoAdapterTest < ActiveSupport::TestCase
   # --- Browse Tests ---
 
   def test_supports_browse
-    assert @adapter.supports_browse?
+    assert_predicate @adapter, :supports_browse?
   end
 
   def test_browse_returns_browse_results
     results = @adapter.browse(sort: "latest", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 
   def test_browse_popular
     results = @adapter.browse(sort: "popular", page: 1)
 
-    assert results.size > 0
+    assert_operator results.size, :>, 0
     assert_kind_of ResultTypes::BrowseResult, results.first
   end
 

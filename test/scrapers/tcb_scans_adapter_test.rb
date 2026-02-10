@@ -168,7 +168,7 @@ class TcbScansAdapterTest < ActiveSupport::TestCase
   end
 
   def test_does_not_support_browse
-    refute @adapter.supports_browse?
+    refute_predicate @adapter, :supports_browse?
   end
 
   private
