@@ -6,74 +6,73 @@
   ) %>
 
   <% has_filter_options = @search_filter_options.values.any?(&:present?) %>
-  <section class="rounded-lg border border-border bg-surface p-4">
-    <%= form_with url: source_search_path(source_slug: source_slug(@source)),
-                  method: :get,
-                  data: { turbo_frame: "source-search-results", turbo_action: "advance" },
-                  class: "space-y-4" do |form| %>
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div class="flex-1 space-y-1" data-controller="auto-submit" data-auto-submit-delay-value="250">
-          <%= form.label :q, "Series title", class: "text-sm text-foreground" %>
-          <%= form.text_field :q,
-                              value: @query,
-                              placeholder: "One Piece",
-                              class: "w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent",
-                              data: { action: "input->auto-submit#submitDebounced" } %>
-        </div>
-        <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
-          Search
-        <% end %>
-      </div>
-
-      <% advanced_filters_active = @selected_genres.present? || @selected_statuses.present? %>
-      <details class="rounded-lg border border-border/70 bg-surface/40 p-3" <%= "open" if advanced_filters_active %>>
-        <summary class="cursor-pointer select-none text-sm font-medium text-muted hover:text-foreground">
-          Advanced filters
-        </summary>
-        <% if has_filter_options %>
-          <div class="mt-3 grid gap-3 md:grid-cols-3">
-            <% if @search_filter_options[:genres].present? %>
-              <div data-controller="auto-submit" data-auto-submit-delay-value="150" data-action="change->auto-submit#submitDebounced">
-                <%= render UI::MultiSelectComponent.new(
-                  name: :genres,
-                  options: @search_filter_options[:genres],
-                  selected: @selected_genres,
-                  label: "Genres",
-                  filter_placeholder: "Filter genres",
-                  all_label: "All genres",
-                  max_chips: 2
-                ) %>
-              </div>
-            <% end %>
-
-            <% if @search_filter_options[:statuses].present? %>
-              <div data-controller="auto-submit" data-auto-submit-delay-value="150" data-action="change->auto-submit#submitDebounced">
-                <%= render UI::MultiSelectComponent.new(
-                  name: :statuses,
-                  options: @search_filter_options[:statuses],
-                  selected: @selected_statuses,
-                  label: "Status",
-                  filter_placeholder: "Filter status",
-                  all_label: "All statuses",
-                  max_chips: 2
-                ) %>
-              </div>
-            <% end %>
-
-            <div class="flex items-end">
-              <%= link_to "Clear advanced filters",
-                          source_search_path(source_search_params(genres: nil, statuses: nil)),
-                          class: "inline-flex h-9 items-center rounded-md border border-border px-3 text-sm text-muted hover:text-foreground hover:border-muted" %>
-            </div>
-          </div>
-        <% else %>
-          <p class="mt-3 text-xs text-muted-2">This source does not expose genre or status filters yet.</p>
-        <% end %>
-      </details>
-    <% end %>
-  </section>
-
   <%= turbo_frame_tag "source-search-results", class: "has-loading-overlay" do %>
+    <section class="rounded-lg border border-border bg-surface p-4">
+      <%= form_with url: source_search_path(source_slug: source_slug(@source)),
+                    method: :get,
+                    data: { turbo_frame: "source-search-results", turbo_action: "advance" },
+                    class: "space-y-4" do |form| %>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="flex-1 space-y-1" data-controller="auto-submit" data-auto-submit-delay-value="250">
+            <%= form.label :q, "Series title", class: "text-sm text-foreground" %>
+            <%= form.text_field :q,
+                                value: @query,
+                                placeholder: "One Piece",
+                                class: "w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent",
+                                data: { action: "input->auto-submit#submitDebounced" } %>
+          </div>
+          <%= render UI::ButtonComponent.new(variant: :primary, type: "submit") do %>
+            Search
+          <% end %>
+        </div>
+
+        <% advanced_filters_active = @selected_genres.present? || @selected_statuses.present? %>
+        <details class="rounded-lg border border-border/70 bg-surface/40 p-3" <%= "open" if advanced_filters_active %>>
+          <summary class="cursor-pointer select-none text-sm font-medium text-muted hover:text-foreground">
+            Advanced filters
+          </summary>
+          <% if has_filter_options %>
+            <div class="mt-3 grid gap-3 md:grid-cols-3">
+              <% if @search_filter_options[:genres].present? %>
+                <div data-controller="auto-submit" data-auto-submit-delay-value="150" data-action="change->auto-submit#submitDebounced">
+                  <%= render UI::MultiSelectComponent.new(
+                    name: :genres,
+                    options: @search_filter_options[:genres],
+                    selected: @selected_genres,
+                    label: "Genres",
+                    filter_placeholder: "Filter genres",
+                    all_label: "All genres",
+                    max_chips: 2
+                  ) %>
+                </div>
+              <% end %>
+
+              <% if @search_filter_options[:statuses].present? %>
+                <div data-controller="auto-submit" data-auto-submit-delay-value="150" data-action="change->auto-submit#submitDebounced">
+                  <%= render UI::MultiSelectComponent.new(
+                    name: :statuses,
+                    options: @search_filter_options[:statuses],
+                    selected: @selected_statuses,
+                    label: "Status",
+                    filter_placeholder: "Filter status",
+                    all_label: "All statuses",
+                    max_chips: 2
+                  ) %>
+                </div>
+              <% end %>
+
+              <div class="flex items-end">
+                <%= link_to "Clear advanced filters",
+                            source_search_path(source_search_params(genres: nil, statuses: nil)),
+                            class: "inline-flex h-9 items-center rounded-md border border-border px-3 text-sm text-muted hover:text-foreground hover:border-muted" %>
+              </div>
+            </div>
+          <% else %>
+            <p class="mt-3 text-xs text-muted-2">This source does not expose genre or status filters yet.</p>
+          <% end %>
+        </details>
+      <% end %>
+    </section>
     <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
 
     <% if @selected_genres.present? || @selected_statuses.present? %>
