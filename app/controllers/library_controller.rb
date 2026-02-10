@@ -1,4 +1,6 @@
 class LibraryController < ApplicationController
+  include GenreFiltering
+
   STATUS_OPTIONS = [
     [ "All", "" ],
     [ "Downloaded", "downloaded" ],
@@ -31,14 +33,7 @@ class LibraryController < ApplicationController
     @source_options = Source.joins(:series_sources).distinct.order(:name, :key).map do |source|
       [ source.display_name_with_content_rating, source.id.to_s ]
     end
-    @genre_options = ActiveRecord::Base.connection.select_values(<<~SQL)
-      SELECT DISTINCT jsonb_array_elements_text(normalized_categories) AS genre
-      FROM series
-      WHERE jsonb_typeof(normalized_categories) = 'array'
-        AND jsonb_array_length(normalized_categories) > 0
-      ORDER BY genre ASC
-      LIMIT 200
-    SQL
+    @genre_options = available_genre_options
 
     base_scope = Series.includes({ cover_attachment: :blob }, :sources, :series_sources)
 
@@ -182,13 +177,6 @@ class LibraryController < ApplicationController
 
     allowed_ids = Source.where(id: ids.map(&:to_i)).pluck(:id).map(&:to_s)
     ids & allowed_ids
-  end
-
-  def normalized_genres
-    Array(params[:genres]).filter_map do |genre|
-      normalized = genre.to_s.strip.downcase.first(80)
-      normalized if normalized.present?
-    end.uniq
   end
 
   def apply_search_filter(scope)

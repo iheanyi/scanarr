@@ -1,7 +1,7 @@
 class SourcesController < ApplicationController
   before_action :set_source, only: %i[search browse preview preview_read preview_image import]
 
-  helper_method :source_slug, :preview_image_token_for, :source_search_params, :source_browse_params, :source_filter_label
+  helper_method :source_slug, :preview_image_token_for
 
   SORT_OPTIONS = {
     "name_asc" => "Name A–Z",
@@ -300,37 +300,6 @@ class SourcesController < ApplicationController
       filters[:genres] = genres if genres.present?
       filters[:statuses] = statuses if statuses.present?
     end
-  end
-
-  def source_search_params(overrides = {})
-    params_hash = {
-      source_slug: source_slug(@source),
-      q: @query.presence,
-      genres: @selected_genres.presence,
-      statuses: @selected_statuses.presence
-    }.compact
-    params_hash.merge!(overrides)
-    params_hash.delete_if { |_, value| value.blank? }
-    params_hash
-  end
-
-  def source_browse_params(overrides = {})
-    params_hash = {
-      source_slug: source_slug(@source),
-      sort: @sort.presence,
-      page: @page.presence,
-      genres: @selected_genres.presence,
-      statuses: @selected_statuses.presence
-    }.compact
-    params_hash.merge!(overrides)
-    params_hash.delete_if { |_, value| value.blank? }
-    params_hash
-  end
-
-  def source_filter_label(kind, value)
-    option_sets = @search_filter_options.presence || @browse_filter_options.presence || empty_filter_options
-    labels_by_value = option_sets.fetch(kind.to_sym, []).to_h.invert
-    labels_by_value[value.to_s] || value.to_s.tr("_-", " ").titleize
   end
 
   def empty_filter_options
