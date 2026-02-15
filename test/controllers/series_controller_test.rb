@@ -171,6 +171,32 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Queuing"
   end
 
+  def test_cancel_all_downloads_returns_turbo_toast
+    series = series(:one)
+
+    post "/sources/weeb-central/#{series_url(series)}/cancel_all_downloads",
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Cancelling downloads in background..."
+  end
+
+  def test_bulk_action_mark_read_returns_turbo_toast
+    series = series(:one)
+    chapter_ids = chapters(:one).id.to_s
+
+    post "/sources/weeb-central/#{series_url(series)}/bulk_actions",
+         params: { chapter_ids: chapter_ids, action_name: "mark_read" },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Marked 1 chapter(s) as read"
+  end
+
   def test_download_all_skips_already_complete_chapters
     series = series(:one)
     chapter = chapters(:one)

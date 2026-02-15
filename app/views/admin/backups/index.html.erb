@@ -71,7 +71,7 @@
           </thead>
           <tbody class="divide-y divide-border">
             <% @backups.each do |backup| %>
-              <tr class="hover:bg-surface-2/40">
+              <tr id="<%= dom_id(backup) %>" class="hover:bg-surface-2/40">
                 <td class="px-4 py-3 font-mono text-xs"><%= backup.filename %></td>
                 <td class="px-4 py-3">
                   <% badge_variant = case backup.backup_type

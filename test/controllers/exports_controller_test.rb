@@ -49,6 +49,24 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Please select a .scanarr export file.", flash[:alert]
   end
 
+  def test_preview_library_without_file_returns_turbo_toast
+    post preview_library_path, headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :unprocessable_entity
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Please select a .scanarr export file."
+  end
+
+  def test_import_without_file_returns_turbo_toast
+    post import_library_path, headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Please select a .scanarr export file."
+  end
+
   def test_import_with_valid_file_succeeds
     # First export, then import
     post export_path
@@ -64,5 +82,41 @@ class ExportsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to export_path
     assert_match /Import complete/, flash[:notice]
+  end
+
+  def test_import_with_valid_file_turbo_request_redirects
+    post export_path
+    export_data = @response.body
+
+    file = Rack::Test::UploadedFile.new(
+      StringIO.new(export_data),
+      "application/gzip",
+      original_filename: "test.scanarr"
+    )
+
+    post import_library_path,
+         params: { file: file, strategy: "skip" },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to export_path
+    assert_match(/Import complete!/, flash[:notice])
+  end
+
+  def test_preview_tachiyomi_without_file_returns_turbo_toast
+    post preview_tachiyomi_path, headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :unprocessable_entity
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Please select a .tachibk or .proto.gz file."
+  end
+
+  def test_import_tachiyomi_without_file_returns_turbo_toast
+    post import_tachiyomi_path, headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Please select a .tachibk or .proto.gz file."
   end
 end

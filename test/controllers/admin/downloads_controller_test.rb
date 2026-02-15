@@ -110,6 +110,22 @@ class Admin::DownloadsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "cancelled", file_asset.download_status
   end
 
+  def test_cancel_queued_download_returns_turbo_toast
+    file_asset = file_assets(:one)
+    file_asset.update!(download_status: "queued", download_error: nil)
+
+    post admin_download_cancel_path(file_asset), headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Download cancelled"
+
+    file_asset.reload
+
+    assert_equal "cancelled", file_asset.download_status
+  end
+
   def test_restart_failed_download_uses_public_id_route_param
     file_asset = file_assets(:one)
     file_asset.update!(download_status: "failed", download_error: "network error")
@@ -123,6 +139,31 @@ class Admin::DownloadsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "queued", file_asset.download_status
     assert_nil file_asset.download_error
+  end
+
+  def test_restart_failed_download_returns_turbo_toast
+    file_asset = file_assets(:one)
+    file_asset.update!(download_status: "failed", download_error: "network error")
+
+    post admin_download_restart_path(file_asset), headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Download restarted successfully"
+
+    file_asset.reload
+
+    assert_equal "queued", file_asset.download_status
+    assert_nil file_asset.download_error
+  end
+
+  def test_cancel_missing_download_turbo_request_redirects_with_flash
+    post admin_download_cancel_path("missing-download-id"),
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to admin_downloads_path
+    assert_equal "Download not found", flash[:alert]
   end
 
   def test_index_hides_restart_button_for_downloading_rows

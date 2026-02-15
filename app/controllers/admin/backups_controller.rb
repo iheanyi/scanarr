@@ -1,6 +1,7 @@
 module Admin
   class BackupsController < ApplicationController
     before_action :require_admin
+    before_action :set_backup, only: %i[download destroy verify]
 
     def index
       @backups = BackupRecord.recent.page(params[:page]).per(20)
@@ -21,12 +22,14 @@ module Admin
 
       CreateBackupJob.perform_later(record.id)
 
-      flash[:notice] = "Backup started. It will appear in the list when complete."
-      redirect_to admin_backups_path
+      respond_with_toast(
+        redirect_path: admin_backups_path,
+        message: "Backup started. It will appear in the list when complete.",
+        variant: :success
+      )
     end
 
     def download
-      @backup = BackupRecord.find(params[:id])
       backup_path = resolved_backup_path(@backup)
 
       if backup_path
@@ -35,39 +38,66 @@ module Admin
                   type: "application/zip",
                   disposition: "attachment"
       else
-        flash[:alert] = "Backup file not found on disk."
-        redirect_to admin_backups_path
+        respond_with_toast(
+          redirect_path: admin_backups_path,
+          message: "Backup file not found on disk.",
+          variant: :danger,
+          status: :not_found
+        )
       end
     end
 
     def destroy
-      @backup = BackupRecord.find(params[:id])
       backup_path = resolved_backup_path(@backup)
       File.delete(backup_path) if backup_path
       @backup.destroy!
 
-      flash[:notice] = "Backup deleted."
-      redirect_to admin_backups_path
+      respond_with_toast(
+        redirect_path: admin_backups_path,
+        message: "Backup deleted.",
+        variant: :success,
+        streams: [
+          turbo_stream.remove(ActionView::RecordIdentifier.dom_id(@backup))
+        ]
+      )
     end
 
     def verify
-      @backup = BackupRecord.find(params[:id])
-
       if @backup.file_exists?
         result = Backup::IntegrityChecker.new(backup_path: @backup.path).check
         if result.valid
-          flash[:notice] = "Backup verified successfully.#{" Warnings: #{result.warnings.join(', ')}" if result.warnings.any?}"
+          message = "Backup verified successfully.#{" Warnings: #{result.warnings.join(', ')}" if result.warnings.any?}"
+          variant = :success
         else
-          flash[:alert] = "Backup integrity check failed: #{result.errors.join(', ')}"
+          message = "Backup integrity check failed: #{result.errors.join(', ')}"
+          variant = :danger
         end
       else
-        flash[:alert] = "Backup file not found on disk."
+        message = "Backup file not found on disk."
+        variant = :danger
       end
 
-      redirect_to admin_backups_path
+      respond_with_toast(
+        redirect_path: admin_backups_path,
+        message: message,
+        variant: variant
+      )
     end
 
     private
+
+    def set_backup
+      @backup = BackupRecord.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      respond_with_toast(
+        redirect_path: admin_backups_path,
+        message: "Backup not found",
+        variant: :danger,
+        status: :not_found,
+        turbo_redirect: true
+      )
+      nil
+    end
 
     def resolved_backup_path(backup)
       root = Backup::DatabaseBackupService::BACKUP_DIR.expand_path

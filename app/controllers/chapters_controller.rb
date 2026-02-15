@@ -1,8 +1,13 @@
 class ChaptersController < ApplicationController
-  before_action :load_context, only: %i[show enqueue_download update_progress remove_download cancel_download]
+  before_action :load_context, only: %i[show enqueue_download update_progress remove_download cancel_download pin_for_offline unpin_for_offline offline_pages]
+  before_action :load_source_for_offline_image, only: %i[offline_page_image]
+  before_action :require_local_downloads_enabled, only: %i[pin_for_offline unpin_for_offline offline_pages offline_page_image]
   # Authentication handled by ApplicationController
 
   helper_method :source_slug
+
+  OFFLINE_IMAGE_TOKEN_PURPOSE = "chapter_offline_image".freeze
+  OFFLINE_IMAGE_TOKEN_TTL = 6.hours
 
   def show
     @release = latest_release
@@ -28,6 +33,7 @@ class ChaptersController < ApplicationController
     @file_asset = file_asset
     @download_in_progress = @file_asset&.download_status.in?(%w[queued pending downloading])
     @chapter_progress = current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil
+    @offline_manifest_entry = current_user ? current_user.offline_manifest_entries.find_by(chapter: @chapter) : nil
     requested_style = params[:reading_style].presence
     resolved_style = requested_style || @series.reading_style.presence || current_user&.effective_reading_style || "left_to_right"
     @reading_style = ReadingStyles.normalize(resolved_style)
@@ -42,7 +48,7 @@ class ChaptersController < ApplicationController
       source_url = @chapter.source_url || @release&.source_url
       if source_url.present?
         begin
-          @source_pages = adapter_for(@source).pages(source_url)
+          @source_pages = fetch_source_pages(source_url)
         rescue Scrapers::Errors::ChapterNotFoundError => e
           @source_error = "This chapter is no longer available on the source. It may have been removed or replaced."
           Rails.logger.warn "Chapter not found: #{@chapter.id} - #{e.message}"
@@ -127,20 +133,24 @@ class ChaptersController < ApplicationController
       )
     end
 
+    message = "Queued download for Chapter #{@chapter.chapter_number}"
+    redirect_path = source_series_chapter_path(
+      source_slug: source_slug(@source),
+      series_slug: @series.to_param,
+      chapter_identifier: chapter_identifier(@chapter)
+    )
+
     respond_to do |format|
-      format.html do
-        redirect_to source_series_chapter_path(
-          source_slug: source_slug(@source),
-          series_slug: @series.to_param,
-          chapter_identifier: chapter_identifier(@chapter)
-        )
-      end
+      format.html { redirect_to redirect_path, notice: message }
       format.turbo_stream do
-        render turbo_stream: turbo_stream.replace(
-          dom_id(@chapter),
-          partial: "series/chapter_row",
-          locals: chapter_row_locals
-        )
+        render turbo_stream: [
+          turbo_stream.replace(
+            ActionView::RecordIdentifier.dom_id(@chapter),
+            partial: "series/chapter_row",
+            locals: chapter_row_locals
+          ),
+          toast_stream(message, variant: :success)
+        ]
       end
     end
   end
@@ -245,6 +255,91 @@ class ChaptersController < ApplicationController
     }
   end
 
+  def pin_for_offline
+    entry = current_user.offline_manifest_entries.find_or_initialize_by(chapter: @chapter)
+    entry.assign_attributes(
+      status: "pinned",
+      last_error: nil,
+      last_synced_at: Time.current
+    )
+    entry.save!
+
+    render json: {
+      chapter_public_id: @chapter.public_id,
+      status: entry.status,
+      updated_at: entry.updated_at.iso8601
+    }
+  end
+
+  def unpin_for_offline
+    current_user.offline_manifest_entries.where(chapter: @chapter).delete_all
+
+    render json: {
+      chapter_public_id: @chapter.public_id,
+      status: "unpinned",
+      updated_at: Time.current.iso8601
+    }
+  end
+
+  def offline_pages
+    release = latest_release
+    file_asset = release&.file_asset
+
+    pages = if file_asset&.download_status == "complete"
+      file_asset.pages.includes(image_attachment: :blob).order(:position).filter_map do |page|
+        next unless page.image.attached?
+
+        {
+          index: page.position,
+          source: "downloaded",
+          url: view_context.url_for(page.display_image)
+        }
+      end
+    else
+      []
+    end
+
+    if pages.empty?
+      source_url = @chapter.source_url || release&.source_url
+      pages = fetch_source_pages(source_url).map do |page|
+        {
+          index: page.index,
+          source: "remote",
+          url: page.url
+        }
+      end
+    end
+
+    manifest_entry = current_user.offline_manifest_entries.find_by(chapter: @chapter)
+    render json: {
+      chapter_public_id: @chapter.public_id,
+      chapter_number: @chapter.chapter_number,
+      status: manifest_entry&.status || "unpinned",
+      page_count: pages.length,
+      pages: pages
+    }
+  rescue Scrapers::Errors::ScraperError => e
+    render json: { error: "Could not load chapter pages: #{e.message}" }, status: :unprocessable_entity
+  end
+
+  def offline_page_image
+    token_payload = offline_image_payload(params[:token])
+    return head :forbidden if token_payload.blank?
+
+    page_url = token_payload.fetch("page_url", "").to_s
+    source_slug = token_payload.fetch("source_slug", "").to_s
+    return head :forbidden if page_url.blank? || source_slug != @source.slug
+
+    adapter = adapter_for(@source)
+    response = adapter.http.get(page_url)
+    return head :bad_gateway unless response_success?(response)
+
+    send_data response.body, type: response_content_type(response), disposition: "inline"
+  rescue Scrapers::Errors::ScraperError => e
+    Rails.logger.warn "Offline image proxy error for #{@source.key}: #{e.class} - #{e.message}"
+    head :bad_gateway
+  end
+
   def redirect
     chapter = Chapter.find_by!(public_id: params[:public_id])
     series = chapter.series
@@ -339,6 +434,10 @@ class ChaptersController < ApplicationController
     Source.find_by!(slug: params[:source_slug])
   end
 
+  def load_source_for_offline_image
+    @source = find_source
+  end
+
   def adapter_for(source)
     Scrapers::AdapterRegistry.for(source)
   end
@@ -357,6 +456,67 @@ class ChaptersController < ApplicationController
       progress: current_user ? ChapterProgress.find_by(user: current_user, chapter: @chapter) : nil,
       latest_release: latest_release
     }
+  end
+
+  def fetch_source_pages(source_url)
+    return [] if source_url.blank?
+
+    adapter_for(@source).pages(source_url).each_with_index.filter_map do |page, idx|
+      page_url = page.respond_to?(:url) ? page.url.to_s : page.to_s
+      next if page_url.blank?
+
+      token = offline_image_token_for(page_url)
+      proxied_url = source_offline_image_path(source_slug: @source.slug, token: token)
+
+      ResultTypes::Page.new(
+        index: page.respond_to?(:index) && page.index.present? ? page.index : idx + 1,
+        url: proxied_url,
+        mime_type: page.respond_to?(:mime_type) ? page.mime_type : nil
+      )
+    end
+  end
+
+  def response_success?(response)
+    if response.respond_to?(:status)
+      response.status.to_i == 200
+    elsif response.respond_to?(:code)
+      response.code.to_i == 200
+    else
+      false
+    end
+  end
+
+  def response_content_type(response)
+    if response.respond_to?(:headers) && response.headers.is_a?(Hash)
+      response.headers["content-type"].presence || response.headers["Content-Type"].presence || "application/octet-stream"
+    elsif response.respond_to?(:[])
+      response["content-type"].presence || response["Content-Type"].presence || "application/octet-stream"
+    else
+      "application/octet-stream"
+    end
+  end
+
+  def offline_image_token_for(page_url)
+    return "" if page_url.blank?
+
+    offline_image_verifier.generate(
+      {
+        source_slug: @source.slug,
+        page_url: page_url
+      },
+      purpose: OFFLINE_IMAGE_TOKEN_PURPOSE,
+      expires_in: OFFLINE_IMAGE_TOKEN_TTL
+    )
+  end
+
+  def offline_image_payload(token)
+    return nil if token.blank?
+
+    offline_image_verifier.verified(token, purpose: OFFLINE_IMAGE_TOKEN_PURPOSE)
+  end
+
+  def offline_image_verifier
+    Rails.application.message_verifier(:chapter_offline_image)
   end
 
   def broadcast_admin_download(file_asset)

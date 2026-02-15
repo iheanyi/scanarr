@@ -4,8 +4,27 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
 
   class FakeAdapter
+    attr_reader :http
+
+    def initialize(pages: [], http: FakeHttp.new)
+      @pages = pages
+      @http = http
+    end
+
     def pages(_url)
-      []
+      @pages
+    end
+  end
+
+  class FakeHttp
+    def initialize(status: 200, body: "image-bytes", headers: { "content-type" => "image/jpeg" })
+      @status = status
+      @body = body
+      @headers = headers
+    end
+
+    def get(_url)
+      Struct.new(:status, :body, :headers).new(@status, @body, @headers)
     end
   end
 
@@ -114,6 +133,18 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_equal DownloadChapterJob, job[:job]
   end
 
+  def test_download_turbo_stream_includes_toast
+    clear_enqueued_jobs
+
+    post "/sources/weeb-central/#{series_url}/chapters/1/download",
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Queued download for Chapter 1"
+  end
+
   def test_update_progress_creates_progress
     assert_difference -> { ChapterProgress.count }, 1 do
       patch "/sources/weeb-central/#{series_url}/chapters/1/progress",
@@ -128,6 +159,70 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "in_progress", progress.status
     assert_predicate progress.progressed_at, :present?
     assert_response :success
+  end
+
+  def test_pin_for_offline_creates_manifest_entry
+    enable_local_download_mode
+
+    assert_difference -> { UserOfflineManifestEntry.count }, 1 do
+      post "/sources/weeb-central/#{series_url}/chapters/1/pin_for_offline", headers: { "ACCEPT" => "application/json" }
+    end
+
+    assert_response :success
+    entry = UserOfflineManifestEntry.order(created_at: :desc).first
+
+    assert_equal chapters(:one), entry.chapter
+    assert_equal users(:admin), entry.user
+    assert_equal "pinned", entry.status
+  end
+
+  def test_unpin_for_offline_removes_manifest_entry
+    enable_local_download_mode
+    UserOfflineManifestEntry.create!(user: users(:admin), chapter: chapters(:one), status: "pinned")
+
+    assert_difference -> { UserOfflineManifestEntry.count }, -1 do
+      delete "/sources/weeb-central/#{series_url}/chapters/1/pin_for_offline", headers: { "ACCEPT" => "application/json" }
+    end
+
+    assert_response :success
+  end
+
+  def test_offline_pages_returns_signed_proxy_urls_and_proxy_streams_image
+    enable_local_download_mode
+    file_assets(:one).update!(download_status: "failed")
+    adapter = FakeAdapter.new(
+      pages: [ ResultTypes::Page.new(index: 1, url: "https://example.test/chapter/1/page-1.jpg") ],
+      http: FakeHttp.new(body: "proxied-image-data")
+    )
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/#{series_url}/chapters/1/offline_pages", headers: { "ACCEPT" => "application/json" }
+
+      assert_response :success
+
+      payload = JSON.parse(@response.body)
+
+      assert_equal 1, payload["page_count"]
+      assert_equal "remote", payload["pages"][0]["source"]
+      assert_match %r{\A/sources/weeb-central/offline_image\?token=}, payload["pages"][0]["url"]
+
+      get payload["pages"][0]["url"], headers: { "ACCEPT" => "image/jpeg" }
+
+      assert_response :success
+      assert_equal "image/jpeg", @response.media_type
+      assert_equal "proxied-image-data", @response.body
+    end
+  end
+
+  def test_offline_endpoints_require_local_downloads_toggle
+    users(:admin).update!(local_downloads_enabled: "false")
+
+    post "/sources/weeb-central/#{series_url}/chapters/1/pin_for_offline", headers: { "ACCEPT" => "application/json" }
+
+    assert_response :forbidden
+    payload = JSON.parse(@response.body)
+
+    assert_includes payload["error"], "disabled"
   end
 
   def test_show_renders_progress_bar
@@ -160,13 +255,12 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  def test_show_renders_lightbox_toggle
+  def test_show_opens_lightbox_from_page_click
     with_adapter(FakeAdapter.new) do
       get "/sources/weeb-central/#{series_url}/chapters/1"
 
       assert_response :success
-      assert_includes @response.body, "toggleLightbox"
-      assert_includes @response.body, "Lightbox"
+      assert_includes @response.body, "click->reader#openLightboxForPage"
     end
   end
 
@@ -294,6 +388,10 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def enable_local_download_mode
+    users(:admin).update!(local_downloads_enabled: "true")
+  end
 
   def with_adapter(adapter)
     original = ChaptersController.instance_method(:adapter_for) rescue nil

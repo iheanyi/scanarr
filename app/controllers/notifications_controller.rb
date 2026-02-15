@@ -2,6 +2,7 @@
 
 class NotificationsController < ApplicationController
   # Authentication handled by ApplicationController
+  before_action :set_notification, only: :mark_read
 
   def index
     @notifications = current_user.new_chapter_notifications
@@ -11,11 +12,10 @@ class NotificationsController < ApplicationController
   end
 
   def mark_read
-    @notification = current_user.new_chapter_notifications.includes(chapter: { series: [ :sources, { cover_attachment: :blob } ] }).find(params[:id])
     @notification.mark_as_read!
 
     respond_to do |format|
-      format.html { redirect_back fallback_location: notifications_path }
+      format.html { redirect_back fallback_location: notifications_path, notice: "Notification marked as read" }
       format.turbo_stream
     end
   end
@@ -27,5 +27,22 @@ class NotificationsController < ApplicationController
       format.html { redirect_back fallback_location: notifications_path, notice: "All notifications marked as read" }
       format.turbo_stream
     end
+  end
+
+  private
+
+  def set_notification
+    @notification = current_user.new_chapter_notifications
+                                .includes(chapter: { series: [ :sources, { cover_attachment: :blob } ] })
+                                .find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    respond_with_toast(
+      redirect_path: notifications_path,
+      message: "Notification not found",
+      variant: :danger,
+      status: :not_found,
+      turbo_redirect: true
+    )
+    nil
   end
 end

@@ -25,4 +25,30 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "auto_download", follow.download_policy
   end
+
+  def test_create_missing_library_series_turbo_request_redirects_with_flash
+    post follows_path,
+         params: { library_series_id: "missing-library-series-id" },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to library_path
+    assert_equal "Series follow target not found", flash[:alert]
+  end
+
+  def test_update_missing_follow_turbo_request_redirects_with_flash
+    patch follow_path("missing-follow-id"),
+          params: { user_series_follow: { download_policy: "auto_download" } },
+          headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to library_path
+    assert_equal "Follow not found", flash[:alert]
+  end
+
+  def test_destroy_missing_follow_turbo_request_redirects_with_flash
+    delete follow_path("missing-follow-id"),
+           headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to library_path
+    assert_equal "Follow not found", flash[:alert]
+  end
 end

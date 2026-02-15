@@ -61,18 +61,11 @@ class SeriesController < ApplicationController
     # Fan out downloads via background job
     DownloadAllJob.perform_later(@series.id, @source.id)
 
-    respond_to do |format|
-      format.html do
-        flash[:notice] = "Queuing downloads in background..."
-        redirect_to library_series_path(series_slug: @series.to_param)
-      end
-      format.turbo_stream do
-        render turbo_stream: turbo_stream.append(
-          "toast-container",
-          UI::ToastComponent.new(message: "Queuing downloads in background...", variant: :success)
-        )
-      end
-    end
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: "Queuing downloads in background...",
+      variant: :success
+    )
   end
 
   def refresh_cover
@@ -82,12 +75,18 @@ class SeriesController < ApplicationController
       # Force re-download by purging existing cover
       @series.cover.purge if @series.cover.attached?
       CoverDownloader.download(@series, @series.cover_url)
-      flash[:notice] = "Cover image refreshed"
+      message = "Cover image refreshed"
+      variant = :success
     else
-      flash[:alert] = "No cover URL available to refresh"
+      message = "No cover URL available to refresh"
+      variant = :warning
     end
 
-    redirect_to library_series_path(series_slug: @series.to_param)
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: message,
+      variant: variant
+    )
   end
 
   def remove_all_downloads
@@ -96,8 +95,10 @@ class SeriesController < ApplicationController
     chapters = @series.chapters.where(source: @source)
                        .includes(releases: { file_asset: { pages: { image_attachment: :blob } } })
     removed = 0
+    chapters_to_broadcast = []
 
     chapters.each do |chapter|
+      chapter_updated = false
       chapter.releases.each do |release|
         file_asset = release.file_asset
         next unless file_asset
@@ -107,12 +108,20 @@ class SeriesController < ApplicationController
         file_asset.pages.each { |page| page.image.purge if page.image.attached? }
         file_asset.pages.destroy_all
         file_asset.destroy!
+        broadcast_admin_download_removal(file_asset)
+        chapter_updated = true
         removed += 1
       end
+      chapters_to_broadcast << chapter if chapter_updated
     end
 
-    flash[:notice] = "Removed #{removed} download(s)"
-    redirect_to library_series_path(series_slug: @series.to_param)
+    chapters_to_broadcast.uniq.each { |chapter| broadcast_chapter_update(chapter) }
+
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: "Removed #{removed} download(s)",
+      variant: :success
+    )
   end
 
   def cancel_all_downloads
@@ -121,14 +130,20 @@ class SeriesController < ApplicationController
     # Process cancellations in background with real-time updates
     CancelAllDownloadsJob.perform_later(@series.id, @source.id)
 
-    flash[:notice] = "Cancelling downloads in background..."
-    redirect_to library_series_path(series_slug: @series.to_param)
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: "Cancelling downloads in background...",
+      variant: :success
+    )
   end
 
   def bulk_action
     @series = find_series_by_param!
     chapter_ids = params[:chapter_ids].to_s.split(",").map(&:to_i)
     chapters = @series.chapters.where(id: chapter_ids, source: @source)
+    chapters_to_broadcast = []
+    message = "No action performed"
+    variant = :warning
 
     case params[:action_name]
     when "download"
@@ -142,7 +157,20 @@ class SeriesController < ApplicationController
         release = chapter.releases.find_or_create_by!(source: @source)
         next if release.file_asset&.download_status.in?(%w[queued pending downloading complete])
 
-        release.create_file_asset!(format: "pages", download_status: "queued", pages_downloaded: 0)
+        file_asset = if release.file_asset
+          release.file_asset.tap do |asset|
+            asset.update!(
+              download_status: "queued",
+              pages_downloaded: 0,
+              pages_expected: nil,
+              download_error: nil
+            )
+          end
+        else
+          release.create_file_asset!(format: "pages", download_status: "queued", pages_downloaded: 0)
+        end
+        broadcast_admin_download_update(file_asset)
+        chapters_to_broadcast << chapter
         DownloadChapterJob.perform_later(
           chapter.source_url,
           source_key: @source.key,
@@ -156,11 +184,13 @@ class SeriesController < ApplicationController
         )
         enqueued += 1
       end
-      flash[:notice] = "Queued #{enqueued} chapter(s) for download"
+      message = "Queued #{enqueued} chapter(s) for download"
+      variant = :success
 
     when "remove"
       removed = 0
       chapters.includes(releases: { file_asset: { pages: { image_attachment: :blob } } }).each do |chapter|
+        chapter_updated = false
         chapter.releases.each do |release|
           file_asset = release.file_asset
           next unless file_asset
@@ -168,25 +198,40 @@ class SeriesController < ApplicationController
           file_asset.pages.each { |page| page.image.purge if page.image.attached? }
           file_asset.pages.destroy_all
           file_asset.destroy!
+          broadcast_admin_download_removal(file_asset)
+          chapter_updated = true
           removed += 1
         end
+        chapters_to_broadcast << chapter if chapter_updated
       end
-      flash[:notice] = "Removed #{removed} download(s)"
+      message = "Removed #{removed} download(s)"
+      variant = :success
 
     when "mark_read"
-      return unless current_user
-      marked = 0
-      chapters.each do |chapter|
-        ChapterProgress.find_or_initialize_by(user: current_user, chapter: chapter).tap do |progress|
-          progress.assign_attributes(status: "completed", page_index: 1, page_count: 1, progressed_at: Time.current)
-          progress.save!
+      if current_user
+        marked = 0
+        chapters.each do |chapter|
+          ChapterProgress.find_or_initialize_by(user: current_user, chapter: chapter).tap do |progress|
+            progress.assign_attributes(status: "completed", page_index: 1, page_count: 1, progressed_at: Time.current)
+            progress.save!
+          end
+          marked += 1
         end
-        marked += 1
+        message = "Marked #{marked} chapter(s) as read"
+        variant = :success
+      else
+        message = "You must be logged in to mark chapters as read"
+        variant = :warning
       end
-      flash[:notice] = "Marked #{marked} chapter(s) as read"
     end
 
-    redirect_to library_series_path(series_slug: @series.to_param)
+    chapters_to_broadcast.uniq.each { |chapter| broadcast_chapter_update(chapter) }
+
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: message,
+      variant: variant
+    )
   end
 
   def refresh_metadata
@@ -204,11 +249,18 @@ class SeriesController < ApplicationController
     importer = SeriesImporter.new(source: @source, adapter: adapter)
     importer.import!(series_source.source_series_id)
 
-    flash[:notice] = "Metadata refreshed successfully"
-    redirect_to library_series_path(series_slug: @series.to_param)
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: "Metadata refreshed successfully",
+      variant: :success
+    )
   rescue StandardError => e
-    flash[:alert] = "Failed to refresh metadata: #{e.message}"
-    redirect_to library_series_path(series_slug: @series.to_param)
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: "Failed to refresh metadata: #{e.message}",
+      variant: :danger,
+      status: :unprocessable_entity
+    )
   end
 
   private
@@ -261,6 +313,8 @@ class SeriesController < ApplicationController
     if current_user
       @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
                                               .index_by(&:chapter_id)
+      @offline_manifest_map = current_user.offline_manifest_entries.where(chapter_id: @chapters.map(&:id))
+                                               .index_by(&:chapter_id)
 
       # Ensure library series exists so the follow button is always available
       @series.ensure_library_series! if @series.library_series.blank?
@@ -271,6 +325,7 @@ class SeriesController < ApplicationController
       end
     else
       @chapter_progress_map = {}
+      @offline_manifest_map = {}
     end
 
     build_reading_cta
@@ -329,5 +384,39 @@ class SeriesController < ApplicationController
     Series.joins(:series_sources)
           .where(series_sources: { source_id: @source.id })
           .find_by_param!(params[:series_slug])
+  end
+
+  def broadcast_chapter_update(chapter)
+    chapter.reload
+    latest_release = chapter.releases.includes(:file_asset).order(created_at: :desc).first
+
+    Turbo::StreamsChannel.broadcast_replace_to(
+      [ @series, :downloads ],
+      target: ActionView::RecordIdentifier.dom_id(chapter),
+      partial: "series/chapter_row",
+      locals: { chapter: chapter, source: @source, series: @series, progress: nil, latest_release: latest_release }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "SeriesController: Failed to broadcast chapter update: #{e.message}"
+  end
+
+  def broadcast_admin_download_update(file_asset)
+    Turbo::StreamsChannel.broadcast_replace_to(
+      "admin_downloads",
+      target: ActionView::RecordIdentifier.dom_id(file_asset),
+      partial: "admin/downloads/download_row",
+      locals: { download: file_asset.reload }
+    )
+  rescue StandardError => e
+    Rails.logger.warn "SeriesController: Failed to broadcast admin download update: #{e.message}"
+  end
+
+  def broadcast_admin_download_removal(file_asset)
+    Turbo::StreamsChannel.broadcast_remove_to(
+      "admin_downloads",
+      target: ActionView::RecordIdentifier.dom_id(file_asset)
+    )
+  rescue StandardError => e
+    Rails.logger.warn "SeriesController: Failed to broadcast admin download removal: #{e.message}"
   end
 end

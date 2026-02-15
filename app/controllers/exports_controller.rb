@@ -15,8 +15,12 @@ class ExportsController < ApplicationController
 
   def preview_library
     unless params[:file].present?
-      flash[:alert] = "Please select a .scanarr export file."
-      redirect_to export_path
+      respond_with_toast(
+        redirect_path: export_path,
+        message: "Please select a .scanarr export file.",
+        variant: :warning,
+        status: :unprocessable_entity
+      )
       return
     end
 
@@ -33,9 +37,13 @@ class ExportsController < ApplicationController
 
     render :preview_library, status: :unprocessable_entity
   rescue => e
-    flash[:alert] = "Could not parse export file: #{e.message}"
     cleanup_library_import_file
-    redirect_to export_path
+    respond_with_toast(
+      redirect_path: export_path,
+      message: "Could not parse export file: #{e.message}",
+      variant: :danger,
+      status: :unprocessable_entity
+    )
   end
 
   def import_library
@@ -45,8 +53,11 @@ class ExportsController < ApplicationController
     elsif session[:library_import_file].present?
       tmp_path = session[:library_import_file]
       unless File.exist?(tmp_path)
-        flash[:alert] = "Preview expired. Please upload the file again."
-        redirect_to export_path
+        respond_with_toast(
+          redirect_path: export_path,
+          message: "Preview expired. Please upload the file again.",
+          variant: :warning
+        )
         return
       end
       data = File.read(tmp_path)
@@ -54,8 +65,11 @@ class ExportsController < ApplicationController
       File.delete(tmp_path) if File.exist?(tmp_path)
       session.delete(:library_import_file)
     else
-      flash[:alert] = "Please select a .scanarr export file."
-      redirect_to export_path
+      respond_with_toast(
+        redirect_path: export_path,
+        message: "Please select a .scanarr export file.",
+        variant: :warning
+      )
       return
     end
 
@@ -68,18 +82,32 @@ class ExportsController < ApplicationController
     ).perform
 
     if result.success
-      flash[:notice] = "Import complete! #{import_summary(result.imported)}"
+      message = "Import complete! #{import_summary(result.imported)}"
+      variant = :success
+      status = :ok
     else
-      flash[:alert] = "Import had errors: #{result.errors.first(3).join('; ')}"
+      message = "Import had errors: #{result.errors.first(3).join('; ')}"
+      variant = :danger
+      status = :unprocessable_entity
     end
 
-    redirect_to export_path
+    respond_with_toast(
+      redirect_path: export_path,
+      message: message,
+      variant: variant,
+      status: status,
+      turbo_redirect: true
+    )
   end
 
   def preview_tachiyomi
     unless params[:file].present?
-      flash[:alert] = "Please select a .tachibk or .proto.gz file."
-      redirect_to export_path
+      respond_with_toast(
+        redirect_path: export_path,
+        message: "Please select a .tachibk or .proto.gz file.",
+        variant: :warning,
+        status: :unprocessable_entity
+      )
       return
     end
 
@@ -96,9 +124,13 @@ class ExportsController < ApplicationController
 
     render :preview_tachiyomi, status: :unprocessable_entity
   rescue => e
-    flash[:alert] = "Could not parse backup file: #{e.message}"
     cleanup_temp_import_file
-    redirect_to export_path
+    respond_with_toast(
+      redirect_path: export_path,
+      message: "Could not parse backup file: #{e.message}",
+      variant: :danger,
+      status: :unprocessable_entity
+    )
   end
 
   def import_tachiyomi
@@ -112,15 +144,21 @@ class ExportsController < ApplicationController
     elsif session[:tachiyomi_import_file].present?
       tmp_path = session[:tachiyomi_import_file]
       unless File.exist?(tmp_path)
-        flash[:alert] = "Preview expired. Please upload the file again."
-        redirect_to export_path
+        respond_with_toast(
+          redirect_path: export_path,
+          message: "Preview expired. Please upload the file again.",
+          variant: :warning
+        )
         return
       end
       # Clear session but don't delete the file — the job will clean it up
       session.delete(:tachiyomi_import_file)
     else
-      flash[:alert] = "Please select a .tachibk or .proto.gz file."
-      redirect_to export_path
+      respond_with_toast(
+        redirect_path: export_path,
+        message: "Please select a .tachibk or .proto.gz file.",
+        variant: :warning
+      )
       return
     end
 
@@ -128,8 +166,12 @@ class ExportsController < ApplicationController
 
     TachiyomiImportJob.perform_later(current_user.id, tmp_path, strategy: strategy)
 
-    flash[:notice] = "Mihon import started in the background. You'll see progress below."
-    redirect_to export_path
+    respond_with_toast(
+      redirect_path: export_path,
+      message: "Mihon import started in the background. You'll see progress below.",
+      variant: :success,
+      turbo_redirect: true
+    )
   end
 
   def export_tachiyomi

@@ -1,6 +1,7 @@
 module Admin
   class UsersController < ApplicationController
     before_action :require_admin
+    before_action :set_user, only: :destroy
 
     def index
       @users = User.order(:created_at)
@@ -22,16 +23,40 @@ module Admin
     end
 
     def destroy
-      user = User.find(params[:id])
-      if user == current_user
-        redirect_to admin_users_path, alert: "You cannot delete yourself"
+      if @user == current_user
+        respond_with_toast(
+          redirect_path: admin_users_path,
+          message: "You cannot delete yourself",
+          variant: :warning
+        )
         return
       end
-      user.destroy!
-      redirect_to admin_users_path, notice: "#{user.username} deleted"
+      @user.destroy!
+
+      respond_with_toast(
+        redirect_path: admin_users_path,
+        message: "#{@user.username} deleted",
+        variant: :success,
+        streams: [
+          turbo_stream.remove(ActionView::RecordIdentifier.dom_id(@user))
+        ]
+      )
     end
 
     private
+
+    def set_user
+      @user = User.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      respond_with_toast(
+        redirect_path: admin_users_path,
+        message: "User not found",
+        variant: :danger,
+        status: :not_found,
+        turbo_redirect: true
+      )
+      nil
+    end
 
     def user_params
       params.require(:user).permit(:username, :email, :password, :password_confirmation)

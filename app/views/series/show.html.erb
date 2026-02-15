@@ -241,7 +241,16 @@
         </span>
       </div>
       <ul class="space-y-2">
-        <%= render partial: "series/chapter_row", collection: @chapters, as: :chapter, locals: { source: @source, series: @series, chapter_progress_map: @chapter_progress_map, latest_release_map: @latest_release_map } %>
+        <%= render partial: "series/chapter_row",
+                   collection: @chapters,
+                   as: :chapter,
+                   locals: {
+                     source: @source,
+                     series: @series,
+                     chapter_progress_map: @chapter_progress_map,
+                     latest_release_map: @latest_release_map,
+                     offline_manifest_map: @offline_manifest_map
+                   } %>
       </ul>
 
       <%# Bulk action floating bar %>
