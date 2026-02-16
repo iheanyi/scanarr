@@ -1,4 +1,6 @@
 class SeriesController < ApplicationController
+  include AdminDownloads::UpdateBroadcast
+
   before_action :set_source, except: :show_from_library
 
   SORT_OPTIONS = {
@@ -398,17 +400,6 @@ class SeriesController < ApplicationController
     )
   rescue StandardError => e
     Rails.logger.warn "SeriesController: Failed to broadcast chapter update: #{e.message}"
-  end
-
-  def broadcast_admin_download_update(file_asset)
-    Turbo::StreamsChannel.broadcast_replace_to(
-      "admin_downloads",
-      target: ActionView::RecordIdentifier.dom_id(file_asset),
-      partial: "admin/downloads/download_row",
-      locals: { download: file_asset.reload }
-    )
-  rescue StandardError => e
-    Rails.logger.warn "SeriesController: Failed to broadcast admin download update: #{e.message}"
   end
 
   def broadcast_admin_download_removal(file_asset)

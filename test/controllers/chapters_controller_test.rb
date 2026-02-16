@@ -214,6 +214,31 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_source_proxy_image_does_not_require_local_downloads_toggle
+    users(:admin).update!(local_downloads_enabled: "false")
+    file_assets(:one).update!(download_status: "failed")
+    adapter = FakeAdapter.new(
+      pages: [ ResultTypes::Page.new(index: 1, url: "https://example.test/chapter/1/page-1.jpg") ],
+      http: FakeHttp.new(body: "reader-proxied-image")
+    )
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/#{series_url}/chapters/1"
+
+      assert_response :success
+
+      proxy_url = @response.body[%r{/sources/weeb-central/offline_image\?token=[^"&]+}]
+
+      assert proxy_url, "Expected chapter reader to render proxied image URL"
+
+      get proxy_url, headers: { "ACCEPT" => "image/jpeg" }
+
+      assert_response :success
+      assert_equal "image/jpeg", @response.media_type
+      assert_equal "reader-proxied-image", @response.body
+    end
+  end
+
   def test_offline_endpoints_require_local_downloads_toggle
     users(:admin).update!(local_downloads_enabled: "false")
 

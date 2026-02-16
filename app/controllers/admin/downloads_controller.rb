@@ -1,5 +1,7 @@
 module Admin
   class DownloadsController < ApplicationController
+    include AdminDownloads::UpdateBroadcast
+
     before_action :require_admin
     before_action :set_download, only: %i[restart cancel]
 
@@ -234,17 +236,6 @@ module Admin
     def broadcast_live_updates(file_asset)
       broadcast_admin_download_update(file_asset)
       broadcast_chapter_update(file_asset)
-    end
-
-    def broadcast_admin_download_update(file_asset)
-      Turbo::StreamsChannel.broadcast_replace_to(
-        "admin_downloads",
-        target: ActionView::RecordIdentifier.dom_id(file_asset),
-        partial: "admin/downloads/download_row",
-        locals: { download: file_asset.reload }
-      )
-    rescue StandardError => e
-      Rails.logger.warn "Admin::DownloadsController: Failed to broadcast admin download update: #{e.message}"
     end
 
     def broadcast_chapter_update(file_asset)
