@@ -132,6 +132,7 @@ class SettingsController < ApplicationController
       :default_language,
       :default_download_policy,
       :default_check_interval_minutes,
+      :local_downloads_enabled,
       :notifications_enabled,
       :notification_auto_cleanup_days
     )

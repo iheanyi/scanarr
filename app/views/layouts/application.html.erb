@@ -3,6 +3,11 @@
   <head>
     <title>Scanarr</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="manifest" href="<%= pwa_manifest_path %>">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icon.svg">
     <% if Rails.env.development? %>
       <meta name="turbo-prefetch" content="false">
     <% end %>

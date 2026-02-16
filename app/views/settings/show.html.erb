@@ -123,6 +123,28 @@
   <%# Source Priority %>
   <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
     <div>
+      <h2 class="text-lg font-semibold">Local Downloads</h2>
+      <p class="text-sm text-muted mt-1">
+        Enable browser-based chapter downloads for offline reading on this device.
+      </p>
+    </div>
+
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
+      <%= render UI::ToggleSwitchComponent.new(
+        form: f,
+        method: :local_downloads_enabled,
+        label: "Enable Local Download Mode",
+        description: "Saves chapter pages in browser storage for offline reading.",
+        auto_submit: true,
+        on_value: "true",
+        off_value: "false"
+      ) %>
+    <% end %>
+  </section>
+
+  <%# Source Priority %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
       <h2 class="text-lg font-semibold">Source Priority</h2>
       <p class="text-sm text-muted mt-1">
         Drag to reorder which sources are preferred for downloads and chapter checks.

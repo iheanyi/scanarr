@@ -5,6 +5,12 @@ import "./controllers"
 
 TurboPower.initialize(Turbo.StreamActions)
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) => {
+    console.warn("Service worker registration failed:", error)
+  })
+}
+
 // Clean up ephemeral UI state before Turbo caches the page.
 // Prevents stale dropdowns/modals from appearing on back navigation.
 document.addEventListener("turbo:before-cache", () => {

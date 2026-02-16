@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { enqueueProgressUpdate, flushQueuedProgress } from "../offline/progress_queue"
 
 export function resolveLightboxSwipeAction(
   deltaX: number,
@@ -106,10 +107,14 @@ export default class extends Controller {
   private lightboxHintFadeTimeout?: ReturnType<typeof setTimeout>
   private lightboxCloseTimeout?: ReturnType<typeof setTimeout>
   private lightboxImageSwapTimeout?: ReturnType<typeof setTimeout>
+  private handleOnlineBound?: () => void
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
     window.addEventListener("keydown", this.handleKeydown)
+    this.handleOnlineBound = () => { void this.flushQueuedProgressUpdates() }
+    window.addEventListener("online", this.handleOnlineBound)
+    void this.flushQueuedProgressUpdates()
     
     if (this.pageTargets.length > 0) {
       this.currentIndex = this.resolveInitialIndex()
@@ -123,6 +128,7 @@ export default class extends Controller {
 
   disconnect() {
     window.removeEventListener("keydown", this.handleKeydown)
+    if (this.handleOnlineBound) window.removeEventListener("online", this.handleOnlineBound)
     this.observer?.disconnect()
     this.teardownVerticalLightbox()
     if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
@@ -763,9 +769,34 @@ export default class extends Controller {
         "X-CSRF-Token": token || ""
       },
       body: JSON.stringify({ page_index: pageIndex, page_count: pageCount })
-    }).catch((error) => {
-      console.warn("Failed to save reading progress:", error)
     })
+      .then(async (response) => {
+        if (!response.ok) {
+          await enqueueProgressUpdate({
+            progressUrl: this.progressUrlValue,
+            pageIndex,
+            pageCount
+          })
+        }
+      })
+      .catch(async (error) => {
+        console.warn("Failed to save reading progress:", error)
+        await enqueueProgressUpdate({
+          progressUrl: this.progressUrlValue,
+          pageIndex,
+          pageCount
+        })
+      })
+  }
+
+  private async flushQueuedProgressUpdates() {
+    if (!navigator.onLine) return
+
+    const token = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content")
+
+    await flushQueuedProgress(token || "")
   }
 
   // Keep next-chapter prompt state in sync with current location in chapter.
