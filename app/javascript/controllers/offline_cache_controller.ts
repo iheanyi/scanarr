@@ -182,17 +182,21 @@ export default class extends Controller {
     })
     this.renderState(completeRecord)
 
-    await syncOfflineManifest(
-      this.manifestUrlValue,
-      [
-        {
-          chapter_public_id: this.chapterPublicIdValue,
-          status: "complete",
-          last_synced_at: new Date().toISOString()
-        }
-      ],
-      this.csrfToken()
-    )
+    try {
+      await syncOfflineManifest(
+        this.manifestUrlValue,
+        [
+          {
+            chapter_public_id: this.chapterPublicIdValue,
+            status: "complete",
+            last_synced_at: new Date().toISOString()
+          }
+        ],
+        this.csrfToken()
+      )
+    } catch (_error) {
+      // Keep local availability as complete even when manifest sync fails.
+    }
   }
 
   private async markFailed(message: string) {

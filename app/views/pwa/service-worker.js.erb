@@ -1,8 +1,7 @@
 const APP_SHELL_CACHE = "scanarr-app-shell-v1"
-const HTML_CACHE = "scanarr-html-v1"
 const IMAGE_CACHE = "scanarr-images-v1"
 const OFFLINE_FALLBACK_URL = "/offline.html"
-const KNOWN_CACHES = [APP_SHELL_CACHE, HTML_CACHE, IMAGE_CACHE]
+const KNOWN_CACHES = [APP_SHELL_CACHE, IMAGE_CACHE]
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -61,18 +60,9 @@ self.addEventListener("fetch", (event) => {
 })
 
 async function networkFirstHTML(request) {
-  const cache = await caches.open(HTML_CACHE)
-
   try {
-    const networkResponse = await fetch(request)
-    if (networkResponse && networkResponse.status === 200) {
-      cache.put(request, networkResponse.clone())
-    }
-    return networkResponse
+    return await fetch(request)
   } catch (_error) {
-    const cachedResponse = await cache.match(request)
-    if (cachedResponse) return cachedResponse
-
     const fallback = await caches.match(OFFLINE_FALLBACK_URL)
     if (fallback) return fallback
 
