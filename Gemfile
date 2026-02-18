@@ -36,7 +36,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # HTML parsing for scrapers
-gem "nokogiri", "~> 1.16"
+gem "nokogiri", "~> 1.19"
 # HTTP client for scrapers
 gem "faraday"
 gem "faraday-retry"
