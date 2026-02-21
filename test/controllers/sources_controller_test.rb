@@ -214,6 +214,24 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_import_without_series_url_turbo_request_redirects_with_flash
+    post "/sources/weeb-central/import",
+         params: { series_url: "" },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to source_search_path(source_slug: "weeb-central")
+    assert_equal "No series URL provided", flash[:alert]
+  end
+
+  def test_import_unavailable_source_turbo_request_redirects_with_flash
+    post "/sources/example-source/import",
+         params: { series_url: "https://example.com/series/123" },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to search_path
+    assert_equal "Import not available for this source", flash[:alert]
+  end
+
   def test_import_respects_notify_only_policy_without_queuing_downloads
     user_series_follows(:one).update!(download_policy: :notify_only)
 

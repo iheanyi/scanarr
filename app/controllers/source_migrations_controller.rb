@@ -43,21 +43,33 @@ class SourceMigrationsController < ApplicationController
     ).execute!
 
     if result.success
-      flash[:notice] = "Migration complete! #{result.migrated.size} series migrated, " \
-                        "#{result.already_on_target.size} already on target, " \
-                        "#{result.no_match.size} could not be matched."
+      message = "Migration complete! #{result.migrated.size} series migrated, " \
+                "#{result.already_on_target.size} already on target, " \
+                "#{result.no_match.size} could not be matched."
+      variant = :success
     else
-      flash[:alert] = "Migration had errors: #{result.errors.first(3).join('; ')}"
+      message = "Migration had errors: #{result.errors.first(3).join('; ')}"
+      variant = :danger
     end
 
-    redirect_to source_migrations_path
+    respond_with_toast(
+      redirect_path: source_migrations_path,
+      message: message,
+      variant: variant,
+      turbo_redirect: true
+    )
   end
 
   def series_preview
     @series = Series.find_by_param!(params[:series_slug])
     @from_source = Source.find_by(id: params[:from_source_id]) || @series.primary_source || @series.sources.first
     if @from_source.blank?
-      redirect_to library_series_path(series_slug: @series.to_param), alert: "No source available for this series"
+      respond_with_toast(
+        redirect_path: library_series_path(series_slug: @series.to_param),
+        message: "No source available for this series",
+        variant: :warning,
+        turbo_redirect: true
+      )
       return
     end
 
@@ -76,8 +88,12 @@ class SourceMigrationsController < ApplicationController
     unless @series.sources.exists?(id: @to_source.id)
       target_series_url = params[:target_series_url].to_s
       if target_series_url.blank?
-        redirect_to library_series_migration_path(series_slug: @series.to_param, from_source_id: @from_source.id),
-                    alert: "Series is not linked to #{@to_source.name} yet. Please choose a source candidate first."
+        respond_with_toast(
+          redirect_path: library_series_migration_path(series_slug: @series.to_param, from_source_id: @from_source.id),
+          message: "Series is not linked to #{@to_source.name} yet. Please choose a source candidate first.",
+          variant: :warning,
+          turbo_redirect: true
+        )
         return
       end
 
@@ -92,17 +108,30 @@ class SourceMigrationsController < ApplicationController
     ).execute!
 
     if result.success && result.migrated.any?
-      flash[:notice] = "Migrated #{@series.canonical_title} to #{@to_source.name}"
+      message = "Migrated #{@series.canonical_title} to #{@to_source.name}"
+      variant = :success
     elsif result.success
-      flash[:notice] = "#{@series.canonical_title} was already using #{@to_source.name}"
+      message = "#{@series.canonical_title} was already using #{@to_source.name}"
+      variant = :info
     else
-      flash[:alert] = "Migration had errors: #{result.errors.first(3).join('; ')}"
+      message = "Migration had errors: #{result.errors.first(3).join('; ')}"
+      variant = :danger
     end
 
-    redirect_to library_series_path(series_slug: @series.to_param)
+    respond_with_toast(
+      redirect_path: library_series_path(series_slug: @series.to_param),
+      message: message,
+      variant: variant,
+      turbo_redirect: true
+    )
   rescue Scrapers::AdapterRegistry::UnknownSourceError, Scrapers::Errors::ScraperError, ActiveRecord::RecordInvalid, ArgumentError => e
-    redirect_to library_series_migration_path(series_slug: @series.to_param, from_source_id: @from_source.id),
-                alert: "Failed to link/migrate #{@series.canonical_title}: #{e.message}"
+    respond_with_toast(
+      redirect_path: library_series_migration_path(series_slug: @series.to_param, from_source_id: @from_source.id),
+      message: "Failed to link/migrate #{@series.canonical_title}: #{e.message}",
+      variant: :danger,
+      status: :unprocessable_entity,
+      turbo_redirect: true
+    )
   end
 
   private

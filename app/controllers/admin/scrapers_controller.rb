@@ -16,27 +16,39 @@ module Admin
 
     def run_smoke
       source = Source.find(params[:source_id])
-      run = ScraperRun.create!(
-        source: source,
-        run_type: "smoke",
-        status: "running",
-        started_at: Time.current
-      )
+      run = nil
 
-      stats = run_smoke_for(source)
-      run.update!(
-        status: "success",
-        finished_at: Time.current,
-        stats_json: stats
+      begin
+        run = ScraperRun.create!(
+          source: source,
+          run_type: "smoke",
+          status: "running",
+          started_at: Time.current
+        )
+
+        stats = run_smoke_for(source)
+        run.update!(
+          status: "success",
+          finished_at: Time.current,
+          stats_json: stats
+        )
+        message = "Smoke test passed for #{source.name || source.key}"
+        variant = :success
+      rescue StandardError => error
+        run&.update!(
+          status: "failed",
+          finished_at: Time.current,
+          error: "#{error.class}: #{error.message}"
+        )
+        message = "Smoke test failed for #{source&.name || source&.key || 'source'}: #{error.message}"
+        variant = :danger
+      end
+
+      respond_with_toast(
+        redirect_path: admin_scrapers_path,
+        message: message,
+        variant: variant
       )
-    rescue StandardError => error
-      run&.update!(
-        status: "failed",
-        finished_at: Time.current,
-        error: "#{error.class}: #{error.message}"
-      )
-    ensure
-      redirect_to admin_scrapers_path
     end
 
     private

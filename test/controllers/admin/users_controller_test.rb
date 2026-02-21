@@ -54,12 +54,44 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_users_path
   end
 
+  def test_admin_can_delete_other_users_with_turbo_toast
+    other = users(:member)
+
+    assert_difference "User.count", -1 do
+      delete admin_user_path(other), headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "#{other.username} deleted"
+    assert_includes @response.body, %(action="remove")
+  end
+
   def test_admin_cannot_delete_self
     delete admin_user_path(@test_user)
 
     assert_redirected_to admin_users_path
     assert_includes flash[:alert], "cannot delete yourself"
     assert User.exists?(@test_user.id)
+  end
+
+  def test_admin_cannot_delete_self_with_turbo_toast
+    delete admin_user_path(@test_user), headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "You cannot delete yourself"
+    assert User.exists?(@test_user.id)
+  end
+
+  def test_admin_delete_missing_user_turbo_request_redirects_with_flash
+    delete admin_user_path("missing-user-id"),
+           headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to admin_users_path
+    assert_equal "User not found", flash[:alert]
   end
 
   def test_member_gets_redirected_from_user_management

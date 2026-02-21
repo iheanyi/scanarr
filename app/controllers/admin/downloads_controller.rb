@@ -64,15 +64,21 @@ module Admin
       # Process ALL series covers in background (fetches from source if needed)
       RefreshAllCoversJob.perform_later
 
-      flash[:notice] = "Refreshing all covers in background..."
-      redirect_to admin_downloads_path
+      respond_with_toast(
+        redirect_path: admin_downloads_path,
+        message: "Refreshing all covers in background...",
+        variant: :success
+      )
     end
 
     def refresh_all_metadata
       RefreshAllMetadataJob.perform_later
 
-      flash[:notice] = "Refreshing all metadata in background..."
-      redirect_to admin_downloads_path
+      respond_with_toast(
+        redirect_path: admin_downloads_path,
+        message: "Refreshing all metadata in background...",
+        variant: :success
+      )
     end
 
     def restart
@@ -82,15 +88,22 @@ module Admin
           download_error: nil,
           pages_downloaded: 0
         )
+        broadcast_live_updates(@download)
 
         enqueue_download_job(@download)
 
-        flash[:notice] = "Download restarted successfully"
+        message = "Download restarted successfully"
+        variant = :success
       else
-        flash[:alert] = "Can only restart failed or cancelled downloads"
+        message = "Can only restart failed or cancelled downloads"
+        variant = :warning
       end
 
-      redirect_to admin_downloads_path(status: params[:status])
+      respond_with_toast(
+        redirect_path: admin_downloads_path(status: params[:status]),
+        message: message,
+        variant: variant
+      )
     end
 
     def cancel
@@ -104,12 +117,19 @@ module Admin
           pages_expected: nil,
           download_error: "Cancelled by user"
         )
-        flash[:notice] = "Download cancelled"
+        broadcast_live_updates(@download)
+        message = "Download cancelled"
+        variant = :success
       else
-        flash[:alert] = "Can only cancel queued or in-progress downloads"
+        message = "Can only cancel queued or in-progress downloads"
+        variant = :warning
       end
 
-      redirect_to admin_downloads_path(status: params[:status])
+      respond_with_toast(
+        redirect_path: admin_downloads_path(status: params[:status]),
+        message: message,
+        variant: variant
+      )
     end
 
     def restart_all_failed
@@ -123,15 +143,22 @@ module Admin
             download_error: nil,
             pages_downloaded: 0
           )
+          broadcast_live_updates(download)
           enqueue_download_job(download)
         end
 
-        flash[:notice] = "Restarted #{count} failed download#{'s' if count != 1}"
+        message = "Restarted #{count} failed download#{'s' if count != 1}"
+        variant = :success
       else
-        flash[:alert] = "No failed downloads to restart"
+        message = "No failed downloads to restart"
+        variant = :warning
       end
 
-      redirect_to admin_downloads_path
+      respond_with_toast(
+        redirect_path: admin_downloads_path,
+        message: message,
+        variant: variant
+      )
     end
 
     def restart_all_stuck
@@ -148,15 +175,22 @@ module Admin
             download_error: nil,
             pages_downloaded: 0
           )
+          broadcast_live_updates(download)
           enqueue_download_job(download)
         end
 
-        flash[:notice] = "Restarted #{count} stuck download#{'s' if count != 1}"
+        message = "Restarted #{count} stuck download#{'s' if count != 1}"
+        variant = :success
       else
-        flash[:alert] = "No stuck downloads to restart"
+        message = "No stuck downloads to restart"
+        variant = :warning
       end
 
-      redirect_to admin_downloads_path
+      respond_with_toast(
+        redirect_path: admin_downloads_path,
+        message: message,
+        variant: variant
+      )
     end
 
     private
@@ -164,7 +198,14 @@ module Admin
     def set_download
       @download = FileAsset.find_by(public_id: params[:id]) || FileAsset.find(params[:id])
     rescue ActiveRecord::RecordNotFound
-      redirect_to admin_downloads_path(status: params[:status]), alert: "Download not found"
+      respond_with_toast(
+        redirect_path: admin_downloads_path(status: params[:status]),
+        message: "Download not found",
+        variant: :danger,
+        status: :not_found,
+        turbo_redirect: true
+      )
+      nil
     end
 
     def enqueue_download_job(file_asset)
@@ -188,6 +229,42 @@ module Admin
         group: chapter.group,
         release_id: release.id
       )
+    end
+
+    def broadcast_live_updates(file_asset)
+      broadcast_admin_download_update(file_asset)
+      broadcast_chapter_update(file_asset)
+    end
+
+    def broadcast_admin_download_update(file_asset)
+      Turbo::StreamsChannel.broadcast_replace_to(
+        "admin_downloads",
+        target: ActionView::RecordIdentifier.dom_id(file_asset),
+        partial: "admin/downloads/download_row",
+        locals: { download: file_asset.reload }
+      )
+    rescue StandardError => e
+      Rails.logger.warn "Admin::DownloadsController: Failed to broadcast admin download update: #{e.message}"
+    end
+
+    def broadcast_chapter_update(file_asset)
+      release = file_asset.release
+      chapter = release&.chapter
+      series = chapter&.series
+      source = release&.source || chapter&.source
+      return unless chapter && series && source
+
+      chapter.reload
+      latest_release = chapter.releases.includes(:file_asset).order(created_at: :desc).first
+
+      Turbo::StreamsChannel.broadcast_replace_to(
+        [ series, :downloads ],
+        target: ActionView::RecordIdentifier.dom_id(chapter),
+        partial: "series/chapter_row",
+        locals: { chapter: chapter, source: source, series: series, progress: nil, latest_release: latest_release }
+      )
+    rescue StandardError => e
+      Rails.logger.warn "Admin::DownloadsController: Failed to broadcast chapter update: #{e.message}"
     end
   end
 end

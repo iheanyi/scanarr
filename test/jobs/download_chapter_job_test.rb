@@ -190,6 +190,42 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     assert_equal 2, step.cursor
   end
 
+  def test_download_stops_when_file_asset_is_cancelled
+    release = Release.create!(
+      chapter: chapters(:one),
+      source: sources(:one),
+      format: "pages",
+      source_url: "https://weebcentral.com/chapters/cancel-mid-run-#{SecureRandom.hex(4)}"
+    )
+    http = FakeHttpClient.new(
+      "https://img.example.com/page-1.jpg" => tiny_png,
+      "https://img.example.com/page-2.jpg" => tiny_png
+    )
+    job = build_resume_job(release: release, adapter: FakeAdapter.new, http: http)
+    step = FakeStep.new
+
+    job.send(:fetch_pages)
+    file_asset = release.reload.file_asset
+    file_asset.update!(
+      download_status: "cancelled",
+      pages_downloaded: 0,
+      pages_expected: nil,
+      download_error: "Cancelled by user"
+    )
+
+    job.send(:download_pages_with_cursor, step)
+    job.send(:finalize)
+
+    file_asset.reload
+
+    assert_equal "cancelled", file_asset.download_status
+    assert_equal "Cancelled by user", file_asset.download_error
+    assert_equal 0, file_asset.pages_downloaded
+    assert_nil file_asset.pages_expected
+    assert_equal 0, file_asset.pages.count
+    assert_nil step.cursor
+  end
+
   def test_ensure_runtime_entities_raises_when_rehydration_is_incomplete
     job = DownloadChapterJob.new
     job.define_singleton_method(:setup_entities) { }

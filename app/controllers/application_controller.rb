@@ -6,9 +6,28 @@ class ApplicationController < ActionController::Base
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActionController::RoutingError, with: :render_not_found
 
-  helper_method :current_notifications, :unread_notification_count, :chapter_identifier
+  helper_method :current_notifications, :unread_notification_count, :chapter_identifier, :local_downloads_enabled?
 
   private
+
+  def toast_stream(message, variant: :success)
+    turbo_stream.append("toast-container", UI::ToastComponent.new(message: message, variant: variant))
+  end
+
+  def respond_with_toast(redirect_path:, message:, variant: :success, streams: [], status: :ok, turbo_redirect: false, turbo_redirect_status: :see_other)
+    flash_key = variant.in?([ :success, :info ]) ? :notice : :alert
+
+    respond_to do |format|
+      format.html { redirect_to redirect_path, flash_key => message }
+      format.turbo_stream do
+        if turbo_redirect
+          redirect_to redirect_path, flash_key => message, status: turbo_redirect_status
+        else
+          render turbo_stream: Array(streams) + [ toast_stream(message, variant: variant) ], status: status
+        end
+      end
+    end
+  end
 
   def render_not_found
     respond_to do |format|
@@ -40,6 +59,19 @@ class ApplicationController < ActionController::Base
   def require_user
     return if current_user
     redirect_to root_path, alert: "You must be logged in to access that page."
+  end
+
+  def local_downloads_enabled?
+    return false unless current_user
+    return false unless current_user.respond_to?(:local_downloads_enabled?)
+
+    current_user.local_downloads_enabled?
+  end
+
+  def require_local_downloads_enabled
+    return if local_downloads_enabled?
+
+    render json: { error: "Local download mode is disabled for this account." }, status: :forbidden
   end
 
   def current_notifications

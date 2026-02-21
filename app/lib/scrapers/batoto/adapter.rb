@@ -73,6 +73,8 @@ module Scrapers
 
       doc = Nokogiri::HTML(response.body)
       parse_search_results(doc)
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+      raise Scrapers::Errors::SourceUnavailableError, "connection timeout while searching BatoTo (#{e.message})"
     rescue StandardError => e
       Rails.logger.error "[Batoto] Search error: #{e.message}"
       []

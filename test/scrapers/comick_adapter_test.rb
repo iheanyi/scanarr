@@ -16,11 +16,25 @@ class ComickAdapterTest < ActiveSupport::TestCase
       key = "GET #{uri}"
       fallback = uri.dup
       fallback.query = nil
-      body = @mapping[key] || @mapping.fetch("GET #{fallback}")
-      Response.new(status: 200, body: body, headers: {}, url: uri.to_s)
+      entry = @mapping[key] || @mapping.fetch("GET #{fallback}")
+      build_response(entry, uri)
     end
 
     private
+
+    def build_response(entry, uri)
+      case entry
+      when Hash
+        Response.new(
+          status: entry.fetch(:status, entry.fetch("status", 200)),
+          body: entry.fetch(:body, entry.fetch("body", "")),
+          headers: entry.fetch(:headers, entry.fetch("headers", {})),
+          url: uri.to_s
+        )
+      else
+        Response.new(status: 200, body: entry, headers: {}, url: uri.to_s)
+      end
+    end
 
     def build_uri(path_or_url, params)
       uri = URI(path_or_url.to_s)
@@ -71,6 +85,26 @@ class ComickAdapterTest < ActiveSupport::TestCase
     results = @adapter.search("one piece")
 
     assert_kind_of ResultTypes::SearchResult, results.first
+  end
+
+  def test_search_raises_rate_limit_error_for_challenge_html
+    challenge_http = FakeHttpClient.new(
+      mapping: {
+        "GET #{@base_url}/api/search" => {
+          status: 403,
+          body: "<!DOCTYPE html><html><head><title>Just a moment...</title></head><body></body></html>",
+          headers: { "content-type" => "text/html; charset=UTF-8" }
+        }
+      },
+      base_url: @base_url
+    )
+    adapter = Scrapers::Comick::Adapter.new(config: { "base_url" => @base_url }, http: challenge_http)
+
+    error = assert_raises(Scrapers::Errors::RateLimitError) do
+      adapter.search("one piece")
+    end
+
+    assert_includes error.message, "anti-bot challenge"
   end
 
   def test_series_parses_details

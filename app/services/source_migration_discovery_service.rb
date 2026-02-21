@@ -7,6 +7,7 @@ class SourceMigrationDiscoveryService
 
   SEARCH_TIMEOUT_SECONDS = 8
   CHAPTER_COUNT_TIMEOUT_SECONDS = 12
+  WORKER_WAIT_TIMEOUT_SECONDS = SEARCH_TIMEOUT_SECONDS + 2
   MAX_WORKERS = 4
   MIN_CONFIDENCE = 0.45
 
@@ -39,9 +40,9 @@ class SourceMigrationDiscoveryService
 
       futures.each_with_index do |future, index|
         source = sources[index]
-        worker_result = future.value!(SEARCH_TIMEOUT_SECONDS)
+        worker_result = future.value!(WORKER_WAIT_TIMEOUT_SECONDS)
         if worker_result.nil?
-          errors << "#{source.name}: search timed out"
+          errors << "#{source.name}: search timed out after #{SEARCH_TIMEOUT_SECONDS}s"
           next
         end
 
@@ -69,7 +70,9 @@ class SourceMigrationDiscoveryService
     end
 
     adapter = Scrapers::AdapterRegistry.for(source)
-    results = adapter.search(@series.canonical_title).first(5)
+    results = Timeout.timeout(SEARCH_TIMEOUT_SECONDS) do
+      adapter.search(@series.canonical_title).first(5)
+    end
     best_match, confidence = best_match_for(results)
     return WorkerResult.new(candidate: nil, error: nil) if best_match.nil?
 
@@ -85,6 +88,12 @@ class SourceMigrationDiscoveryService
       ),
       error: nil
     )
+  rescue Timeout::Error
+    WorkerResult.new(candidate: nil, error: "#{source.name}: search timed out after #{SEARCH_TIMEOUT_SECONDS}s")
+  rescue Scrapers::Errors::RateLimitError
+    WorkerResult.new(candidate: nil, error: "#{source.name}: blocked by anti-bot protection")
+  rescue Scrapers::Errors::SourceUnavailableError => e
+    WorkerResult.new(candidate: nil, error: "#{source.name}: #{e.message.truncate(100)}")
   rescue StandardError => e
     WorkerResult.new(candidate: nil, error: "#{source.name}: #{e.message.truncate(100)}")
   end

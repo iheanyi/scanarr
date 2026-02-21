@@ -50,10 +50,28 @@ class FollowsController < ApplicationController
 
   def set_library_series
     @library_series = LibrarySeries.find(params[:library_series_id])
+  rescue ActiveRecord::RecordNotFound
+    respond_with_toast(
+      redirect_path: library_path,
+      message: "Series follow target not found",
+      variant: :danger,
+      status: :not_found,
+      turbo_redirect: true
+    )
+    nil
   end
 
   def set_follow
     @follow = current_user.user_series_follows.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    respond_with_toast(
+      redirect_path: library_path,
+      message: "Follow not found",
+      variant: :danger,
+      status: :not_found,
+      turbo_redirect: true
+    )
+    nil
   end
 
   def follow_params

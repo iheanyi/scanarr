@@ -212,11 +212,23 @@ class SourcesController < ApplicationController
   def import
     series_url = params[:series_url].to_s
     if series_url.blank?
-      redirect_to source_search_path(source_slug: source_slug(@source)), alert: "No series URL provided" and return
+      respond_with_toast(
+        redirect_path: source_search_path(source_slug: source_slug(@source)),
+        message: "No series URL provided",
+        variant: :warning,
+        turbo_redirect: true
+      )
+      return
     end
 
     unless Scrapers::AdapterRegistry.registered?(@source.key)
-      redirect_to search_path, alert: "Import not available for this source" and return
+      respond_with_toast(
+        redirect_path: search_path,
+        message: "Import not available for this source",
+        variant: :warning,
+        turbo_redirect: true
+      )
+      return
     end
 
     importer = SeriesImporter.new(source: @source, adapter: Scrapers::AdapterRegistry.for(@source))
@@ -240,7 +252,13 @@ class SourcesController < ApplicationController
     redirect_to library_series_path(series_slug: series.to_param)
   rescue Scrapers::Errors::ScraperError, StandardError => e
     Rails.logger.error "Import failed for #{series_url}: #{e.class} - #{e.message}"
-    redirect_to search_path(q: params[:q]), alert: "Import failed: #{e.message}"
+    respond_with_toast(
+      redirect_path: search_path(q: params[:q]),
+      message: "Import failed: #{e.message}",
+      variant: :danger,
+      status: :unprocessable_entity,
+      turbo_redirect: true
+    )
   end
 
   private

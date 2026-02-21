@@ -20,6 +20,12 @@ class SourceMigrationDiscoveryServiceTest < ActiveSupport::TestCase
     end
   end
 
+  class TimeoutAdapter
+    def search(_query)
+      raise Timeout::Error, "execution expired"
+    end
+  end
+
   def test_call_collects_errors_sequentially_while_returning_candidates
     series_record = series(:one)
     from_source = sources(:one)
@@ -82,5 +88,40 @@ class SourceMigrationDiscoveryServiceTest < ActiveSupport::TestCase
 
     assert_includes result.errors, "#{missing_source.name}: adapter not implemented"
     assert result.errors.any? { |error| error.include?("#{failing_source.name}: adapter exploded") }
+  end
+
+  def test_call_reports_timeout_errors_cleanly
+    series_record = series(:one)
+    from_source = sources(:one)
+
+    timeout_source = Source.create!(
+      key: "timeout_source_for_discovery",
+      name: "Timeout Source",
+      slug: "timeout-source-for-discovery",
+      base_url: "https://timeout-source.example",
+      enabled: true
+    )
+
+    original_registered = Scrapers::AdapterRegistry.method(:registered?)
+    original_for = Scrapers::AdapterRegistry.method(:for)
+    result = nil
+
+    begin
+      Scrapers::AdapterRegistry.define_singleton_method(:registered?) do |source_key|
+        source_key == timeout_source.key
+      end
+      Scrapers::AdapterRegistry.define_singleton_method(:for) do |source|
+        raise Scrapers::AdapterRegistry::UnknownSourceError, "unexpected source #{source.key}" unless source.key == timeout_source.key
+
+        TimeoutAdapter.new
+      end
+      result = SourceMigrationDiscoveryService.new(series: series_record, from_source: from_source).call
+    ensure
+      Scrapers::AdapterRegistry.define_singleton_method(:registered?, original_registered)
+      Scrapers::AdapterRegistry.define_singleton_method(:for, original_for)
+    end
+
+    assert_empty result.candidates
+    assert_includes result.errors, "#{timeout_source.name}: search timed out after #{SourceMigrationDiscoveryService::SEARCH_TIMEOUT_SECONDS}s"
   end
 end

@@ -24,7 +24,7 @@
       </thead>
       <tbody class="divide-y divide-border">
         <% @users.each do |user| %>
-          <tr class="hover:bg-surface-2/30">
+          <tr id="<%= dom_id(user) %>" class="hover:bg-surface-2/30">
             <td class="px-4 py-3 font-medium text-foreground"><%= user.username %></td>
             <td class="px-4 py-3 text-muted"><%= user.email %></td>
             <td class="px-4 py-3">

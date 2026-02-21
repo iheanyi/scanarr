@@ -28,3 +28,7 @@
     <%= unread_notification_count > 0 ? (unread_notification_count > 9 ? "9+" : unread_notification_count) : "" %>
   </span>
 <% end %>
+
+<%= turbo_stream.append "toast-container" do %>
+  <%= render UI::ToastComponent.new(message: "Notification marked as read", variant: :success) %>
+<% end %>

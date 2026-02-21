@@ -51,6 +51,17 @@ class Admin::BackupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pending", record.status
   end
 
+  def test_create_returns_turbo_toast
+    assert_difference "BackupRecord.count", 1 do
+      post admin_create_backup_path, headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Backup started. It will appear in the list when complete."
+  end
+
   def test_destroy_deletes_backup_record
     record = BackupRecord.create!(
       filename: "to_delete.zip",
@@ -63,6 +74,32 @@ class Admin::BackupsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_backups_path
+  end
+
+  def test_destroy_returns_turbo_toast_and_remove_stream
+    record = BackupRecord.create!(
+      filename: "to_delete_turbo.zip",
+      backup_type: "manual",
+      status: "complete"
+    )
+
+    assert_difference "BackupRecord.count", -1 do
+      delete admin_backup_path(record), headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Backup deleted."
+    assert_includes @response.body, %(action="remove")
+  end
+
+  def test_destroy_missing_backup_turbo_request_redirects_with_flash
+    delete admin_backup_path("missing-backup-id"),
+           headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to admin_backups_path
+    assert_equal "Backup not found", flash[:alert]
   end
 
   def test_download_redirects_when_file_missing
@@ -91,5 +128,29 @@ class Admin::BackupsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_backups_path
     assert_equal "Backup file not found on disk.", flash[:alert]
+  end
+
+  def test_verify_returns_turbo_toast_when_file_missing
+    record = BackupRecord.create!(
+      filename: "missing-turbo.zip",
+      path: "/nonexistent/path.zip",
+      backup_type: "manual",
+      status: "complete"
+    )
+
+    post admin_backup_verify_path(record), headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", @response.media_type
+    assert_includes @response.body, "toast-container"
+    assert_includes @response.body, "Backup file not found on disk."
+  end
+
+  def test_verify_missing_backup_turbo_request_redirects_with_flash
+    post admin_backup_verify_path("missing-backup-id"),
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to admin_backups_path
+    assert_equal "Backup not found", flash[:alert]
   end
 end
