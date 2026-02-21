@@ -85,14 +85,36 @@ async function networkFirstHTML(request) {
 
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName)
-  const cachedResponse = await cache.match(request)
+  const cacheKey = cacheKeyForRequest(request)
+  const cachedResponse = await cache.match(cacheKey)
   if (cachedResponse) return cachedResponse
 
-  const networkResponse = await fetch(request)
-  if (networkResponse && networkResponse.ok) {
-    cache.put(request, networkResponse.clone())
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse && networkResponse.ok) {
+      cache.put(cacheKey, networkResponse.clone())
+    }
+    return networkResponse
+  } catch (_error) {
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=UTF-8" }
+    })
   }
-  return networkResponse
+}
+
+function cacheKeyForRequest(request) {
+  const url = new URL(request.url)
+  if (
+    url.origin === self.location.origin &&
+    url.pathname.endsWith("/offline_image") &&
+    url.searchParams.has("cache_key")
+  ) {
+    url.searchParams.delete("token")
+    return url.toString()
+  }
+
+  return request
 }
 
 async function staleWhileRevalidate(request, cacheName) {

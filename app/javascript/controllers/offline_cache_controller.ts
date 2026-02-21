@@ -165,13 +165,13 @@ export default class extends Controller {
       if (index % 8 === 0) await this.ensureStorageBudget()
 
       const pageUrl = pageUrls[index]
-      const request = new Request(pageUrl, { credentials: "same-origin" })
-      const response = await fetch(request, { signal: this.abortController.signal })
+      const networkRequest = new Request(pageUrl, { credentials: "same-origin" })
+      const response = await fetch(networkRequest, { signal: this.abortController.signal })
       if (!response.ok) {
         throw new Error(`Failed to cache page ${index + 1} (${response.status}).`)
       }
 
-      await cache.put(request, response.clone())
+      await cache.put(this.cacheRequestForPage(pageUrl), response.clone())
 
       const nextRecord = await patchOfflineChapter(this.chapterKeyValue, {
         downloadedCount: index + 1,
@@ -297,10 +297,28 @@ export default class extends Controller {
     const record = await getOfflineChapter(this.chapterKeyValue)
     if (record?.pages?.length) {
       const cache = await caches.open(IMAGE_CACHE)
-      await Promise.all(record.pages.map((pageUrl) => cache.delete(new Request(pageUrl, { credentials: "same-origin" }))))
+      await Promise.all(record.pages.map((pageUrl) => cache.delete(this.cacheRequestForPage(pageUrl))))
     }
 
     await deleteOfflineChapter(this.chapterKeyValue)
+  }
+
+  private cacheRequestForPage(pageUrl: string) {
+    try {
+      const url = new URL(pageUrl, window.location.origin)
+      if (
+        url.origin === window.location.origin &&
+        url.pathname.endsWith("/offline_image") &&
+        url.searchParams.has("cache_key")
+      ) {
+        url.searchParams.delete("token")
+        return new Request(url.toString(), { credentials: "same-origin" })
+      }
+    } catch (_error) {
+      // Ignore malformed URLs and cache the original request key.
+    }
+
+    return new Request(pageUrl, { credentials: "same-origin" })
   }
 
   private isAbortError(error: unknown) {
