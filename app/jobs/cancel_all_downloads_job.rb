@@ -1,4 +1,6 @@
 class CancelAllDownloadsJob < ApplicationJob
+  include DownloadBroadcasting
+
   queue_as :default
 
   # Only one cancel job per series at a time
@@ -38,7 +40,7 @@ class CancelAllDownloadsJob < ApplicationJob
 
         # Broadcast update for this chapter
         broadcast_chapter_update(series, chapter)
-        broadcast_admin_download_update(file_asset)
+        broadcast_admin_download_update(file_asset, log_prefix: nil)
       end
     end
 
@@ -69,16 +71,4 @@ class CancelAllDownloadsJob < ApplicationJob
     Rails.logger.warn "Failed to broadcast chapter update: #{e.message}"
   end
 
-  def broadcast_admin_download_update(file_asset)
-    return unless file_asset
-
-    Turbo::StreamsChannel.broadcast_replace_to(
-      "admin_downloads",
-      target: ActionView::RecordIdentifier.dom_id(file_asset),
-      partial: "admin/downloads/download_row",
-      locals: { download: file_asset.reload }
-    )
-  rescue => e
-    Rails.logger.warn "Failed to broadcast admin download update: #{e.message}"
-  end
 end
