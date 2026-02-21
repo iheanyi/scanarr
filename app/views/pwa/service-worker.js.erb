@@ -106,7 +106,12 @@ async function staleWhileRevalidate(request, cacheName) {
       }
       return response
     })
-    .catch(() => null)
+    .catch(() =>
+      new Response("Offline", {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=UTF-8" }
+      })
+    )
 
   return cachedResponse || networkPromise
 }

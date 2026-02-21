@@ -19,14 +19,6 @@ export interface OfflineManifestEntryPayload {
   last_error?: string
 }
 
-export interface OfflineManifestPayload {
-  entries: Array<{
-    chapter_public_id: string
-    status: string
-    updated_at: string
-  }>
-}
-
 export async function pinChapter(pinUrl: string, csrfToken: string): Promise<void> {
   await jsonRequest(pinUrl, {
     method: "POST",
@@ -43,13 +35,6 @@ export async function unpinChapter(unpinUrl: string, csrfToken: string): Promise
 
 export async function fetchOfflinePages(pagesUrl: string): Promise<OfflinePagesPayload> {
   return await jsonRequest(pagesUrl, {
-    method: "GET",
-    headers: { Accept: "application/json" }
-  })
-}
-
-export async function fetchOfflineManifest(manifestUrl: string): Promise<OfflineManifestPayload> {
-  return await jsonRequest(manifestUrl, {
     method: "GET",
     headers: { Accept: "application/json" }
   })

@@ -58,6 +58,13 @@ export default class extends Controller {
     void this.refreshLocalState()
   }
 
+  disconnect() {
+    if (!this.busy) return
+
+    this.cancelRequested = true
+    this.abortController?.abort()
+  }
+
   async download(event?: Event) {
     await this.save(event)
   }

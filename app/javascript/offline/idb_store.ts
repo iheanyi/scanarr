@@ -57,14 +57,6 @@ export async function getOfflineChapter(chapterKey: string): Promise<OfflineChap
   return (record as OfflineChapterRecord | undefined) || null
 }
 
-export async function listOfflineChapters(): Promise<OfflineChapterRecord[]> {
-  const db = await openDatabase()
-  const tx = db.transaction(CHAPTERS_STORE, "readonly")
-  const store = tx.objectStore(CHAPTERS_STORE)
-  const records = await requestToPromise(store.getAll())
-  return (records as OfflineChapterRecord[]) || []
-}
-
 export async function putOfflineChapter(record: OfflineChapterRecord): Promise<void> {
   const db = await openDatabase()
   const tx = db.transaction(CHAPTERS_STORE, "readwrite")
