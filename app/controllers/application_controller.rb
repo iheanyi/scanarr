@@ -63,6 +63,7 @@ class ApplicationController < ActionController::Base
 
   def local_downloads_enabled?
     return false unless current_user
+    return false unless current_user.respond_to?(:local_downloads_enabled?)
 
     current_user.local_downloads_enabled?
   end

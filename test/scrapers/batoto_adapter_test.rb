@@ -55,6 +55,16 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     end
   end
 
+  class RaisingHttpClient
+    def initialize(error)
+      @error = error
+    end
+
+    def get(*)
+      raise @error
+    end
+  end
+
   def setup
     @base_url = "https://bato.to"
     @series_id = "81514"
@@ -102,6 +112,18 @@ class BatotoAdapterTest < ActiveSupport::TestCase
     results = adapter.search("one piece")
 
     assert_empty results
+  end
+
+  def test_search_raises_source_unavailable_error_for_connection_timeout
+    timeout_http = RaisingHttpClient.new(Faraday::ConnectionFailed.new("execution expired"))
+    adapter = Scrapers::Batoto::Adapter.new(config: { "base_url" => @base_url }, http: timeout_http)
+
+    error = assert_raises(Scrapers::Errors::SourceUnavailableError) do
+      adapter.search("one piece")
+    end
+
+    assert_includes error.message, "connection timeout"
+    assert_includes error.message, "BatoTo"
   end
 
   # --- Series Tests ---

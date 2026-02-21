@@ -313,8 +313,12 @@ class SeriesController < ApplicationController
     if current_user
       @chapter_progress_map = ChapterProgress.where(user: current_user, chapter_id: @chapters.map(&:id))
                                               .index_by(&:chapter_id)
-      @offline_manifest_map = current_user.offline_manifest_entries.where(chapter_id: @chapters.map(&:id))
-                                               .index_by(&:chapter_id)
+      @offline_manifest_map = if current_user.respond_to?(:offline_manifest_entries)
+        current_user.offline_manifest_entries.where(chapter_id: @chapters.map(&:id))
+                    .index_by(&:chapter_id)
+      else
+        {}
+      end
 
       # Ensure library series exists so the follow button is always available
       @series.ensure_library_series! if @series.library_series.blank?

@@ -38,7 +38,7 @@ module Scrapers
     def search(query, filters: {})
       _ = filters
       response = http.get("/api/search", params: { q: query, type: "comic", limit: 20 })
-      payload = JSON.parse(response.body)
+      payload = parse_json_response(response, endpoint: "/api/search")
 
       results = payload.is_a?(Hash) ? payload.fetch("data", []) : payload
       results.map do |item|
@@ -98,7 +98,7 @@ module Scrapers
 
       loop do
         response = http.get("/api/comics/#{slug}/chapter-list", params: { lang: "en", page: page })
-        payload = JSON.parse(response.body)
+        payload = parse_json_response(response, endpoint: "/api/comics/#{slug}/chapter-list")
 
         data = payload.fetch("data", [])
         pagination = payload.fetch("pagination", {})
@@ -221,7 +221,7 @@ module Scrapers
       end
 
       response = http.get("/api/comics/top", params: { days: days, type: "follow" })
-      payload = JSON.parse(response.body)
+      payload = parse_json_response(response, endpoint: "/api/comics/top")
 
       results = payload.is_a?(Hash) ? payload.fetch("data", []) : payload
       results.first(limit).map do |item|
@@ -231,7 +231,7 @@ module Scrapers
 
     def browse_latest(page: 1, limit: 20)
       response = http.get("/api/chapters/latest", params: { order: "new", page: page })
-      payload = JSON.parse(response.body)
+      payload = parse_json_response(response, endpoint: "/api/chapters/latest")
 
       results = payload.is_a?(Hash) ? payload.fetch("data", []) : payload
       results.first(limit).map do |item|
@@ -247,7 +247,7 @@ module Scrapers
         page: page,
         limit: limit
       })
-      payload = JSON.parse(response.body)
+      payload = parse_json_response(response, endpoint: "/api/search")
 
       results = payload.is_a?(Hash) ? payload.fetch("data", []) : payload
       results.map do |item|
@@ -268,6 +268,31 @@ module Scrapers
         chapter_count: nil,
         description: nil
       )
+    end
+
+    def parse_json_response(response, endpoint:)
+      body = response.body.to_s
+      content_type = response.headers["content-type"].to_s
+
+      if response.status.to_i == 403 && html_response?(body, content_type) && body.match?(/just a moment/i)
+        raise Scrapers::Errors::RateLimitError, "Comick blocked this request with an anti-bot challenge"
+      end
+
+      unless response.status.to_i.between?(200, 299)
+        raise Scrapers::Errors::SourceUnavailableError, "Comick API returned HTTP #{response.status} for #{endpoint}"
+      end
+
+      if html_response?(body, content_type)
+        raise Scrapers::Errors::SourceUnavailableError, "Comick returned HTML instead of JSON for #{endpoint}"
+      end
+
+      JSON.parse(body)
+    rescue JSON::ParserError => e
+      raise Scrapers::Errors::SourceUnavailableError, "Comick returned invalid JSON for #{endpoint}: #{e.message}"
+    end
+
+    def html_response?(body, content_type)
+      content_type.include?("text/html") || body.lstrip.start_with?("<!DOCTYPE html", "<html")
     end
   end
   end
