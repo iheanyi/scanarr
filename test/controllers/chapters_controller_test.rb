@@ -204,9 +204,13 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
 
       assert_equal 1, payload["page_count"]
       assert_equal "remote", payload["pages"][0]["source"]
-      assert_match %r{\A/sources/weeb-central/offline_image\?token=}, payload["pages"][0]["url"]
+      page_url = payload["pages"][0]["url"]
+      assert_match %r{\A/sources/weeb-central/offline_image\?}, page_url
+      query = Rack::Utils.parse_query(URI.parse(page_url).query)
+      assert_predicate query["token"], :present?
+      assert_predicate query["cache_key"], :present?
 
-      get payload["pages"][0]["url"], headers: { "ACCEPT" => "image/jpeg" }
+      get page_url, headers: { "ACCEPT" => "image/jpeg" }
 
       assert_response :success
       assert_equal "image/jpeg", @response.media_type

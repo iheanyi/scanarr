@@ -466,7 +466,11 @@ class ChaptersController < ApplicationController
       next if page_url.blank?
 
       token = offline_image_token_for(page_url)
-      proxied_url = source_offline_image_path(source_slug: @source.slug, token: token)
+      proxied_url = source_offline_image_path(
+        source_slug: @source.slug,
+        token: token,
+        cache_key: offline_image_cache_key_for(page_url)
+      )
 
       ResultTypes::Page.new(
         index: page.respond_to?(:index) && page.index.present? ? page.index : idx + 1,
@@ -507,6 +511,10 @@ class ChaptersController < ApplicationController
       purpose: OFFLINE_IMAGE_TOKEN_PURPOSE,
       expires_in: OFFLINE_IMAGE_TOKEN_TTL
     )
+  end
+
+  def offline_image_cache_key_for(page_url)
+    Digest::SHA256.hexdigest("#{@source.slug}:#{page_url}")
   end
 
   def offline_image_payload(token)

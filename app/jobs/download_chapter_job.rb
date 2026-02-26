@@ -181,6 +181,7 @@ class DownloadChapterJob < ApplicationJob
   def fetch_pages
     ensure_runtime_entities!
     return if skip_download?
+    return if stop_if_cancelled!
 
     @pages = current_adapter.pages(@chapter_url)
     @file_asset.update!(pages_expected: @pages.size)
@@ -190,6 +191,7 @@ class DownloadChapterJob < ApplicationJob
   def download_pages_with_cursor(step)
     ensure_runtime_entities!
     return if skip_download?
+    return if stop_if_cancelled!
 
     # Resume from cursor (page index we left off at)
     start_idx = step.cursor || 0
@@ -200,6 +202,7 @@ class DownloadChapterJob < ApplicationJob
     @pages[start_idx..].each_with_index do |page_data, relative_idx|
       idx = start_idx + relative_idx
       position = idx + 1
+      return if stop_if_cancelled!
 
       # Skip if this page already exists (idempotent)
       existing_page = @file_asset.pages.find_by(position: position)
@@ -253,6 +256,7 @@ class DownloadChapterJob < ApplicationJob
   def finalize
     ensure_runtime_entities!
     return if skip_download?
+    return if stop_if_cancelled!
 
     pages = @file_asset.pages.includes(image_attachment: :blob).order(:position)
     page_count = pages.count
@@ -383,5 +387,16 @@ class DownloadChapterJob < ApplicationJob
 
   def skip_download?
     @skip_download == true
+  end
+
+  def stop_if_cancelled!
+    return false unless @file_asset
+
+    @file_asset.reload
+    return false unless @file_asset.download_status == "cancelled"
+
+    Rails.logger.info "DownloadChapterJob: FileAsset #{@file_asset.id} was cancelled, stopping"
+    broadcast_chapter_update(@chapter, @source) if @chapter && @source
+    true
   end
 end

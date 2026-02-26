@@ -49,6 +49,9 @@ application.register("lazy-frame", LazyFrameController)
 import SelectionToggleController from "./selection_toggle_controller"
 application.register("selection-toggle", SelectionToggleController)
 
+import OfflineCacheController from "./offline_cache_controller"
+application.register("offline-cache", OfflineCacheController)
+
 // ─── Custom Action Options ──────────────────────────────────────────────────
 // Inline replacements for stimulus-fx. Uses Stimulus's first-party
 // registerActionOption API -- no external dependency needed.

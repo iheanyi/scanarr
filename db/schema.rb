@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_161000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_173000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -444,6 +444,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_161000) do
     t.index ["slug"], name: "index_sources_on_slug", unique: true
   end
 
+  create_table "user_offline_manifest_entries", force: :cascade do |t|
+    t.bigint "chapter_id", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.text "last_error"
+    t.datetime "last_synced_at"
+    t.string "status", default: "pinned", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["chapter_id"], name: "index_user_offline_manifest_entries_on_chapter_id"
+    t.index ["updated_at"], name: "index_user_offline_manifest_entries_on_updated_at"
+    t.index ["user_id", "chapter_id"], name: "index_offline_manifest_on_user_and_chapter", unique: true
+    t.index ["user_id", "status"], name: "index_offline_manifest_on_user_and_status"
+    t.index ["user_id"], name: "index_user_offline_manifest_entries_on_user_id"
+  end
+
   create_table "user_series_follows", force: :cascade do |t|
     t.integer "check_interval_minutes"
     t.datetime "created_at", null: false
@@ -506,6 +522,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_161000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_offline_manifest_entries", "chapters"
+  add_foreign_key "user_offline_manifest_entries", "users"
   add_foreign_key "user_series_follows", "library_series"
   add_foreign_key "user_series_follows", "users"
   add_foreign_key "volumes", "series"
