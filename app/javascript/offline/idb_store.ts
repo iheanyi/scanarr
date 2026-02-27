@@ -78,6 +78,21 @@ export async function patchOfflineChapter(chapterKey: string, patch: Partial<Off
   return nextRecord
 }
 
+export async function getAllOfflineChapters(): Promise<OfflineChapterRecord[]> {
+  const db = await openDatabase()
+  const tx = db.transaction(CHAPTERS_STORE, "readonly")
+  const store = tx.objectStore(CHAPTERS_STORE)
+  return await requestToPromise(store.getAll()) as OfflineChapterRecord[]
+}
+
+export async function getOfflineChaptersByStatus(status: OfflineChapterStatus): Promise<OfflineChapterRecord[]> {
+  const db = await openDatabase()
+  const tx = db.transaction(CHAPTERS_STORE, "readonly")
+  const store = tx.objectStore(CHAPTERS_STORE)
+  const index = store.index("status")
+  return await requestToPromise(index.getAll(status)) as OfflineChapterRecord[]
+}
+
 export async function deleteOfflineChapter(chapterKey: string): Promise<void> {
   const db = await openDatabase()
   const tx = db.transaction(CHAPTERS_STORE, "readwrite")

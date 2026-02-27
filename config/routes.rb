@@ -24,6 +24,7 @@ Rails.application.routes.draw do
 
   root "sources#index"
   get "/library", to: "library#index", as: :library
+  get "/offline-library", to: "offline_library#show", as: :offline_library
   get "/library/random", to: "library#random", as: :library_random
   get "/library/:series_slug", to: "series#show_from_library", as: :library_series
   get "/library/:series_slug/migrate", to: "source_migrations#series_preview", as: :library_series_migration
