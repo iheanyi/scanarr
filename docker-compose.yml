@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    environment:
+      POSTGRES_USER: scanarr
+      POSTGRES_PASSWORD: ${SCANARR_DATABASE_PASSWORD:-scanarr}
+      POSTGRES_DB: scanarr_production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scanarr -d scanarr_production"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      DB_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      SIDEKIQ_REDIS_URL: redis://redis:6379/1
+      REDIS_CACHE_NAMESPACE: scanarr:cache:production
+      RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-info}
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      SCANARR_DATABASE_PASSWORD: ${SCANARR_DATABASE_PASSWORD:-scanarr}
+      SCANARR_DISABLE_AUTH: ${SCANARR_DISABLE_AUTH:-false}
+    volumes:
+      - storage_data:/rails/storage
+
+  sidekiq:
+    build: .
+    restart: unless-stopped
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      DB_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      SIDEKIQ_REDIS_URL: redis://redis:6379/1
+      REDIS_CACHE_NAMESPACE: scanarr:cache:production
+      SIDEKIQ_CONCURRENCY: ${SIDEKIQ_CONCURRENCY:-5}
+      SCANARR_DATABASE_PASSWORD: ${SCANARR_DATABASE_PASSWORD:-scanarr}
+    volumes:
+      - storage_data:/rails/storage
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage_data:
