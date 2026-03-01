@@ -7,6 +7,7 @@ class OfflineLibraryControllerTest < ActionDispatch::IntegrationTest
 
   def test_show_renders_shell
     get offline_library_path
+
     assert_response :success
     assert_select "[data-controller='offline-library']"
     assert_select "h1", text: "Offline Library"
@@ -15,6 +16,7 @@ class OfflineLibraryControllerTest < ActionDispatch::IntegrationTest
   def test_show_requires_authentication
     sign_out
     get offline_library_path
+
     assert_response :redirect
   end
 end

@@ -72,7 +72,7 @@
                   class="inline-flex h-4 w-4 items-center justify-center text-success"
                   title="Available offline"
                   aria-label="Available offline"
-                  <% unless offline_available %>hidden<% end %>>
+                  <%= "hidden" unless offline_available %>>
               <%= icon "check", class: "h-2.5 w-2.5" %>
               <span class="sr-only">Available offline</span>
             </span>
@@ -81,7 +81,7 @@
         <% if offline_capable %>
           <div class="group/offline inline-flex items-center gap-1 rounded-full px-0.5 py-0.5">
             <span class="max-w-0 overflow-hidden whitespace-nowrap px-0 text-[10px] text-muted-2 tabular-nums text-right opacity-0 transition-all duration-150 group-hover/offline:max-w-10 group-hover/offline:px-1 group-hover/offline:opacity-100 group-focus-within/offline:max-w-10 group-focus-within/offline:px-1 group-focus-within/offline:opacity-100"
-                  <% unless show_offline_cancel_icon %>hidden<% end %>
+                  <%= "hidden" unless show_offline_cancel_icon %>
                   data-offline-cache-target="progress"></span>
             <button type="button"
                     class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-info/35 hover:bg-surface hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
