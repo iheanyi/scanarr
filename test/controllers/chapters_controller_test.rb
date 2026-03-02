@@ -205,8 +205,10 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       assert_equal 1, payload["page_count"]
       assert_equal "remote", payload["pages"][0]["source"]
       page_url = payload["pages"][0]["url"]
+
       assert_match %r{\A/sources/weeb-central/offline_image\?}, page_url
       query = Rack::Utils.parse_query(URI.parse(page_url).query)
+
       assert_predicate query["token"], :present?
       assert_predicate query["cache_key"], :present?
 
