@@ -40,6 +40,9 @@
 # Ignore development files
 /.devcontainer
 
+# Ignore node_modules (rebuilt during Docker build)
+/node_modules
+
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
