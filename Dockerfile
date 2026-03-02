@@ -66,7 +66,8 @@ RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
 # Build JS/CSS assets and precompile for Propshaft digesting
 RUN yarn build && \
-    SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+    SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
+    rm -rf node_modules
 
 # Final stage for app image
 FROM base
