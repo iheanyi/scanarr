@@ -5,10 +5,20 @@ import "./controllers"
 
 TurboPower.initialize(Turbo.StreamActions)
 
+const localDownloadsEnabled = document.querySelector("a[href='/offline-library']") !== null
+
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) => {
-    console.warn("Service worker registration failed:", error)
-  })
+  if (localDownloadsEnabled) {
+    navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) => {
+      console.warn("Service worker registration failed:", error)
+    })
+  } else {
+    void navigator.serviceWorker.getRegistration("/").then((registration) => {
+      if (registration) {
+        void registration.unregister()
+      }
+    })
+  }
 }
 
 // Clean up ephemeral UI state before Turbo caches the page.

@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import {
-  getAllOfflineChapters,
+  getOfflineChaptersByStatus,
   type OfflineChapterRecord
 } from "../offline/idb_store"
 
@@ -25,8 +25,7 @@ export default class extends Controller {
   }
 
   async render() {
-    const allChapters = await getAllOfflineChapters()
-    const complete = allChapters.filter((ch) => ch.status === "complete")
+    const complete = await getOfflineChaptersByStatus("complete")
 
     if (this.hasCountTarget) {
       this.countTarget.textContent = `${complete.length} chapter${complete.length !== 1 ? "s" : ""}`
