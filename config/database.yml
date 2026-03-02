@@ -90,6 +90,7 @@ production:
     database: scanarr_production
     username: scanarr
     password: <%= ENV["SCANARR_DATABASE_PASSWORD"] %>
+    host: <%= ENV.fetch("DB_HOST", "localhost") %>
   cache:
     <<: *primary_production
     database: scanarr_production_cache

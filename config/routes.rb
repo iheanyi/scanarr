@@ -19,9 +19,12 @@ Rails.application.routes.draw do
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
+  get "/manifest.json" => "rails/pwa#manifest", as: :pwa_manifest
+  get "/service-worker.js" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   root "sources#index"
   get "/library", to: "library#index", as: :library
+  get "/offline-library", to: "offline_library#show", as: :offline_library
   get "/library/random", to: "library#random", as: :library_random
   get "/library/:series_slug", to: "series#show_from_library", as: :library_series
   get "/library/:series_slug/migrate", to: "source_migrations#series_preview", as: :library_series_migration
@@ -41,11 +44,14 @@ Rails.application.routes.draw do
     end
   end
   get "/search", to: "search#index", as: :search
+  get "/offline_manifest", to: "offline_manifests#index", as: :offline_manifest, defaults: { format: :json }
+  patch "/offline_manifest", to: "offline_manifests#sync", as: :sync_offline_manifest, defaults: { format: :json }
   get "/sources/:source_slug/search", to: "sources#search", as: :source_search
   get "/sources/:source_slug/browse", to: "sources#browse", as: :source_browse
   get "/sources/:source_slug/preview", to: "sources#preview", as: :source_preview
   get "/sources/:source_slug/preview/read", to: "sources#preview_read", as: :source_preview_read
   get "/sources/:source_slug/preview/image", to: "sources#preview_image", as: :source_preview_image
+  get "/sources/:source_slug/offline_image", to: "chapters#offline_page_image", as: :source_offline_image
   post "/sources/:source_slug/import", to: "sources#import", as: :source_import
   get "/sources/:source_slug", to: "series#index", as: :source_series_index
   get "/sources/:source_slug/:series_slug", to: "series#show", as: :source_series
@@ -72,6 +78,21 @@ Rails.application.routes.draw do
        as: :source_series_chapter_download,
        format: false,
        constraints: { chapter_identifier: /[^\/]+/ }
+  get "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/offline_pages",
+      to: "chapters#offline_pages",
+      as: :source_series_chapter_offline_pages,
+      defaults: { format: :json },
+      constraints: { chapter_identifier: /[^\/]+/ }
+  post "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/pin_for_offline",
+       to: "chapters#pin_for_offline",
+       as: :source_series_chapter_pin_for_offline,
+       defaults: { format: :json },
+       constraints: { chapter_identifier: /[^\/]+/ }
+  delete "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/pin_for_offline",
+         to: "chapters#unpin_for_offline",
+         as: :source_series_chapter_unpin_for_offline,
+         defaults: { format: :json },
+         constraints: { chapter_identifier: /[^\/]+/ }
   delete "/sources/:source_slug/:series_slug/chapters/:chapter_identifier/download",
          to: "chapters#remove_download",
          as: :source_series_chapter_remove_download,

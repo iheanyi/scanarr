@@ -1,0 +1,147 @@
+const APP_SHELL_CACHE = "scanarr-app-shell-v1"
+const HTML_CACHE = "scanarr-html-v1"
+const IMAGE_CACHE = "scanarr-images-v1"
+const OFFLINE_FALLBACK_URL = "/offline.html"
+const OFFLINE_LIBRARY_URL = "/offline-library"
+const KNOWN_CACHES = [APP_SHELL_CACHE, HTML_CACHE, IMAGE_CACHE]
+
+self.addEventListener("install", (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(APP_SHELL_CACHE)
+    await cache.addAll([OFFLINE_FALLBACK_URL])
+
+    const htmlCache = await caches.open(HTML_CACHE)
+    try {
+      const response = await fetch(OFFLINE_LIBRARY_URL, { credentials: "same-origin" })
+      if (response && response.ok) {
+        await htmlCache.put(OFFLINE_LIBRARY_URL, response)
+      }
+    } catch (_e) {
+      // Offline library pre-cache is best-effort; the page will be cached on first visit
+    }
+
+    await self.skipWaiting()
+  })())
+})
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    const cacheNames = await caches.keys()
+    await Promise.all(
+      cacheNames
+        .filter((cacheName) => !KNOWN_CACHES.includes(cacheName))
+        .map((cacheName) => caches.delete(cacheName))
+    )
+    await self.clients.claim()
+  })())
+})
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request
+  if (request.method !== "GET") return
+
+  const accept = request.headers.get("Accept") || ""
+  if (accept.includes("text/vnd.turbo-stream.html")) {
+    event.respondWith(fetch(request))
+    return
+  }
+
+  const url = new URL(request.url)
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstHTML(request))
+    return
+  }
+
+  if (request.destination === "image") {
+    event.respondWith(cachedOfflineImageOrNetwork(request))
+    return
+  }
+
+  if (
+    url.origin === self.location.origin &&
+    (request.destination === "style" ||
+      request.destination === "script" ||
+      request.destination === "font" ||
+      request.destination === "worker" ||
+      url.pathname.startsWith("/assets/"))
+  ) {
+    event.respondWith(staleWhileRevalidate(request, APP_SHELL_CACHE))
+    return
+  }
+
+  event.respondWith(fetch(request))
+})
+
+async function networkFirstHTML(request) {
+  const cache = await caches.open(HTML_CACHE)
+
+  try {
+    const networkResponse = await fetch(request)
+    if (networkResponse && networkResponse.status === 200) {
+      cache.put(request, networkResponse.clone())
+    }
+    return networkResponse
+  } catch (_error) {
+    const cachedResponse = await cache.match(request)
+    if (cachedResponse) return cachedResponse
+
+    const fallback = await caches.match(OFFLINE_FALLBACK_URL)
+    if (fallback) return fallback
+
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=UTF-8" }
+    })
+  }
+}
+
+async function cachedOfflineImageOrNetwork(request) {
+  const cache = await caches.open(IMAGE_CACHE)
+  const cacheKey = cacheKeyForRequest(request)
+  const cachedResponse = await cache.match(cacheKey)
+  if (cachedResponse) return cachedResponse
+
+  try {
+    return await fetch(request)
+  } catch (_error) {
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=UTF-8" }
+    })
+  }
+}
+
+function cacheKeyForRequest(request) {
+  const url = new URL(request.url)
+  if (
+    url.origin === self.location.origin &&
+    url.pathname.endsWith("/offline_image") &&
+    url.searchParams.has("cache_key")
+  ) {
+    url.searchParams.delete("token")
+    return url.toString()
+  }
+
+  return request
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName)
+  const cachedResponse = await cache.match(request)
+
+  const networkPromise = fetch(request)
+    .then((response) => {
+      if (response && response.ok) {
+        cache.put(request, response.clone())
+      }
+      return response
+    })
+    .catch(() =>
+      new Response("Offline", {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=UTF-8" }
+      })
+    )
+
+  return cachedResponse || networkPromise
+}
