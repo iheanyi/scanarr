@@ -1,5 +1,14 @@
 #!/bin/bash -e
 
+# Treat blank compose-substituted secrets as unset.
+if [ -z "${SECRET_KEY_BASE:-}" ]; then
+  unset SECRET_KEY_BASE
+fi
+
+if [ -z "${RAILS_MASTER_KEY:-}" ]; then
+  unset RAILS_MASTER_KEY
+fi
+
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare

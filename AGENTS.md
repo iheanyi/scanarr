@@ -7,14 +7,14 @@ Scanarr is a Rails 8.1 monolith (manga aggregation/download manager). Developmen
 ### Prerequisites (system-level, already installed in snapshot)
 
 - **Ruby 3.4.4** at `/usr/local/ruby-3.4.4/bin` (added to `PATH` via `~/.bashrc`)
-- **PostgreSQL 16** — start with `sudo pg_ctlcluster 16 main start`
+- **PostgreSQL 18** — start with `sudo pg_ctlcluster 18 main start`
 - **Redis** — start with `sudo redis-server --daemonize yes`
 - **Node.js 22.x** + **Yarn 1.x** (pre-installed)
 - **libvips**, **libpq-dev**, **libyaml-dev** (pre-installed)
 
 ### Starting the dev environment
 
-1. Start PostgreSQL: `sudo pg_ctlcluster 16 main start`
+1. Start PostgreSQL: `sudo pg_ctlcluster 18 main start`
 2. Start Redis: `sudo redis-server --daemonize yes`
 3. Prepare DB (idempotent): `bin/rails db:prepare`
 4. Start all services: `bin/dev`

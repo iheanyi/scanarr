@@ -1,4 +1,7 @@
 class ApplicationJob < ActiveJob::Base
+  # Solid Queue exposes `limits_concurrency`; keep declarations boot-safe on Sidekiq.
+  def self.limits_concurrency(...) = nil unless respond_to?(:limits_concurrency)
+
   # Automatically retry jobs that encountered a deadlock
   retry_on ActiveRecord::Deadlocked, wait: 5.seconds, attempts: 3
 

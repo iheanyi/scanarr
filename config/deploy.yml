@@ -41,8 +41,11 @@ env:
   secret:
     - RAILS_MASTER_KEY
   clear:
-    REDIS_URL: redis://127.0.0.1:6379/0
-    SIDEKIQ_REDIS_URL: redis://127.0.0.1:6379/1
+    # Default to Kamal redis accessory DNS name: <service>-<accessory>.
+    # Override these URLs if you use an external Redis service.
+    REDIS_URL: redis://scanarr-redis:6379/0
+    SIDEKIQ_REDIS_URL: redis://scanarr-redis:6379/1
+    ACTION_CABLE_REDIS_URL: redis://scanarr-redis:6379/2
     REDIS_CACHE_NAMESPACE: scanarr:cache:production
 
     # Set number of Sidekiq threads per worker process.

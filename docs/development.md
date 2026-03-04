@@ -2,11 +2,13 @@
 
 ## Sidekiq + Redis local setup
 
-Scanarr now uses Sidekiq for jobs and Redis for both queueing and cache in development.
+Scanarr uses Sidekiq for jobs and Redis for queueing, cache, and Action Cable in development.
 
 ### Quick start
 
-1. Start Redis locally:
+1. Start PostgreSQL locally.
+
+2. Start Redis locally:
 
 ```bash
 # Option A (Homebrew)
@@ -16,13 +18,13 @@ brew services start redis
 docker run --name scanarr-redis -p 6379:6379 valkey/valkey:8
 ```
 
-2. Run setup (includes Redis connectivity checks):
+3. Run setup (includes Redis connectivity checks):
 
 ```bash
 bin/setup
 ```
 
-3. Start app + worker:
+4. Start app + worker:
 
 ```bash
 bin/dev

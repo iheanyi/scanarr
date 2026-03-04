@@ -38,8 +38,8 @@ Docker Compose starts four services:
 |------------|--------------------|--------------------------------------------|
 | `web`      | Scanarr (built)    | Rails app via Thruster on port 80          |
 | `sidekiq`  | Scanarr (built)    | Background jobs (downloads, chapter checks)|
-| `postgres` | postgres:16-alpine | Primary database + cache/queue/cable DBs   |
-| `redis`    | valkey/valkey:8    | Cache store (db 0) + Sidekiq queue (db 1)  |
+| `postgres` | postgres:18-alpine | Primary application database               |
+| `redis`    | valkey/valkey:8    | Cache store (db 0) + Sidekiq queue (db 1) + Action Cable pub/sub (db 2) |
 
 Three named volumes persist data across restarts:
 
@@ -70,8 +70,19 @@ All configuration is done via environment variables in `.env`. Copy `.env.exampl
 | `WEB_CONCURRENCY`     | `1`       | Number of Puma worker processes.                 |
 | `RAILS_MAX_THREADS`   | `5`       | Threads per Puma worker.                         |
 | `SIDEKIQ_CONCURRENCY` | `5`       | Sidekiq worker threads.                          |
+| `REDIS_URL`           | `redis://redis:6379/0` | Redis cache URL for Rails cache store. |
+| `SIDEKIQ_REDIS_URL`   | `redis://redis:6379/1` | Redis URL for Sidekiq queues.          |
+| `ACTION_CABLE_REDIS_URL` | `redis://redis:6379/2` | Redis URL for Action Cable pub/sub. |
 | `RAILS_LOG_LEVEL`     | `info`    | Log verbosity (`debug`, `info`, `warn`, `error`).|
 | `SCANARR_DISABLE_AUTH`| `false`   | Set to `true` to skip login (single-user/VPN).   |
+
+## Kamal Redis defaults
+
+Kamal deploys can use the Redis accessory defined in `config/deploy.yml`.
+
+- Default app runtime URLs point to `redis://scanarr-redis:6379/0` (cache) and `redis://scanarr-redis:6379/1` (Sidekiq).
+- Action Cable defaults to `redis://scanarr-redis:6379/2`.
+- To use external Redis, override `REDIS_URL`, `SIDEKIQ_REDIS_URL`, and `ACTION_CABLE_REDIS_URL` in `config/deploy.yml` for your environment.
 
 ## Common Operations
 
@@ -118,6 +129,56 @@ docker compose up -d
 ```
 
 Migrations run automatically on container start.
+
+### Upgrade PostgreSQL major versions (16 -> 18)
+
+This release upgrades the Postgres image from `postgres:16` to `postgres:18`.
+Major Postgres upgrades require dump/restore for Docker volumes.
+
+1. Back up while your old Postgres container is still running:
+
+```bash
+docker compose exec postgres pg_dumpall -U scanarr > scanarr-pg16-backup.sql
+```
+
+2. Stop services:
+
+```bash
+docker compose down
+```
+
+3. Remove only the Postgres volume (keep Redis and storage volumes):
+
+```bash
+docker volume ls | grep postgres_data
+docker volume rm <your_project>_postgres_data
+```
+
+4. Start fresh Postgres 18:
+
+```bash
+docker compose up -d postgres
+```
+
+5. Restore data:
+
+```bash
+docker compose exec -T postgres psql -U scanarr < scanarr-pg16-backup.sql
+```
+
+6. Start the full stack:
+
+```bash
+docker compose up -d
+```
+
+7. Verify Postgres version:
+
+```bash
+docker compose exec postgres psql -U scanarr -d scanarr_production -c "select version();"
+```
+
+If you already pulled the new image and Postgres fails to boot, roll back to the previous commit/image first, take a dump, then follow the steps above.
 
 ### Change the exposed port
 
@@ -173,7 +234,7 @@ echo "SECRET_KEY_BASE=$(openssl rand -hex 64)" >> .env
 
 ### Database connection errors on first start
 
-The init script creates the extra databases (cache, queue, cable) on first run. If postgres was started before the init script was in place, reset the volume:
+If database initialization fails on first boot, reset the Postgres volume and retry:
 
 ```bash
 docker compose down -v    # WARNING: destroys all data

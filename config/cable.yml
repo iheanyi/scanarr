@@ -1,22 +1,12 @@
-# SolidCable configuration
-# See: https://github.com/rails/solid_cable
-#
-# Development uses single database approach (solid_cable_messages in main DB)
-# Production uses separate cable database for better performance
-
 development:
-  adapter: solid_cable
-  polling_interval: 0.1.seconds
-  message_retention: 1.hour
-  silence_polling: true
+  adapter: redis
+  url: <%= ENV.fetch("ACTION_CABLE_REDIS_URL", "redis://127.0.0.1:6379/2") %>
+  channel_prefix: scanarr_development
 
 test:
   adapter: test
 
 production:
-  adapter: solid_cable
-  connects_to:
-    database:
-      writing: cable
-  polling_interval: 0.1.seconds
-  message_retention: 1.day
+  adapter: redis
+  url: <%= ENV.fetch("ACTION_CABLE_REDIS_URL", "redis://127.0.0.1:6379/2") %>
+  channel_prefix: scanarr_production
