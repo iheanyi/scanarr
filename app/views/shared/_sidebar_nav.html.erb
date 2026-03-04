@@ -24,6 +24,12 @@
           <%= icon "book-open", class: "h-4 w-4 shrink-0" %>
           Library
         <% end %>
+        <% if local_downloads_enabled? %>
+          <%= link_to offline_library_path, nav_link_attributes.call(offline_library_path) do %>
+            <%= icon "download", class: "h-4 w-4 shrink-0" %>
+            Offline
+          <% end %>
+        <% end %>
         <%= link_to calendar_path, nav_link_attributes.call(calendar_path) do %>
           <%= icon "calendar", class: "h-4 w-4 shrink-0" %>
           Calendar

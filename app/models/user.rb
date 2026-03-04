@@ -3,6 +3,7 @@ class User < ApplicationRecord
 
   has_many :sessions, dependent: :destroy
   has_many :chapter_progresses, dependent: :destroy
+  has_many :offline_manifest_entries, class_name: "UserOfflineManifestEntry", dependent: :destroy
   has_many :user_series_follows, dependent: :destroy
   has_many :followed_library_series, through: :user_series_follows, source: :library_series
   has_many :new_chapter_notifications, dependent: :destroy
@@ -22,6 +23,7 @@ class User < ApplicationRecord
     :default_language,
     :default_download_policy,
     :default_check_interval_minutes,
+    :local_downloads_enabled,
     :notifications_enabled,
     :notification_auto_cleanup_days,
     :default_source_priority
@@ -82,6 +84,16 @@ class User < ApplicationRecord
 
   def notifications_enabled?
     ActiveModel::Type::Boolean.new.cast(notifications_enabled)
+  end
+
+  # Override reader so nil (unset) defaults to "false" for form binding
+  def local_downloads_enabled
+    val = super
+    val.nil? ? "false" : val
+  end
+
+  def local_downloads_enabled?
+    ActiveModel::Type::Boolean.new.cast(local_downloads_enabled)
   end
 
   def effective_cleanup_days

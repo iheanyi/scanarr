@@ -5,6 +5,22 @@ import "./controllers"
 
 TurboPower.initialize(Turbo.StreamActions)
 
+const localDownloadsEnabled = document.querySelector("a[href='/offline-library']") !== null
+
+if ("serviceWorker" in navigator) {
+  if (localDownloadsEnabled) {
+    navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch((error) => {
+      console.warn("Service worker registration failed:", error)
+    })
+  } else {
+    void navigator.serviceWorker.getRegistration("/").then((registration) => {
+      if (registration) {
+        void registration.unregister()
+      }
+    })
+  }
+}
+
 // Clean up ephemeral UI state before Turbo caches the page.
 // Prevents stale dropdowns/modals from appearing on back navigation.
 document.addEventListener("turbo:before-cache", () => {

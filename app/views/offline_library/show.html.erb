@@ -1,0 +1,30 @@
+<div data-controller="offline-library">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-semibold">Offline Library</h1>
+      <p class="text-sm text-muted mt-1">
+        Chapters saved for offline reading.
+        <span data-offline-library-target="count" class="font-medium text-foreground"></span>
+      </p>
+    </div>
+    <%= link_to library_path, class: "inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 py-1.5 text-sm text-muted hover:text-foreground transition-colors" do %>
+      <%= icon "book-open", class: "h-4 w-4" %>
+      Full Library
+    <% end %>
+  </div>
+
+  <div data-offline-library-target="list" class="space-y-4" hidden></div>
+
+  <div data-offline-library-target="empty" hidden>
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+      <div class="rounded-full bg-surface-2 p-4 mb-4">
+        <%= icon "download", class: "h-8 w-8 text-muted" %>
+      </div>
+      <h2 class="text-lg font-semibold text-foreground">No offline chapters yet</h2>
+      <p class="text-sm text-muted mt-1 max-w-sm">
+        Open a downloaded chapter and tap the download icon next to the chapter title to save it for offline reading.
+      </p>
+      <%= link_to "Go to Library", library_path, class: "mt-4 inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong transition-colors" %>
+    </div>
+  </div>
+</div>
