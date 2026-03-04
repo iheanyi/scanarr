@@ -93,7 +93,7 @@ gem "rails_icons", "~> 1.6"
 
 gem "turbo_power", "~> 0.7.0"
 
-gem "google-protobuf", "~> 4.30"
+gem "google-protobuf", "~> 4.34"
 
 group :development do
   gem "rack-mini-profiler", "~> 4.0"
