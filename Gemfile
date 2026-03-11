@@ -86,7 +86,7 @@ gem "mission_control-jobs", "~> 1.1"
 
 gem "view_component"
 
-gem "rails_icons", "~> 1.6"
+gem "rails_icons", "~> 1.7"
 
 gem "turbo_power", "~> 0.7.0"
 
