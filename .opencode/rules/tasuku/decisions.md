@@ -34,3 +34,11 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Redis gives a better foundation for low-overhead aggregation and time-windowed metrics needed for a search metrics engine.
 
+## turbo-toast-navigation-boundary (2026-02-15)
+
+**Chose**: Use Turbo Stream toasts for in-place UI mutations and keep redirects for navigation-intent actions, including Turbo requests.
+
+**Over**: Use Turbo Stream toasts for every mutating action regardless of navigation intent, Always redirect after mutations even when an in-place update is more responsive
+
+**Because**: Preserves expected navigation flow for actions that should move users to a different page, while still providing fast in-place feedback where the user stays on the current screen.
+
