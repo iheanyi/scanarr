@@ -1,3 +1,5 @@
+<% scanarr_storage_path = ENV.fetch("SCANARR_STORAGE_PATH", "scanarr_storage_data") %>
+
 # Name of your application. Used to uniquely configure containers.
 service: scanarr
 
@@ -70,6 +72,8 @@ env:
     DB_HOST: scanarr-postgres
 
     ACTIVE_STORAGE_SERVICE: local
+    SCANARR_STORAGE_ROOT: /rails/storage
+    SCANARR_BACKUP_ROOT: /rails/storage/backups
     ACTIVE_STORAGE_LOCAL_ROOT: /rails/storage
     # For S3/R2/MinIO, set ACTIVE_STORAGE_SERVICE=s3 and provide:
     # S3_ENDPOINT:
@@ -89,10 +93,10 @@ aliases:
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
 # Use a persistent storage volume for local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
-# For example: /srv/scanarr/storage:/rails/storage
+# To use VPS block storage, mount it on the host and run Kamal commands with:
+# SCANARR_STORAGE_PATH=/mnt/scanarr/storage bin/kamal deploy
 volumes:
-  - "scanarr_storage_data:/rails/storage"
+  - "<%= scanarr_storage_path %>:/rails/storage"
 
 
 # Configure the image builder.

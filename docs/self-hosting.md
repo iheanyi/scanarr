@@ -81,6 +81,8 @@ RAILS_HOSTS=manga.example.com,scanarr.home.arpa,192.168.1.50
 RAILS_ASSUME_SSL=true
 RAILS_FORCE_SSL=true
 ACTIVE_STORAGE_SERVICE=local
+SCANARR_STORAGE_ROOT=/rails/storage
+SCANARR_BACKUP_ROOT=/rails/storage/backups
 ACTIVE_STORAGE_LOCAL_ROOT=/rails/storage
 ```
 
@@ -106,7 +108,7 @@ docker run -d \
 
 The web container runs `db:prepare` on startup. Start `scanarr-web` before `scanarr-sidekiq` on first install so migrations run before jobs start.
 
-If you use `ACTIVE_STORAGE_SERVICE=s3`, omit the `scanarr_storage_data` volume and configure the S3/R2/MinIO variables instead.
+If you use `ACTIVE_STORAGE_SERVICE=s3`, the `/rails/storage` mount is still useful for local database backup archives. You can use a smaller host directory for that path, or set `SCANARR_BACKUP_ROOT` to another durable location.
 
 ### Kamal
 
@@ -115,7 +117,7 @@ Use Kamal when you want deploys over SSH to a server or VPS. The included `confi
 - Kamal proxy on the web role with automatic TLS for `scanarr.example.com`
 - A PostgreSQL 18 accessory with persistent `scanarr_postgres_data`
 - A Valkey accessory with persistent `scanarr_redis_data`
-- An app storage volume at `scanarr_storage_data:/rails/storage`
+- An app storage mount at `${SCANARR_STORAGE_PATH:-scanarr_storage_data}:/rails/storage`
 - Separate `web` and Sidekiq `job` roles
 
 Before deploying, edit `config/deploy.yml`:
@@ -125,6 +127,12 @@ Before deploying, edit `config/deploy.yml`:
 - Set `registry` to the registry you use for Kamal builds.
 - Set `APP_URL`, `APP_HOST`, and `RAILS_HOSTS` to the same domain users browse.
 - For host-path or NAS storage, replace the `scanarr_storage_data:/rails/storage` volume with a server path such as `/srv/scanarr/storage:/rails/storage`.
+
+For VPS block storage, mount the disk on the host first, then set the host-side storage path when running Kamal:
+
+```bash
+export SCANARR_STORAGE_PATH=/mnt/scanarr/storage
+```
 
 Export secrets locally or source them from your password manager:
 
@@ -200,9 +208,11 @@ Copy `.env.example` to `.env` and configure these values.
 | `RAILS_ASSUME_SSL` | `false` | Treat proxied requests as HTTPS. Set `true` behind Caddy, Kamal proxy, Cloudflare Tunnel, Traefik, or nginx. |
 | `RAILS_FORCE_SSL` | `false` | Use secure cookies, HSTS, and HTTPS redirects. Set `true` when all external traffic reaches Scanarr through HTTPS. |
 | `ACTION_CABLE_ALLOWED_REQUEST_ORIGINS` | `APP_URL` | Optional explicit websocket origins. Use a comma-separated list for multiple domains. |
-| `ACTIVE_STORAGE_SERVICE` | `local` | Set to `local` for the Compose storage volume, or `s3` for AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
-| `SCANARR_STORAGE_PATH` | `scanarr_storage_data` | Docker Compose source for local storage. Use the default named volume, another named volume, or an absolute host path such as `/srv/scanarr/storage`. |
-| `ACTIVE_STORAGE_LOCAL_ROOT` | `/rails/storage` | Disk path for local Active Storage files inside the web and Sidekiq containers. |
+| `SCANARR_STORAGE_PATH` | `scanarr_storage_data` | Docker/Kamal host-side storage source. Use a Docker volume by default, or set an absolute path such as `/mnt/scanarr/storage` for VPS block storage or NAS-backed bind mounts. |
+| `SCANARR_STORAGE_ROOT` | `/rails/storage` | In-container durable storage root for local files and default backup archives. Most Docker/Kamal users should not change this. |
+| `SCANARR_BACKUP_ROOT` | `/rails/storage/backups` | Directory where Scanarr writes app-created database backup archives. |
+| `ACTIVE_STORAGE_SERVICE` | `local` | Set to `local` for disk storage, or `s3` for AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
+| `ACTIVE_STORAGE_LOCAL_ROOT` | `/rails/storage` | Backward-compatible fallback for older installs. Prefer `SCANARR_STORAGE_ROOT` for new deployments. |
 | `S3_ENDPOINT` | blank | Custom S3-compatible endpoint. Required for R2 and MinIO; usually blank for AWS S3. |
 | `S3_BUCKET` | blank | Bucket name for `ACTIVE_STORAGE_SERVICE=s3`. |
 | `S3_ACCESS_KEY_ID` | blank | S3-compatible access key. |
@@ -242,19 +252,20 @@ RAILS_FORCE_SSL=false
 
 The default storage service writes downloaded pages, covers, generated CBZ archives, and backup artifacts through Rails Active Storage. In Compose, the default named Docker volume is `scanarr_storage_data`, mounted at `/rails/storage` in both the web and Sidekiq containers.
 
-Rails does allow the local disk location to be configured. Scanarr exposes this in two layers:
+The defaults are intentionally different for local development and containers:
 
 | Variable | Controls |
 | --- | --- |
-| `SCANARR_STORAGE_PATH` | Docker Compose source on the host. This can be a named Docker volume or an absolute host path/NAS mount. |
-| `ACTIVE_STORAGE_LOCAL_ROOT` | Path inside the Rails containers where Active Storage writes files. Usually leave this as `/rails/storage`. |
+| unset in local Rails dev | `bin/dev` writes to `./storage` and backups to `./storage/backups`. |
+| `SCANARR_STORAGE_PATH` | Docker/Kamal source on the host. This can be a named Docker volume or an absolute block-storage/NAS path. |
+| `SCANARR_STORAGE_ROOT` | Path inside the app process. Containers default to `/rails/storage`; direct Rails installs default to `./storage`. |
+| `SCANARR_BACKUP_ROOT` | Optional override for app-created database backup archives. |
+| `ACTIVE_STORAGE_LOCAL_ROOT` | Backward-compatible fallback for older installs. Prefer `SCANARR_STORAGE_ROOT` for new deployments. |
 
-For a custom server directory or mounted NAS path, set:
+For a custom server directory, NAS path, or VPS block storage mount, set only the host-side path:
 
 ```env
-ACTIVE_STORAGE_SERVICE=local
 SCANARR_STORAGE_PATH=/srv/scanarr/storage
-ACTIVE_STORAGE_LOCAL_ROOT=/rails/storage
 ```
 
 Create the host directory before first boot and make it writable by the container user:
@@ -272,12 +283,17 @@ docker compose up -d
 
 Compose mounts the same host path into the web and Sidekiq containers, so downloads, cover refreshes, backups, and background jobs see the same files. If the directory already contains data, make sure the container user can read and write it.
 
-If you do not want to use the environment variable, the equivalent manual Compose mount is:
+Keep `SCANARR_STORAGE_ROOT` and `ACTIVE_STORAGE_LOCAL_ROOT` unset unless you are running Rails directly without Docker or intentionally changing the container mount target. The left side of the mount is the only value most self-hosters should change.
 
-```yaml
-volumes:
-  - /srv/scanarr/storage:/rails/storage
+For a direct non-Docker Rails install, point Rails at the durable disk path:
+
+```env
+SCANARR_STORAGE_ROOT=/var/lib/scanarr/storage
+SCANARR_BACKUP_ROOT=/var/lib/scanarr/storage/backups
+ACTIVE_STORAGE_LOCAL_ROOT=/var/lib/scanarr/storage
 ```
+
+The app process must be able to read and write the storage directory. The Docker image runs as UID/GID `1000:1000`, so block-storage directories mounted from the host should be owned by that user or otherwise writable by it.
 
 New downloads use readable Active Storage object keys:
 
@@ -394,14 +410,14 @@ docker compose exec -T postgres psql -U scanarr < scanarr-backup.sql
 
 ### Back up downloaded files
 
-For local disk storage, back up the `scanarr_storage_data` volume along with the database. For example:
+For local disk storage, back up the directory or Docker volume behind `SCANARR_STORAGE_PATH` along with the database. With the default named volume:
 
 ```bash
 docker run --rm -v scanarr_storage_data:/data -v "$PWD:/backup" alpine \
   tar czf /backup/scanarr-storage.tgz -C /data .
 ```
 
-For S3-compatible storage, back up or version the object store bucket according to your provider's tooling.
+For S3-compatible storage, back up or version the object store bucket according to your provider's tooling. Also back up `SCANARR_BACKUP_ROOT` if you use Scanarr's app-created database backup archives.
 
 If you set `SCANARR_STORAGE_PATH` to a host path, back up that host path directly instead of using the Docker volume backup command.
 
@@ -622,7 +638,7 @@ docker compose logs -f sidekiq
 
 ### Storage fills up
 
-With local storage, downloaded manga pages are stored in the `scanarr_storage_data` volume by default. To move storage to a host path, set `SCANARR_STORAGE_PATH`:
+With local storage, downloaded manga pages are stored in the `scanarr_storage_data` volume by default. To move storage to a host path or block storage volume, set `SCANARR_STORAGE_PATH` in `.env` and restart the stack:
 
 ```env
 SCANARR_STORAGE_PATH=/path/to/manga

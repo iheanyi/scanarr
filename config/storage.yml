@@ -4,7 +4,7 @@ test:
 
 local:
   service: Disk
-  root: <%= ENV.fetch("ACTIVE_STORAGE_LOCAL_ROOT", Rails.root.join("storage").to_s) %>
+  root: <%= ENV.fetch("SCANARR_STORAGE_ROOT") { ENV.fetch("ACTIVE_STORAGE_LOCAL_ROOT", Rails.root.join("storage").to_s) } %>
 
 s3:
   service: S3

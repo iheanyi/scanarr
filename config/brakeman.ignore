@@ -2,11 +2,11 @@
   "ignored_warnings": [
     {
       "fingerprint": "a8033b907a37d6e77bff977d5d8e5cc02850adbfa34f18887a573e8a66710578",
-      "note": "Backup downloads are constrained to files under storage/backups via resolved_backup_path and require admin authentication."
+      "note": "Backup downloads are constrained to files under the configured backup root via resolved_backup_path and require admin authentication."
     },
     {
       "fingerprint": "ea25daf10377f0fd14ad38fbc39c8be428b21c461cb5aa9c90f0b09f7cc3df1d",
-      "note": "Backup deletion is constrained to files under storage/backups via resolved_backup_path and require admin authentication."
+      "note": "Backup deletion is constrained to files under the configured backup root via resolved_backup_path and require admin authentication."
     }
   ],
   "updated": "2026-02-10",

@@ -2,11 +2,13 @@ require "zip"
 
 module Backup
   class DatabaseBackupService
-    BACKUP_DIR = Rails.root.join("storage/backups")
-
     Result = Data.define(:path, :size, :checksum, :manifest)
 
-    def initialize(destination: BACKUP_DIR, include_config: true)
+    def self.backup_dir
+      Scanarr::Storage.backup_root
+    end
+
+    def initialize(destination: self.class.backup_dir, include_config: true)
       @destination = Pathname.new(destination)
       @include_config = include_config
     end

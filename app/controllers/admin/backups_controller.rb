@@ -99,12 +99,17 @@ module Admin
     end
 
     def resolved_backup_path(backup)
-      root = Backup::DatabaseBackupService::BACKUP_DIR.expand_path
-      candidate = root.join(backup.filename).expand_path
-      return nil unless candidate.to_s.start_with?("#{root}/")
-      return nil unless File.file?(candidate)
+      roots = [
+        Backup::DatabaseBackupService.backup_dir,
+        Rails.root.join("storage/backups")
+      ].map(&:expand_path).uniq
 
-      candidate.to_s
+      candidates = roots.map { |root| root.join(backup.filename).expand_path }
+      candidates << Pathname.new(backup.path).expand_path if backup.path.present?
+
+      candidates.uniq.find do |candidate|
+        roots.any? { |root| candidate.to_s.start_with?("#{root}/") } && File.file?(candidate)
+      end&.to_s
     end
   end
 end
