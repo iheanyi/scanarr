@@ -310,7 +310,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       get "/sources/weeb-central/#{series_url}/chapters/1"
 
       assert_response :success
-      assert_includes @response.body, "max-w-2xl"
+      assert_includes @response.body, "max-w-5xl"
       assert_includes @response.body, "max-h-[75vh]"
     end
   end

@@ -1,3 +1,31 @@
+<% content_for :page_direction, "panel-pulse" %>
+<% directions = [
+  {
+    id: "panel-pulse",
+    step: "Live system",
+    name: "Panel Pulse",
+    flag: "Chosen direction",
+    summary: "A sharper manga-tech direction with bolder framing, kinetic highlights, and more visual momentum.",
+    focus: "Best for browse surfaces, status-heavy flows, and a more energetic app personality."
+  },
+  {
+    id: "ink-noir",
+    step: "Archive",
+    name: "Ink Noir",
+    flag: "Exploration",
+    summary: "A cinematic, high-contrast reader aesthetic that treats the chapter canvas like the star of the product.",
+    focus: "Best for immersive chapter reading, punchy covers, and cleaner hierarchy under pressure."
+  },
+  {
+    id: "editorial-shelf",
+    step: "Archive",
+    name: "Editorial Shelf",
+    flag: "Exploration",
+    summary: "A premium bookstore tone with warmer neutrals, richer metadata framing, and a sense of curation.",
+    focus: "Best for library browsing, discovery, and making series pages feel collectible."
+  }
+] %>
+
 <div id="design-system" class="relative overflow-hidden rounded-[28px] bg-background p-4 text-foreground sm:rounded-[32px] sm:p-6">
   <div class="pointer-events-none absolute inset-0">
     <div class="absolute inset-0 ds-radial-1"></div>
@@ -5,1117 +33,490 @@
     <div class="absolute inset-0 ds-grid opacity-25"></div>
   </div>
 
-  <div class="relative space-y-12">
-    <div class="rounded-3xl border border-border bg-surface p-6 shadow-[0_0_0_1px_rgba(8,10,12,0.7)] backdrop-blur">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p class="text-xs uppercase tracking-[0.35em] text-muted-2">Scanarr Design System</p>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Design language for scanners and readers.</h1>
-          <p class="mt-3 max-w-2xl text-sm text-muted">
-            A restrained system inspired by Geist and SpineFind. Built for clarity, speed, and a calm reading
-            experience across every surface in Scanarr.
-          </p>
-          <div class="mt-4 flex flex-wrap gap-1.5 text-[11px] text-muted">
-            <span class="rounded-full border border-border bg-surface-2 px-2.5 py-1 leading-4">Neutral-first</span>
-            <span class="rounded-full border border-border bg-surface-2 px-2.5 py-1 leading-4">Quiet motion</span>
-            <span class="rounded-full border border-border bg-surface-2 px-2.5 py-1 leading-4">Readable hierarchy</span>
+  <div class="relative space-y-8">
+    <section class="scanarr-hero-panel rounded-[2rem] p-6 sm:p-8">
+      <div class="relative grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div class="space-y-5">
+          <p class="text-xs uppercase tracking-[0.35em] text-muted-2">Panel Pulse Design System</p>
+          <div class="space-y-3">
+            <h1 class="max-w-4xl text-3xl font-semibold tracking-tight text-foreground sm:text-5xl">
+              Panel Pulse is now the live Scanarr direction.
+            </h1>
+            <p class="max-w-3xl text-sm text-muted sm:text-base">
+              The system now leans into a blue and cyan manga-tech identity: darker shells, sharper cover framing,
+              stronger stat blocks, and higher-energy browse and chapter surfaces, all while preserving the semantic
+              token contract and existing ViewComponent primitives.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2 text-[11px] text-muted">
+            <span class="rounded-full border border-border bg-surface/70 px-3 py-1.5">Panel Pulse is live</span>
+            <span class="rounded-full border border-border bg-surface/70 px-3 py-1.5">Semantic tokens preserved</span>
+            <span class="rounded-full border border-border bg-surface/70 px-3 py-1.5">Archived explorations below</span>
           </div>
         </div>
-        <div class="w-full space-y-3 text-xs text-muted sm:min-w-[220px] sm:w-auto">
-          <div class="flex items-center justify-between rounded-2xl border border-border bg-surface-2 px-4 py-3">
-            <span class="uppercase tracking-[0.25em] text-muted-2">Status</span>
-            <span class="text-foreground">v0.1</span>
-          </div>
-          <div class="flex items-center justify-between rounded-2xl border border-border bg-surface-2 px-4 py-3">
-            <span class="uppercase tracking-[0.25em] text-muted-2">Updated</span>
-            <span class="text-foreground">Feb 2026</span>
-          </div>
-          <div class="rounded-2xl border border-border bg-surface-2 px-4 py-3 text-muted">
-            Public reference for UI standards and component behavior.
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="lg:hidden">
-      <div class="flex flex-wrap gap-2 text-xs text-muted">
-        <a href="#overview" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Overview</a>
-        <a href="#tokens" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Tokens</a>
-        <a href="#components" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Components</a>
-        <a href="#patterns" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Patterns</a>
-        <a href="#guidelines" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Guidelines</a>
-        <a href="#roadmap" class="rounded-full border border-border px-3 py-1 hover:text-foreground">Roadmap</a>
-      </div>
-    </div>
-
-    <div class="grid gap-12 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <aside class="hidden lg:block">
-        <div class="sticky top-24 space-y-4 text-sm text-muted">
-          <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Sections</p>
-          <nav class="flex flex-col gap-2 border-l border-border pl-4">
-            <a href="#overview" class="hover:text-foreground">Overview</a>
-            <a href="#tokens" class="hover:text-foreground">Tokens</a>
-            <a href="#components" class="hover:text-foreground">Components</a>
-            <a href="#patterns" class="hover:text-foreground">Patterns</a>
-            <a href="#guidelines" class="hover:text-foreground">Guidelines</a>
-            <a href="#roadmap" class="hover:text-foreground">Roadmap</a>
-          </nav>
-        </div>
-      </aside>
-
-      <div class="space-y-16">
-        <section id="overview" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-2xl font-semibold text-foreground">Overview</h2>
-            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Principles</span>
-          </div>
-          <div class="grid gap-6 md:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <p class="text-xs uppercase tracking-[0.28em] text-muted-2">01</p>
-              <h3 class="mt-3 text-sm font-semibold text-foreground">Minimal color</h3>
-              <p class="mt-2 text-sm text-muted">Neutral surfaces first. Accent is reserved for primary actions and success.</p>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <p class="text-xs uppercase tracking-[0.28em] text-muted-2">02</p>
-              <h3 class="mt-3 text-sm font-semibold text-foreground">Generous whitespace</h3>
-              <p class="mt-2 text-sm text-muted">Interfaces should breathe. Density is an intentional, context-specific choice.</p>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <p class="text-xs uppercase tracking-[0.28em] text-muted-2">03</p>
-              <h3 class="mt-3 text-sm font-semibold text-foreground">Subtle interactions</h3>
-              <p class="mt-2 text-sm text-muted">Motion is quiet and purposeful. Focus on feedback, not spectacle.</p>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-              <p class="text-xs uppercase tracking-[0.28em] text-muted-2">04</p>
-              <h3 class="mt-3 text-sm font-semibold text-foreground">Clear hierarchy</h3>
-              <p class="mt-2 text-sm text-muted">Type and spacing do the heavy lifting. Color is supporting cast.</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="tokens" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-2xl font-semibold text-foreground">Tokens</h2>
-            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Color / Type / Space</span>
-          </div>
-          <div class="grid gap-8 lg:grid-cols-2">
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Color</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Palette</span>
-              </div>
-              <div class="grid gap-4 p-6 sm:grid-cols-2">
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl border border-border bg-background"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Base</p>
-                    <p class="text-xs text-muted-2">#0b0f14</p>
+        <div class="grid gap-3">
+          <% directions.each do |direction| %>
+            <a href="#<%= direction[:id] %>"
+               class="group rounded-2xl border border-border/80 bg-surface/70 p-4 transition-colors hover:border-accent/40 hover:bg-surface">
+              <div class="flex items-start justify-between gap-3">
+                <div class="space-y-2">
+                  <p class="text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-2"><%= direction[:step] %></p>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-lg font-semibold text-foreground"><%= direction[:name] %></h2>
+                    <span class="rounded-full border border-border bg-background/70 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-2">
+                      <%= direction[:flag] %>
+                    </span>
                   </div>
+                  <p class="text-sm text-muted"><%= direction[:summary] %></p>
                 </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl border border-border bg-surface"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Surface</p>
-                    <p class="text-xs text-muted-2">#131a24</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl border border-border-soft bg-border"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Border</p>
-                    <p class="text-xs text-muted-2">#2c3849</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl bg-accent-strong"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Accent</p>
-                    <p class="text-xs text-muted-2">#5fd3b7</p>
-                  </div>
-                </div>
+                <%= icon "arrow-down-right", class: "mt-1 size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:translate-y-0.5 group-hover:text-foreground" %>
               </div>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Status</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Semantic</span>
-              </div>
-              <div class="grid gap-4 p-6 sm:grid-cols-2">
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl bg-success-soft"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Success</p>
-                    <p class="text-xs text-muted-2">#6fe3b5</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl bg-warning-soft"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Warning</p>
-                    <p class="text-xs text-muted-2">#f2c16b</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl bg-error-soft"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Error</p>
-                    <p class="text-xs text-muted-2">#f0646f</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-xl bg-info-soft"></div>
-                  <div>
-                    <p class="text-sm text-foreground">Info</p>
-                    <p class="text-xs text-muted-2">#6fb6ff</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Text Hierarchy</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Colors</span>
-              </div>
-              <div class="space-y-4 p-6">
-                <div class="space-y-1">
-                  <p class="text-lg font-medium text-foreground">text-foreground</p>
-                  <p class="text-xs text-muted-2">Headings, titles, important body text</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-lg font-medium text-muted">text-muted</p>
-                  <p class="text-xs text-muted-2">Labels, descriptions, supporting content</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-lg font-medium text-muted-2">text-muted-2</p>
-                  <p class="text-xs text-muted-2">Hints, timestamps, metadata, placeholders</p>
-                </div>
-                <div class="space-y-1">
-                  <p class="text-lg font-medium text-accent">text-accent</p>
-                  <p class="text-xs text-muted-2">Links, primary actions, emphasis</p>
-                </div>
-              </div>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Typography</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Geist</span>
-              </div>
-              <div class="space-y-4 p-6">
-                <div class="space-y-1">
-                  <p class="text-xs text-muted-2 font-mono">font-sans</p>
-                  <p class="text-lg text-foreground">Geist by Vercel</p>
-                  <p class="text-sm text-muted">Modern typeface designed for dark interfaces. Excellent legibility at all sizes.</p>
-                </div>
-                <div class="border-t border-border pt-4 space-y-2">
-                  <p class="text-3xl font-semibold text-foreground">Heading XL</p>
-                  <p class="text-xl font-medium text-foreground">Heading L</p>
-                  <p class="text-base text-foreground">Body text for reading and content.</p>
-                  <p class="text-sm text-muted">Secondary text for labels and hints.</p>
-                  <p class="text-xs text-muted-2">Tertiary for metadata and timestamps.</p>
-                </div>
-              </div>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Spacing</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">4px base</span>
-              </div>
-              <div class="space-y-4 p-6">
-                <div class="flex items-center gap-4">
-                  <div class="flex items-center">
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                    <div class="h-3 w-1 bg-accent"></div>
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                  </div>
-                  <code class="text-xs text-accent font-medium">spacing-1</code>
-                  <span class="text-xs text-muted-2">4px</span>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="flex items-center">
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                    <div class="h-3 w-2 bg-accent"></div>
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                  </div>
-                  <code class="text-xs text-accent font-medium">spacing-2</code>
-                  <span class="text-xs text-muted-2">8px</span>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="flex items-center">
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                    <div class="h-3 w-4 bg-accent"></div>
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                  </div>
-                  <code class="text-xs text-accent font-medium">spacing-4</code>
-                  <span class="text-xs text-muted-2">16px</span>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="flex items-center">
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                    <div class="h-3 w-8 bg-accent"></div>
-                    <div class="h-6 w-6 rounded bg-surface-2"></div>
-                  </div>
-                  <code class="text-xs text-accent font-medium">spacing-8</code>
-                  <span class="text-xs text-muted-2">32px</span>
-                </div>
-              </div>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Elevation</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Shadows</span>
-              </div>
-              <div class="space-y-4 p-6">
-                <div class="flex items-center gap-4">
-                  <div class="h-10 w-16 rounded-md bg-surface-2 shadow-sm"></div>
-                  <div class="space-y-0.5">
-                    <code class="text-xs text-muted-2">shadow-sm</code>
-                    <p class="text-xs text-muted">Buttons, inputs</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="h-10 w-16 rounded-md bg-surface-2 shadow-md"></div>
-                  <div class="space-y-0.5">
-                    <code class="text-xs text-muted-2">shadow-md</code>
-                    <p class="text-xs text-muted">Cards, dropdowns</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="h-10 w-16 rounded-lg bg-surface-2 shadow-lg"></div>
-                  <div class="space-y-0.5">
-                    <code class="text-xs text-muted-2">shadow-lg</code>
-                    <p class="text-xs text-muted">Modals, dialogs</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="h-10 w-16 rounded-lg bg-surface-2 shadow-glow"></div>
-                  <div class="space-y-0.5">
-                    <code class="text-xs text-muted-2">shadow-glow</code>
-                    <p class="text-xs text-muted">Accent emphasis</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Radius</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Shapes</span>
-              </div>
-              <div class="flex items-center gap-4 p-6">
-                <div class="h-10 w-10 rounded-md border border-border-soft"></div>
-                <div class="h-10 w-10 rounded-xl border border-border-soft"></div>
-                <div class="h-10 w-10 rounded-2xl border border-border-soft"></div>
-                <div class="h-10 w-10 rounded-full border border-border-soft"></div>
-              </div>
-              <p class="px-6 pb-6 pt-1 text-xs text-muted">Use rounded-2xl for cards, rounded-md for inputs, rounded-full for pills.</p>
-            </div>
-            <div class="overflow-hidden rounded-2xl border border-border bg-surface lg:col-span-2">
-              <div class="flex items-center justify-between border-b border-border px-5 py-3">
-                <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">Icons</h3>
-                <span class="text-[10px] uppercase tracking-[0.3em] text-muted-2">Lucide</span>
-              </div>
-              <div class="p-6">
-                <p class="text-xs text-muted mb-4">1500+ icons from Lucide. Use <code class="text-accent">icon "name"</code> helper.</p>
-                <div class="flex flex-wrap gap-3">
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "search", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "book-open", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "download", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "calendar", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "settings", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "bell", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "heart", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "star", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "circle-check", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "circle-x", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "info", class: "size-5" %>
-                  </div>
-                  <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-muted hover:text-accent transition-colors">
-                    <%= icon "triangle-alert", class: "size-5" %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="components" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-2xl font-semibold text-foreground">Components</h2>
-            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Preview</span>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Buttons</p>
-                  <h3 class="mt-2 text-sm font-semibold text-foreground">Action hierarchy</h3>
-                  <p class="mt-2 text-sm text-muted">Primary, secondary, ghost, and danger variants for clear intent.</p>
-                </div>
-                <span class="rounded-full border border-border px-3 py-1 text-xs text-muted">UI::Button</span>
-              </div>
-              <div class="mt-5 flex flex-wrap items-center gap-3">
-                <%= render UI::ButtonComponent.new(label: "Primary", variant: :primary) %>
-                <%= render UI::ButtonComponent.new(label: "Secondary", variant: :secondary) %>
-                <%= render UI::ButtonComponent.new(label: "Ghost", variant: :ghost) %>
-                <%= render UI::ButtonComponent.new(label: "Danger", variant: :danger) %>
-              </div>
-              <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;%= render UI::ButtonComponent.new(label: "Primary", variant: :primary) %&gt;</code></pre>
-            </div>
-            <div class="space-y-6">
-              <div class="rounded-2xl border border-border bg-surface p-6">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-foreground">Badges</h3>
-                  <span class="text-xs text-muted-2">UI::Badge</span>
-                </div>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <%= render UI::BadgeComponent.new(label: "Default") %>
-                  <%= render UI::BadgeComponent.new(label: "Success", variant: :success) %>
-                  <%= render UI::BadgeComponent.new(label: "Warning", variant: :warning) %>
-                  <%= render UI::BadgeComponent.new(label: "Error", variant: :error) %>
-                  <%= render UI::BadgeComponent.new(label: "Info", variant: :info) %>
-                  <%= render UI::BadgeComponent.new(label: "Accent", variant: :accent) %>
-                </div>
-              </div>
-              <div class="rounded-2xl border border-border bg-surface p-6">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-foreground">Inputs</h3>
-                  <span class="text-xs text-muted-2">UI::Input</span>
-                </div>
-                <div class="mt-3 space-y-3">
-                  <input type="text" placeholder="Search series" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-2 focus:border-accent focus:outline-none">
-                  <div class="flex items-center gap-3">
-                    <label class="flex items-center gap-2 text-sm text-muted">
-                      <input type="checkbox" class="h-4 w-4 rounded border-border bg-background text-accent focus:ring-accent">
-                      Auto-download
-                    </label>
-                    <span class="text-xs text-muted-2">Auto-applies</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Selects</h3>
-                <span class="text-xs text-muted-2">UI::Select</span>
-              </div>
-              <div class="mt-3">
-                <%= form_with url: "#", method: :get, local: true do |form| %>
-                  <%= render UI::SelectComponent.new(
-                    form: form,
-                    method: :reading_style,
-                    label: "Reading style",
-                    hint: "Auto-applies on change.",
-                    options: [
-                      [ "Left to Right", "left_to_right" ],
-                      [ "Right to Left", "right_to_left" ],
-                      [ "Vertical (Paged)", "vertical" ],
-                      [ "Webtoon (Continuous)", "webtoon" ]
-                    ],
-                    selected: "left_to_right"
-                  ) %>
-                <% end %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Toggles</h3>
-                <span class="text-xs text-muted-2">UI::ToggleSwitch</span>
-              </div>
-              <div class="mt-3">
-                <%= form_with url: "#", method: :post, local: true do |form| %>
-                  <%= render UI::ToggleSwitchComponent.new(
-                    form: form,
-                    method: :auto_download,
-                    label: "Auto-download new chapters",
-                    description: "Instantly pulls new chapters when available.",
-                    on_value: "1",
-                    off_value: "0"
-                  ) %>
-                <% end %>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Multi-select</h3>
-                <span class="text-xs text-muted-2">UI::MultiSelect</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Dropdown-style multi-select for compact filter toolbars.</p>
-              <div class="mt-3">
-                <%= render UI::MultiSelectComponent.new(
-                  name: "sources",
-                  label: "Sources",
-                  options: [
-                    [ "MangaDex", "mangadex" ],
-                    [ "WeebCentral", "weebcentral" ],
-                    [ "MangaPill", "mangapill" ],
-                    [ "MangaSee", "mangasee" ]
-                  ],
-                  selected: [ "mangadex", "weebcentral" ],
-                  filter_placeholder: "Filter sources",
-                  all_label: "All sources"
-                ) %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Filterable Multi-select</h3>
-                <span class="text-xs text-muted-2">UI::FilterableMultiSelect</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Chip-heavy variant for forms that benefit from more visual selection context.</p>
-              <div class="mt-3">
-                <%= render UI::FilterableMultiSelectComponent.new(
-                  name: "sources-filterable",
-                  label: "Sources",
-                  options: [
-                    [ "MangaDex", "mangadex" ],
-                    [ "WeebCentral", "weebcentral" ],
-                    [ "MangaPill", "mangapill" ],
-                    [ "MangaSee", "mangasee" ]
-                  ],
-                  selected: [ "mangadex", "weebcentral" ],
-                  filter_placeholder: "Filter sources",
-                  all_label: "All sources"
-                ) %>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Spinner</h3>
-                <span class="text-xs text-muted-2">UI::Spinner</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Loading indicators with multiple sizes.</p>
-              <div class="mt-4 flex items-center gap-6">
-                <%= render UI::SpinnerComponent.new(size: :xs) %>
-                <%= render UI::SpinnerComponent.new(size: :sm) %>
-                <%= render UI::SpinnerComponent.new(size: :md) %>
-                <%= render UI::SpinnerComponent.new(size: :lg) %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Input</h3>
-                <span class="text-xs text-muted-2">UI::Input</span>
-              </div>
-              <div class="mt-3">
-                <%= render UI::InputComponent.new(
-                  name: "search",
-                  placeholder: "Search series...",
-                  label: "Search",
-                  hint: "Type to filter results"
-                ) %>
-              </div>
-            </div>
-          </div>
-          <%= render UI::CardComponent.new(class: "mt-6") do |card| %>
-            <% card.with_header do %>
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Card</h3>
-                <span class="text-xs text-muted-2">UI::Card</span>
-              </div>
-            <% end %>
-            <p class="text-sm text-muted">Cards support headers, footers, and configurable padding/radius. Use <code class="text-xs text-accent">interactive: true</code> for hoverable cards.</p>
+            </a>
           <% end %>
-          <div class="mt-6 rounded-2xl border border-border bg-surface p-6">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-foreground">Empty State</h3>
-              <span class="text-xs text-muted-2">UI::EmptyState</span>
-            </div>
-            <div class="mt-4 rounded-xl border border-border-soft bg-background">
-              <%= render UI::EmptyStateComponent.new(
-                title: "No series found",
-                description: "Try adjusting your search or add a new series to get started.",
-                compact: true
-              ) do |empty| %>
-                <% empty.with_icon do %>
-                  <%= icon "book-open", class: "size-6" %>
-                <% end %>
-                <% empty.with_action do %>
-                  <%= render UI::ButtonComponent.new(label: "Add Series", variant: :primary, size: :sm) %>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Dropdown</h3>
-                <span class="text-xs text-muted-2">UI::Dropdown</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Menu with selectable items and active state highlighting.</p>
-              <div class="mt-4">
-                <%= render UI::DropdownComponent.new(
-                  label: "Sort by",
-                  items: [
-                    { label: "Latest", href: "#", selected: true },
-                    { label: "Oldest", href: "#", selected: false },
-                    { label: "A-Z", href: "#", selected: false }
-                  ]
-                ) %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Toggle Button</h3>
-                <span class="text-xs text-muted-2">UI::ToggleButton</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Stateful button with hover label swap for follow/unfollow actions.</p>
-              <div class="mt-4 flex items-center gap-3">
-                <%= render UI::ToggleButtonComponent.new(
-                  active: true,
-                  active_label: "Following",
-                  inactive_label: "Follow",
-                  hover_label: "Unfollow",
-                  form_url: "#",
-                  method: :post
-                ) %>
-                <%= render UI::ToggleButtonComponent.new(
-                  active: false,
-                  active_label: "Following",
-                  inactive_label: "Follow",
-                  hover_label: "Unfollow",
-                  form_url: "#",
-                  method: :post
-                ) %>
-              </div>
-            </div>
-          </div>
-          <div class="rounded-2xl border border-border bg-surface p-6">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold text-foreground">Redirect Select</h3>
-              <span class="text-xs text-muted-2">UI::RedirectSelect</span>
-            </div>
-            <p class="mt-2 text-xs text-muted">Standalone select that navigates on change. No form required.</p>
-            <div class="mt-4">
-              <%= render UI::RedirectSelectComponent.new(
-                options: [
-                  [ "All Sources", "#" ],
-                  [ "MangaDex", "#mangadex" ],
-                  [ "WeebCentral", "#weebcentral" ]
-                ],
-                selected: "#",
-                size: :sm
-              ) %>
-            </div>
-          </div>
-          <%# === New extracted components === %>
-          <div class="rounded-2xl border border-border bg-surface p-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Layout</p>
-                <h3 class="mt-2 text-sm font-semibold text-foreground">Page Header</h3>
-                <p class="mt-2 text-sm text-muted">Consistent page headers with breadcrumb, title, description, and action slots.</p>
-              </div>
-              <span class="rounded-full border border-border px-3 py-1 text-xs text-muted">UI::PageHeader</span>
-            </div>
-            <div class="mt-5 rounded-xl border border-border-soft bg-background p-4">
-              <%= render UI::PageHeaderComponent.new(
-                title: "Browse",
-                description: "Discover new series from this source.",
-                breadcrumb_text: "MangaDex"
-              ) do |header| %>
-                <% header.with_actions do %>
-                  <%= render UI::ButtonComponent.new(label: "Refresh", variant: :ghost, size: :sm) %>
-                <% end %>
-              <% end %>
-            </div>
-            <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;%= render UI::PageHeaderComponent.new(title: "Browse", description: "...", breadcrumb_text: "MangaDex") %&gt;</code></pre>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Status Badge</h3>
-                <span class="text-xs text-muted-2">UI::StatusBadge</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Auto-maps status strings to semantic colors.</p>
-              <div class="mt-4 flex flex-wrap gap-2">
-                <%= render UI::StatusBadgeComponent.new(status: "downloading") %>
-                <%= render UI::StatusBadgeComponent.new(status: "complete", label: "Ready") %>
-                <%= render UI::StatusBadgeComponent.new(status: "failed") %>
-                <%= render UI::StatusBadgeComponent.new(status: "queued") %>
-                <%= render UI::StatusBadgeComponent.new(status: "ongoing") %>
-                <%= render UI::StatusBadgeComponent.new(status: "completed") %>
-                <%= render UI::StatusBadgeComponent.new(status: "hiatus") %>
-                <%= render UI::StatusBadgeComponent.new(status: "cancelled") %>
-              </div>
-              <p class="mt-3 text-xs text-muted-2">With borders:</p>
-              <div class="mt-2 flex flex-wrap gap-2">
-                <%= render UI::StatusBadgeComponent.new(status: "completed", bordered: true) %>
-                <%= render UI::StatusBadgeComponent.new(status: "in progress", bordered: true) %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Series Cover</h3>
-                <span class="text-xs text-muted-2">UI::SeriesCover</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Cover image with "No cover" fallback. Multiple sizes.</p>
-              <div class="mt-4 flex flex-wrap items-end gap-4">
-                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover xs", size: :xs, rounded: :sm) %>
-                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover sm", size: :sm, rounded: :sm) %>
-                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover md", size: :md) %>
-                <%= render UI::SeriesCoverComponent.new(url: nil, alt: "No cover lg", size: :lg) %>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Flash Message</h3>
-                <span class="text-xs text-muted-2">UI::FlashMessage</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Consistent alerts with ARIA attributes.</p>
-              <div class="mt-4 space-y-3">
-                <%= render UI::FlashMessageComponent.new(variant: :success, message: "Series imported successfully.") %>
-                <%= render UI::FlashMessageComponent.new(variant: :danger, message: "Failed to fetch chapters.") %>
-                <%= render UI::FlashMessageComponent.new(variant: :warning, message: "Some sources are unavailable.") %>
-                <%= render UI::FlashMessageComponent.new(variant: :info, message: "New version available.") %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Stat Card</h3>
-                <span class="text-xs text-muted-2">UI::StatCard</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Admin stat cards with label, value, and color.</p>
-              <div class="mt-4 grid grid-cols-2 gap-3">
-                <%= render UI::StatCardComponent.new(label: "Queued", value: 12, color: :warning) %>
-                <%= render UI::StatCardComponent.new(label: "Complete", value: 847, color: :accent) %>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Toast</h3>
-                <span class="text-xs text-muted-2">UI::Toast</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Persistent examples with semantic variants. In app flows these are usually shown via Turbo Stream.</p>
-              <div class="mt-4 space-y-3">
-                <%= render UI::ToastComponent.new(message: "Series imported successfully.", variant: :success, auto_dismiss: false) %>
-                <%= render UI::ToastComponent.new(message: "Failed to fetch chapters.", variant: :danger, auto_dismiss: false) %>
-                <%= render UI::ToastComponent.new(message: "Source may be rate-limited.", variant: :warning, auto_dismiss: false) %>
-                <%= render UI::ToastComponent.new(message: "3 new chapters available.", variant: :info, auto_dismiss: false) %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Auto Select</h3>
-                <span class="text-xs text-muted-2">UI::AutoSelect</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Select that auto-submits on change. Wraps SelectComponent with Stimulus auto-submit.</p>
-              <div class="mt-3">
-                <%= form_with url: "#", method: :get, local: true do |form| %>
-                  <%= render UI::AutoSelectComponent.new(
-                    form: form,
-                    method: :sort_by,
-                    label: "Sort by",
-                    hint: "Auto-submits on change.",
-                    options: [
-                      [ "Latest Updated", "latest" ],
-                      [ "Alphabetical", "alphabetical" ],
-                      [ "Most Chapters", "chapters" ]
-                    ],
-                    selected: "latest"
-                  ) %>
-                <% end %>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Pagination</h3>
-                <span class="text-xs text-muted-2">UI::Pagination</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Windowed page navigation for Kaminari collections. Auto-hides when single page.</p>
-              <div class="mt-4 rounded-xl border border-border-soft bg-background p-4">
-                <% pagination_demo_collection = Kaminari.paginate_array((1..120).to_a).page(4).per(10) %>
-                <div class="min-w-0 overflow-x-auto">
-                  <%= render UI::PaginationComponent.new(
-                    collection: pagination_demo_collection,
-                    base_path: "#",
-                    params: { status: "active" }
-                  ) %>
-                </div>
-              </div>
-              <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;%= render UI::PaginationComponent.new(collection: @items, base_path: items_path, params: { status: "active" }) %&gt;</code></pre>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Follow Controls</h3>
-                <span class="text-xs text-muted-2">UI::FollowControls</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Follow/unfollow toggle with auto-download switch. Used on the series detail page.</p>
-              <div class="mt-4 flex flex-wrap items-center gap-3">
-                <%= render UI::ToggleButtonComponent.new(
-                  active: true,
-                  active_label: "Following",
-                  inactive_label: "Follow",
-                  hover_label: "Unfollow",
-                  form_url: "#",
-                  method: :post
-                ) %>
-                <div class="text-xs text-muted-2">+</div>
-                <%= form_with url: "#", method: :get, local: true do |form| %>
-                  <%= render UI::ToggleSwitchComponent.new(
-                    form: form,
-                    method: :auto_download,
-                    label: "Auto-download",
-                    on_value: "1",
-                    off_value: "0"
-                  ) %>
-                <% end %>
-              </div>
-              <pre class="mt-5 overflow-x-auto rounded-xl border border-border bg-background p-4 text-xs text-muted"><code>&lt;%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %&gt;</code></pre>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Search Input</h3>
-                <span class="text-xs text-muted-2">UI::SearchInput</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Text input with integrated search icon. Works standalone or with a form builder.</p>
-              <div class="mt-4 space-y-3">
-                <%= render UI::SearchInputComponent.new(placeholder: "Search series...", name: :q) %>
-                <%= form_with url: "#", method: :get, local: true do |form| %>
-                  <%= render UI::SearchInputComponent.new(form: form, placeholder: "Filter chapters...", name: :query) %>
-                <% end %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Progress Bar</h3>
-                <span class="text-xs text-muted-2">UI::ProgressBar</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Animated progress indicator with color and size variants.</p>
-              <div class="mt-4 space-y-4">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-xs text-muted">
-                    <span>Downloaded</span>
-                    <span class="text-success">18/24</span>
-                  </div>
-                  <%= render UI::ProgressBarComponent.new(value: 18, max: 24, color: :success, size: :sm) %>
-                </div>
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-xs text-muted">
-                    <span>Importing</span>
-                    <span class="text-info">7/20</span>
-                  </div>
-                  <%= render UI::ProgressBarComponent.new(value: 7, max: 20, color: :info, size: :md) %>
-                </div>
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-xs text-muted">
-                    <span>Storage</span>
-                    <span class="text-warning">85%</span>
-                  </div>
-                  <%= render UI::ProgressBarComponent.new(value: 85, max: 100, color: :warning, size: :xs) %>
-                </div>
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between text-xs text-muted">
-                    <span>Failed</span>
-                    <span class="text-danger">3/10</span>
-                  </div>
-                  <%= render UI::ProgressBarComponent.new(value: 3, max: 10, color: :danger, size: :sm) %>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Confirm Button</h3>
-                <span class="text-xs text-muted-2">UI::ConfirmButton</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Destructive action button with browser confirmation dialog. Supports variants, counts, and compact mode.</p>
-              <div class="mt-4 flex flex-wrap items-center gap-3">
-                <%= render UI::ConfirmButtonComponent.new(
-                  label: "Delete Series",
-                  url: "#",
-                  confirm: "Are you sure you want to delete this series?",
-                  icon: "trash-2",
-                  variant: :danger
-                ) %>
-                <%= render UI::ConfirmButtonComponent.new(
-                  label: "Reset",
-                  url: "#",
-                  confirm: "Reset all chapter progress?",
-                  icon: "rotate-ccw",
-                  variant: :warning
-                ) %>
-                <%= render UI::ConfirmButtonComponent.new(
-                  label: "Re-scan",
-                  url: "#",
-                  confirm: "Re-scan all sources?",
-                  icon: "refresh-cw",
-                  variant: :accent
-                ) %>
-              </div>
-              <p class="mt-3 text-xs text-muted-2">Compact with count:</p>
-              <div class="mt-2 flex flex-wrap items-center gap-3">
-                <%= render UI::ConfirmButtonComponent.new(
-                  label: "Clear",
-                  url: "#",
-                  confirm: "Clear all failed downloads?",
-                  icon: "x",
-                  variant: :danger,
-                  compact: true,
-                  count: 5
-                ) %>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-foreground">Filter Tabs</h3>
-                <span class="text-xs text-muted-2">UI::FilterTabs</span>
-              </div>
-              <p class="mt-2 text-xs text-muted">Segmented tab bar for filtering views. Supports color variants per tab.</p>
-              <div class="mt-4 space-y-4">
-                <%= render UI::FilterTabsComponent.new(items: [
-                  { label: "All", href: "#", active: true, variant: :default },
-                  { label: "Downloaded", href: "#", active: false, variant: :success },
-                  { label: "In Progress", href: "#", active: false, variant: :warning },
-                  { label: "New", href: "#", active: false, variant: :accent }
-                ]) %>
-                <p class="text-xs text-muted-2">Small size with icons:</p>
-                <%= render UI::FilterTabsComponent.new(size: :sm, items: [
-                  { label: "Sources", href: "#", active: false, icon: "globe" },
-                  { label: "Chapters", href: "#", active: true, variant: :info, icon: "book-open" },
-                  { label: "Downloads", href: "#", active: false, icon: "download" }
-                ]) %>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="patterns" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-2xl font-semibold text-foreground">Patterns</h2>
-            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Interaction</span>
-          </div>
-          <p class="text-sm text-muted">Common interaction patterns beyond individual components.</p>
-          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div class="rounded-xl border border-border bg-surface p-4">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
-                  <%= icon "menu", class: "h-[18px] w-[18px] text-accent" %>
-                </div>
-                <h3 class="text-sm font-semibold text-foreground">Navigation</h3>
-              </div>
-              <p class="text-xs text-muted leading-relaxed">Sidebar with sections, breadcrumbs for depth, tabs for views.</p>
-            </div>
-            <div class="rounded-xl border border-border bg-surface p-4">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
-                  <%= icon "layout-dashboard", class: "h-[18px] w-[18px] text-accent" %>
-                </div>
-                <h3 class="text-sm font-semibold text-foreground">Data Display</h3>
-              </div>
-              <p class="text-xs text-muted leading-relaxed">Cards for items, lists for chapters, grids for libraries.</p>
-            </div>
-            <div class="rounded-xl border border-border bg-surface p-4">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
-                  <%= icon "loader", class: "h-[18px] w-[18px] text-accent" %>
-                </div>
-                <h3 class="text-sm font-semibold text-foreground">Loading States</h3>
-              </div>
-              <p class="text-xs text-muted leading-relaxed">Skeleton screens, spinners for actions, progress for downloads.</p>
-            </div>
-            <div class="rounded-xl border border-border bg-surface p-4">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
-                  <%= icon "inbox", class: "h-[18px] w-[18px] text-accent" %>
-                </div>
-                <h3 class="text-sm font-semibold text-foreground">Empty States</h3>
-              </div>
-              <p class="text-xs text-muted leading-relaxed">Helpful messages with clear next actions when no content.</p>
-            </div>
-            <div class="rounded-xl border border-border bg-surface p-4">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
-                  <%= icon "circle-check", class: "h-[18px] w-[18px] text-accent" %>
-                </div>
-                <h3 class="text-sm font-semibold text-foreground">Feedback</h3>
-              </div>
-              <p class="text-xs text-muted leading-relaxed">Toast notifications, inline validation, status badges.</p>
-            </div>
-            <div class="rounded-xl border border-border bg-surface p-4">
-              <div class="flex items-center gap-3 mb-2">
-                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 border border-accent/20">
-                  <%= icon "layers", class: "h-[18px] w-[18px] text-accent" %>
-                </div>
-                <h3 class="text-sm font-semibold text-foreground">Overlays</h3>
-              </div>
-              <p class="text-xs text-muted leading-relaxed">Modals for focus, dialogs for confirmation, popovers for context.</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="guidelines" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-2xl font-semibold text-foreground">Guidelines</h2>
-            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Usage</span>
-          </div>
-          <div class="grid gap-6 md:grid-cols-2">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <h3 class="text-sm font-semibold text-foreground">Do</h3>
-              <ul class="mt-3 space-y-2 text-sm text-muted">
-                <li>Use the accent color for the single primary action.</li>
-                <li>Prefer concise labels with direct verbs.</li>
-                <li>Keep secondary actions visually quiet.</li>
-                <li>Use whitespace to separate content clusters.</li>
-              </ul>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <h3 class="text-sm font-semibold text-foreground">Don't</h3>
-              <ul class="mt-3 space-y-2 text-sm text-muted">
-                <li>Stack multiple bright buttons in one row.</li>
-                <li>Use borders where spacing solves the layout.</li>
-                <li>Introduce motion without meaning.</li>
-                <li>Over-label; let hierarchy do the work.</li>
-              </ul>
-            </div>
-          </div>
-          <div class="rounded-2xl border border-border bg-surface p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-semibold text-foreground">Accessibility</h3>
-              <span class="text-xs text-muted-2">WCAG 2.1 AA</span>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
-                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
-                  </div>
-                  <div>
-                    <p class="text-sm text-foreground">4.5:1 contrast for body text</p>
-                    <p class="text-xs text-muted-2">3:1 for large text (18px+ or 14px bold)</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-3">
-                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
-                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
-                  </div>
-                  <div>
-                    <p class="text-sm text-foreground">Visible focus indicators</p>
-                    <p class="text-xs text-muted-2">2px ring with accent color on all interactive elements</p>
-                  </div>
-                </div>
-              </div>
-              <div class="space-y-3">
-                <div class="flex items-start gap-3">
-                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
-                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
-                  </div>
-                  <div>
-                    <p class="text-sm text-foreground">Color is not the only indicator</p>
-                    <p class="text-xs text-muted-2">Icons, text, or patterns supplement color meaning</p>
-                  </div>
-                </div>
-                <div class="flex items-start gap-3">
-                  <div class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-full bg-success-soft flex items-center justify-center">
-                    <%= icon "check", class: "size-3 text-success", stroke_width: "3" %>
-                  </div>
-                  <div>
-                    <p class="text-sm text-foreground">Touch targets 44x44px minimum</p>
-                    <p class="text-xs text-muted-2">Adequate spacing between interactive elements</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="roadmap" class="scroll-mt-24 space-y-6 border-t border-border pt-8">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-2xl font-semibold text-foreground">Roadmap</h2>
-            <span class="text-xs uppercase tracking-[0.3em] text-muted-2">Phases</span>
-          </div>
-          <div class="space-y-4">
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm text-foreground">Phase 0 - Foundation setup + design system page</p>
-                  <p class="mt-2 text-xs text-muted-2">Base layout, public docs, and early component scaffolding.</p>
-                </div>
-                <span class="rounded-full bg-success-soft px-3 py-1 text-xs text-success">Done</span>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm text-foreground">Phase 1 - Icons, tokens, base component</p>
-                  <p class="mt-2 text-xs text-muted-2">Lucide icons, semantic color tokens, BaseComponent with cn() helper.</p>
-                </div>
-                <span class="rounded-full bg-success-soft px-3 py-1 text-xs text-success">Done</span>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm text-foreground">Phase 2 - Button, badge, spinner, toggle, dropdown, card</p>
-                  <p class="mt-2 text-xs text-muted-2">Action surfaces, status markers, and interactive containers.</p>
-                </div>
-                <span class="rounded-full bg-success-soft px-3 py-1 text-xs text-success">Done</span>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm text-foreground">Phase 3 - Forms, selects, multi-select, input</p>
-                  <p class="mt-2 text-xs text-muted-2">Form components with auto-submit, redirect select, and empty states.</p>
-                </div>
-                <span class="rounded-full bg-success-soft px-3 py-1 text-xs text-success">Done</span>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm text-foreground">Phase 4 - Token reconciliation + raw color cleanup</p>
-                  <p class="mt-2 text-xs text-muted-2">Unified naming, semantic tokens everywhere, zero raw Tailwind colors.</p>
-                </div>
-                <span class="rounded-full bg-success-soft px-3 py-1 text-xs text-success">Done</span>
-              </div>
-            </div>
-            <div class="rounded-2xl border border-border bg-surface p-6">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-sm text-foreground">Phase 5 - Layout patterns, feedback, series refactor</p>
-                  <p class="mt-2 text-xs text-muted-2">Full coverage across notifications, layout, and product surfaces.</p>
-                </div>
-                <span class="rounded-full bg-accent-soft px-3 py-1 text-xs text-accent-strong">In progress</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
-    </div>
+    </section>
+
+    <section class="grid gap-4 lg:grid-cols-3">
+      <div class="scanarr-subtle-panel rounded-3xl p-5">
+        <p class="text-xs uppercase tracking-[0.28em] text-muted-2">What Changes</p>
+        <h2 class="mt-3 text-lg font-semibold text-foreground">Kinetic manga-tech shell</h2>
+        <p class="mt-2 text-sm text-muted">
+          Covers, stats, chapter rows, and shell chrome all carry more energy now, with cyan contrast replacing the
+          old generic dark-dashboard feel.
+        </p>
+      </div>
+      <div class="scanarr-subtle-panel rounded-3xl p-5">
+        <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Constraint</p>
+        <h2 class="mt-3 text-lg font-semibold text-foreground">Same semantic token API</h2>
+        <p class="mt-2 text-sm text-muted">
+          All three directions are implemented through scoped `--ds-*` overrides, so `bg-surface`, `text-muted`, and
+          existing component variants continue to work.
+        </p>
+      </div>
+      <div class="scanarr-subtle-panel rounded-3xl p-5">
+        <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Status</p>
+        <h2 class="mt-3 text-lg font-semibold text-foreground">Panel Pulse is the system</h2>
+        <p class="mt-2 text-sm text-muted">
+          The live app now inherits Panel Pulse defaults, while the other directions remain available below as reference
+          explorations rather than active candidates.
+        </p>
+      </div>
+    </section>
+
+    <details class="scanarr-subtle-panel rounded-[2rem] p-4 sm:p-5">
+      <summary class="cursor-pointer list-none select-none">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs uppercase tracking-[0.28em] text-muted-2">Archive</p>
+            <h2 class="mt-2 text-xl font-semibold text-foreground">Earlier direction explorations</h2>
+            <p class="mt-2 max-w-2xl text-sm text-muted">
+              Ink Noir and Editorial Shelf stay here as reference paths, but they are no longer driving the live system.
+            </p>
+          </div>
+          <span class="rounded-full border border-border bg-background/70 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-2">
+            Expand archive
+          </span>
+        </div>
+      </summary>
+
+      <div class="mt-5 space-y-6">
+        <article id="ink-noir" data-direction="ink-noir" class="ds-direction-card rounded-[2rem] p-4 sm:p-6">
+      <div class="relative space-y-6">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div class="max-w-3xl space-y-4">
+            <span class="ds-direction-label"><%= icon "moon-star", class: "size-3.5" %> Ink Noir</span>
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-3xl font-semibold text-foreground">Cinematic contrast, poster-led covers, quieter chrome.</h2>
+                <span class="rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground/90">
+                  Archived exploration
+                </span>
+              </div>
+              <p class="max-w-2xl text-sm text-muted">
+                The app fades back so the art can dominate. Navigation becomes more atmospheric, chapter rows gain
+                stronger visual grouping, and the reader shifts toward an immersive theater rather than a utility page.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Reader immersion</span>
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Punchy cover moments</span>
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Sharper action hierarchy</span>
+            </div>
+          </div>
+
+          <div class="grid min-w-0 gap-2 sm:min-w-[260px] sm:grid-cols-3">
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-background"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Base</p>
+              <p class="text-sm text-foreground">#05070b</p>
+            </div>
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-surface"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Surface</p>
+              <p class="text-sm text-foreground">#0d1219</p>
+            </div>
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-accent"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Accent</p>
+              <p class="text-sm text-foreground">#f04367</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div class="ds-direction-shell grid-cols-[92px_minmax(0,1fr)]">
+            <div class="ds-direction-sidebar flex flex-col justify-between p-4 text-sm text-muted">
+              <div class="space-y-6">
+                <div>
+                  <p class="text-[10px] uppercase tracking-[0.28em] text-muted-2">Scanarr</p>
+                  <p class="mt-2 text-base font-semibold text-foreground">Night Mode</p>
+                </div>
+                <div class="space-y-3">
+                  <div class="rounded-2xl border border-border/80 bg-background/40 p-3 text-foreground">Library</div>
+                  <div>Browse</div>
+                  <div>History</div>
+                  <div>Offline</div>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="h-1.5 rounded-full bg-surface-2">
+                  <div class="h-1.5 w-3/4 rounded-full bg-accent"></div>
+                </div>
+                <p class="text-xs text-muted-2">Reader progress as mood lighting</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-4 p-4">
+              <div class="ds-direction-surface rounded-[1.5rem] p-4">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="space-y-2">
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Featured series</p>
+                    <h3 class="text-2xl font-semibold text-foreground">Blue Lock</h3>
+                    <p class="max-w-lg text-sm text-muted">
+                      Covers read like poster art, while secondary metadata stays intentionally recessive.
+                    </p>
+                  </div>
+                  <span class="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-strong">Read now</span>
+                </div>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-3">
+                <% [ "Blue Lock", "Dandadan", "Chainsaw Man" ].each do |title| %>
+                  <div class="space-y-3">
+                    <div class="ds-direction-cover aspect-[2/3] rounded-[1.5rem]"></div>
+                    <div class="space-y-1">
+                      <p class="text-sm font-semibold text-foreground"><%= title %></p>
+                      <p class="text-xs text-muted-2">Unread chapter spotlight</p>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-3">
+                <div class="ds-direction-metric rounded-2xl p-3">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Unread</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">18</p>
+                </div>
+                <div class="ds-direction-metric rounded-2xl p-3">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Downloaded</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">642</p>
+                </div>
+                <div class="ds-direction-metric rounded-2xl p-3">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">In progress</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">4</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="ds-direction-surface rounded-[1.75rem] p-4">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Reader preview</p>
+                  <h3 class="mt-2 text-xl font-semibold text-foreground">Focus mode with visible progress, softer chrome.</h3>
+                </div>
+                <span class="rounded-full border border-border/80 bg-background/70 px-3 py-1 text-xs text-muted">Right to left</span>
+              </div>
+              <div class="mt-4 rounded-[1.5rem] border border-border/80 bg-background/70 p-4">
+                <div class="flex items-center justify-between text-xs text-muted">
+                  <span>Page 17 / 41</span>
+                  <span class="text-accent-strong">42%</span>
+                </div>
+                <div class="mt-2 h-1.5 rounded-full bg-surface-2">
+                  <div class="h-1.5 w-[42%] rounded-full bg-accent"></div>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div class="ds-direction-page h-72 rounded-[1.4rem]"></div>
+                  <div class="ds-direction-page h-72 rounded-[1.4rem]"></div>
+                  <div class="ds-direction-page h-72 rounded-[1.4rem]"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ds-direction-surface rounded-[1.75rem] p-4">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Chapter list</p>
+                  <h3 class="mt-2 text-xl font-semibold text-foreground">Rows grouped into stronger reading blocks.</h3>
+                </div>
+                <span class="rounded-full border border-border/80 bg-background/70 px-3 py-1 text-xs text-muted">Priority on latest unread</span>
+              </div>
+              <div class="mt-4 space-y-3">
+                <% [
+                  [ "Chapter 154", "Unread · 8 minutes ago", "New" ],
+                  [ "Chapter 153", "Page 12/19 · yesterday", "Continue" ],
+                  [ "Chapter 152", "Downloaded · completed", "Offline" ]
+                ].each do |chapter, meta, tag| %>
+                  <div class="rounded-2xl border border-border/80 bg-background/70 px-4 py-3">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="space-y-1">
+                        <p class="text-sm font-semibold text-foreground"><%= chapter %></p>
+                        <p class="text-xs text-muted-2"><%= meta %></p>
+                      </div>
+                      <span class="rounded-full bg-accent-soft px-3 py-1 text-[11px] font-semibold text-accent-strong"><%= tag %></span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        </article>
+
+        <article id="editorial-shelf" data-direction="editorial-shelf" class="ds-direction-card rounded-[2rem] p-4 sm:p-6">
+      <div class="relative space-y-6">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div class="max-w-3xl space-y-4">
+            <span class="ds-direction-label"><%= icon "library-big", class: "size-3.5" %> Editorial Shelf</span>
+            <div class="space-y-3">
+              <h2 class="text-3xl font-semibold text-foreground">Warmer, curated, and more like a collector’s shelf than a utility console.</h2>
+              <p class="max-w-2xl text-sm text-muted">
+                This direction gives library and series pages a premium editorial tone. It favors warm neutrals, quieter
+                borders, and the feeling that your collection has been selected, not merely stored.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Library-led identity</span>
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Richer metadata framing</span>
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Soft premium surfaces</span>
+            </div>
+          </div>
+
+          <div class="grid min-w-0 gap-2 sm:min-w-[260px] sm:grid-cols-3">
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-background"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Base</p>
+              <p class="text-sm text-foreground">#111318</p>
+            </div>
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-surface"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Surface</p>
+              <p class="text-sm text-foreground">#1b1e24</p>
+            </div>
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-accent"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Accent</p>
+              <p class="text-sm text-foreground">#d8a665</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+          <div class="ds-direction-surface rounded-[1.75rem] p-4">
+            <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Library shelf</p>
+            <h3 class="mt-2 text-xl font-semibold text-foreground">Series presented like a curated collection.</h3>
+            <div class="mt-4 grid gap-4 sm:grid-cols-3">
+              <% [ "Frieren", "Monster", "Vagabond" ].each do |title| %>
+                <div class="space-y-3">
+                  <div class="ds-direction-cover aspect-[2/3] rounded-[1.5rem]"></div>
+                  <div class="space-y-1">
+                    <p class="text-sm font-semibold text-foreground"><%= title %></p>
+                    <p class="text-xs text-muted-2">Author, status, and shelf context stay readable without noise.</p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="ds-direction-shell grid-cols-[minmax(0,1fr)]">
+            <div class="flex flex-col gap-4 p-4">
+              <div class="ds-direction-surface rounded-[1.5rem] p-5">
+                <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Series detail</p>
+                <div class="mt-3 flex flex-col gap-4 md:flex-row">
+                  <div class="ds-direction-cover aspect-[2/3] w-40 rounded-[1.5rem]"></div>
+                  <div class="space-y-3">
+                    <h3 class="text-2xl font-semibold text-foreground">The Climber</h3>
+                    <div class="flex flex-wrap gap-2">
+                      <span class="ds-direction-pill rounded-full px-3 py-1.5 text-xs">Drama</span>
+                      <span class="ds-direction-pill rounded-full px-3 py-1.5 text-xs">Psychological</span>
+                      <span class="ds-direction-pill rounded-full px-3 py-1.5 text-xs">Completed</span>
+                    </div>
+                    <p class="max-w-lg text-sm text-muted">
+                      Synopsis, creator names, and collection metadata feel like a printed sleeve note instead of a status
+                      dump.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="ds-direction-metric rounded-2xl p-4">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Curated reads</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">12</p>
+                </div>
+                <div class="ds-direction-metric rounded-2xl p-4">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Series finished</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">48</p>
+                </div>
+              </div>
+
+              <div class="ds-direction-surface rounded-[1.5rem] p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Reader feel</p>
+                    <p class="mt-2 text-sm text-muted">Still calm, but with warmer paper tones and softer chrome.</p>
+                  </div>
+                  <span class="rounded-full border border-border/80 bg-background/70 px-3 py-1 text-xs text-muted">Best for collection</span>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div class="ds-direction-page h-56 rounded-[1.4rem]"></div>
+                  <div class="ds-direction-page h-56 rounded-[1.4rem]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        </article>
+      </div>
+    </details>
+
+    <article id="panel-pulse" data-direction="panel-pulse" class="ds-direction-card rounded-[2rem] p-4 sm:p-6">
+      <div class="relative space-y-6">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div class="max-w-3xl space-y-4">
+            <span class="ds-direction-label"><%= icon "sparkles", class: "size-3.5" %> Panel Pulse</span>
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-3xl font-semibold text-foreground">A sharper, manga-tech direction with more momentum in browse and status-heavy UI.</h2>
+                <span class="rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground/90">
+                  Live system
+                </span>
+              </div>
+              <p class="max-w-2xl text-sm text-muted">
+                This version is the most expressive. It leans into electric cyan accents, graphic framing, and a more
+                animated sense of system state, without becoming a neon cyberpunk cliché.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">High-energy browse</span>
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Status-rich UI</span>
+              <span class="ds-direction-pill rounded-full px-3 py-1.5">Stronger product personality</span>
+            </div>
+          </div>
+
+          <div class="grid min-w-0 gap-2 sm:min-w-[260px] sm:grid-cols-3">
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-background"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Base</p>
+              <p class="text-sm text-foreground">#07111f</p>
+            </div>
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-surface"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Surface</p>
+              <p class="text-sm text-foreground">#0f1d31</p>
+            </div>
+            <div class="rounded-2xl border border-border/80 bg-background/70 p-3">
+              <div class="h-10 rounded-xl bg-accent"></div>
+              <p class="mt-3 text-xs uppercase tracking-[0.18em] text-muted-2">Accent</p>
+              <p class="text-sm text-foreground">#66e0ff</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div class="ds-direction-shell grid-cols-[82px_minmax(0,1fr)]">
+            <div class="ds-direction-sidebar flex flex-col gap-3 p-4 text-sm text-muted">
+              <div class="rounded-2xl border border-border/80 bg-background/60 p-3 text-center text-xs uppercase tracking-[0.2em] text-foreground">
+                Live
+              </div>
+              <div>Browse</div>
+              <div>Search</div>
+              <div>Queue</div>
+              <div>Stats</div>
+            </div>
+
+            <div class="flex flex-col gap-4 p-4">
+              <div class="ds-direction-surface rounded-[1.5rem] p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Browse feed</p>
+                    <h3 class="mt-2 text-2xl font-semibold text-foreground">Trending series with clearer motion and urgency.</h3>
+                  </div>
+                  <span class="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-strong">Hot</span>
+                </div>
+              </div>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <% [ "Sakamoto Days", "Kaiju No. 8", "Kagurabachi", "Gachiakuta" ].each do |title| %>
+                  <div class="ds-direction-surface rounded-[1.4rem] p-3">
+                    <div class="flex gap-3">
+                      <div class="ds-direction-cover aspect-[2/3] w-24 rounded-[1rem]"></div>
+                      <div class="space-y-2">
+                        <p class="text-sm font-semibold text-foreground"><%= title %></p>
+                        <p class="text-xs text-muted">Graphic framing helps badges, unread counts, and source metadata coexist.</p>
+                        <div class="flex flex-wrap gap-2">
+                          <span class="rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-semibold text-accent-strong">12 new</span>
+                          <span class="rounded-full border border-border/80 px-2.5 py-1 text-[11px] text-muted">MangaDex</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="ds-direction-surface rounded-[1.75rem] p-4">
+              <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Queue / systems preview</p>
+              <h3 class="mt-2 text-xl font-semibold text-foreground">Status gets a stronger shape language without losing readability.</h3>
+              <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="ds-direction-metric rounded-2xl p-4">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Queued</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">24</p>
+                </div>
+                <div class="ds-direction-metric rounded-2xl p-4">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Speed</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">1.8x</p>
+                </div>
+                <div class="ds-direction-metric rounded-2xl p-4">
+                  <p class="text-xs uppercase tracking-[0.18em] text-muted-2">Failures</p>
+                  <p class="mt-2 text-2xl font-semibold text-foreground">2</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="ds-direction-surface rounded-[1.75rem] p-4">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-muted-2">Reader snapshot</p>
+                  <p class="mt-2 text-sm text-muted">Panels feel slightly more engineered, with stronger progress and framing.</p>
+                </div>
+                <span class="rounded-full border border-border/80 bg-background/70 px-3 py-1 text-xs text-muted">More expressive</span>
+              </div>
+              <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="ds-direction-page h-64 rounded-[1.4rem]"></div>
+                <div class="ds-direction-page h-64 rounded-[1.4rem]"></div>
+                <div class="ds-direction-page h-64 rounded-[1.4rem]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
   </div>
 </div>

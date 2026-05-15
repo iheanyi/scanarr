@@ -40,14 +40,14 @@ module UI
     private
 
     def base_classes
-      "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors"
+      "inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-xs font-semibold leading-none transition-all"
     end
 
     def state_classes
       if @active
-        "border-accent/40 bg-accent/15 text-accent hover:bg-accent/25"
+        "border-accent/30 bg-accent-soft text-accent-strong shadow-sm hover:border-accent/40 hover:bg-accent-soft"
       else
-        "border-border bg-surface-2 text-muted hover:border-border-soft hover:text-foreground"
+        "border-border/80 bg-background/60 text-muted shadow-sm hover:border-border-soft hover:text-foreground"
       end
     end
   end

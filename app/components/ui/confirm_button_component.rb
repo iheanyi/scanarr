@@ -5,10 +5,10 @@ require_relative "base_component"
 module UI
   class ConfirmButtonComponent < BaseComponent
     VARIANT_CLASSES = {
-      danger: "inline-flex items-center gap-1.5 rounded-md border border-danger/40 px-3 py-1.5 text-sm font-semibold text-danger hover:bg-danger-soft",
-      warning: "inline-flex items-center gap-1.5 rounded-md border border-warning/40 px-3 py-1.5 text-sm font-semibold text-warning hover:bg-warning-soft",
-      accent: "inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent hover:bg-accent-ghost",
-      info: "inline-flex items-center gap-1.5 rounded-md border border-info/40 px-3 py-1.5 text-sm font-medium text-info hover:bg-info-soft"
+      danger: "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-danger/40 bg-danger-soft/60 px-3 text-xs font-semibold leading-none text-danger shadow-sm transition-all hover:bg-danger-soft",
+      warning: "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-warning/40 bg-warning-soft/60 px-3 text-xs font-semibold leading-none text-warning shadow-sm transition-all hover:bg-warning-soft",
+      accent: "inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-accent/40 bg-accent-soft/60 px-3 text-xs font-semibold leading-none text-accent shadow-sm transition-all hover:bg-accent-soft",
+      info: "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-info/40 bg-info-soft/60 px-3 text-xs font-medium leading-none text-info shadow-sm transition-all hover:bg-info-soft"
     }.freeze
 
     COUNT_CLASSES = {

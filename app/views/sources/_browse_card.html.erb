@@ -1,17 +1,18 @@
-<div class="group flex min-w-0 flex-col" data-browse-item>
+<div class="group/series flex min-w-0 flex-col" data-browse-item>
   <div class="relative">
     <%= link_to source_preview_path(source_slug: source_slug(@source), series_url: result.url),
                 class: "block focus:outline-none",
                 data: { turbo_frame: "_top" } do %>
-      <div class="relative overflow-hidden rounded-lg border border-border/80 bg-surface-2 transition-colors group-hover:border-accent/40 group-focus-within:ring-2 group-focus-within:ring-accent group-focus-within:ring-offset-2 group-focus-within:ring-offset-background">
+      <div class="scanarr-cover-tile transition-all duration-200 group-hover/series:-translate-y-1 group-hover/series:border-accent/30 group-hover/series:shadow-[0_28px_70px_rgba(0,0,0,0.38)] group-focus-within:ring-2 group-focus-within:ring-accent group-focus-within:ring-offset-2 group-focus-within:ring-offset-background">
         <%= render UI::SeriesCoverComponent.new(
           url: result.cover_url,
           alt: "#{result.title} cover",
           size: :full,
           aspect: "2/3",
           rounded: :lg,
-          image_class: "transition duration-300 group-hover:scale-105",
-          class: "border-0"
+          framed: false,
+          image_class: "transition duration-300 group-hover/series:scale-105",
+          class: "scanarr-cover-tile-media h-full w-full bg-transparent"
         ) do |cover| %>
           <% cover.with_fallback do %>
             <div class="flex h-full w-full items-center justify-center bg-surface-2/70">
@@ -20,7 +21,7 @@
           <% end %>
           <% cover.with_overlay do %>
             <% if result.respond_to?(:description) && result.description.present? %>
-              <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+              <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover/series:opacity-100 group-focus-within:opacity-100">
                 <p class="text-xs leading-snug text-white/70 line-clamp-4">
                   <%= truncate(result.description, length: 220) %>
                 </p>
@@ -32,7 +33,7 @@
       </div>
     <% end %>
 
-    <div class="pointer-events-none invisible absolute right-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+    <div class="pointer-events-none invisible absolute right-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover/series:visible group-hover/series:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
       <%= button_to "Import",
                     source_import_path(source_slug: source_slug(@source)),
                     method: :post,
@@ -43,7 +44,7 @@
     </div>
 
     <% if result.respond_to?(:status) && result.status.present? %>
-      <div class="pointer-events-none invisible absolute left-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+      <div class="pointer-events-none invisible absolute left-2 top-2 z-20 opacity-0 transition-opacity duration-200 group-hover/series:visible group-hover/series:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
         <%= render UI::StatusBadgeComponent.new(
           status: result.status,
           bordered: true,
@@ -53,8 +54,8 @@
     <% end %>
   </div>
 
-  <div class="mt-2 min-w-0 space-y-0.5">
-    <h3 class="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent" title="<%= result.title %>">
+  <div class="mt-3 min-w-0 space-y-1.5 px-1">
+    <h3 class="truncate text-sm font-medium text-foreground transition-colors group-hover/series:text-accent" title="<%= result.title %>">
       <%= link_to result.title,
                   source_preview_path(source_slug: source_slug(@source), series_url: result.url),
                   data: { turbo_frame: "_top" },

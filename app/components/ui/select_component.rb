@@ -3,9 +3,9 @@
 module UI
   class SelectComponent < BaseComponent
     SIZES = {
-      sm: "px-2 py-1.5 pr-7 text-xs",
-      md: "px-3 py-2 pr-9 text-sm",
-      lg: "px-4 py-2.5 pr-10 text-base"
+      sm: "h-9 px-3 pr-9 text-xs",
+      md: "h-10 px-3.5 pr-10 text-sm",
+      lg: "h-11 px-4 pr-11 text-base"
     }.freeze
 
     ICON_SIZES = {
@@ -21,9 +21,9 @@ module UI
     }.freeze
 
     LEADING_ICON_PADDING = {
-      sm: "pl-8",
-      md: "pl-9",
-      lg: "pl-10"
+      sm: "pl-9",
+      md: "pl-10",
+      lg: "pl-11"
     }.freeze
 
     def initialize(form:, method:, options:, selected: nil, include_blank: nil, label: nil, hint: nil, size: :md, full_width: true, leading_icon: nil, **system_arguments)
@@ -42,7 +42,7 @@ module UI
 
     def select_attributes
       classes = cn(
-        "appearance-none rounded-md border border-border bg-surface-2 text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30",
+        "appearance-none rounded-lg border border-border/80 bg-surface text-foreground leading-none shadow-sm transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-focus/70 disabled:bg-surface-2 disabled:text-muted",
         SIZES[@size],
         has_leading_icon? ? LEADING_ICON_PADDING[@size] : nil,
         has_leading_icon? ? "col-start-1 row-start-1" : nil,

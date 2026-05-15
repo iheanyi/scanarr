@@ -5,11 +5,9 @@ class DesignSystemControllerTest < ActionDispatch::IntegrationTest
     get design_system_path
 
     assert_response :success
-    assert_includes @response.body, "Design System"
-    assert_includes @response.body, "id=\"overview\""
-    assert_includes @response.body, "id=\"tokens\""
-    assert_includes @response.body, "id=\"components\""
-    assert_includes @response.body, "id=\"guidelines\""
-    assert_includes @response.body, "id=\"roadmap\""
+    assert_includes @response.body, "Panel Pulse"
+    assert_includes @response.body, "id=\"panel-pulse\""
+    assert_includes @response.body, "id=\"ink-noir\""
+    assert_includes @response.body, "id=\"editorial-shelf\""
   end
 end

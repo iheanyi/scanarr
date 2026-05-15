@@ -24,7 +24,7 @@
     <% end %>
     data-chapter-filter-target="item"
     data-chapter-filter-text="chapter <%= chapter.chapter_number %> <%= chapter.title %>"
-    class="group/row rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/30 transition-colors <%= "opacity-60" if is_read %>">
+    class="scanarr-panel-row group/row rounded-[1.35rem] p-4 transition-all <%= "opacity-70" if is_read %>">
   <div class="flex gap-3 sm:items-center">
     <div class="pt-1 sm:pt-0 shrink-0 bulk-checkbox opacity-0 group-hover/row:opacity-100 transition-opacity">
       <input type="checkbox"
@@ -42,7 +42,7 @@
                       series_slug: series.to_param,
                       chapter_identifier: chapter_identifier(chapter)
                     ),
-                    class: "text-base font-semibold #{is_read ? "text-muted" : "text-accent"}" %>
+                    class: "text-base font-semibold transition-colors #{is_read ? "text-muted" : "text-foreground group-hover/row:text-accent"}" %>
         <% if offline_capable %>
           <span data-offline-cache-target="availableIndicator"
                 class="inline-flex h-4 w-4 items-center justify-center text-success"
@@ -100,7 +100,7 @@
       <% if chapter.meaningful_title? %>
         <p class="text-sm text-muted text-pretty"><%= chapter.title %></p>
       <% end %>
-      <p id="<%= dom_id(chapter, :progress) %>" class="text-xs text-muted-2">
+      <p id="<%= dom_id(chapter, :progress) %>" class="scanarr-panel-progress-pill inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs text-muted-2">
         <% if file_asset&.download_status == "downloading" && file_asset.pages_expected.present? %>
           Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
         <% elsif file_asset&.download_status == "failed" && file_asset.download_error.present? %>

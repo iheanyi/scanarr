@@ -38,99 +38,102 @@
       data-reader-next-chapter-url-value="<%= next_chapter_url %>"
       data-reader-next-chapter-title-value="<%= next_chapter_title %>"
       <% end %>
-      class="space-y-6">
-  <%# Breadcrumbs %>
-  <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
-    <%= link_to "Library", library_path, class: "hover:text-foreground", data: { turbo_preload: "" } %>
-    <span class="text-muted-2">/</span>
-    <%= link_to @series.canonical_title, library_series_path(series_slug: @series.to_param), class: "hover:text-foreground truncate max-w-xs", data: { turbo_preload: "" } %>
-    <span class="text-muted-2">/</span>
-    <span class="text-foreground">Ch. <%= @chapter.chapter_number %></span>
-  </nav>
+      class="scanarr-reader-page space-y-6">
+  <div class="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 lg:px-6 lg:py-8">
+    <section class="scanarr-reader-stage rounded-[2rem] p-4 md:p-6">
+      <div class="space-y-6">
+        <%# Breadcrumbs %>
+        <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
+          <%= link_to "Library", library_path, class: "hover:text-foreground", data: { turbo_preload: "" } %>
+          <span class="text-muted-2">/</span>
+          <%= link_to @series.canonical_title, library_series_path(series_slug: @series.to_param), class: "hover:text-foreground truncate max-w-xs", data: { turbo_preload: "" } %>
+          <span class="text-muted-2">/</span>
+          <span class="text-foreground">Ch. <%= @chapter.chapter_number %></span>
+        </nav>
 
-  <header class="space-y-3">
-    <div>
-      <h1 class="text-2xl font-semibold text-balance"><%= @series.canonical_title %></h1>
-      <% if @series.author_name.present? || @series.artist_name.present? %>
-        <p class="text-sm text-muted">
-          <% if @series.author_name.present? && @series.artist_name.present? && @series.author_name != @series.artist_name %>
-            by <%= @series.author_name %> · Art by <%= @series.artist_name %>
-          <% elsif @series.author_name.present? %>
-            by <%= @series.author_name %>
-          <% elsif @series.artist_name.present? %>
-            by <%= @series.artist_name %>
-          <% end %>
-        </p>
-      <% end %>
-    </div>
-    <div class="border-t border-border pt-3 space-y-2">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <h2 class="text-xl font-medium text-foreground">Chapter <%= @chapter.chapter_number %></h2>
-          <% if offline_capable %>
-            <span data-offline-cache-target="availableIndicator"
-                  class="inline-flex h-4 w-4 items-center justify-center text-success"
-                  title="Available offline"
-                  aria-label="Available offline"
-                  <%= "hidden" unless offline_available %>>
-              <%= icon "check", class: "h-2.5 w-2.5" %>
-              <span class="sr-only">Available offline</span>
-            </span>
-          <% end %>
-        </div>
-        <% if offline_capable %>
-          <div class="group/offline inline-flex items-center gap-1 rounded-full px-0.5 py-0.5">
-            <span class="max-w-0 overflow-hidden whitespace-nowrap px-0 text-[10px] text-muted-2 tabular-nums text-right opacity-0 transition-all duration-150 group-hover/offline:max-w-10 group-hover/offline:px-1 group-hover/offline:opacity-100 group-focus-within/offline:max-w-10 group-focus-within/offline:px-1 group-focus-within/offline:opacity-100"
-                  <%= "hidden" unless show_offline_cancel_icon %>
-                  data-offline-cache-target="progress"></span>
-            <button type="button"
-                    class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-info/35 hover:bg-surface hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    data-action="click->offline-cache#download"
-                    data-offline-cache-target="downloadButton"
-                    <%= "hidden" unless show_offline_download_icon %>>
-              <%= icon "download", class: "h-3.5 w-3.5" %>
-              <span class="sr-only">Download for offline</span>
-            </button>
-            <button type="button"
-                    class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-warning/35 hover:bg-surface hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    data-action="click->offline-cache#cancel"
-                    data-offline-cache-target="cancelButton"
-                    <%= "hidden" unless show_offline_cancel_icon %>>
-              <%= icon "x", class: "h-3.5 w-3.5" %>
-              <span class="sr-only">Cancel offline download</span>
-            </button>
-            <button type="button"
-                    class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-danger/35 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    data-action="click->offline-cache#remove"
-                    data-offline-cache-target="removeButton"
-                    <%= "hidden" unless show_offline_remove_icon %>>
-              <%= icon "trash-2", class: "h-3.5 w-3.5" %>
-              <span class="sr-only">Remove offline chapter</span>
-            </button>
+        <header class="space-y-3">
+          <div>
+            <h1 class="text-2xl font-semibold text-balance md:text-3xl"><%= @series.canonical_title %></h1>
+            <% if @series.author_name.present? || @series.artist_name.present? %>
+              <p class="text-sm text-muted">
+                <% if @series.author_name.present? && @series.artist_name.present? && @series.author_name != @series.artist_name %>
+                  by <%= @series.author_name %> · Art by <%= @series.artist_name %>
+                <% elsif @series.author_name.present? %>
+                  by <%= @series.author_name %>
+                <% elsif @series.artist_name.present? %>
+                  by <%= @series.artist_name %>
+                <% end %>
+              </p>
+            <% end %>
+          </div>
+          <div class="space-y-2 border-t border-border/80 pt-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-xl font-medium text-foreground">Chapter <%= @chapter.chapter_number %></h2>
+                <% if offline_capable %>
+                  <span data-offline-cache-target="availableIndicator"
+                        class="inline-flex h-4 w-4 items-center justify-center text-success"
+                        title="Available offline"
+                        aria-label="Available offline"
+                        <%= "hidden" unless offline_available %>>
+                    <%= icon "check", class: "h-2.5 w-2.5" %>
+                    <span class="sr-only">Available offline</span>
+                  </span>
+                <% end %>
+              </div>
+              <% if offline_capable %>
+                <div class="group/offline inline-flex items-center gap-1 rounded-full px-0.5 py-0.5">
+                  <span class="max-w-0 overflow-hidden whitespace-nowrap px-0 text-[10px] text-muted-2 tabular-nums text-right opacity-0 transition-all duration-150 group-hover/offline:max-w-10 group-hover/offline:px-1 group-hover/offline:opacity-100 group-focus-within/offline:max-w-10 group-focus-within/offline:px-1 group-focus-within/offline:opacity-100"
+                        <%= "hidden" unless show_offline_cancel_icon %>
+                        data-offline-cache-target="progress"></span>
+                  <button type="button"
+                          class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-info/35 hover:bg-surface hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          data-action="click->offline-cache#download"
+                          data-offline-cache-target="downloadButton"
+                          <%= "hidden" unless show_offline_download_icon %>>
+                    <%= icon "download", class: "h-3.5 w-3.5" %>
+                    <span class="sr-only">Download for offline</span>
+                  </button>
+                  <button type="button"
+                          class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-warning/35 hover:bg-surface hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          data-action="click->offline-cache#cancel"
+                          data-offline-cache-target="cancelButton"
+                          <%= "hidden" unless show_offline_cancel_icon %>>
+                    <%= icon "x", class: "h-3.5 w-3.5" %>
+                    <span class="sr-only">Cancel offline download</span>
+                  </button>
+                  <button type="button"
+                          class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-danger/35 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          data-action="click->offline-cache#remove"
+                          data-offline-cache-target="removeButton"
+                          <%= "hidden" unless show_offline_remove_icon %>>
+                    <%= icon "trash-2", class: "h-3.5 w-3.5" %>
+                    <span class="sr-only">Remove offline chapter</span>
+                  </button>
+                </div>
+              <% end %>
+            </div>
+            <% if @chapter.meaningful_title? %>
+              <p class="text-muted text-pretty"><%= @chapter.title %></p>
+            <% end %>
+          </div>
+        </header>
+
+        <% if page_count.positive? %>
+          <div class="rounded-2xl border border-border/80 bg-background/70 p-4 backdrop-blur">
+            <div class="flex items-center justify-between text-xs text-foreground">
+              <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
+              <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
+            </div>
+            <div class="mt-2 h-1.5 w-full rounded-full bg-surface-2">
+              <div data-reader-target="progressBar"
+                   class="h-1.5 rounded-full bg-accent transition-[width] duration-200"
+                   style="width: <%= progress_percent %>%"></div>
+            </div>
           </div>
         <% end %>
-      </div>
-      <% if @chapter.meaningful_title? %>
-        <p class="text-muted text-pretty"><%= @chapter.title %></p>
-      <% end %>
-    </div>
-  </header>
 
-  <% if page_count.positive? %>
-    <div class="sticky top-4 z-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
-      <div class="flex items-center justify-between text-xs text-foreground">
-        <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
-        <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
-      </div>
-      <div class="mt-2 h-1 w-full rounded-full bg-surface-2">
-        <div data-reader-target="progressBar"
-             class="h-1 rounded-full bg-accent transition-[width] duration-200"
-             style="width: <%= progress_percent %>%"></div>
-      </div>
-    </div>
-  <% end %>
-
-  <nav class="flex flex-wrap items-center gap-2">
+        <nav class="flex flex-wrap items-center gap-2">
     <% if @previous_chapter || @next_chapter %>
       <div class="inline-flex items-center rounded-md border border-border bg-surface/60 p-1">
         <% if @previous_chapter %>
@@ -203,7 +206,9 @@
         full_width: false
       ) %>
     <% end %>
-  </nav>
+        </nav>
+      </div>
+    </section>
 
   <% viewport_class = if is_horizontal
                         base = "flex overflow-x-auto snap-x snap-mandatory w-full"
@@ -219,30 +224,30 @@
                         "flex flex-col items-center gap-4"
      end %>
   <% page_class = if is_horizontal
-                    "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
+                    "scanarr-reader-page-frame snap-start shrink-0 w-[78vw] max-w-5xl flex items-center justify-center p-4 cursor-pointer"
      elsif is_webtoon
                     # Long strip: full width, no extra styling - panels flow together
-                    "w-full max-w-3xl cursor-pointer"
+                    "scanarr-reader-page-frame w-full max-w-4xl cursor-pointer"
      elsif is_paged_vertical
                     # Paged vertical: each page snaps as a discrete panel
-                    "snap-start min-h-[82vh] w-full max-w-2xl flex items-center justify-center px-2 py-2 cursor-pointer"
+                    "scanarr-reader-page-frame snap-start min-h-[82vh] w-full max-w-3xl flex items-center justify-center px-3 py-3 cursor-pointer"
      else
                     # Default vertical pages
-                    "w-full max-w-2xl cursor-pointer"
+                    "scanarr-reader-page-frame w-full max-w-3xl cursor-pointer"
      end %>
   <% image_class = if is_webtoon
                      # Long strip: no height limit, images flow naturally
-                     "w-full max-w-full object-contain pointer-events-none"
+                     "scanarr-reader-image w-full max-w-full object-contain pointer-events-none"
      else
                      # Other modes: constrain height for page-based viewing
-                     "max-h-[75vh] w-auto max-w-full object-contain rounded-md pointer-events-none"
+                     "scanarr-reader-image max-h-[75vh] w-auto max-w-full object-contain rounded-xl pointer-events-none"
      end %>
 
   <section data-reader-target="viewport"
-           class="<%= viewport_class %>"
+           class="scanarr-reader-stage rounded-[2rem] p-3 md:p-5 <%= viewport_class %>"
            data-reader-rtl="<%= is_rtl %>">
     <% if @file_asset&.download_status.present? %>
-      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? "shrink-0 w-screen flex items-center justify-center" : "" %>">
+      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? "shrink-0 w-full flex items-center justify-center" : "" %>">
         <% if @file_asset.download_status == "downloading" && @file_asset.pages_expected.present? %>
           Downloading pages (<%= @file_asset.pages_downloaded %>/<%= @file_asset.pages_expected %>)
         <% elsif @file_asset.download_status == "failed" %>
@@ -255,7 +260,7 @@
       </div>
     <% end %>
     <% if @source_error.present? %>
-      <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-screen flex flex-col items-center justify-center" : "" %>">
+      <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-full flex flex-col items-center justify-center" : "" %>">
         <div class="flex items-center gap-2 text-danger">
           <%= icon "circle-alert", class: "h-5 w-5" %>
           <span class="font-medium">Unable to load chapter</span>
@@ -275,7 +280,7 @@
         title: "Streaming from source",
         description: "This does not store pages locally yet.",
         compact: true,
-        class: is_horizontal ? "shrink-0 w-screen" : nil
+        class: is_horizontal ? "shrink-0 w-full" : nil
       ) do |empty| %>
         <% empty.with_icon do %>
           <%= icon "wifi", class: "h-6 w-6" %>
@@ -301,6 +306,7 @@
       </article>
     <% end %>
   </section>
+  </div>
 
   <%# Lightbox overlay - must be inside controller scope %>
   <div data-reader-target="lightbox"

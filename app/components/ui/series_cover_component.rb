@@ -31,7 +31,7 @@ module UI
       "16/9" => "aspect-video"
     }.freeze
 
-    def initialize(url:, alt: "", size: :md, aspect: nil, rounded: :md, loading: "lazy", image_class: nil, **system_arguments)
+    def initialize(url:, alt: "", size: :md, aspect: nil, rounded: :md, loading: "lazy", image_class: nil, framed: true, **system_arguments)
       super(**system_arguments)
       @url = url
       @alt = alt
@@ -40,11 +40,13 @@ module UI
       @rounded = rounded
       @loading = loading
       @image_class = image_class
+      @framed = framed
     end
 
     def container_classes
       cn(
-        "overflow-hidden border border-border bg-background",
+        "relative block overflow-hidden",
+        @framed ? "border border-border bg-background" : nil,
         SIZE_CLASSES[@size.to_sym] || SIZE_CLASSES[:md],
         @aspect ? ASPECT_CLASSES[@aspect.to_s] : nil,
         ROUNDED_CLASSES[@rounded.to_sym] || ROUNDED_CLASSES[:md],
@@ -53,7 +55,7 @@ module UI
     end
 
     def image_classes
-      cn("h-full w-full object-cover", @image_class)
+      cn("block h-full w-full object-cover", @image_class)
     end
 
     def has_cover?

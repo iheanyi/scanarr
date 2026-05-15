@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <% immersive_reader = controller_name == "chapters" && action_name == "show" %>
+    <% page_direction = content_for(:page_direction).presence || "panel-pulse" %>
     <title>Scanarr</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="manifest" href="<%= pwa_manifest_path %>">
-    <meta name="theme-color" content="#0a0a0a">
+    <meta name="theme-color" content="<%= page_direction == "panel-pulse" ? "#07111f" : "#05070b" %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icon.svg">
@@ -26,12 +28,12 @@
 
     <%= yield :head %>
   </head>
-  <body class="min-h-dvh bg-background text-foreground text-pretty">
+  <body data-page-direction="<%= page_direction %>" class="min-h-dvh overflow-x-hidden bg-background text-pretty text-foreground">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-foreground">Skip to content</a>
-    <div data-controller="drawer" class="min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <header class="flex items-center gap-3 border-b border-border px-4 py-3 lg:hidden">
+    <div data-controller="drawer" class="scanarr-app-shell min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
+      <header class="flex items-center gap-3 border-b border-border/70 px-4 py-3 backdrop-blur-xl lg:hidden <%= immersive_reader ? "bg-background/85" : "bg-background/70" %>">
         <button type="button"
-                class="inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-foreground hover:bg-surface-2/80"
+                class="inline-flex items-center justify-center rounded-md border border-border bg-surface/85 p-2 text-foreground transition-colors hover:border-accent/30 hover:bg-surface-2"
                 data-action="click->drawer#open"
                 aria-label="Open navigation">
           <%= icon "menu", class: "h-5 w-5", aria: { hidden: true } %>
@@ -39,21 +41,21 @@
         <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
       </header>
 
-      <aside class="hidden border-r border-border bg-surface px-4 py-6 lg:sticky lg:top-0 lg:flex lg:min-h-dvh lg:flex-col">
+      <aside class="scanarr-sidebar hidden border-r border-border/70 px-4 py-6 lg:sticky lg:top-0 lg:flex lg:min-h-dvh lg:flex-col">
         <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance text-foreground" %>
         <div class="mt-6 flex-1">
           <%= render "shared/sidebar_nav" %>
         </div>
       </aside>
 
-      <div class="min-h-dvh">
+      <div class="scanarr-page-shell min-h-dvh">
         <% if flash[:notice].present? || flash[:alert].present? %>
           <div class="mx-auto w-full max-w-6xl px-4 pt-4 space-y-2">
             <%= render UI::FlashMessageComponent.new(variant: :success, message: flash[:notice], dismissible: true) %>
             <%= render UI::FlashMessageComponent.new(variant: :danger, message: flash[:alert], dismissible: true) %>
           </div>
         <% end %>
-        <main id="main-content" class="mx-auto w-full max-w-6xl px-4 py-8">
+        <main id="main-content" class="<%= immersive_reader ? "scanarr-reader-main" : "mx-auto w-full max-w-6xl px-4 py-8" %>">
           <%= yield %>
         </main>
       </div>
@@ -68,11 +70,11 @@
 
       <dialog data-drawer-target="dialog"
               data-action="click->drawer#closeOnBackdrop"
-              class="m-0 h-dvh w-80 max-w-full border-r border-border bg-surface p-4 text-foreground backdrop:bg-background/80">
+              class="scanarr-sidebar m-0 h-dvh w-80 max-w-full border-r border-border/70 p-4 text-foreground backdrop:bg-background/80">
         <div class="flex items-center justify-between border-b border-border pb-4">
           <%= link_to "Scanarr", root_path, class: "text-lg font-semibold text-balance" %>
           <button type="button"
-                  class="inline-flex items-center justify-center rounded-md border border-border bg-surface-2 p-2 text-foreground hover:bg-surface-2/80"
+                  class="inline-flex items-center justify-center rounded-md border border-border bg-surface/85 p-2 text-foreground transition-colors hover:border-accent/30 hover:bg-surface-2"
                   data-action="drawer#close"
                   aria-label="Close navigation">
             <%= icon "x", class: "h-5 w-5", aria: { hidden: true } %>

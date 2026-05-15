@@ -2,9 +2,15 @@
   <meta name="turbo-refresh-method" content="morph">
   <meta name="turbo-refresh-scroll" content="preserve">
 <% end %>
+<% content_for :page_direction, "panel-pulse" %>
 
-<div class="space-y-6">
-  <nav aria-label="Breadcrumb" class="text-sm text-muted">
+<% chapter_count = @chapters.size
+  read_count = @chapter_progress_map.present? ? @chapter_progress_map.count { |_, progress| progress.status == "completed" } : 0
+  unread_count = [ chapter_count - read_count, 0 ].max
+  active_download_count = @in_progress_count.to_i %>
+
+<div data-direction="panel-pulse" class="space-y-8">
+  <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-sm text-muted">
     <%= link_to "Library", library_path, class: "hover:text-foreground", data: { turbo_preload: "" } %>
     <span class="text-muted-2">/</span>
     <%= link_to @source.name || @source.key, source_series_index_path(source_slug: @source.slug), class: "hover:text-foreground", data: { turbo_preload: "" } %>
@@ -12,169 +18,213 @@
     <span class="text-foreground"><%= @series.canonical_title %></span>
   </nav>
 
-  <header class="flex flex-col gap-4 sm:flex-row sm:gap-6">
-    <div class="relative group shrink-0">
-      <%= render UI::SeriesCoverComponent.new(
-        url: @series.cover_image_url,
-        alt: "#{@series.canonical_title} cover",
-        size: :xl,
-        rounded: :lg,
-        loading: "eager",
-        class: "h-48 w-36 border-border/80"
-      ) do |cover| %>
-        <% cover.with_fallback do %>
-          <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
-            <%= icon "book-open", class: "h-6 w-6 text-muted-2", stroke_width: "1.75" %>
-            <% if @series.cover_url.present? %>
-              <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
-                            method: :post,
-                            class: "inline-flex items-center rounded-md bg-surface-2 border border-border px-2 py-1 text-xs font-medium text-foreground hover:text-foreground hover:bg-surface" do %>
-                <%= icon "download", class: "h-3 w-3 mr-1" %>
-                Fetch
+  <section class="scanarr-panel-shell rounded-[2rem] p-5 md:p-6">
+    <header class="relative grid gap-6 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:items-start">
+      <div class="relative flex justify-center lg:self-start lg:justify-start">
+        <div class="scanarr-panel-cover-frame w-[12rem] sm:w-[13.5rem]">
+          <div class="relative group">
+            <%= render UI::SeriesCoverComponent.new(
+              url: @series.cover_image_url,
+              alt: "#{@series.canonical_title} cover",
+              size: :xl,
+              aspect: "2/3",
+              rounded: :lg,
+              loading: "eager",
+              framed: false,
+              image_class: "transition duration-300 group-hover:scale-[1.02]",
+              class: "scanarr-panel-cover-media block w-full bg-transparent"
+            ) do |cover| %>
+              <% cover.with_fallback do %>
+                <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
+                  <%= icon "book-open", class: "h-6 w-6 text-muted-2", stroke_width: "1.75" %>
+                  <% if @series.cover_url.present? %>
+                    <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
+                                  method: :post,
+                                  class: "inline-flex items-center rounded-md border border-border bg-surface-2 px-2 py-1 text-xs font-medium text-foreground hover:bg-surface" do %>
+                      <%= icon "download", class: "mr-1 h-3 w-3" %>
+                      Fetch
+                    <% end %>
+                  <% end %>
+                </div>
+              <% end %>
+              <% cover.with_overlay do %>
+                <% if @series.cover_url.present? && @series.cover_image_url.present? %>
+                  <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
+                                method: :post,
+                                class: "absolute bottom-3 left-1/2 inline-flex -translate-x-1/2 items-center rounded-full border border-border bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-accent" do %>
+                    <%= icon "refresh-cw", class: "mr-1 h-3 w-3" %>
+                    Refresh
+                  <% end %>
+                <% end %>
               <% end %>
             <% end %>
           </div>
-        <% end %>
-        <% cover.with_overlay do %>
-          <% if @series.cover_url.present? && @series.cover_image_url.present? %>
-            <%= button_to source_series_refresh_cover_path(source_slug: @source.slug, series_slug: @series.to_param),
-                          method: :post,
-                          class: "absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center rounded-md bg-surface/90 border border-border px-2 py-1 text-xs font-medium text-foreground hover:text-accent" do %>
-              <%= icon "refresh-cw", class: "h-3 w-3 mr-1" %>
-              Refresh
-            <% end %>
-          <% end %>
-        <% end %>
-      <% end %>
-    </div>
-    <div class="space-y-2 flex-1">
-      <div class="flex items-center gap-2">
-        <p class="text-sm text-muted"><%= @source.name || @source.key %></p>
-        <% if @series.status.present? %>
-          <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
-        <% end %>
-        <% if @series.series_type.present? %>
-          <span class="inline-flex items-center rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted"><%= @series.series_type.titleize %></span>
-        <% end %>
-        <%= button_to source_series_refresh_metadata_path(source_slug: @source.slug, series_slug: @series.to_param),
-                      method: :post,
-                      class: "inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted hover:text-foreground hover:border-muted" do %>
-          <%= icon "refresh-cw", class: "h-3 w-3" %>
-          Refresh
-        <% end %>
+        </div>
       </div>
-      <h1 class="text-3xl font-semibold text-balance"><%= @series.canonical_title %></h1>
-      <% if @series.localized_title.present? %>
-        <p class="text-lg text-muted"><%= @series.localized_title %></p>
-      <% end %>
-      <% if @series.display_author.present? %>
-        <p class="text-sm text-foreground">by <%= @series.display_author %></p>
-      <% end %>
-      <% if @series.raw_tags.present? %>
-        <div class="flex flex-wrap gap-1.5">
-          <% @series.raw_tags.first(12).each do |tag| %>
-            <span class="inline-block rounded-full bg-surface-2 border border-border px-2.5 py-0.5 text-xs text-muted"><%= tag %></span>
-          <% end %>
-          <% if @series.raw_tags.size > 12 %>
-            <span class="inline-block rounded-full bg-surface-2 border border-border px-2.5 py-0.5 text-xs text-muted-2">+<%= @series.raw_tags.size - 12 %> more</span>
-          <% end %>
-        </div>
-      <% end %>
-      <% if @series.description.present? %>
-        <div class="max-w-2xl text-sm text-muted" data-controller="text-expand">
-          <div class="text-pretty <%= "line-clamp-3" if @series.description.length > 200 %>" data-text-expand-target="content">
-            <%= simple_format(@series.description) %>
-          </div>
-          <% if @series.description.length > 200 %>
-            <button type="button"
-                    class="text-xs text-muted-2 hover:text-foreground cursor-pointer mt-1"
-                    data-text-expand-target="toggle"
-                    data-action="click->text-expand#toggle">
-              Show more
-            </button>
-          <% end %>
-        </div>
-      <% end %>
 
-      <% if @check_error %>
-        <div class="mt-4 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger-soft p-3">
-          <%= icon "alert-triangle", class: "h-4 w-4 shrink-0 text-danger mt-0.5" %>
-          <div class="text-sm">
-            <p class="font-medium text-danger">
-              Chapter check failing
-              <% if @check_error.check_critically_failing? %>
-                (<%= @check_error.consecutive_failures %> consecutive failures)
-              <% end %>
-            </p>
-            <p class="text-muted text-xs mt-0.5"><%= @check_error.last_check_error %></p>
-            <% if @check_error.last_check_error_at %>
-              <p class="text-muted-2 text-xs mt-0.5">Last failed <%= time_ago_in_words(@check_error.last_check_error_at) %> ago</p>
-            <% end %>
+      <div class="flex-1 space-y-5">
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="scanarr-panel-chip rounded-full px-3 py-1.5 text-muted"><%= @source.name || @source.key %></span>
+          <% if @series.status.present? %>
+            <%= render UI::StatusBadgeComponent.new(status: @series.status) %>
+          <% end %>
+          <% if @series.series_type.present? %>
+            <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-muted"><%= @series.series_type.titleize %></span>
+          <% end %>
+          <%= button_to source_series_refresh_metadata_path(source_slug: @source.slug, series_slug: @series.to_param),
+                        method: :post,
+                        class: "scanarr-panel-chip inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-muted transition-colors hover:text-foreground" do %>
+            <%= icon "refresh-cw", class: "h-3 w-3" %>
+            Refresh
+          <% end %>
+        </div>
+
+        <div class="space-y-3">
+          <h1 class="text-3xl font-semibold text-balance md:text-5xl"><%= @series.canonical_title %></h1>
+          <% if @series.localized_title.present? %>
+            <p class="text-lg text-muted"><%= @series.localized_title %></p>
+          <% end %>
+          <% if @series.display_author.present? %>
+            <p class="text-sm text-foreground">by <%= @series.display_author %></p>
+          <% end %>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div class="scanarr-panel-metric rounded-[1.4rem] p-4">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-muted-2">Chapters</p>
+            <p class="mt-2 text-2xl font-semibold text-foreground"><%= chapter_count %></p>
+          </div>
+          <div class="scanarr-panel-metric rounded-[1.4rem] p-4">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-muted-2">Unread</p>
+            <p class="mt-2 text-2xl font-semibold text-foreground"><%= unread_count %></p>
+          </div>
+          <div class="scanarr-panel-metric rounded-[1.4rem] p-4">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-muted-2">Downloaded</p>
+            <p class="mt-2 text-2xl font-semibold text-foreground"><%= @downloaded_count %></p>
+          </div>
+          <div class="scanarr-panel-metric rounded-[1.4rem] p-4">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-muted-2">Active queue</p>
+            <p class="mt-2 text-2xl font-semibold text-foreground"><%= active_download_count %></p>
           </div>
         </div>
-      <% end %>
 
-      <div class="mt-4 flex flex-col gap-y-2 items-start">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <% if @reading_cta_path.present? %>
-            <%= render UI::ButtonComponent.new(
-              variant: :secondary,
-              size: :sm,
-              href: @reading_cta_path,
-              data: { turbo_frame: "_top" }
-            ) do %>
-              <%= @reading_cta_label %>
-              <%= icon "chevron-right", class: "h-4 w-4" %>
+        <% if @series.raw_tags.present? %>
+          <div class="flex flex-wrap gap-2">
+            <% @series.raw_tags.first(12).each do |tag| %>
+              <span class="scanarr-panel-chip inline-block rounded-full px-2.5 py-1 text-xs text-muted"><%= tag %></span>
             <% end %>
-          <% end %>
+            <% if @series.raw_tags.size > 12 %>
+              <span class="scanarr-panel-chip inline-block rounded-full px-2.5 py-1 text-xs text-muted-2">+<%= @series.raw_tags.size - 12 %> more</span>
+            <% end %>
+          </div>
+        <% end %>
 
-          <% if user_signed_in? %>
-            <%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %>
-            <%= link_to "Migrate",
-                        library_series_migration_path(series_slug: @series.to_param, from_source_id: @source.id),
-                        class: "inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-surface-2" %>
-          <% end %>
-
-          <%= form_with model: @series,
-                        url: source_series_update_path(source_slug: @source.slug, series_slug: @series.to_param),
-                        method: :patch,
-                        class: "inline-flex min-w-0 items-center leading-none",
-                        data: { controller: "auto-submit", turbo_submits_with: "Updating..." } do |form| %>
-            <div class="relative inline-flex items-center">
-              <span class="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-2.5">
-                <%= icon "book-open", class: "h-4 w-4 text-muted" %>
-              </span>
-              <%= render UI::AutoSelectComponent.new(
-                form: form,
-                method: :reading_style,
-                options: User::READING_STYLE_OPTIONS,
-                selected: User.normalize_reading_style(@series.reading_style),
-                size: :sm,
-                full_width: false,
-                aria: { label: "Reading style" },
-                class: "h-8 w-auto rounded-md border-border/80 bg-surface pl-8 pr-8 text-xs font-medium shadow-sm hover:border-muted"
-              ) %>
+        <% if @series.description.present? %>
+          <div class="scanarr-panel-subtle max-w-3xl rounded-[1.5rem] p-4 text-sm leading-relaxed text-muted" data-controller="text-expand">
+            <div class="text-pretty <%= "line-clamp-4" if @series.description.length > 220 %>" data-text-expand-target="content">
+              <%= simple_format(@series.description) %>
             </div>
-          <% end %>
-        </div>
-
-        <% if user_signed_in? %>
-          <div class="mt-1 flex items-center">
-            <%= render UI::FollowPreferencesComponent.new(user_follow: @user_follow) %>
+            <% if @series.description.length > 220 %>
+              <button type="button"
+                      class="mt-1 cursor-pointer text-xs text-muted-2 hover:text-foreground"
+                      data-text-expand-target="toggle"
+                      data-action="click->text-expand#toggle">
+                Show more
+              </button>
+            <% end %>
           </div>
         <% end %>
-      </div>
-    </div>
-  </header>
 
-  <section class="space-y-3" data-controller="chapter-filter bulk-select">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <h2 class="text-xl font-semibold text-balance">Chapters</h2>
-        <% if @chapter_progress_map.present? %>
-          <% read_count = @chapter_progress_map.count { |_, p| p.status == "completed" } %>
-          <span class="text-sm text-muted"><%= read_count %>/<%= @chapters.size %> read</span>
+        <% if @check_error %>
+          <div class="mt-2 flex items-start gap-2 rounded-2xl border border-danger/30 bg-danger-soft p-3">
+            <%= icon "alert-triangle", class: "mt-0.5 h-4 w-4 shrink-0 text-danger" %>
+            <div class="text-sm">
+              <p class="font-medium text-danger">
+                Chapter check failing
+                <% if @check_error.check_critically_failing? %>
+                  (<%= @check_error.consecutive_failures %> consecutive failures)
+                <% end %>
+              </p>
+              <p class="mt-0.5 text-xs text-muted"><%= @check_error.last_check_error %></p>
+              <% if @check_error.last_check_error_at %>
+                <p class="mt-0.5 text-xs text-muted-2">Last failed <%= time_ago_in_words(@check_error.last_check_error_at) %> ago</p>
+              <% end %>
+            </div>
+          </div>
         <% end %>
+
+        <div class="scanarr-panel-action-card rounded-[1.5rem] p-4">
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <% if @reading_cta_path.present? %>
+                  <%= render UI::ButtonComponent.new(
+                    variant: :primary,
+                    size: :sm,
+                    href: @reading_cta_path,
+                    data: { turbo_frame: "_top" }
+                  ) do %>
+                    <%= @reading_cta_label %>
+                    <%= icon "chevron-right", class: "h-4 w-4" %>
+                  <% end %>
+                <% end %>
+
+                <% if user_signed_in? %>
+                  <%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %>
+                  <%= render UI::ButtonComponent.new(
+                    variant: :ghost,
+                    size: :sm,
+                    href: library_series_migration_path(series_slug: @series.to_param, from_source_id: @source.id)
+                  ) do %>
+                    Migrate
+                  <% end %>
+                <% end %>
+              </div>
+
+              <%= form_with model: @series,
+                            url: source_series_update_path(source_slug: @source.slug, series_slug: @series.to_param),
+                            method: :patch,
+                            class: "inline-flex min-w-0 items-center leading-none",
+                            data: { controller: "auto-submit", turbo_submits_with: "Updating..." } do |form| %>
+                <div class="relative inline-flex items-center">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-2.5">
+                    <%= icon "book-open", class: "h-4 w-4 text-muted" %>
+                  </span>
+                  <%= render UI::AutoSelectComponent.new(
+                    form: form,
+                    method: :reading_style,
+                    options: User::READING_STYLE_OPTIONS,
+                    selected: User.normalize_reading_style(@series.reading_style),
+                    size: :sm,
+                    full_width: false,
+                    aria: { label: "Reading style" },
+                    class: "h-9 w-auto rounded-md border-border/80 bg-surface pl-8 pr-8 text-xs font-medium shadow-sm hover:border-muted"
+                  ) %>
+                </div>
+              <% end %>
+            </div>
+
+            <% if user_signed_in? %>
+              <div class="scanarr-panel-subtle rounded-[1.2rem] p-3">
+                <%= render UI::FollowPreferencesComponent.new(user_follow: @user_follow) %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </header>
+  </section>
+
+  <section class="scanarr-panel-subtle rounded-[2rem] p-4 md:p-5" data-controller="chapter-filter bulk-select">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-3">
+        <h2 class="text-xl font-semibold text-balance">Chapters</h2>
+          <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= chapter_count %> total</span>
+          <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= read_count %> read</span>
+          <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= unread_count %> unread</span>
+        </div>
+        <p class="text-sm text-muted">Unread chapters, active downloads, and progress states sit closer to the title so the list scans faster.</p>
       </div>
       <% if @chapters.any? %>
         <div class="flex items-center gap-2">
@@ -229,7 +279,7 @@
     </div>
     <%= turbo_stream_from @series, :downloads %>
     <% if @chapters.any? %>
-      <div class="flex items-center gap-3">
+      <div class="scanarr-panel-filter-bar flex items-center gap-3 rounded-[1.25rem] p-3">
         <div class="flex-1">
           <%= render UI::SearchInputComponent.new(
             placeholder: "Filter chapters by number or title\u2026",
@@ -240,7 +290,7 @@
           <%= @chapters.size %> of <%= @chapters.size %>
         </span>
       </div>
-      <ul class="space-y-2">
+      <ul class="space-y-3">
         <%= render partial: "series/chapter_row",
                    collection: @chapters,
                    as: :chapter,
@@ -255,7 +305,7 @@
 
       <%# Bulk action floating bar %>
       <div data-bulk-select-target="actionBar" data-turbo-temporary class="hidden sticky bottom-4 z-10">
-        <div class="mx-auto max-w-2xl rounded-lg border border-border bg-surface shadow-lg p-3">
+        <div class="scanarr-panel-action-card mx-auto max-w-2xl rounded-2xl p-3">
           <%= form_with url: source_series_bulk_actions_path(source_slug: @source.slug, series_slug: @series.to_param), method: :post do |f| %>
             <input type="hidden" name="chapter_ids" value="" data-bulk-select-target="chapterIds">
             <input type="hidden" name="action_name" value="" data-bulk-select-target="actionName">

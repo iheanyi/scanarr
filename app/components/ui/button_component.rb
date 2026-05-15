@@ -32,32 +32,32 @@ module UI
     private
 
     def base_classes
-      "inline-flex items-center justify-center gap-1.5 rounded-md font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
+      "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg font-semibold leading-none transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50"
     end
 
     def variant_classes
       case @variant.to_sym
       when :primary
-        "bg-accent text-accent-foreground hover:bg-accent-strong"
+        "border border-accent/25 bg-accent text-accent-foreground shadow-[0_12px_30px_rgba(102,224,255,0.12)] hover:border-accent/40 hover:bg-accent-strong"
       when :secondary
-        "bg-surface-2 text-foreground hover:bg-surface"
+        "border border-border/80 bg-surface text-foreground shadow-sm hover:border-border-soft hover:bg-surface-2"
       when :ghost
-        "border border-border text-foreground hover:bg-surface-2 hover:border-border-soft"
+        "border border-border/80 bg-background/60 text-foreground shadow-sm hover:border-accent/20 hover:bg-surface"
       when :danger
-        "bg-danger text-foreground hover:bg-danger/90"
+        "border border-danger/30 bg-danger text-foreground shadow-[0_12px_24px_rgba(255,127,154,0.08)] hover:bg-danger/90"
       else
-        "bg-accent text-accent-foreground hover:bg-accent-strong"
+        "border border-accent/25 bg-accent text-accent-foreground shadow-[0_12px_30px_rgba(102,224,255,0.12)] hover:border-accent/40 hover:bg-accent-strong"
       end
     end
 
     def size_classes
       case @size.to_sym
       when :sm
-        "h-8 px-3 text-xs"
+        "h-9 px-3 text-xs"
       when :lg
         "h-11 px-5 text-sm"
       else
-        "h-9 px-4 text-sm"
+        "h-10 px-4 text-sm"
       end
     end
 

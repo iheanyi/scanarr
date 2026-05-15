@@ -46,7 +46,7 @@ class UI::AutoSelectComponentTest < ComponentTestCase
       )
     )
 
-    assert_includes rendered.to_html, "pl-8"
+    assert_includes rendered.to_html, "pl-9"
     assert_includes rendered.to_html, "ml-2.5"
   end
 end
