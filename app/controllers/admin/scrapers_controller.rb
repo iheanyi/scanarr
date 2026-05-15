@@ -1,7 +1,5 @@
 module Admin
-  class ScrapersController < ApplicationController
-    before_action :require_admin
-
+  class ScrapersController < AdminController
     def index
       @sources = Source.order(:name)
       @statuses = ScraperRun::STATUSES

@@ -45,7 +45,7 @@ module UI
 
     def state_classes
       if @active
-        "border-accent/30 bg-accent-soft text-accent-strong shadow-sm hover:border-accent/40 hover:bg-accent-soft"
+        "border-accent/30 bg-accent-soft text-accent-strong shadow-sm hover:border-accent/40 hover:bg-accent/25"
       else
         "border-border/80 bg-background/60 text-muted shadow-sm hover:border-border-soft hover:text-foreground"
       end

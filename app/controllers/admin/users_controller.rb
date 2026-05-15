@@ -1,6 +1,5 @@
 module Admin
-  class UsersController < ApplicationController
-    before_action :require_admin
+  class UsersController < AdminController
     before_action :set_user, only: :destroy
 
     def index

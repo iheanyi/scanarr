@@ -229,12 +229,15 @@ class DownloadChapterJob < ApplicationJob
 
       # Use find_or_create_by! to handle race conditions
       page = existing_page || @file_asset.pages.find_or_create_by!(position: position)
-      page.image.attach(
+      attach_options = {
         io: StringIO.new(response.body),
         filename: "#{position.to_s.rjust(3, '0')}.#{extension}",
-        content_type: content_type,
-        key: library_path_builder.page_path(@chapter, position: position, extension: extension)
-      )
+        content_type: content_type
+      }
+      key = library_path_builder.page_path(@chapter, position: position, extension: extension)
+      attach_options[:key] = key if key.present?
+
+      page.image.attach(attach_options)
 
       # Pre-process the WebP display variant so it's ready before the user opens the chapter
       page.preprocess_display_variant!

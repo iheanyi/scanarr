@@ -21,12 +21,11 @@ module UI
       lg: "rounded-2xl"
     }.freeze
 
-    def initialize(padding: :md, radius: :lg, interactive: false, elevated: false, **system_arguments)
+    def initialize(padding: :md, radius: :lg, interactive: false, **system_arguments)
       super(**system_arguments)
       @padding = padding
       @radius = radius
       @interactive = interactive
-      @elevated = elevated
     end
 
     def card_classes

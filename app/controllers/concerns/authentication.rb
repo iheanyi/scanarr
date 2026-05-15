@@ -129,13 +129,10 @@ module Authentication
   end
 
   def create_auto_login_user
-    password = SecureRandom.hex(32)
-    User.create!(
+    User.new(
       email: "admin@scanarr.local",
       username: "admin",
-      role: :admin,
-      password: password,
-      password_confirmation: password
-    )
+      role: :admin
+    ).tap { |user| user.save!(validate: false) }
   end
 end

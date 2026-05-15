@@ -1,6 +1,5 @@
 module Admin
-  class BackupsController < ApplicationController
-    before_action :require_admin
+  class BackupsController < AdminController
     before_action :set_backup, only: %i[download destroy verify]
 
     def index

@@ -66,6 +66,26 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, User.count
   end
 
+  def test_setup_remains_available_after_auto_login_user_is_created
+    previous_auth_setting = ENV["SCANARR_DISABLE_AUTH"]
+    ENV["SCANARR_DISABLE_AUTH"] = "true"
+
+    get root_path
+    auto_login_user = User.find_by!(email: "admin@scanarr.local")
+
+    assert_nil auto_login_user.password_digest
+
+    Session.delete_all
+    ENV["SCANARR_DISABLE_AUTH"] = "false"
+
+    get setup_path
+
+    assert_response :success
+    assert_includes @response.body, "Create your admin account"
+  ensure
+    ENV["SCANARR_DISABLE_AUTH"] = previous_auth_setting
+  end
+
   def test_redirects_if_setup_already_complete
     User.create!(
       email: "admin@scanarr.local",

@@ -1,6 +1,5 @@
 module Admin
-  class DownloadsController < ApplicationController
-    before_action :require_admin
+  class DownloadsController < AdminController
     before_action :set_download, only: %i[restart cancel]
 
     # Custom ordering:
