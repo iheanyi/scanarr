@@ -1,0 +1,90 @@
+#!/usr/bin/env sh
+set -eu
+
+APP_ROOT="$(
+  CDPATH=''
+  cd -- "$(dirname -- "$0")/.."
+  pwd
+)"
+ENV_FILE="${SCANARR_SELF_HOST_ENV:-.env.caddy-smoke}"
+BROWSER_URL="http://localhost:8080"
+
+cd "$APP_ROOT"
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Docker is required to run the self-host Caddy smoke test." >&2
+  echo "Install Docker with the Compose plugin, then rerun: bin/self-host-caddy-smoke" >&2
+  exit 1
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+  echo "Docker Compose is required to run the self-host Caddy smoke test." >&2
+  echo "Install the Docker Compose plugin, then rerun: bin/self-host-caddy-smoke" >&2
+  exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl is required to verify the browser URL." >&2
+  exit 1
+fi
+
+if [ ! -f "$ENV_FILE" ]; then
+  if ! command -v openssl >/dev/null 2>&1; then
+    echo "openssl is required to create $ENV_FILE with a SECRET_KEY_BASE." >&2
+    exit 1
+  fi
+
+  SECRET_KEY_BASE="$(openssl rand -hex 64)"
+
+  cat > "$ENV_FILE" <<EOF
+SECRET_KEY_BASE=$SECRET_KEY_BASE
+SCANARR_DATABASE_PASSWORD=scanarr
+
+# Direct web container fallback. Caddy is the primary dogfood URL below.
+PORT=3001
+
+# Browser URL served by the bundled Caddy profile.
+APP_URL=$BROWSER_URL
+RAILS_HOSTS=localhost,127.0.0.1
+RAILS_ASSUME_SSL=false
+RAILS_FORCE_SSL=false
+
+# CADDY_DOMAIN is the listener inside the Caddy container. HTTP_PORT is the
+# host port exposed to your browser.
+CADDY_DOMAIN=:80
+HTTP_PORT=8080
+HTTPS_PORT=8443
+
+RAILS_LOG_LEVEL=info
+EOF
+  echo "Created $ENV_FILE for a localhost Caddy smoke test."
+else
+  configured_app_url="$(grep '^APP_URL=' "$ENV_FILE" 2>/dev/null | tail -n 1 | cut -d= -f2- || true)"
+  if [ -n "$configured_app_url" ]; then
+    BROWSER_URL="$configured_app_url"
+  fi
+fi
+
+HEALTH_URL="${BROWSER_URL%/}/up"
+
+echo "Starting Scanarr with the bundled Caddy profile..."
+docker compose --env-file "$ENV_FILE" --profile caddy up -d --build
+
+echo "Waiting for $HEALTH_URL ..."
+attempt=1
+while [ "$attempt" -le 60 ]; do
+  if curl -fsS "$HEALTH_URL" >/dev/null 2>&1; then
+    echo "Scanarr is reachable through Caddy: $BROWSER_URL"
+    echo "Direct container fallback: http://localhost:3001"
+    exit 0
+  fi
+
+  sleep 2
+  attempt=$((attempt + 1))
+done
+
+echo "Timed out waiting for $HEALTH_URL." >&2
+echo "Inspect the stack with:" >&2
+echo "  docker compose --env-file $ENV_FILE --profile caddy ps" >&2
+echo "  docker compose --env-file $ENV_FILE --profile caddy logs -f web caddy" >&2
+exit 1

@@ -27,6 +27,16 @@ Compose builds a local `scanarr:${SCANARR_VERSION:-local}` image from the clone,
 
 Open `http://localhost:3000` and create the first admin account.
 
+To dogfood the bundled Caddy profile locally and open Scanarr through the reverse proxy, run:
+
+```bash
+bin/self-host-caddy-smoke
+```
+
+Then open `http://localhost:8080`.
+
+Local media storage uses the named Docker volume `scanarr_storage_data` by default. To store pages, covers, and backups on a server path or NAS mount, set `SCANARR_STORAGE_PATH=/srv/scanarr/storage` before starting Compose.
+
 See [docs/self-hosting.md](docs/self-hosting.md) for production setup, backups, updates, reverse proxy examples, and troubleshooting.
 See [docs/releasing.md](docs/releasing.md) for the release/tagging policy.
 

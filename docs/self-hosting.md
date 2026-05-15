@@ -50,6 +50,14 @@ Then start the stack with Caddy:
 docker compose --profile caddy up -d
 ```
 
+For a local browser smoke test through the bundled Caddy profile, run:
+
+```bash
+bin/self-host-caddy-smoke
+```
+
+The helper creates an ignored `.env.caddy-smoke`, starts Compose with the `caddy` profile, waits for the proxied health check, and prints `http://localhost:8080` when the app is reachable through Caddy.
+
 ### Existing Postgres and Valkey
 
 Use the standalone container path if your NAS, homelab stack, or platform already provides PostgreSQL and Redis/Valkey. You still run two Scanarr containers: one web container and one Sidekiq worker.
@@ -116,6 +124,7 @@ Before deploying, edit `config/deploy.yml`:
 - Replace `scanarr.example.com` with your public or internal domain.
 - Set `registry` to the registry you use for Kamal builds.
 - Set `APP_URL`, `APP_HOST`, and `RAILS_HOSTS` to the same domain users browse.
+- For host-path or NAS storage, replace the `scanarr_storage_data:/rails/storage` volume with a server path such as `/srv/scanarr/storage:/rails/storage`.
 
 Export secrets locally or source them from your password manager:
 
@@ -192,6 +201,7 @@ Copy `.env.example` to `.env` and configure these values.
 | `RAILS_FORCE_SSL` | `false` | Use secure cookies, HSTS, and HTTPS redirects. Set `true` when all external traffic reaches Scanarr through HTTPS. |
 | `ACTION_CABLE_ALLOWED_REQUEST_ORIGINS` | `APP_URL` | Optional explicit websocket origins. Use a comma-separated list for multiple domains. |
 | `ACTIVE_STORAGE_SERVICE` | `local` | Set to `local` for the Compose storage volume, or `s3` for AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
+| `SCANARR_STORAGE_PATH` | `scanarr_storage_data` | Docker Compose source for local storage. Use the default named volume, another named volume, or an absolute host path such as `/srv/scanarr/storage`. |
 | `ACTIVE_STORAGE_LOCAL_ROOT` | `/rails/storage` | Disk path for local Active Storage files inside the web and Sidekiq containers. |
 | `S3_ENDPOINT` | blank | Custom S3-compatible endpoint. Required for R2 and MinIO; usually blank for AWS S3. |
 | `S3_BUCKET` | blank | Bucket name for `ACTIVE_STORAGE_SERVICE=s3`. |
@@ -202,6 +212,7 @@ Copy `.env.example` to `.env` and configure these values.
 | `CADDY_DOMAIN` | `:80` | Domain served by the optional Compose Caddy profile. Set this to your public or internal hostname for HTTPS. |
 | `HTTP_PORT` | `80` | Host HTTP port for the optional Caddy profile. |
 | `HTTPS_PORT` | `443` | Host HTTPS port for the optional Caddy profile. |
+| `CADDY_PROXY_TARGET` | `web:80` | Internal upstream for the optional Caddy profile. Usually leave this as `web:80`. |
 
 ### Custom Domains
 
@@ -229,9 +240,39 @@ RAILS_FORCE_SSL=false
 
 ### Local Disk
 
-The default storage service writes downloaded pages, covers, generated CBZ archives, and backup artifacts into the `scanarr_storage_data` volume mounted at `/rails/storage`.
+The default storage service writes downloaded pages, covers, generated CBZ archives, and backup artifacts through Rails Active Storage. In Compose, the default named Docker volume is `scanarr_storage_data`, mounted at `/rails/storage` in both the web and Sidekiq containers.
 
-If you prefer a visible host directory for NAS backups, replace the `web` and `sidekiq` storage mounts with a bind mount:
+Rails does allow the local disk location to be configured. Scanarr exposes this in two layers:
+
+| Variable | Controls |
+| --- | --- |
+| `SCANARR_STORAGE_PATH` | Docker Compose source on the host. This can be a named Docker volume or an absolute host path/NAS mount. |
+| `ACTIVE_STORAGE_LOCAL_ROOT` | Path inside the Rails containers where Active Storage writes files. Usually leave this as `/rails/storage`. |
+
+For a custom server directory or mounted NAS path, set:
+
+```env
+ACTIVE_STORAGE_SERVICE=local
+SCANARR_STORAGE_PATH=/srv/scanarr/storage
+ACTIVE_STORAGE_LOCAL_ROOT=/rails/storage
+```
+
+Create the host directory before first boot and make it writable by the container user:
+
+```bash
+sudo mkdir -p /srv/scanarr/storage
+sudo chown -R 1000:1000 /srv/scanarr/storage
+```
+
+Then apply it:
+
+```bash
+docker compose up -d
+```
+
+Compose mounts the same host path into the web and Sidekiq containers, so downloads, cover refreshes, backups, and background jobs see the same files. If the directory already contains data, make sure the container user can read and write it.
+
+If you do not want to use the environment variable, the equivalent manual Compose mount is:
 
 ```yaml
 volumes:
@@ -247,6 +288,19 @@ library/<source>/<series-slug>--<series-id>/volumes/<volume>/chapters/<chapter>-
 ```
 
 Existing blobs keep whatever key they were created with. Re-downloaded chapters, refreshed covers, and newly packaged archives use the readable layout.
+
+### Storage Adapter Notes
+
+Scanarr currently relies on Rails Active Storage for blob metadata, local disk storage, S3-compatible services, signed URLs, and streaming. The small `LocalAdapter` helper in the codebase is not the storage backend for downloaded pages today; it is only a thin filesystem helper.
+
+A custom local storage adapter is possible, but the Rails-native path is usually better for self-hosting: mount the target directory or volume into the containers and point Active Storage at that mount. A custom Active Storage service would make sense only if we need behavior Rails Disk/S3 does not cover, such as per-library roots, a nonstandard remote filesystem API, dual-write migrations, or custom integrity checks.
+
+Areas to improve in the codebase:
+
+- Add a storage preflight check that verifies the web and Sidekiq containers can read/write `ACTIVE_STORAGE_LOCAL_ROOT` before the app reports healthy.
+- Add an admin storage status page showing backend type, configured root or bucket, writable status, and approximate usage.
+- Add storage migration jobs for moving from the default Docker volume to a host path, NAS mount, or S3-compatible bucket.
+- Decide whether to remove or formalize `StorageAdapters::LocalAdapter`, since Active Storage is the real persistence layer.
 
 ### Cloudflare R2
 
@@ -349,6 +403,8 @@ docker run --rm -v scanarr_storage_data:/data -v "$PWD:/backup" alpine \
 
 For S3-compatible storage, back up or version the object store bucket according to your provider's tooling.
 
+If you set `SCANARR_STORAGE_PATH` to a host path, back up that host path directly instead of using the Docker volume backup command.
+
 ### Update Scanarr
 
 ```bash
@@ -425,6 +481,27 @@ docker compose --profile caddy up -d
 ```
 
 Caddy stores certificates and state in the `scanarr_caddy_data` and `scanarr_caddy_config` volumes.
+
+For local testing through Caddy without claiming host ports 80 or 443, use:
+
+```env
+APP_URL=http://localhost:8080
+RAILS_HOSTS=localhost,127.0.0.1
+RAILS_ASSUME_SSL=false
+RAILS_FORCE_SSL=false
+CADDY_DOMAIN=:80
+HTTP_PORT=8080
+HTTPS_PORT=8443
+```
+
+Then start the Caddy profile and open `http://localhost:8080`:
+
+```bash
+docker compose --profile caddy up -d
+curl -fsS http://localhost:8080/up
+```
+
+`CADDY_DOMAIN` is the listener inside the Caddy container. Keep it as `:80` for this local HTTP smoke test; `HTTP_PORT` controls the host port you type into the browser.
 
 ### External Caddy
 
@@ -545,9 +622,8 @@ docker compose logs -f sidekiq
 
 ### Storage fills up
 
-With local storage, downloaded manga pages are stored in the `storage_data` volume. To move storage to a host path, change the web and Sidekiq volume mounts:
+With local storage, downloaded manga pages are stored in the `scanarr_storage_data` volume by default. To move storage to a host path, set `SCANARR_STORAGE_PATH`:
 
-```yaml
-volumes:
-  - /path/to/manga:/rails/storage
+```env
+SCANARR_STORAGE_PATH=/path/to/manga
 ```

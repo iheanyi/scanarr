@@ -71,7 +71,7 @@ services:
       SCANARR_DATABASE_PASSWORD: ${SCANARR_DATABASE_PASSWORD:-scanarr}
       SCANARR_DISABLE_AUTH: ${SCANARR_DISABLE_AUTH:-false}
     volumes:
-      - storage_data:/rails/storage
+      - ${SCANARR_STORAGE_PATH:-scanarr_storage_data}:${ACTIVE_STORAGE_LOCAL_ROOT:-/rails/storage}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost/up"]
       interval: 10s
@@ -118,7 +118,7 @@ services:
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
       SCANARR_DATABASE_PASSWORD: ${SCANARR_DATABASE_PASSWORD:-scanarr}
     volumes:
-      - storage_data:/rails/storage
+      - ${SCANARR_STORAGE_PATH:-scanarr_storage_data}:${ACTIVE_STORAGE_LOCAL_ROOT:-/rails/storage}
 
   caddy:
     image: caddy:2-alpine
@@ -143,7 +143,7 @@ volumes:
     name: scanarr_postgres_data
   redis_data:
     name: scanarr_redis_data
-  storage_data:
+  scanarr_storage_data:
     name: scanarr_storage_data
   caddy_data:
     name: scanarr_caddy_data

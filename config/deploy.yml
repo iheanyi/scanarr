@@ -90,6 +90,7 @@ aliases:
 
 # Use a persistent storage volume for local Active Storage files.
 # Recommended to change this to a mounted volume path that is backed up off server.
+# For example: /srv/scanarr/storage:/rails/storage
 volumes:
   - "scanarr_storage_data:/rails/storage"
 
