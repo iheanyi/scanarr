@@ -2,7 +2,12 @@ require "test_helper"
 
 class UserSeriesFollowTest < ActiveSupport::TestCase
   def setup
-    @user = User.create!(email: "test@example.com", username: "test_follow_user")
+    @user = User.create!(
+      email: "test@example.com",
+      username: "test_follow_user",
+      password: "testpassword123",
+      password_confirmation: "testpassword123"
+    )
     @library_series = LibrarySeries.create!(canonical_title: "One Piece")
   end
 

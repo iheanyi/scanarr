@@ -2,7 +2,7 @@ require "test_helper"
 
 class LibraryExportServiceTest < ActiveSupport::TestCase
   def setup
-    @user = User.find_or_create_by!(email: "admin@scanarr.local")
+    @user = users(:admin)
   end
 
   def test_export_produces_gzipped_json

@@ -38,7 +38,15 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_upgrades_existing_phantom_user
-    phantom = User.create!(email: "admin@scanarr.local", username: "phantom_admin")
+    User.insert!({
+      email: "admin@scanarr.local",
+      username: "phantom_admin",
+      api_key: "scanarr_test_phantom_key_000000000000000",
+      role: User.roles[:admin],
+      created_at: Time.current,
+      updated_at: Time.current
+    })
+    phantom = User.find_by!(email: "admin@scanarr.local")
 
     post setup_path, params: {
       user: {
@@ -83,5 +91,31 @@ class SetupControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_equal 0, User.where.not(password_digest: nil).count
+  end
+
+  def test_rate_limits_repeated_setup_attempts
+    5.times do
+      post setup_path, params: {
+        user: {
+          username: "admin",
+          email: "admin@test.com",
+          password: "short",
+          password_confirmation: "short"
+        }
+      }
+
+      assert_response :unprocessable_entity
+    end
+
+    post setup_path, params: {
+      user: {
+        username: "admin",
+        email: "admin@test.com",
+        password: "short",
+        password_confirmation: "short"
+      }
+    }
+
+    assert_response :too_many_requests
   end
 end

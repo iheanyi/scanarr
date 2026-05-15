@@ -88,8 +88,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_renders_progress_pill_for_signed_in_user
-    # Auto-create admin user for progress tracking
-    admin = User.find_or_create_by!(email: "admin@scanarr.local")
+    admin = users(:admin)
     series = series(:one)
     chapter = chapters(:one)
     ChapterProgress.create!(

@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   has_secure_password validations: false
 
+  MAX_PASSWORD_LENGTH = ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED
+
   has_many :sessions, dependent: :destroy
   has_many :chapter_progresses, dependent: :destroy
   has_many :offline_manifest_entries, class_name: "UserOfflineManifestEntry", dependent: :destroy
@@ -12,7 +14,10 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: true
   validates :username, presence: true, uniqueness: true
-  validates :password, length: { minimum: 8 }, if: -> { password.present? }
+  validates :password, presence: true, if: :password_digest_blank?
+  validates :password, confirmation: true, allow_blank: true
+  validates :password, length: { minimum: 8 }, allow_blank: true
+  validate :password_within_bcrypt_limit
 
   before_save :generate_api_key
   before_validation :normalize_default_reading_style, :normalize_theme
@@ -139,6 +144,16 @@ class User < ApplicationRecord
 
   def generate_api_key
     self.api_key ||= self.class.generate_api_key
+  end
+
+  def password_digest_blank?
+    password_digest.blank?
+  end
+
+  def password_within_bcrypt_limit
+    return if password.blank? || password.bytesize <= MAX_PASSWORD_LENGTH
+
+    errors.add(:password, "is too long (maximum is #{MAX_PASSWORD_LENGTH} bytes)")
   end
 
   def self.generate_api_key

@@ -44,6 +44,22 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_predicate new_user, :admin?
   end
 
+  def test_admin_cannot_create_user_without_password
+    assert_no_difference "User.count" do
+      post admin_users_path, params: {
+        user: {
+          username: "nopassword",
+          email: "nopassword@test.com",
+          password: "",
+          password_confirmation: "",
+          role: "member"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
   def test_admin_can_delete_other_users
     other = users(:member)
 

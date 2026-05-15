@@ -64,6 +64,32 @@ class RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Username"
   end
 
+  def test_rate_limits_repeated_registration_attempts
+    5.times do
+      post register_path, params: {
+        user: {
+          username: "",
+          email: "",
+          password: "short",
+          password_confirmation: "mismatch"
+        }
+      }
+
+      assert_response :unprocessable_entity
+    end
+
+    post register_path, params: {
+      user: {
+        username: "",
+        email: "",
+        password: "short",
+        password_confirmation: "mismatch"
+      }
+    }
+
+    assert_response :too_many_requests
+  end
+
   def test_redirects_to_login_when_registration_disabled
     SiteSetting.instance.update!(registration_enabled: false)
 

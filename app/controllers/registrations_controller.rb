@@ -2,6 +2,8 @@
 
 class RegistrationsController < ApplicationController
   allow_unauthenticated_access
+  rate_limit to: 5, within: 10.minutes, only: :create, with: :rate_limit_exceeded
+
   layout "minimal"
 
   before_action :redirect_if_authenticated

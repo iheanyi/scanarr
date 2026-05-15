@@ -28,6 +28,20 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "Invalid username or password"
   end
 
+  def test_login_rate_limits_repeated_attempts
+    sign_out
+
+    10.times do
+      post login_path, params: { username: "admin", password: "wrongpassword" }
+
+      assert_response :unprocessable_entity
+    end
+
+    post login_path, params: { username: "admin", password: "wrongpassword" }
+
+    assert_response :too_many_requests
+  end
+
   def test_api_key_auth_valid
     sign_out
     get library_path, headers: { "X-Api-Key" => users(:admin).api_key }
@@ -37,6 +51,12 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
 
   def test_api_key_auth_invalid
     sign_out
+    get library_path, headers: { "X-Api-Key" => "invalid_key" }
+
+    assert_response :unauthorized
+  end
+
+  def test_invalid_api_key_does_not_fall_back_to_cookie_session
     get library_path, headers: { "X-Api-Key" => "invalid_key" }
 
     assert_response :unauthorized

@@ -51,7 +51,13 @@ module Authentication
 
   def require_authentication
     return if auth_disabled? && ensure_auto_login
-    resume_session || authenticate_via_api_key || request_authentication
+    return authenticate_via_api_key if api_key_request?
+
+    resume_session || request_authentication
+  end
+
+  def api_key_request?
+    request.headers["X-Api-Key"].present?
   end
 
   def resume_session
@@ -118,6 +124,18 @@ module Authentication
 
   def auto_login_user
     return nil unless auth_disabled?
-    User.first || User.create!(email: "admin@scanarr.local", username: "admin", role: :admin)
+
+    User.first || create_auto_login_user
+  end
+
+  def create_auto_login_user
+    password = SecureRandom.hex(32)
+    User.create!(
+      email: "admin@scanarr.local",
+      username: "admin",
+      role: :admin,
+      password: password,
+      password_confirmation: password
+    )
   end
 end

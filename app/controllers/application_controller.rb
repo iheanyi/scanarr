@@ -47,6 +47,14 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def rate_limit_exceeded
+    respond_to do |format|
+      format.html { render plain: "Too many requests. Try again later.", status: :too_many_requests }
+      format.json { render json: { error: "Too many requests. Try again later." }, status: :too_many_requests }
+      format.any { head :too_many_requests }
+    end
+  end
+
   def render_internal_error
     respond_to do |format|
       format.html { render "errors/internal_server_error", status: :internal_server_error, layout: "application" }

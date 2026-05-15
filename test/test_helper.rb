@@ -8,6 +8,10 @@ require "webmock/minitest"
 require "support/query_counter"
 require "test_helpers/session_test_helper"
 
+require Rails.root.join("app/lib/scrapers/result_types").to_s
+require Rails.root.join("app/lib/scrapers/http_client").to_s
+require Rails.root.join("app/lib/scrapers/chapter_downloader").to_s
+
 VCR.configure do |config|
   config.cassette_library_dir = "test/vcr_cassettes"
   config.hook_into :webmock
@@ -33,13 +37,22 @@ module ActionDispatch
     include SessionTestHelper
 
     setup do
+      clear_rate_limit_cache
       @test_user = users(:admin)
       sign_in_as(@test_user)
+      clear_rate_limit_cache
     end
 
     def api_key_header(user = nil)
       user ||= @test_user
       { "X-Api-Key" => user.api_key }
+    end
+
+    private
+
+    def clear_rate_limit_cache
+      cache_store = ActionController::Base.cache_store
+      cache_store.clear if cache_store.respond_to?(:clear)
     end
   end
 end

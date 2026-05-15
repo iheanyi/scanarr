@@ -26,7 +26,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_with_reading_progress
-    admin = User.find_or_create_by!(email: "admin@scanarr.local")
+    admin = users(:admin)
     chapter = chapters(:one)
     ChapterProgress.create!(
       user: admin,
@@ -45,7 +45,7 @@ class StatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_displays_recently_read_with_progress
-    admin = User.find_or_create_by!(email: "admin@scanarr.local")
+    admin = users(:admin)
     chapter = chapters(:one)
     ChapterProgress.create!(
       user: admin,

@@ -16,7 +16,7 @@ class ReadingHistoryControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_index_with_reading_progress
-    admin = User.find_or_create_by!(email: "admin@scanarr.local")
+    admin = users(:admin)
     chapter = chapters(:one)
     ChapterProgress.create!(
       user: admin,
@@ -34,7 +34,7 @@ class ReadingHistoryControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_index_filters_by_status
-    admin = User.find_or_create_by!(email: "admin@scanarr.local")
+    admin = users(:admin)
     chapter = chapters(:one)
     ChapterProgress.create!(
       user: admin,

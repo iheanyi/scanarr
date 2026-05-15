@@ -2,7 +2,7 @@ require "test_helper"
 
 class LibraryImportServiceTest < ActiveSupport::TestCase
   def setup
-    @user = User.find_or_create_by!(email: "admin@scanarr.local")
+    @user = users(:admin)
   end
 
   def test_import_from_gzipped_data

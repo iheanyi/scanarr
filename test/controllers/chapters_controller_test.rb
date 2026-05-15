@@ -263,8 +263,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_uses_saved_progress_for_initial_page
-    # Auto-create admin user for progress tracking
-    admin = User.find_or_create_by!(email: "admin@scanarr.local")
+    admin = users(:admin)
     ChapterProgress.create!(
       user: admin,
       chapter: chapters(:one),
