@@ -38,7 +38,7 @@ Three named volumes persist data across restarts:
 
 | Volume | Mounted at | Contains |
 | --- | --- | --- |
-| `postgres_data` | `/var/lib/postgresql/data` | Database data |
+| `postgres_data` | `/var/lib/postgresql` | Database data |
 | `redis_data` | `/data` | Valkey persistence |
 | `storage_data` | `/rails/storage` | Downloaded pages, covers, backups, and Active Storage files |
 
@@ -188,6 +188,7 @@ server {
 ## PostgreSQL Major Upgrades
 
 This Compose file uses PostgreSQL 18. Major PostgreSQL upgrades require dump and restore.
+The Postgres volume is mounted at `/var/lib/postgresql` so the official PostgreSQL 18 image can manage its major-version-specific data directory.
 
 1. Back up while the old Postgres container is running:
 
