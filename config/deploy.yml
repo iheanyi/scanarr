@@ -39,7 +39,9 @@ registry:
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
-    - RAILS_MASTER_KEY
+    - SECRET_KEY_BASE
+    # Optional only if you intentionally use Rails encrypted credentials.
+    # - RAILS_MASTER_KEY
   clear:
     # Default to Kamal redis accessory DNS name: <service>-<accessory>.
     # Override these URLs if you use an external Redis service.
@@ -87,7 +89,7 @@ builder:
   #   RUBY_VERSION: 3.4.4
   # secrets:
   #   - GITHUB_TOKEN
-  #   - RAILS_MASTER_KEY
+  #   - SECRET_KEY_BASE
 
 # Use a different ssh user than root
 # ssh:

@@ -1,7 +1,7 @@
 class ChaptersController < ApplicationController
   before_action :load_context, only: %i[show enqueue_download update_progress remove_download cancel_download pin_for_offline unpin_for_offline offline_pages]
   before_action :load_source_for_offline_image, only: %i[offline_page_image]
-  before_action :require_local_downloads_enabled, only: %i[pin_for_offline unpin_for_offline offline_pages offline_page_image]
+  before_action :require_local_downloads_enabled, only: %i[pin_for_offline unpin_for_offline offline_pages]
   # Authentication handled by ApplicationController
 
   helper_method :source_slug
@@ -472,7 +472,7 @@ class ChaptersController < ApplicationController
         cache_key: offline_image_cache_key_for(page_url)
       )
 
-      ResultTypes::Page.new(
+      Scrapers::ResultTypes::Page.new(
         index: page.respond_to?(:index) && page.index.present? ? page.index : idx + 1,
         url: proxied_url,
         mime_type: page.respond_to?(:mime_type) ? page.mime_type : nil

@@ -11,6 +11,7 @@ module Scrapers
     ].freeze
     FILTER_OPTIONS_CACHE_KEY = "scrapers/mangadex/filter_options".freeze
     FILTER_OPTIONS_CACHE_TTL = 12.hours
+    UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 
     def search(query, filters: {})
       response = http.get("/manga", params: {
@@ -272,16 +273,20 @@ module Scrapers
 
     def extract_manga_id(id_or_url)
       url = id_or_url.to_s
-      return url if url.match?(/\A[0-9a-f-]{36}\z/i)
+      if (match = url.match(/\A(?:manga\/)?(#{UUID_PATTERN})\z/i))
+        return match[1]
+      end
 
-      url[/\/title\/([0-9a-f-]{36})/i, 1] || url
+      url[%r{/(?:title|manga)/(#{UUID_PATTERN})(?:[/?#]|$)}i, 1] || url
     end
 
     def extract_chapter_id(id_or_url)
       url = id_or_url.to_s
-      return url if url.match?(/\A[0-9a-f-]{36}\z/i)
+      if (match = url.match(/\A(?:chapter\/)?(#{UUID_PATTERN})\z/i))
+        return match[1]
+      end
 
-      url[/\/chapter\/([0-9a-f-]{36})/i, 1] || url
+      url[%r{/chapter/(#{UUID_PATTERN})(?:[/?#]|$)}i, 1] || url
     end
 
     def cover_url(item)

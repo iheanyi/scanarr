@@ -3,9 +3,9 @@
     <%= link_to source_preview_path(source_slug: source_slug(@source), series_url: result.url),
                 class: "block focus:outline-none",
                 data: { turbo_frame: "_top" } do %>
-      <div class="scanarr-cover-tile transition-all duration-200 group-hover/series:-translate-y-1 group-hover/series:border-accent/30 group-hover/series:shadow-[0_28px_70px_rgba(0,0,0,0.38)] group-focus-within:ring-2 group-focus-within:ring-accent group-focus-within:ring-offset-2 group-focus-within:ring-offset-background">
+      <div class="scanarr-cover-tile transition-transform duration-200 group-hover/series:-translate-y-0.5 group-focus-within:ring-2 group-focus-within:ring-accent group-focus-within:ring-offset-2 group-focus-within:ring-offset-background">
         <%= render UI::SeriesCoverComponent.new(
-          url: result.cover_url,
+          url: source_preview_image_proxy_path(result.cover_url),
           alt: "#{result.title} cover",
           size: :full,
           aspect: "2/3",
@@ -21,8 +21,8 @@
           <% end %>
           <% cover.with_overlay do %>
             <% if result.respond_to?(:description) && result.description.present? %>
-              <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover/series:opacity-100 group-focus-within:opacity-100">
-                <p class="text-xs leading-snug text-white/70 line-clamp-4">
+              <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-background/88 p-3 opacity-0 transition-opacity duration-200 group-hover/series:opacity-100 group-focus-within:opacity-100">
+                <p class="text-xs leading-snug text-muted line-clamp-4">
                   <%= truncate(result.description, length: 220) %>
                 </p>
               </div>
@@ -38,7 +38,7 @@
                     source_import_path(source_slug: source_slug(@source)),
                     method: :post,
                     params: { series_url: result.url },
-                    class: "pointer-events-auto inline-flex items-center justify-center rounded-md bg-accent px-2 py-1 text-[11px] font-semibold text-accent-foreground shadow-sm hover:bg-accent-strong focus:outline-none focus:ring-2 focus:ring-accent-strong",
+                    class: "pointer-events-auto inline-flex h-7 items-center justify-center rounded-md border border-border-soft bg-background/90 px-2.5 text-[11px] font-semibold text-foreground backdrop-blur hover:border-accent/40 hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent",
                     form: { class: "pointer-events-auto", data: { turbo_frame: "_top" } },
                     data: { turbo_submits_with: "Importing..." } %>
     </div>
@@ -48,7 +48,7 @@
         <%= render UI::StatusBadgeComponent.new(
           status: result.status,
           bordered: true,
-          class: "bg-surface text-foreground border-border shadow-sm"
+          class: "bg-surface text-foreground border-border"
         ) %>
       </div>
     <% end %>

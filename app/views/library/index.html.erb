@@ -152,7 +152,7 @@
           <% cache [ series, series.cover_image_url, progress[:downloaded], progress[:total], progress[:downloading], source&.slug, followed, unread, @status ] do %>
           <%= link_to series_path, class: "group/series flex min-w-0 flex-col", data: { turbo_frame: "_top" } do %>
             <%# Cover zone %>
-            <div class="scanarr-cover-tile transition-all duration-200 group-hover/series:-translate-y-1 group-hover/series:border-accent/30 group-hover/series:shadow-[0_28px_70px_rgba(0,0,0,0.38)]">
+            <div class="scanarr-cover-tile transition-all duration-200 group-hover/series:-translate-y-1 group-hover/series:border-accent/30">
               <%= render UI::SeriesCoverComponent.new(
                 url: series.cover_image_url,
                 alt: series.canonical_title,
@@ -170,7 +170,7 @@
                 <% end %>
                 <% cover.with_overlay do %>
                   <%# Hover overlay with title and description %>
-                  <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover/series:opacity-100">
+                  <div class="pointer-events-none absolute inset-0 flex flex-col justify-end bg-background/88 p-3 opacity-0 transition-opacity duration-200 group-hover/series:opacity-100">
                     <h3 class="text-sm font-semibold leading-tight text-white line-clamp-2">
                       <%= series.canonical_title %>
                     </h3>
@@ -184,7 +184,7 @@
 
                   <%# Progress bar (always visible when applicable) %>
                   <% if progress[:total] > 0 %>
-                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 to-transparent p-2 pt-8 transition-opacity duration-200 group-hover/series:opacity-0">
+                    <div class="absolute inset-x-0 bottom-0 bg-background/90 p-2 transition-opacity duration-200 group-hover/series:opacity-0">
                       <div class="flex items-center justify-between text-xs">
                         <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
                           <%= progress[:downloaded] %>/<%= progress[:total] %>

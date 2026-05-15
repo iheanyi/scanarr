@@ -31,7 +31,7 @@ class Series < ApplicationRecord
 
   # Returns the cover image URL - prefers local attachment, falls back to remote URL
   def cover_image_url
-    return cover_url unless cover.attached?
+    return cover_url unless cover.attached? && attached_cover_available?
 
     url_helpers = Rails.application.routes.url_helpers
 
@@ -42,6 +42,14 @@ class Series < ApplicationRecord
     else
       cover_url
     end
+  end
+
+  def attached_cover_available?
+    blob = cover.blob
+    return false unless blob
+    return true unless blob.service.class.name == "ActiveStorage::Service::DiskService"
+
+    blob.service.exist?(blob.key)
   end
 
   # Returns download progress stats for this series

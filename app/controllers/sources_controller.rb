@@ -1,7 +1,7 @@
 class SourcesController < ApplicationController
   before_action :set_source, only: %i[search browse preview preview_read preview_image import]
 
-  helper_method :source_slug, :preview_image_token_for, :source_search_params, :source_browse_params, :source_filter_label
+  helper_method :source_slug, :preview_image_token_for, :source_preview_image_proxy_path, :source_search_params, :source_browse_params, :source_filter_label
 
   SORT_OPTIONS = {
     "name_asc" => "Name A–Z",
@@ -365,6 +365,15 @@ class SourcesController < ApplicationController
       },
       purpose: PREVIEW_IMAGE_TOKEN_PURPOSE,
       expires_in: PREVIEW_IMAGE_TOKEN_TTL
+    )
+  end
+
+  def source_preview_image_proxy_path(image_url)
+    return nil if image_url.blank?
+
+    source_preview_image_path(
+      source_slug: source_slug(@source),
+      token: preview_image_token_for(image_url)
     )
   end
 

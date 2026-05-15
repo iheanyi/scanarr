@@ -79,6 +79,19 @@ class MangadexAdapterTest < ActiveSupport::TestCase
     assert_equal "1", chapters.first.number
   end
 
+  def test_chapters_accepts_api_manga_path
+    chapters = @adapter.chapters("manga/#{@manga_id}")
+
+    assert_equal 2, chapters.size
+    assert_equal "1", chapters.first.number
+  end
+
+  def test_series_accepts_api_manga_url
+    series = @adapter.series("#{@base_url}/manga/#{@manga_id}")
+
+    assert_equal "Naruto", series.title
+  end
+
   def test_pages_returns_urls
     pages = @adapter.pages(@chapter_id)
 

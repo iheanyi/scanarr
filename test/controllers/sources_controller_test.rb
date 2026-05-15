@@ -51,7 +51,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     def browse(sort:, page:, limit:, filters: {})
       @last_browse_filters = filters
       [
-        ResultTypes::BrowseResult.new(
+        Scrapers::ResultTypes::BrowseResult.new(
           id: "browse-#{sort}-#{page}-#{limit}",
           title: "Browse Series",
           url: "https://weebcentral.com/series/BROWSE",
@@ -63,7 +63,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     def search(_query, filters: {})
       @last_search_filters = filters
       [
-        ResultTypes::SearchResult.new(
+        Scrapers::ResultTypes::SearchResult.new(
           id: "series-123",
           title: "One Piece",
           url: "https://weebcentral.com/series/OP",
@@ -74,22 +74,27 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     def series(_url)
-      ResultTypes::Series.new(id: "series-123", title: "One Piece", url: "https://weebcentral.com/series/OP")
+      Scrapers::ResultTypes::Series.new(
+        id: "series-123",
+        title: "One Piece",
+        url: "https://weebcentral.com/series/OP",
+        cover_url: "https://img.example.com/series-cover.jpg"
+      )
     end
 
     def chapters(_series_url)
       [
-        ResultTypes::Chapter.new(id: "ch-1", title: "Chapter 1", number: "1", url: "https://weebcentral.com/chapters/01CHAPTER"),
-        ResultTypes::Chapter.new(id: "ch-2", title: "Chapter 2", number: "2", url: "https://weebcentral.com/chapters/02CHAPTER"),
-        ResultTypes::Chapter.new(id: "ch-3", title: "Chapter 3", number: "3", url: "https://weebcentral.com/chapters/03CHAPTER")
+        Scrapers::ResultTypes::Chapter.new(id: "ch-1", title: "Chapter 1", number: "1", url: "https://weebcentral.com/chapters/01CHAPTER"),
+        Scrapers::ResultTypes::Chapter.new(id: "ch-2", title: "Chapter 2", number: "2", url: "https://weebcentral.com/chapters/02CHAPTER"),
+        Scrapers::ResultTypes::Chapter.new(id: "ch-3", title: "Chapter 3", number: "3", url: "https://weebcentral.com/chapters/03CHAPTER")
       ]
     end
 
     def pages(chapter_url)
       chapter_id = chapter_url.split("/").last
       [
-        ResultTypes::Page.new(index: 1, url: "https://img.example.com/#{chapter_id}-1.jpg", mime_type: "image/jpeg"),
-        ResultTypes::Page.new(index: 2, url: "https://img.example.com/#{chapter_id}-2.jpg", mime_type: "image/jpeg")
+        Scrapers::ResultTypes::Page.new(index: 1, url: "https://img.example.com/#{chapter_id}-1.jpg", mime_type: "image/jpeg"),
+        Scrapers::ResultTypes::Page.new(index: 2, url: "https://img.example.com/#{chapter_id}-2.jpg", mime_type: "image/jpeg")
       ]
     end
 
@@ -144,7 +149,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_includes @response.body, "One Piece"
-      assert_includes @response.body, "https://img.example.com/cover.jpg"
+      assert_select "img[src*='/sources/weeb-central/preview/image?token=']", count: 1
+      assert_not_includes @response.body, "https://img.example.com/cover.jpg"
     end
   end
 
@@ -155,6 +161,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select "turbo-frame#browse-content form select[name='sort'][data-action='change->auto-submit#submit']"
       assert_select "turbo-frame#browse-content button", text: "Apply", count: 0
+      assert_select "img[src*='/sources/weeb-central/preview/image?token=']", count: 1
+      assert_not_includes @response.body, "https://img.example.com/browse-cover.jpg"
     end
   end
 
@@ -248,6 +256,8 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_select "a[href*='/sources/weeb-central/preview/read'][href*='chapter_url=']", minimum: 1
+      assert_select "img[src*='/sources/weeb-central/preview/image?token=']", count: 1
+      assert_not_includes @response.body, "https://img.example.com/series-cover.jpg"
       assert_select "a", text: "Read", minimum: 1
     end
   end
@@ -263,9 +273,11 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select "main[data-controller='reader']"
       assert_select "img[src*='/sources/weeb-central/preview/image?token=']", count: 2
-      assert_select "a", text: "Previous Chapter", count: 1
-      assert_select "a", text: "Next Chapter", count: 1
+      assert_select "nav[aria-label='Reader controls']", count: 1
+      assert_select "a", text: "Prev", count: 1
+      assert_select "a", text: "Next", count: 1
       assert_select "h2", text: "Chapter 2"
+      assert_select "[data-reader-target='nextChapterOverlay']", count: 1
       assert_includes @response.body, "reader#lightboxPointerDown"
       assert_includes @response.body, "reader#lightboxPointerMove"
       assert_includes @response.body, "reader#lightboxPointerUp"

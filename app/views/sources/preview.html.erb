@@ -65,7 +65,7 @@
       <div class="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
         <%# Cover and quick actions %>
         <div class="space-y-4">
-          <%= render UI::SeriesCoverComponent.new(url: @series.cover_url, alt: "#{@series.title} cover", size: :xl, aspect: "2/3", rounded: :lg, class: "w-full max-w-[280px] max-h-[60vh]") %>
+          <%= render UI::SeriesCoverComponent.new(url: source_preview_image_proxy_path(@series.cover_url), alt: "#{@series.title} cover", size: :xl, aspect: "2/3", rounded: :lg, class: "w-full max-w-[280px] max-h-[60vh]") %>
 
           <%= button_to "Import to Library",
                         source_import_path(source_slug: source_slug(@source)),

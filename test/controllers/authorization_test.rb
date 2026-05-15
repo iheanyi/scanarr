@@ -30,6 +30,12 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
+  def test_member_cannot_access_admin_jobs_dashboard
+    get "/admin/jobs"
+
+    assert_redirected_to root_path
+  end
+
   def test_member_cannot_enable_disable_sources
     source = sources(:one)
     patch settings_source_path(source_id: source.id), params: { enabled: "0" }

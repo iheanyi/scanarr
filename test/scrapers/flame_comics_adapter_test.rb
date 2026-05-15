@@ -295,6 +295,14 @@ class FlameComicsAdapterTest < ActiveSupport::TestCase
     assert_equal "completed", completed_result.status
   end
 
+  def test_browse_strips_html_from_description
+    results = @adapter.browse(sort: "popular", page: 1, limit: 10)
+
+    completed_result = results.find { |r| r.title == "Solo Leveling" }
+
+    assert_equal "A great manhwa about leveling up.", completed_result.description
+  end
+
   private
 
   def homepage_fixture

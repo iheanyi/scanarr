@@ -59,6 +59,25 @@
     </div>
   </section>
 
+  <%# Appearance %>
+  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+    <div>
+      <h2 class="text-lg font-semibold">Appearance</h2>
+      <p class="text-sm text-muted mt-1">Choose the app theme used across Scanarr.</p>
+    </div>
+
+    <%= form_with model: @user, url: settings_path, method: :patch, data: { turbo_submits_with: "Saving..." } do |f| %>
+      <%= render UI::AutoSelectComponent.new(
+        form: f,
+        method: :theme,
+        options: User::THEME_OPTIONS,
+        selected: @user.effective_theme,
+        label: "App Theme",
+        hint: "Signal Coral is the default for users who have not chosen a theme."
+      ) %>
+    <% end %>
+  </section>
+
   <%# Reading Preferences %>
   <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
     <div>

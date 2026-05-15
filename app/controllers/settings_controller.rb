@@ -134,11 +134,16 @@ class SettingsController < ApplicationController
       :default_check_interval_minutes,
       :local_downloads_enabled,
       :notifications_enabled,
-      :notification_auto_cleanup_days
+      :notification_auto_cleanup_days,
+      :theme
     )
 
     if permitted[:default_reading_style].present?
       permitted[:default_reading_style] = ReadingStyles.normalize(permitted[:default_reading_style])
+    end
+
+    if permitted[:theme].present?
+      permitted[:theme] = ScanarrThemes.normalize(permitted[:theme])
     end
 
     permitted

@@ -37,114 +37,113 @@
         data-reader-next-chapter-url-value="<%= next_chapter_url %>"
         data-reader-next-chapter-title-value="<%= next_chapter_title %>"
         <% end %>
-        class="space-y-6">
-    <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
-      <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground", data: { turbo_preload: "" } %>
-      <span class="text-muted-2">/</span>
-      <%= link_to "Preview", source_preview_path(source_slug: source_slug(@source), series_url: @series_url), class: "hover:text-foreground", data: { turbo_preload: "" } %>
-      <span class="text-muted-2">/</span>
-      <span class="text-foreground truncate max-w-xs">Ch. <%= chapter_number %></span>
-    </nav>
+        class="scanarr-reader-page space-y-5">
+    <div class="mx-auto w-full max-w-7xl space-y-4 px-4 py-4 lg:px-6 lg:py-8">
+      <section class="scanarr-reader-stage rounded-2xl p-4 md:p-5">
+        <div class="space-y-5">
+          <nav class="flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
+            <%= link_to @source.name, source_browse_path(source_slug: source_slug(@source)), class: "hover:text-foreground", data: { turbo_preload: "" } %>
+            <span class="text-muted-2">/</span>
+            <%= link_to "Preview", source_preview_path(source_slug: source_slug(@source), series_url: @series_url), class: "hover:text-foreground", data: { turbo_preload: "" } %>
+            <span class="text-muted-2">/</span>
+            <span class="text-foreground truncate max-w-xs">Ch. <%= chapter_number %></span>
+          </nav>
 
-    <header class="space-y-3">
-      <div>
-        <h1 class="text-2xl font-semibold text-balance"><%= @series.title %></h1>
-        <% if @series.author.present? || @series.artist.present? %>
-          <p class="text-sm text-muted">
-            <% if @series.author.present? && @series.artist.present? && @series.author != @series.artist %>
-              by <%= @series.author %> · Art by <%= @series.artist %>
-            <% elsif @series.author.present? %>
-              by <%= @series.author %>
-            <% elsif @series.artist.present? %>
-              by <%= @series.artist %>
+          <header class="space-y-3">
+            <div>
+              <h1 class="text-2xl font-semibold text-balance tracking-tight md:text-3xl"><%= @series.title %></h1>
+              <% if @series.author.present? || @series.artist.present? %>
+                <p class="text-sm text-muted">
+                  <% if @series.author.present? && @series.artist.present? && @series.author != @series.artist %>
+                    by <%= @series.author %> · Art by <%= @series.artist %>
+                  <% elsif @series.author.present? %>
+                    by <%= @series.author %>
+                  <% elsif @series.artist.present? %>
+                    by <%= @series.artist %>
+                  <% end %>
+                </p>
+              <% end %>
+            </div>
+            <div class="border-t border-border/80 pt-3">
+              <h2 class="text-xl font-medium text-foreground">Chapter <%= chapter_number %></h2>
+              <% if @chapter&.title.present? %>
+                <p class="text-muted text-pretty"><%= @chapter.title %></p>
+              <% end %>
+            </div>
+          </header>
+        </div>
+      </section>
+
+      <nav class="scanarr-reader-controls sticky top-3 z-20 mx-auto w-fit max-w-full rounded-lg border border-border/80 bg-background/90 p-1.5 shadow-sm backdrop-blur-xl" aria-label="Reader controls" data-reader-target="controls">
+        <div class="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
+          <% if page_count.positive? %>
+            <div class="flex h-8 shrink-0 items-center gap-2 rounded-md bg-surface/55 px-2.5 text-xs text-foreground">
+              <span class="shrink-0 tabular-nums" data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
+              <div class="h-1.5 w-20 rounded-full bg-surface-2 md:w-32">
+                <div data-reader-target="progressBar"
+                     class="h-1.5 rounded-full bg-accent transition-[width] duration-200"
+                     style="width: <%= progress_percent %>%"></div>
+              </div>
+              <span class="shrink-0 tabular-nums" data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
+            </div>
+            <button type="button"
+                    class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-border bg-surface/70 px-2 text-sm font-medium text-foreground hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    data-action="click->reader#toggleLightbox">
+              <%= icon "maximize-2", class: "h-3.5 w-3.5", aria: { hidden: true } %>
+              Lightbox
+            </button>
+          <% end %>
+          <% if @previous_chapter %>
+            <%= link_to source_preview_read_path(
+                source_slug: source_slug(@source),
+                series_url: @series_url,
+                chapter_url: @previous_chapter.url,
+                reading_style: @reading_style
+              ),
+              class: "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-surface/70 px-2 text-sm font-medium text-muted hover:bg-surface-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              data: { turbo_preload: "" } do %>
+              <%= icon "chevron-left", class: "h-3.5 w-3.5", aria: { hidden: true } %>
+              Prev
             <% end %>
-          </p>
-        <% end %>
-      </div>
-      <div class="border-t border-border pt-3">
-        <h2 class="text-xl font-medium text-foreground">Chapter <%= chapter_number %></h2>
-        <% if @chapter&.title.present? %>
-          <p class="text-muted text-pretty"><%= @chapter.title %></p>
-        <% end %>
-      </div>
-    </header>
-
-    <% if page_count.positive? %>
-      <div class="sticky top-4 z-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
-        <div class="flex items-center justify-between text-xs text-foreground">
-          <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
-          <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
+          <% end %>
+          <% if @next_chapter %>
+            <%= link_to source_preview_read_path(
+                source_slug: source_slug(@source),
+                series_url: @series_url,
+                chapter_url: @next_chapter.url,
+                reading_style: @reading_style
+              ),
+              class: "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border bg-surface/70 px-2 text-sm font-medium text-muted hover:bg-surface-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              data: { turbo_preload: "" } do %>
+              Next
+              <%= icon "chevron-right", class: "h-3.5 w-3.5", aria: { hidden: true } %>
+            <% end %>
+          <% end %>
+          <%= button_to "Import",
+                        source_import_path(source_slug: source_slug(@source)),
+                        method: :post,
+                        params: { series_url: @series_url },
+                        class: "inline-flex h-8 shrink-0 items-center rounded-md border border-border-soft bg-surface/70 px-2.5 text-sm font-medium text-foreground hover:border-accent/35 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        form: { class: "shrink-0" },
+                        data: { turbo_submits_with: "Importing..." } %>
+          <%= form_with url: source_preview_read_path(source_slug: source_slug(@source)),
+                        method: :get,
+                        local: true,
+                        class: "shrink-0",
+                        data: { turbo_submits_with: "Updating..." } do |form| %>
+            <%= hidden_field_tag :series_url, @series_url %>
+            <%= hidden_field_tag :chapter_url, @chapter_url %>
+            <%= render UI::AutoSelectComponent.new(
+              form: form,
+              method: :reading_style,
+              options: User::READING_STYLE_OPTIONS,
+              selected: @reading_style,
+              size: :sm,
+              full_width: false
+            ) %>
+          <% end %>
         </div>
-        <div class="mt-2 h-1 w-full rounded-full bg-surface-2">
-          <div data-reader-target="progressBar"
-               class="h-1 rounded-full bg-accent transition-[width] duration-200"
-               style="width: <%= progress_percent %>%"></div>
-        </div>
-      </div>
-    <% end %>
-
-    <nav class="flex flex-wrap items-center gap-2">
-      <% if page_count.positive? %>
-        <%= render UI::ButtonComponent.new(
-          variant: :ghost,
-          size: :sm,
-          data: { action: "click->reader#toggleLightbox" }
-        ) do %>
-          Lightbox
-        <% end %>
-      <% end %>
-      <% if @previous_chapter %>
-        <%= render UI::ButtonComponent.new(
-          variant: :ghost,
-          size: :sm,
-          href: source_preview_read_path(
-            source_slug: source_slug(@source),
-            series_url: @series_url,
-            chapter_url: @previous_chapter.url,
-            reading_style: @reading_style
-          ),
-          data: { turbo_preload: "" }
-        ) do %>
-          Previous Chapter
-        <% end %>
-      <% end %>
-      <% if @next_chapter %>
-        <%= render UI::ButtonComponent.new(
-          variant: :ghost,
-          size: :sm,
-          href: source_preview_read_path(
-            source_slug: source_slug(@source),
-            series_url: @series_url,
-            chapter_url: @next_chapter.url,
-            reading_style: @reading_style
-          ),
-          data: { turbo_preload: "" }
-        ) do %>
-          Next Chapter
-        <% end %>
-      <% end %>
-      <%= button_to "Import to Library",
-                    source_import_path(source_slug: source_slug(@source)),
-                    method: :post,
-                    params: { series_url: @series_url },
-                    class: "rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong",
-                    data: { turbo_submits_with: "Importing..." } %>
-      <%= form_with url: source_preview_read_path(source_slug: source_slug(@source)),
-                    method: :get,
-                    local: true,
-                    data: { turbo_submits_with: "Updating..." } do |form| %>
-        <%= hidden_field_tag :series_url, @series_url %>
-        <%= hidden_field_tag :chapter_url, @chapter_url %>
-        <%= render UI::AutoSelectComponent.new(
-          form: form,
-          method: :reading_style,
-          options: User::READING_STYLE_OPTIONS,
-          selected: @reading_style,
-          size: :sm,
-          full_width: false
-        ) %>
-      <% end %>
-    </nav>
+      </nav>
 
     <% viewport_class = if is_horizontal
                           base = "flex overflow-x-auto snap-x snap-mandatory w-full"
@@ -159,7 +158,7 @@
     <% page_class = if is_horizontal
                       "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
        elsif is_webtoon
-                      "w-full max-w-3xl cursor-pointer"
+                      "w-full max-w-4xl cursor-pointer"
        elsif is_paged_vertical
                       "snap-start min-h-[82vh] w-full max-w-2xl flex items-center justify-center px-2 py-2 cursor-pointer"
        else
@@ -172,7 +171,7 @@
        end %>
 
     <section data-reader-target="viewport"
-             class="<%= viewport_class %>"
+             class="scanarr-reader-stage rounded-2xl p-2 md:p-4 <%= viewport_class %>"
              data-reader-rtl="<%= is_rtl %>">
       <% if @source_error.present? %>
         <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-screen flex flex-col items-center justify-center" : "" %>">
@@ -251,6 +250,49 @@
           </div>
         </div>
       <% end %>
+    </div>
+    <% if @next_chapter %>
+      <div data-reader-target="nextChapterOverlay"
+           class="fixed inset-0 z-[60] hidden items-center justify-center bg-background/98 p-6">
+        <div class="w-full max-w-md space-y-5 text-center">
+          <div class="space-y-2">
+            <p class="font-mono text-sm tracking-wide text-muted uppercase">End of Chapter</p>
+            <h2 class="text-3xl font-semibold text-balance tracking-tight text-foreground">Continue reading?</h2>
+          </div>
+
+          <div class="space-y-1 rounded-lg border border-border bg-surface p-4">
+            <p class="text-sm text-muted">Up next</p>
+            <p class="text-xl font-semibold text-foreground">
+              Chapter <%= @next_chapter.number || "?" %>
+              <% if @next_chapter.title.present? %>
+                <span class="mt-1 block text-sm font-normal text-muted"><%= @next_chapter.title %></span>
+              <% end %>
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <button type="button"
+                    data-action="click->reader#goToNextChapter"
+                    class="inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-3 text-base font-semibold text-accent-foreground hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+              Continue to next chapter
+              <span class="ml-2 inline-flex items-center justify-center rounded-full bg-background/20 px-2.5 py-0.5 text-sm font-semibold">
+                <span data-reader-target="nextChapterCountdown">5</span>s
+              </span>
+            </button>
+
+            <button type="button"
+                    data-action="click->reader#cancelNextChapter"
+                    class="inline-flex w-full items-center justify-center rounded-lg border border-border bg-surface-2 px-4 py-3 text-sm font-medium text-foreground hover:border-border-soft hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+              Stay on this chapter
+            </button>
+
+            <%= link_to "Back to preview",
+                        source_preview_path(source_slug: source_slug(@source), series_url: @series_url),
+                        class: "inline-block text-sm font-medium text-muted hover:text-foreground" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
     </div>
   </main>
 <% end %>

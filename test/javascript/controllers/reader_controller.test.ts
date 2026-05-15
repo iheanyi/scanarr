@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   navigationScrollBehaviorForStyle,
   observerThresholdForStyle,
+  resolveVisibleVerticalPageIndex,
   resolveLightboxSwipeAction,
   resolveLightboxTapZoneAction,
   usesVerticalLightboxForStyle
@@ -163,6 +164,30 @@ describe('Navigation Scroll Behavior Logic', () => {
     expect(navigationScrollBehaviorForStyle('right_to_left', true)).toBe('instant')
     expect(navigationScrollBehaviorForStyle('vertical', true)).toBe('instant')
     expect(navigationScrollBehaviorForStyle('webtoon', true)).toBe('instant')
+  })
+})
+
+describe('Vertical Reader Progress Logic', () => {
+  it('uses the first visible page in reading order', () => {
+    expect(resolveVisibleVerticalPageIndex([
+      { top: -477, bottom: 8370 },
+      { top: 8370, bottom: 15088 }
+    ], 993)).toBe(0)
+  })
+
+  it('advances once the previous page has fully left the viewport', () => {
+    expect(resolveVisibleVerticalPageIndex([
+      { top: -9100, bottom: -20 },
+      { top: -20, bottom: 6800 },
+      { top: 6800, bottom: 14000 }
+    ], 993)).toBe(1)
+  })
+
+  it('returns null when no page is visible', () => {
+    expect(resolveVisibleVerticalPageIndex([
+      { top: 1200, bottom: 2200 },
+      { top: 2300, bottom: 3300 }
+    ], 993)).toBeNull()
   })
 })
 

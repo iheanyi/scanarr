@@ -47,12 +47,35 @@ export function navigationScrollBehaviorForStyle(style: string, prefersReducedMo
   return "instant"
 }
 
+export type VerticalPageRect = Pick<DOMRectReadOnly, "top" | "bottom">
+
+export function resolveVisibleVerticalPageIndex(rects: VerticalPageRect[], viewportHeight: number): number | null {
+  if (viewportHeight <= 0) return null
+
+  let topmostVisibleIndex: number | null = null
+  let topmostVisibleTop = Infinity
+
+  rects.forEach((rect, index) => {
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0))
+    if (visibleHeight <= 0) return
+
+    if (rect.top < topmostVisibleTop) {
+      topmostVisibleTop = rect.top
+      topmostVisibleIndex = index
+    }
+  })
+
+  return topmostVisibleIndex
+}
+
 export default class extends Controller {
-  static targets = ["page", "viewport", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "lightboxScroll", "lightboxStrip", "lightboxHint", "lightboxProgressText", "lightboxPanel", "nextChapterOverlay", "nextChapterCountdown"]
+  static targets = ["page", "viewport", "controls", "progressText", "progressBar", "progressPercent", "lightbox", "lightboxImage", "lightboxScroll", "lightboxStrip", "lightboxHint", "lightboxProgressText", "lightboxPanel", "nextChapterOverlay", "nextChapterCountdown"]
   static values = { style: String, pageCount: Number, initialPageIndex: Number, progressUrl: String, nextChapterUrl: String, nextChapterTitle: String }
   declare readonly pageTargets: HTMLElement[]
   declare readonly viewportTarget: HTMLElement
   declare readonly hasViewportTarget: boolean
+  declare readonly controlsTarget: HTMLElement
+  declare readonly hasControlsTarget: boolean
   declare readonly progressTextTarget: HTMLElement
   declare readonly progressBarTarget: HTMLElement
   declare readonly progressPercentTarget: HTMLElement
@@ -108,6 +131,20 @@ export default class extends Controller {
   private lightboxCloseTimeout?: ReturnType<typeof setTimeout>
   private lightboxImageSwapTimeout?: ReturnType<typeof setTimeout>
   private handleOnlineBound?: () => void
+  private documentScrollFrame?: number
+  private lastDocumentScrollY = 0
+  private hasUserNavigated = false
+  private initialScrollRetryTimeout?: ReturnType<typeof setTimeout>
+  private initialScrollCleanup: Array<() => void> = []
+  private readonly handleDocumentScroll = () => {
+    if (this.documentScrollFrame) return
+
+    this.documentScrollFrame = requestAnimationFrame(() => {
+      this.documentScrollFrame = undefined
+      this.syncControlsFromDocumentScroll()
+      this.syncCurrentIndexFromDocumentScroll()
+    })
+  }
 
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -117,10 +154,14 @@ export default class extends Controller {
     void this.flushQueuedProgressUpdates()
     
     if (this.pageTargets.length > 0) {
-      this.currentIndex = this.resolveInitialIndex()
+      const initialIndex = this.resolveInitialIndex()
+      this.currentIndex = initialIndex
+      this.prepareImagesForInitialScroll(initialIndex)
       // Use instant scroll on initial load
       this.scrollToIndex(this.currentIndex, "instant")
       this.observePages()
+      this.setupDocumentScrollFallback()
+      this.setupInitialScrollCorrection(initialIndex)
       // Force initial state sync after scroll
       requestAnimationFrame(() => this.syncState())
     }
@@ -130,11 +171,14 @@ export default class extends Controller {
     window.removeEventListener("keydown", this.handleKeydown)
     if (this.handleOnlineBound) window.removeEventListener("online", this.handleOnlineBound)
     this.observer?.disconnect()
+    this.teardownDocumentScrollFallback()
     this.teardownVerticalLightbox()
     if (this.lightboxHintFadeTimeout) clearTimeout(this.lightboxHintFadeTimeout)
     if (this.lightboxCloseTimeout) clearTimeout(this.lightboxCloseTimeout)
     if (this.lightboxImageSwapTimeout) clearTimeout(this.lightboxImageSwapTimeout)
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
+    if (this.documentScrollFrame) cancelAnimationFrame(this.documentScrollFrame)
+    this.teardownInitialScrollCorrection()
     this.clearPendingNextChapterPrompt()
     this.clearNextChapterCountdown()
   }
@@ -165,17 +209,21 @@ export default class extends Controller {
     if (isRtl && !isVertical) {
       if (nextKeys.includes(event.key)) {
         event.preventDefault()
+        this.hasUserNavigated = true
         this.previous()
       } else if (prevKeys.includes(event.key)) {
         event.preventDefault()
+        this.hasUserNavigated = true
         this.next()
       }
     } else {
       if (nextKeys.includes(event.key)) {
         event.preventDefault()
+        this.hasUserNavigated = true
         this.next()
       } else if (prevKeys.includes(event.key)) {
         event.preventDefault()
+        this.hasUserNavigated = true
         this.previous()
       }
     }
@@ -186,6 +234,7 @@ export default class extends Controller {
     const target = event.currentTarget as HTMLElement
     const index = this.pageTargets.indexOf(target)
     if (index >= 0) {
+      this.hasUserNavigated = true
       this.currentIndex = index
       this.syncState()
       this.openLightbox()
@@ -341,6 +390,7 @@ export default class extends Controller {
   }
 
   next() {
+    this.hasUserNavigated = true
     this.hasInteracted = true
     const nextIndex = this.currentIndex + 1
     const navigationBehavior = this.navigationScrollBehavior()
@@ -364,6 +414,7 @@ export default class extends Controller {
   }
 
   previous() {
+    this.hasUserNavigated = true
     this.hasInteracted = true
     const navigationBehavior = this.navigationScrollBehavior()
     if (this.lightboxOpen && this.usesVerticalLightbox()) {
@@ -643,6 +694,122 @@ export default class extends Controller {
     )
 
     this.pageTargets.forEach((page) => this.observer?.observe(page))
+  }
+
+  private prepareImagesForInitialScroll(index: number) {
+    if (index <= 0) return
+
+    this.pageTargets.slice(0, index + 1).forEach((page) => {
+      const image = page.querySelector("img") as HTMLImageElement | null
+      if (!image) return
+      if (image.loading === "lazy") image.loading = "eager"
+    })
+  }
+
+  private setupInitialScrollCorrection(index: number) {
+    this.teardownInitialScrollCorrection()
+    if (index <= 0 || index >= this.pageTargets.length) return
+
+    const pendingImages = this.pageTargets
+      .slice(0, index + 1)
+      .map((page) => page.querySelector("img") as HTMLImageElement | null)
+      .filter((image): image is HTMLImageElement => Boolean(image) && (!image.complete || image.naturalHeight === 0))
+
+    const correctInitialScroll = () => {
+      if (this.hasUserNavigated || this.lightboxOpen) return
+      this.scrollToIndex(index, "instant")
+    }
+
+    if (pendingImages.length === 0) {
+      requestAnimationFrame(correctInitialScroll)
+      return
+    }
+
+    let remaining = pendingImages.length
+    const markImageSettled = () => {
+      remaining -= 1
+      if (remaining <= 0) correctInitialScroll()
+    }
+
+    pendingImages.forEach((image) => {
+      image.addEventListener("load", markImageSettled, { once: true })
+      image.addEventListener("error", markImageSettled, { once: true })
+      this.initialScrollCleanup.push(() => {
+        image.removeEventListener("load", markImageSettled)
+        image.removeEventListener("error", markImageSettled)
+      })
+    })
+
+    this.initialScrollRetryTimeout = setTimeout(correctInitialScroll, 2500)
+  }
+
+  private teardownInitialScrollCorrection() {
+    if (this.initialScrollRetryTimeout) clearTimeout(this.initialScrollRetryTimeout)
+    this.initialScrollRetryTimeout = undefined
+    this.initialScrollCleanup.forEach((cleanup) => cleanup())
+    this.initialScrollCleanup = []
+  }
+
+  private setupDocumentScrollFallback() {
+    if (this.isHorizontal() || this.isPagedVertical()) return
+    this.lastDocumentScrollY = this.documentScrollY()
+    window.addEventListener("scroll", this.handleDocumentScroll, { passive: true })
+  }
+
+  private teardownDocumentScrollFallback() {
+    window.removeEventListener("scroll", this.handleDocumentScroll)
+  }
+
+  private syncCurrentIndexFromDocumentScroll() {
+    if (this.isScrolling || this.lightboxOpen || this.pageTargets.length === 0) return
+
+    const index = resolveVisibleVerticalPageIndex(
+      this.pageTargets.map((page) => page.getBoundingClientRect()),
+      window.innerHeight
+    )
+
+    if (index === null || index === this.currentIndex) return
+
+    this.hasInteracted = true
+    this.currentIndex = index
+    this.syncState()
+  }
+
+  private syncControlsFromDocumentScroll() {
+    if (!this.hasControlsTarget) return
+
+    const scrollY = this.documentScrollY()
+    const delta = scrollY - this.lastDocumentScrollY
+    this.lastDocumentScrollY = scrollY
+
+    if (!this.isScrolling && Math.abs(delta) > 8) {
+      this.hasUserNavigated = true
+    }
+
+    if (this.isScrolling || this.lightboxOpen || scrollY < 80) {
+      this.showControls()
+      return
+    }
+
+    if (delta > 8) {
+      this.hideControls()
+    } else if (delta < -8) {
+      this.showControls()
+    }
+  }
+
+  private documentScrollY() {
+    return document.documentElement.scrollTop || document.body.scrollTop || 0
+  }
+
+  private hideControls() {
+    if (!this.hasControlsTarget) return
+    this.controlsTarget.classList.add("scanarr-reader-controls--hidden")
+  }
+
+  private showControls() {
+    if (!this.hasControlsTarget) return
+    this.controlsTarget.classList.remove("scanarr-reader-controls--hidden")
   }
 
   private syncState() {

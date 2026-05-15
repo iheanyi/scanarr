@@ -9,6 +9,12 @@ if [ -z "${RAILS_MASTER_KEY:-}" ]; then
   unset RAILS_MASTER_KEY
 fi
 
+if [ -z "${SECRET_KEY_BASE:-}" ] && [ -z "${RAILS_MASTER_KEY:-}" ]; then
+  echo "ERROR: Set SECRET_KEY_BASE in your environment or .env file." >&2
+  echo "Generate one with: openssl rand -hex 64" >&2
+  exit 1
+fi
+
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare

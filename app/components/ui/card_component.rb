@@ -33,7 +33,7 @@ module UI
       cn(
         "border border-border bg-surface",
         RADIUS[@radius.to_sym] || RADIUS[:lg],
-        @elevated ? "shadow-md" : "shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
+        "shadow-none",
         @interactive ? "transition-colors hover:bg-surface-2 hover:border-border-soft cursor-pointer" : nil,
         system_arguments[:class]
       )

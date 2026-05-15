@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <% immersive_reader = controller_name == "chapters" && action_name == "show" %>
+    <% immersive_reader = (controller_name == "chapters" && action_name == "show") || (controller_name == "sources" && action_name == "preview_read") %>
     <% page_direction = content_for(:page_direction).presence || "panel-pulse" %>
+    <% app_theme = ScanarrThemes.normalize(content_for(:scanarr_theme).presence || current_user&.effective_theme) %>
     <title>Scanarr</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="manifest" href="<%= pwa_manifest_path %>">
-    <meta name="theme-color" content="<%= page_direction == "panel-pulse" ? "#07111f" : "#05070b" %>">
+    <meta name="theme-color" content="<%= ScanarrThemes.meta_color(app_theme) %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icon.svg">
@@ -28,7 +29,7 @@
 
     <%= yield :head %>
   </head>
-  <body data-page-direction="<%= page_direction %>" class="min-h-dvh overflow-x-hidden bg-background text-pretty text-foreground">
+  <body data-page-direction="<%= page_direction %>" data-scanarr-theme="<%= app_theme %>" class="min-h-dvh overflow-x-hidden bg-background text-pretty text-foreground">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-foreground">Skip to content</a>
     <div data-controller="drawer" class="scanarr-app-shell min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
       <header class="flex items-center gap-3 border-b border-border/70 px-4 py-3 backdrop-blur-xl lg:hidden <%= immersive_reader ? "bg-background/85" : "bg-background/70" %>">
@@ -85,5 +86,8 @@
         </div>
       </dialog>
     </div>
+    <% if content_for?(:ui_picker) %>
+      <script src="https://ui.sh/ui-picker.js"></script>
+    <% end %>
   </body>
 </html>

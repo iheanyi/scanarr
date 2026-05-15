@@ -5,7 +5,9 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     get settings_path
 
     assert_response :success
+    assert_includes @response.body, 'data-scanarr-theme="signal-coral"'
     assert_includes @response.body, "Settings"
+    assert_includes @response.body, "Appearance"
     assert_includes @response.body, "Reading Preferences"
     assert_includes @response.body, "Download Defaults"
     assert_includes @response.body, "Notifications"
@@ -38,6 +40,24 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     user = User.find_by(email: "admin@scanarr.local")
 
     assert_not user.notifications_enabled?
+  end
+
+  def test_update_theme
+    patch settings_path, params: { user: { theme: "archive-noir" } }
+
+    assert_redirected_to settings_path
+    user = User.find_by(email: "admin@scanarr.local")
+
+    assert_equal "archive-noir", user.theme
+  end
+
+  def test_update_theme_normalizes_unknown_values
+    patch settings_path, params: { user: { theme: "does-not-exist" } }
+
+    assert_redirected_to settings_path
+    user = User.find_by(email: "admin@scanarr.local")
+
+    assert_equal "signal-coral", user.theme
   end
 
   def test_update_via_turbo_stream

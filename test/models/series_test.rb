@@ -53,4 +53,18 @@ class SeriesTest < ActiveSupport::TestCase
 
     assert_nil series.display_author
   end
+
+  def test_cover_image_url_falls_back_when_local_blob_file_is_missing
+    series = Series.create!(
+      canonical_title: "Missing Cover",
+      cover_url: "https://example.test/cover.jpg"
+    )
+    series.cover.attach(io: StringIO.new("cover-bytes"), filename: "cover.jpg", content_type: "image/jpeg")
+
+    assert_includes series.cover_image_url, "/rails/active_storage/blobs"
+
+    series.cover.blob.service.delete(series.cover.blob.key)
+
+    assert_equal "https://example.test/cover.jpg", series.cover_image_url
+  end
 end

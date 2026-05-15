@@ -191,7 +191,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     enable_local_download_mode
     file_assets(:one).update!(download_status: "failed")
     adapter = FakeAdapter.new(
-      pages: [ ResultTypes::Page.new(index: 1, url: "https://example.test/chapter/1/page-1.jpg") ],
+      pages: [ Scrapers::ResultTypes::Page.new(index: 1, url: "https://example.test/chapter/1/page-1.jpg") ],
       http: FakeHttp.new(body: "proxied-image-data")
     )
 
@@ -213,6 +213,27 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       assert_predicate query["cache_key"], :present?
 
       get page_url, headers: { "ACCEPT" => "image/jpeg" }
+
+      assert_response :success
+      assert_equal "image/jpeg", @response.media_type
+      assert_equal "proxied-image-data", @response.body
+    end
+  end
+
+  def test_offline_image_proxy_is_available_when_local_downloads_are_disabled
+    users(:admin).update!(local_downloads_enabled: "false")
+    adapter = FakeAdapter.new(http: FakeHttp.new(body: "proxied-image-data"))
+    token = Rails.application.message_verifier(:chapter_offline_image).generate(
+      {
+        source_slug: "weeb-central",
+        page_url: "https://example.test/chapter/1/page-1.jpg"
+      },
+      purpose: "chapter_offline_image",
+      expires_in: 6.hours
+    )
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/offline_image", params: { token: token, cache_key: "ignored" }, headers: { "ACCEPT" => "image/jpeg" }
 
       assert_response :success
       assert_equal "image/jpeg", @response.media_type

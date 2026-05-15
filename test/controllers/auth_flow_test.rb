@@ -1,6 +1,15 @@
 require "test_helper"
 
 class AuthFlowTest < ActionDispatch::IntegrationTest
+  def test_login_page_uses_default_theme
+    sign_out
+
+    get login_path
+
+    assert_response :success
+    assert_includes @response.body, 'data-scanarr-theme="signal-coral"'
+  end
+
   def test_login_with_valid_credentials
     sign_out
     post login_path, params: { username: "admin", password: "testpassword123" }

@@ -38,15 +38,15 @@ module UI
     def variant_classes
       case @variant.to_sym
       when :primary
-        "border border-accent/25 bg-accent text-accent-foreground shadow-[0_12px_30px_rgba(102,224,255,0.12)] hover:border-accent/40 hover:bg-accent-strong"
+        "border border-accent/30 bg-accent text-accent-foreground shadow-none hover:border-accent/50 hover:bg-accent-strong"
       when :secondary
-        "border border-border/80 bg-surface text-foreground shadow-sm hover:border-border-soft hover:bg-surface-2"
+        "border border-border/80 bg-surface text-foreground shadow-none hover:border-border-soft hover:bg-surface-2"
       when :ghost
-        "border border-border/80 bg-background/60 text-foreground shadow-sm hover:border-accent/20 hover:bg-surface"
+        "border border-border/80 bg-background/60 text-foreground shadow-none hover:border-accent/20 hover:bg-surface"
       when :danger
-        "border border-danger/30 bg-danger text-foreground shadow-[0_12px_24px_rgba(255,127,154,0.08)] hover:bg-danger/90"
+        "border border-danger/30 bg-danger text-foreground shadow-none hover:bg-danger/90"
       else
-        "border border-accent/25 bg-accent text-accent-foreground shadow-[0_12px_30px_rgba(102,224,255,0.12)] hover:border-accent/40 hover:bg-accent-strong"
+        "border border-accent/30 bg-accent text-accent-foreground shadow-none hover:border-accent/50 hover:bg-accent-strong"
       end
     end
 

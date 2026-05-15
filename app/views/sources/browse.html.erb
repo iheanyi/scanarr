@@ -1,5 +1,5 @@
-<div class="space-y-8">
-  <section class="scanarr-hero-panel rounded-[2rem] p-5 md:p-6">
+<div class="space-y-6">
+  <section>
     <%= render UI::PageHeaderComponent.new(
       title: "Browse",
       description: "Discover new series from this source.",
@@ -12,7 +12,7 @@
   <% else %>
     <% has_filter_options = @browse_filter_options.values.any?(&:present?) %>
     <%= turbo_frame_tag "browse-content", class: "has-loading-overlay" do %>
-      <section class="scanarr-subtle-panel rounded-[2rem] p-4 md:p-5">
+      <section class="scanarr-subtle-panel rounded-lg p-4">
         <%= form_with url: source_browse_path(source_slug: source_slug(@source)),
                       method: :get,
                       data: { turbo_frame: "browse-content", turbo_action: "advance" },
@@ -32,7 +32,7 @@
         </div>
 
         <% advanced_filters_active = @selected_genres.present? || @selected_statuses.present? %>
-        <details class="rounded-[1.25rem] border border-border/70 bg-background/60 p-3" <%= "open" if advanced_filters_active %>>
+        <details class="rounded-lg border border-border/70 bg-background/50 p-3" <%= "open" if advanced_filters_active %>>
           <summary class="cursor-pointer select-none text-sm font-medium text-muted hover:text-foreground">
             Advanced filters
           </summary>
@@ -104,14 +104,14 @@
           </section>
         <% end %>
 
-        <h2 class="text-xl font-semibold text-balance">
+        <h2 class="text-lg font-semibold text-balance">
           <%= @sort.titleize %> Series
         </h2>
 
         <% if @results.any? %>
           <% if @page == 1 %>
             <%# Single grid — turbo-frames use display:contents so all items flow seamlessly %>
-            <div class="browse-grid grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
+            <div class="browse-grid grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
               <% @results.each do |result| %>
                 <%= render "browse_card", result: result %>
               <% end %>

@@ -15,7 +15,7 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 8 }, if: -> { password.present? }
 
   before_save :generate_api_key
-  before_validation :normalize_default_reading_style
+  before_validation :normalize_default_reading_style, :normalize_theme
 
   # JSONB preferences with typed accessors
   store_accessor :preferences,
@@ -26,7 +26,8 @@ class User < ApplicationRecord
     :local_downloads_enabled,
     :notifications_enabled,
     :notification_auto_cleanup_days,
-    :default_source_priority
+    :default_source_priority,
+    :theme
 
   LANGUAGE_OPTIONS = [
     [ "Any", "" ],
@@ -64,6 +65,8 @@ class User < ApplicationRecord
     [ "After 90 days", "90" ]
   ].freeze
 
+  THEME_OPTIONS = ScanarrThemes::OPTIONS
+
   def effective_reading_style
     self.class.normalize_reading_style(default_reading_style)
   end
@@ -100,6 +103,10 @@ class User < ApplicationRecord
     notification_auto_cleanup_days.presence&.to_i
   end
 
+  def effective_theme
+    self.class.normalize_theme(theme)
+  end
+
   def setup_complete?
     password_digest.present? && username.present?
   end
@@ -112,12 +119,22 @@ class User < ApplicationRecord
     ReadingStyles.normalize(value)
   end
 
+  def self.normalize_theme(value)
+    ScanarrThemes.normalize(value)
+  end
+
   private
 
   def normalize_default_reading_style
     return if default_reading_style.blank?
 
     self.default_reading_style = self.class.normalize_reading_style(default_reading_style)
+  end
+
+  def normalize_theme
+    return if theme.blank?
+
+    self.theme = self.class.normalize_theme(theme)
   end
 
   def generate_api_key

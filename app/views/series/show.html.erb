@@ -9,7 +9,7 @@
   unread_count = [ chapter_count - read_count, 0 ].max
   active_download_count = @in_progress_count.to_i %>
 
-<div data-direction="panel-pulse" class="space-y-8">
+<div class="space-y-8">
   <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-sm text-muted">
     <%= link_to "Library", library_path, class: "hover:text-foreground", data: { turbo_preload: "" } %>
     <span class="text-muted-2">/</span>

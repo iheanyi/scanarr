@@ -54,14 +54,11 @@ module Scrapers
       series_data = data.dig("pageProps", "series")
       return nil unless series_data
 
-      description = series_data["description"]
-      description = Nokogiri::HTML.fragment(description).text if description.present?
-
       ResultTypes::Series.new(
         id: series_id.to_s,
         title: series_data["title"],
         alt_titles: series_data["altTitles"] || [],
-        description: description,
+        description: plain_text(series_data["description"]),
         author: Array(series_data["author"]).first,
         artist: Array(series_data["artist"]).first,
         status: STATUS_MAP.fetch(series_data["status"]&.downcase, "ongoing"),
@@ -283,7 +280,7 @@ module Scrapers
         status: STATUS_MAP.fetch(series_data["status"]&.downcase, nil),
         last_updated: series_data["last_edit"] ? Time.at(series_data["last_edit"]).utc : nil,
         chapter_count: nil,
-        description: series_data["description"]
+        description: plain_text(series_data["description"])
       )
     end
 
@@ -327,6 +324,12 @@ module Scrapers
       when /\.webp/ then "image/webp"
       else "image/jpeg"
       end
+    end
+
+    def plain_text(value)
+      return nil if value.blank?
+
+      Nokogiri::HTML.fragment(value.to_s).text.squish
     end
   end
   end

@@ -62,11 +62,28 @@ class UserPreferencesTest < ActiveSupport::TestCase
     assert_equal 30, @user.effective_cleanup_days
   end
 
+  def test_effective_theme_defaults_to_signal_coral
+    assert_equal "signal-coral", @user.effective_theme
+  end
+
+  def test_theme_returns_set_value
+    @user.update!(theme: "archive-noir")
+
+    assert_equal "archive-noir", @user.effective_theme
+  end
+
+  def test_theme_normalizes_unknown_values_to_default
+    @user.update!(theme: "unknown-theme")
+
+    assert_equal "signal-coral", @user.theme
+  end
+
   def test_preferences_persist_via_jsonb
     @user.update!(
       default_reading_style: "webcomic",
       default_download_policy: "auto_download",
-      notifications_enabled: "false"
+      notifications_enabled: "false",
+      theme: "oxide-shelf"
     )
 
     reloaded = User.find(@user.id)
@@ -74,5 +91,6 @@ class UserPreferencesTest < ActiveSupport::TestCase
     assert_equal "vertical", reloaded.default_reading_style
     assert_equal "auto_download", reloaded.default_download_policy
     assert_not reloaded.notifications_enabled?
+    assert_equal "oxide-shelf", reloaded.effective_theme
   end
 end

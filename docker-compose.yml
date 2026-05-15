@@ -38,8 +38,8 @@ services:
         condition: service_healthy
     environment:
       RAILS_ENV: production
-      RAILS_MASTER_KEY:
-      SECRET_KEY_BASE:
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:-}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env with openssl rand -hex 64}
       DB_HOST: postgres
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       SIDEKIQ_REDIS_URL: ${SIDEKIQ_REDIS_URL:-redis://redis:6379/1}
@@ -52,6 +52,12 @@ services:
       SCANARR_DISABLE_AUTH: ${SCANARR_DISABLE_AUTH:-false}
     volumes:
       - storage_data:/rails/storage
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
 
   sidekiq:
     build: .
@@ -62,13 +68,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      web:
+        condition: service_healthy
     environment:
       RAILS_ENV: production
-      RAILS_MASTER_KEY:
-      SECRET_KEY_BASE:
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:-}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env with openssl rand -hex 64}
       DB_HOST: postgres
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       SIDEKIQ_REDIS_URL: ${SIDEKIQ_REDIS_URL:-redis://redis:6379/1}
+      ACTION_CABLE_REDIS_URL: ${ACTION_CABLE_REDIS_URL:-redis://redis:6379/2}
       REDIS_CACHE_NAMESPACE: scanarr:cache:production
       SIDEKIQ_CONCURRENCY: ${SIDEKIQ_CONCURRENCY:-5}
       SCANARR_DATABASE_PASSWORD: ${SCANARR_DATABASE_PASSWORD:-scanarr}
