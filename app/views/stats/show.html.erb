@@ -97,6 +97,7 @@
                       class: "group space-y-2" do %>
             <%= render UI::SeriesCoverComponent.new(
               url: series.cover_image_url,
+              fallback_url: series.cover_fallback_url,
               alt: series.canonical_title,
               size: :full,
               aspect: "2/3",

@@ -67,6 +67,7 @@
                      class="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent">
               <%= render UI::SeriesCoverComponent.new(
                     url: series.cover_image_url,
+                    fallback_url: series.cover_fallback_url,
                     alt: "#{series.canonical_title} cover",
                     size: :sm,
                     rounded: :md,
@@ -105,6 +106,7 @@
             <div class="flex gap-3 rounded-lg border border-border bg-surface-2 p-3">
               <%= render UI::SeriesCoverComponent.new(
                     url: series.cover_image_url,
+                    fallback_url: series.cover_fallback_url,
                     alt: "#{series.canonical_title} cover",
                     size: :sm,
                     rounded: :md,

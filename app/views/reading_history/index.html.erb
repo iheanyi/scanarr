@@ -52,7 +52,13 @@
         <% chapter_path = source && series ? source_series_chapter_path(source.slug, series.to_param, chapter.chapter_number) : "#" %>
 
         <%= link_to chapter_path, class: "group flex items-center gap-4 rounded-lg border border-border/60 bg-surface p-3 transition-colors hover:border-accent/40 hover:bg-surface-2/60" do %>
-          <%= render UI::SeriesCoverComponent.new(url: series&.cover_image_url, alt: series&.canonical_title || "", size: :sm, rounded: :sm) %>
+          <%= render UI::SeriesCoverComponent.new(
+            url: series&.cover_image_url,
+            fallback_url: series&.cover_fallback_url,
+            alt: series&.canonical_title || "",
+            size: :sm,
+            rounded: :sm
+          ) %>
 
           <div class="flex-1 min-w-0">
             <p class="truncate text-sm font-medium text-foreground group-hover:text-accent transition-colors">

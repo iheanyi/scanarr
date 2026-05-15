@@ -54,7 +54,7 @@ class SeriesTest < ActiveSupport::TestCase
     assert_nil series.display_author
   end
 
-  def test_cover_image_url_falls_back_when_local_blob_file_is_missing
+  def test_cover_image_url_does_not_stat_disk_for_attached_cover
     series = Series.create!(
       canonical_title: "Missing Cover",
       cover_url: "https://example.test/cover.jpg"
@@ -63,8 +63,25 @@ class SeriesTest < ActiveSupport::TestCase
 
     assert_includes series.cover_image_url, "/rails/active_storage/blobs"
 
-    series.cover.blob.service.delete(series.cover.blob.key)
+    service = series.cover.blob.service
+    service.singleton_class.alias_method :original_exist_for_cover_test, :exist?
+    service.define_singleton_method(:exist?) { |*| raise "unexpected disk stat" }
 
-    assert_equal "https://example.test/cover.jpg", series.cover_image_url
+    begin
+      assert_includes series.cover_image_url, "/rails/active_storage/blobs"
+    ensure
+      service.singleton_class.alias_method :exist?, :original_exist_for_cover_test
+      service.singleton_class.remove_method :original_exist_for_cover_test
+    end
+  end
+
+  def test_cover_fallback_url_uses_remote_url_for_attached_cover
+    series = Series.create!(
+      canonical_title: "Fallback Cover",
+      cover_url: "https://example.test/cover.jpg"
+    )
+    series.cover.attach(io: StringIO.new("cover-bytes"), filename: "cover.jpg", content_type: "image/jpeg")
+
+    assert_equal "https://example.test/cover.jpg", series.cover_fallback_url
   end
 end

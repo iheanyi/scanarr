@@ -155,6 +155,7 @@
             <div class="scanarr-cover-tile transition-all duration-200 group-hover/series:-translate-y-1 group-hover/series:border-accent/30">
               <%= render UI::SeriesCoverComponent.new(
                 url: series.cover_image_url,
+                fallback_url: series.cover_fallback_url,
                 alt: series.canonical_title,
                 size: :full,
                 aspect: "2/3",

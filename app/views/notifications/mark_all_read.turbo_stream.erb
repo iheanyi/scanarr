@@ -2,7 +2,14 @@
   <ul id="notification-list" class="divide-y divide-border rounded-lg border border-border bg-surface">
     <% current_user.new_chapter_notifications.includes(chapter: { series: [ :sources, :cover_attachment ] }).order(created_at: :desc).limit(50).each do |notification| %>
       <li id="<%= dom_id(notification) %>" class="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-surface-2/40 opacity-60">
-        <%= render UI::SeriesCoverComponent.new(url: notification.chapter.series.cover_image_url, alt: "", size: :xs, rounded: :sm, class: "shrink-0") %>
+        <%= render UI::SeriesCoverComponent.new(
+          url: notification.chapter.series.cover_image_url,
+          fallback_url: notification.chapter.series.cover_fallback_url,
+          alt: "",
+          size: :xs,
+          rounded: :sm,
+          class: "shrink-0"
+        ) %>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-foreground truncate"><%= notification.chapter.series.canonical_title %></p>
           <p class="text-sm text-muted">

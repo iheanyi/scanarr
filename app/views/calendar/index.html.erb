@@ -72,7 +72,13 @@
             <% chapters.each do |chapter| %>
               <div class="px-4 py-3 flex items-center justify-between hover:bg-surface transition-colors">
                 <div class="flex items-center gap-4">
-                  <%= render UI::SeriesCoverComponent.new(url: chapter.series.cover_image_url, alt: chapter.series.canonical_title, size: :sm, rounded: :sm) %>
+                  <%= render UI::SeriesCoverComponent.new(
+                    url: chapter.series.cover_image_url,
+                    fallback_url: chapter.series.cover_fallback_url,
+                    alt: chapter.series.canonical_title,
+                    size: :sm,
+                    rounded: :sm
+                  ) %>
 
                   <div>
                     <h3 class="font-medium flex items-center gap-2">

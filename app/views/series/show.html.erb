@@ -25,6 +25,7 @@
           <div class="relative group">
             <%= render UI::SeriesCoverComponent.new(
               url: @series.cover_image_url,
+              fallback_url: @series.cover_fallback_url,
               alt: "#{@series.canonical_title} cover",
               size: :xl,
               aspect: "2/3",

@@ -35,7 +35,13 @@
                       data: { turbo_frame: "_top" },
                       class: "group rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors" do %>
             <div class="flex gap-4">
-              <%= render UI::SeriesCoverComponent.new(url: series.cover_image_url, alt: "#{series.canonical_title} cover", size: :lg, class: "shrink-0") %>
+              <%= render UI::SeriesCoverComponent.new(
+                url: series.cover_image_url,
+                fallback_url: series.cover_fallback_url,
+                alt: "#{series.canonical_title} cover",
+                size: :lg,
+                class: "shrink-0"
+              ) %>
               <div class="flex flex-col min-w-0">
                 <h2 class="text-lg font-semibold text-balance line-clamp-2 group-hover:text-accent transition-colors"><%= series.canonical_title %></h2>
                 <% if series.display_author.present? %>
