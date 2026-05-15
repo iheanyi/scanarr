@@ -370,7 +370,7 @@ GEM
       tsort
     redis (5.4.1)
       redis-client (>= 0.22.0)
-    redis-client (0.26.4)
+    redis-client (0.29.0)
       connection_pool
     regexp_parser (2.11.3)
     reline (0.6.3)
@@ -414,13 +414,13 @@ GEM
       logger
     rubyzip (3.2.2)
     securerandom (0.4.1)
-    sidekiq (8.1.0)
+    sidekiq (8.1.5)
       connection_pool (>= 3.0.0)
       json (>= 2.16.0)
       logger (>= 1.7.0)
       rack (>= 3.2.0)
-      redis-client (>= 0.26.0)
-    sidekiq-cron (2.3.1)
+      redis-client (>= 0.29.0)
+    sidekiq-cron (2.4.0)
       cronex (>= 0.13.0)
       fugit (~> 1.8, >= 1.11.1)
       globalid (>= 1.0.1)
