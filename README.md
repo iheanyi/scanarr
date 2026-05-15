@@ -59,7 +59,7 @@ bin/bundler-audit
 
 Some scraper/download tests depend on external-source behavior and can fail when sources time out, block requests, or change markup.
 
-Security automation also runs Gitleaks, Docker Compose smoke tests, and an image vulnerability scan in GitHub Actions. Dependency review, CodeQL, and blocking image-vulnerability failures are ready to enable with the `ENABLE_DEPENDENCY_REVIEW=true`, `ENABLE_CODEQL=true`, and `TRIVY_BLOCKING=true` repository variables once the matching GitHub security features are available.
+Security automation also runs Gitleaks, a blocking OSV lockfile scan, Docker Compose smoke tests, and an advisory image vulnerability scan in GitHub Actions. Dependency review, CodeQL, and blocking image-vulnerability failures are ready to enable with the `ENABLE_DEPENDENCY_REVIEW=true`, `ENABLE_CODEQL=true`, and `TRIVY_BLOCKING=true` repository variables once the matching GitHub security features or upstream image fixes are available.
 
 ## Legal
 

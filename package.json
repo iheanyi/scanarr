@@ -1,14 +1,18 @@
 {
   "name": "app",
   "private": true,
+  "resolutions": {
+    "picomatch": "4.0.4",
+    "yaml": "1.10.3"
+  },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
-    "@vitest/coverage-v8": "^4.0.18",
-    "esbuild": "^0.27.2",
+    "@vitest/coverage-v8": "^4.1.6",
+    "esbuild": "^0.27.7",
     "esbuild-postcss": "^0.0.4",
-    "jsdom": "^28.0.0",
+    "jsdom": "^28.1.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.6"
   },
   "scripts": {
     "build": "node esbuild.config.mjs",
@@ -20,10 +24,10 @@
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.23",
-    "@tailwindcss/postcss": "^4.1.18",
-    "autoprefixer": "^10.4.24",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.3.0",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.3.0",
     "turbo_power": "^0.7.1"
   }
 }
