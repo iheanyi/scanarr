@@ -77,15 +77,16 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     series_source = SeriesSource.find_by(source: release.source, series: release.chapter.series)
 
     assert_equal "SERIES123", series_source.source_series_id
-    assert_equal "weeb_central/one-piece", series_source.library_base_path
+    assert_equal "library/weeb_central/one-piece--#{release.chapter.series.public_id}", series_source.library_base_path
 
     file_asset = release.file_asset
 
-    assert_equal "weeb_central/one-piece/volumes/unknown/chapters/1", file_asset.path
+    assert_equal "library/weeb_central/one-piece--#{release.chapter.series.public_id}/volumes/unknown/chapters/1--#{release.chapter.public_id}", file_asset.path
     pages = file_asset.pages.order(:position).to_a
 
     assert_equal [ 1, 2 ], pages.map(&:position)
     assert_equal [ "001.png", "002.png" ], pages.map { |page| page.image.filename.to_s }
+    assert_equal [ "#{file_asset.path}/pages/001.png", "#{file_asset.path}/pages/002.png" ], pages.map { |page| page.image.blob.key }
     assert_equal [ "image/png", "image/png" ], pages.map { |page| page.image.content_type }
     assert_equal 2, file_asset.page_count
     assert_equal "complete", file_asset.download_status

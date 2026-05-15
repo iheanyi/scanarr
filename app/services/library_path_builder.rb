@@ -6,10 +6,12 @@ class LibraryPathBuilder
 
   def base_path
     title = slug(@series.canonical_title)
-    author = slug(@series.display_author)
     return nil if title.blank?
 
-    [ @source.key.to_s, [ title, author ].compact.join("-") ].join("/")
+    source = slug(@source&.key || @source&.slug || "unknown_source")
+    series_id = slug(@series.public_id.presence || @series.id || "unsaved")
+
+    [ "library", source, "#{title}--#{series_id}" ].join("/")
   end
 
   def chapter_path(chapter)
@@ -17,9 +19,32 @@ class LibraryPathBuilder
     return nil if base.blank?
 
     volume_segment = normalize_numeric(chapter.volume&.volume_number) || "unknown"
-    chapter_segment = normalize_numeric(chapter.chapter_number.presence || chapter.public_id) || "unknown"
+    chapter_number = normalize_numeric(chapter.chapter_number.presence || chapter.public_id) || "unknown"
+    chapter_id = slug(chapter.public_id.presence || chapter.id || "unsaved")
+    chapter_segment = "#{chapter_number}--#{chapter_id}"
 
     [ base, "volumes", volume_segment, "chapters", chapter_segment ].join("/")
+  end
+
+  def page_path(chapter, position:, extension:)
+    base = chapter_path(chapter)
+    return nil if base.blank?
+
+    [ base, "pages", "#{format('%03d', position)}.#{normalize_extension(extension)}" ].join("/")
+  end
+
+  def cover_path(extension:)
+    base = base_path
+    return nil if base.blank?
+
+    [ base, "covers", "cover.#{normalize_extension(extension)}" ].join("/")
+  end
+
+  def archive_path(chapter, extension: "cbz")
+    base = chapter_path(chapter)
+    return nil if base.blank?
+
+    [ base, "chapter.#{normalize_extension(extension)}" ].join("/")
   end
 
   private
@@ -35,5 +60,9 @@ class LibraryPathBuilder
     return raw if raw.match?(/\A[\d.]+\z/)
 
     raw.parameterize
+  end
+
+  def normalize_extension(extension)
+    extension.to_s.delete_prefix(".").parameterize.presence || "bin"
   end
 end

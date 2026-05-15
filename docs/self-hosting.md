@@ -23,6 +23,8 @@ Open `http://localhost:3000` and create the first admin account. On first boot, 
 
 Before exposing Scanarr outside localhost, edit `.env` and change `SCANARR_DATABASE_PASSWORD` from the example value.
 
+Compose builds a local app image from the checked-out repository and tags it as `${SCANARR_IMAGE:-scanarr}:${SCANARR_VERSION:-local}`. For a release checkout, set `SCANARR_VERSION=v0.1.0` or the tag you are running.
+
 ## Services
 
 Docker Compose starts four long-running services:
@@ -68,6 +70,71 @@ Copy `.env.example` to `.env` and configure these values.
 | `ACTION_CABLE_REDIS_URL` | `redis://redis:6379/2` | Action Cable pub/sub Redis URL. |
 | `RAILS_LOG_LEVEL` | `info` | Log verbosity: `debug`, `info`, `warn`, `error`, or `fatal`. |
 | `SCANARR_DISABLE_AUTH` | `false` | Set to `true` only for private single-user deployments behind a trusted VPN or reverse proxy. |
+| `ACTIVE_STORAGE_SERVICE` | `local` | Set to `local` for the Compose storage volume, or `s3` for AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
+| `ACTIVE_STORAGE_LOCAL_ROOT` | `/rails/storage` | Disk path for local Active Storage files inside the web and Sidekiq containers. |
+| `S3_ENDPOINT` | blank | Custom S3-compatible endpoint. Required for R2 and MinIO; usually blank for AWS S3. |
+| `S3_BUCKET` | blank | Bucket name for `ACTIVE_STORAGE_SERVICE=s3`. |
+| `S3_ACCESS_KEY_ID` | blank | S3-compatible access key. |
+| `S3_SECRET_ACCESS_KEY` | blank | S3-compatible secret key. |
+| `S3_REGION` | `auto` | Region for S3-compatible storage. Use `auto` for Cloudflare R2. |
+| `S3_FORCE_PATH_STYLE` | `true` | Use path-style bucket addressing. Use `false` for most AWS S3 buckets. |
+
+## Storage
+
+### Local Disk
+
+The default storage service writes downloaded pages, covers, generated CBZ archives, and backup artifacts into the `storage_data` volume mounted at `/rails/storage`.
+
+New downloads use readable Active Storage object keys:
+
+```text
+library/<source>/<series-slug>--<series-id>/volumes/<volume>/chapters/<chapter>--<chapter-id>/pages/001.jpg
+library/<source>/<series-slug>--<series-id>/covers/cover.jpg
+library/<source>/<series-slug>--<series-id>/volumes/<volume>/chapters/<chapter>--<chapter-id>/chapter.cbz
+```
+
+Existing blobs keep whatever key they were created with. Re-downloaded chapters, refreshed covers, and newly packaged archives use the readable layout.
+
+### Cloudflare R2
+
+```env
+ACTIVE_STORAGE_SERVICE=s3
+S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+S3_BUCKET=scanarr
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_REGION=auto
+S3_FORCE_PATH_STYLE=true
+```
+
+### AWS S3
+
+```env
+ACTIVE_STORAGE_SERVICE=s3
+S3_BUCKET=scanarr
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_REGION=us-east-1
+S3_FORCE_PATH_STYLE=false
+```
+
+Leave `S3_ENDPOINT` blank for normal AWS S3 usage.
+
+### MinIO
+
+For a MinIO service reachable from the Scanarr containers:
+
+```env
+ACTIVE_STORAGE_SERVICE=s3
+S3_ENDPOINT=http://minio:9000
+S3_BUCKET=scanarr
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_REGION=us-east-1
+S3_FORCE_PATH_STYLE=true
+```
+
+When using S3-compatible storage, back up the bucket separately from the Compose volumes.
 
 ## Common Operations
 
@@ -120,7 +187,7 @@ docker compose exec -T postgres psql -U scanarr < scanarr-backup.sql
 
 ### Back up downloaded files
 
-Back up the `storage_data` volume along with the database. For example:
+For local disk storage, back up the `storage_data` volume along with the database. For example:
 
 ```bash
 docker run --rm -v scanarr_storage_data:/data -v "$PWD:/backup" alpine \
@@ -128,6 +195,8 @@ docker run --rm -v scanarr_storage_data:/data -v "$PWD:/backup" alpine \
 ```
 
 Adjust the volume name if your Compose project name is not `scanarr`.
+
+For S3-compatible storage, back up or version the object store bucket according to your provider's tooling.
 
 ### Update Scanarr
 
@@ -138,6 +207,15 @@ docker compose up -d
 ```
 
 Migrations run automatically when the web container starts.
+
+For tagged releases:
+
+```bash
+git fetch --tags
+git checkout v0.1.0
+SCANARR_VERSION=v0.1.0 docker compose build
+docker compose up -d
+```
 
 ### Change the exposed port
 
@@ -275,7 +353,7 @@ docker compose logs -f sidekiq
 
 ### Storage fills up
 
-Downloaded manga pages are stored in the `storage_data` volume. To move storage to a host path, change the web and Sidekiq volume mounts:
+With local storage, downloaded manga pages are stored in the `storage_data` volume. To move storage to a host path, change the web and Sidekiq volume mounts:
 
 ```yaml
 volumes:

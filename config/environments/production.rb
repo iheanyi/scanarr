@@ -18,8 +18,9 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files through Active Storage. Use ACTIVE_STORAGE_SERVICE=s3
+  # with S3_* env vars for AWS S3, Cloudflare R2, MinIO, or another S3-compatible service.
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "local").to_sym
 
   # Serve files directly (proxy) instead of redirecting, saving an HTTP roundtrip per image.
   # Also allows proper Cache-Control headers on the served content.

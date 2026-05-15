@@ -3,11 +3,11 @@ class CoverDownloader
 
   # Downloads a cover image from a URL and attaches it to a series.
   # Handles HTTP redirects and SSL certificate issues gracefully.
-  def self.download(series, cover_url)
-    new.download(series, cover_url)
+  def self.download(series, cover_url, source: nil)
+    new.download(series, cover_url, source: source)
   end
 
-  def download(series, cover_url)
+  def download(series, cover_url, source: nil)
     return if cover_url.blank?
 
     response = fetch_with_redirects(cover_url)
@@ -22,16 +22,27 @@ class CoverDownloader
     else "jpg"
     end
 
-    series.cover.attach(
+    attach_options = {
       io: StringIO.new(response.body),
       filename: "cover.#{extension}",
       content_type: content_type
-    )
+    }
+    key = cover_key(series, source, extension)
+    attach_options[:key] = key if key.present?
+
+    series.cover.attach(attach_options)
   rescue StandardError => e
     Rails.logger.warn "CoverDownloader: Failed for #{series.canonical_title}: #{e.message}"
   end
 
   private
+
+  def cover_key(series, source, extension)
+    source ||= series.primary_source
+    return nil unless source
+
+    LibraryPathBuilder.new(series: series, source: source).cover_path(extension: extension)
+  end
 
   def fetch_with_redirects(url, redirects_remaining = MAX_REDIRECTS, verify_ssl: true)
     uri = URI.parse(url)

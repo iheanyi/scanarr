@@ -103,7 +103,7 @@ class SeriesImporter
     return if cover_url.blank?
     return if series.cover.attached? && series.cover_url == cover_url
 
-    CoverDownloader.download(series, cover_url)
+    CoverDownloader.download(series, cover_url, source: @source)
   end
 
   # Detect a localized title (Japanese, Korean, or Chinese) from alt_titles

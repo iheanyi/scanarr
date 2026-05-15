@@ -12,10 +12,11 @@ class CoverDownloaderTest < ActiveSupport::TestCase
     stub_request(:get, @cover_url)
       .to_return(status: 200, body: @jpeg_body, headers: { "content-type" => "image/jpeg" })
 
-    CoverDownloader.download(@series, @cover_url)
+    CoverDownloader.download(@series, @cover_url, source: sources(:one))
 
     assert_predicate @series.cover, :attached?
     assert_equal "cover.jpg", @series.cover.filename.to_s
+    assert_equal "library/weeb_central/one-piece--#{@series.public_id}/covers/cover.jpg", @series.cover.blob.key
   end
 
   test "follows HTTP redirects" do

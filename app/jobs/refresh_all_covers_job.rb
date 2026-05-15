@@ -24,7 +24,7 @@ class RefreshAllCoversJob < ApplicationJob
             series.update!(cover_url: series_result.cover_url) if series.cover_url != series_result.cover_url
 
             # Download and attach cover
-            download_cover(series, series_result.cover_url)
+            download_cover(series, series_result.cover_url, source: source)
             refreshed += 1
             Rails.logger.info "RefreshAllCoversJob: Refreshed cover for #{series.canonical_title}"
             break # Got a cover, move to next series
@@ -45,12 +45,12 @@ class RefreshAllCoversJob < ApplicationJob
     Scrapers::AdapterRegistry.for(source)
   end
 
-  def download_cover(series, cover_url)
+  def download_cover(series, cover_url, source:)
     return if cover_url.blank?
 
     # Purge existing cover to force re-download
     series.cover.purge if series.cover.attached?
 
-    CoverDownloader.download(series, cover_url)
+    CoverDownloader.download(series, cover_url, source: source)
   end
 end

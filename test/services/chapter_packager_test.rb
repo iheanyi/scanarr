@@ -27,9 +27,11 @@ class ChapterPackagerTest < ActiveSupport::TestCase
 
   def test_packages_pages_into_cbz
     series = Series.create!(canonical_title: "One Piece")
-    chapter = Chapter.create!(series: series, chapter_number: "1")
-    release = Release.create!(chapter: chapter)
-    file_asset = FileAsset.create!(release: release)
+    source = sources(:one)
+    chapter = Chapter.create!(series: series, source: source, chapter_number: "1")
+    release = Release.create!(chapter: chapter, source: source)
+    path = LibraryPathBuilder.new(series: series, source: source).chapter_path(chapter)
+    file_asset = FileAsset.create!(release: release, path: path)
 
     page1 = file_asset.pages.create!(position: 1)
     page1.image.attach(io: StringIO.new("page-1"), filename: "001.jpg", content_type: "image/jpeg")
@@ -39,6 +41,7 @@ class ChapterPackagerTest < ActiveSupport::TestCase
     ChapterPackager.new(file_asset).package!
 
     assert_predicate file_asset.archive, :attached?
+    assert_equal "#{path}/chapter.cbz", file_asset.archive.blob.key
     file_asset.archive.blob.open do |file|
       Zip::File.open(file.path) do |zip|
         assert_equal [ "001.jpg", "002.jpg" ], zip.entries.map(&:name)

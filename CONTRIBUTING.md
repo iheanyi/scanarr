@@ -26,6 +26,8 @@ For scraper changes, include the source you tested, whether the request used fix
 
 For Docker/self-hosting changes, include the `docker compose` command you ran and whether it was a fresh install or an upgrade path.
 
+Release process notes live in [docs/releasing.md](docs/releasing.md). Public release tags should use the `v0.x.y` format.
+
 ## Project Conventions
 
 - Keep production defaults self-host friendly and environment-variable driven.

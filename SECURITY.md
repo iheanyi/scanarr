@@ -20,5 +20,6 @@ Use GitHub private vulnerability reporting if it is enabled for the repository. 
 - Set a stable `SECRET_KEY_BASE`.
 - Change the default `SCANARR_DATABASE_PASSWORD` before exposing the app.
 - Keep `.env`, `config/master.key`, backups, and storage volumes private.
+- If using S3-compatible storage, keep bucket credentials private and back up the bucket separately from the database.
 - Put public deployments behind HTTPS.
 - Leave `SCANARR_DISABLE_AUTH=false` unless Scanarr is reachable only through a trusted private network.

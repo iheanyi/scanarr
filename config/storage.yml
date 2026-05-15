@@ -4,7 +4,18 @@ test:
 
 local:
   service: Disk
-  root: <%= Rails.root.join("storage") %>
+  root: <%= ENV.fetch("ACTIVE_STORAGE_LOCAL_ROOT", Rails.root.join("storage").to_s) %>
+
+s3:
+  service: S3
+  access_key_id: <%= ENV["S3_ACCESS_KEY_ID"] %>
+  secret_access_key: <%= ENV["S3_SECRET_ACCESS_KEY"] %>
+  region: <%= ENV.fetch("S3_REGION", "auto") %>
+  bucket: <%= ENV["S3_BUCKET"] %>
+<% if ENV["S3_ENDPOINT"].to_s.strip != "" %>
+  endpoint: <%= ENV["S3_ENDPOINT"] %>
+<% end %>
+  force_path_style: <%= ENV.fetch("S3_FORCE_PATH_STYLE", "true") %>
 
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:

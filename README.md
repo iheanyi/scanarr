@@ -23,9 +23,12 @@ sed -i.bak "s/^SECRET_KEY_BASE=.*/SECRET_KEY_BASE=$(openssl rand -hex 64)/" .env
 docker compose up -d
 ```
 
+Compose builds a local `scanarr:${SCANARR_VERSION:-local}` image from the clone, so a registry account is not required.
+
 Open `http://localhost:3000` and create the first admin account.
 
 See [docs/self-hosting.md](docs/self-hosting.md) for production setup, backups, updates, reverse proxy examples, and troubleshooting.
+See [docs/releasing.md](docs/releasing.md) for the release/tagging policy.
 
 ## Development
 
@@ -55,6 +58,8 @@ bin/bundler-audit
 ```
 
 Some scraper/download tests depend on external-source behavior and can fail when sources time out, block requests, or change markup.
+
+Security automation also runs Gitleaks, Docker Compose smoke tests, and an image vulnerability scan in GitHub Actions. Dependency review, CodeQL, and blocking image-vulnerability failures are ready to enable with the `ENABLE_DEPENDENCY_REVIEW=true`, `ENABLE_CODEQL=true`, and `TRIVY_BLOCKING=true` repository variables once the matching GitHub security features are available.
 
 ## Legal
 

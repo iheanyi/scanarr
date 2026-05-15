@@ -139,8 +139,7 @@ class DownloadChapterJob < ApplicationJob
     series_source = SeriesSource.find_by(series: @series, source: @source)
     series_source ||= SeriesSource.create!(series: @series, source: @source)
 
-    builder = LibraryPathBuilder.new(series: @series, source: @source)
-    base_path = builder.base_path
+    base_path = library_path_builder.base_path
     if base_path.present? && series_source.library_base_path != base_path
       series_source.update!(library_base_path: base_path)
     end
@@ -160,7 +159,7 @@ class DownloadChapterJob < ApplicationJob
           download_error: nil,
           pages_downloaded: 0,
           pages_expected: nil,
-          path: @file_asset.path.presence || builder.chapter_path(@chapter)
+          path: @file_asset.path.presence || library_path_builder.chapter_path(@chapter)
         )
       end
     else
@@ -169,7 +168,7 @@ class DownloadChapterJob < ApplicationJob
         download_status: "downloading",
         pages_downloaded: 0,
         download_error: nil,
-        path: builder.chapter_path(@chapter)
+        path: library_path_builder.chapter_path(@chapter)
       )
     end
 
@@ -233,7 +232,8 @@ class DownloadChapterJob < ApplicationJob
       page.image.attach(
         io: StringIO.new(response.body),
         filename: "#{position.to_s.rjust(3, '0')}.#{extension}",
-        content_type: content_type
+        content_type: content_type,
+        key: library_path_builder.page_path(@chapter, position: position, extension: extension)
       )
 
       # Pre-process the WebP display variant so it's ready before the user opens the chapter
@@ -383,6 +383,10 @@ class DownloadChapterJob < ApplicationJob
 
   def runtime_entities_ready?
     @source && @series && @chapter && @release && @file_asset
+  end
+
+  def library_path_builder
+    @library_path_builder ||= LibraryPathBuilder.new(series: @series, source: @source)
   end
 
   def skip_download?
