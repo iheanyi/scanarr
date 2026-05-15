@@ -1,7 +1,35 @@
 require "active_support/core_ext/integer/time"
+require "uri"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
+  env_list = ->(name) { ENV.fetch(name, "").split(/[,\s]+/).map(&:strip).reject(&:empty?) }
+  env_enabled = ->(name) { ENV.fetch(name, "false").match?(/\A(true|1|yes|on)\z/i) }
+
+  app_url = ENV.fetch("APP_URL", "").strip
+  app_uri = if app_url.empty?
+    nil
+  else
+    URI.parse(app_url)
+  end
+
+  app_host = ENV.fetch("APP_HOST", "").strip
+  app_host = app_uri.host.to_s if app_host.empty? && app_uri
+
+  app_protocol = ENV.fetch("APP_PROTOCOL", "").strip
+  app_protocol = app_uri.scheme.to_s if app_protocol.empty? && app_uri
+  app_protocol = env_enabled.call("RAILS_FORCE_SSL") ? "https" : "http" if app_protocol.empty?
+
+  app_port = ENV.fetch("APP_PORT", "").strip
+  app_port = app_uri.port.to_s if app_port.empty? && app_uri && ![ 80, 443 ].include?(app_uri.port)
+
+  default_url_options = if app_host.empty?
+    {}
+  else
+    options = { host: app_host, protocol: "#{app_protocol}://" }
+    options[:port] = app_port.to_i if app_port.match?(/\A\d+\z/)
+    options
+  end
 
   # Code is not reloaded between requests.
   config.enable_reloading = false
@@ -26,14 +54,15 @@ Rails.application.configure do
   # Also allows proper Cache-Control headers on the served content.
   config.active_storage.resolve_model_to_route = :rails_storage_proxy
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # Configure reverse-proxy SSL behavior with env vars so Compose, Kamal,
+  # Caddy, Cloudflare Tunnel, and local-only homelab installs can share one image.
+  config.assume_ssl = true if env_enabled.call("RAILS_ASSUME_SSL") || env_enabled.call("RAILS_FORCE_SSL")
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true if env_enabled.call("RAILS_FORCE_SSL")
 
   # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } } if env_enabled.call("RAILS_FORCE_SSL")
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
@@ -61,8 +90,10 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # Set host to be used by generated links.
+  config.action_controller.default_url_options = default_url_options
+  config.action_mailer.default_url_options = default_url_options
+  Rails.application.routes.default_url_options = default_url_options
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -83,12 +114,24 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Enable DNS rebinding protection and other `Host` header attacks when hosts
+  # are configured. RAILS_HOSTS accepts comma- or space-separated hosts. Regex
+  # values may be written as /pattern/.
+  configured_hosts = env_list.call("RAILS_HOSTS")
+  configured_hosts << app_host if app_host.present?
+  configured_hosts.uniq.each do |host|
+    config.hosts << if host.start_with?("/") && host.end_with?("/") && host.length > 2
+      Regexp.new(host[1...-1])
+    else
+      host
+    end
+  end
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } } if configured_hosts.any?
+
+  cable_origins = env_list.call("ACTION_CABLE_ALLOWED_REQUEST_ORIGINS")
+  if app_host.present?
+    host_with_port = app_port.match?(/\A\d+\z/) ? "#{app_host}:#{app_port}" : app_host
+    cable_origins << "#{app_protocol}://#{host_with_port}"
+  end
+  config.action_cable.allowed_request_origins = cable_origins.uniq if cable_origins.any?
 end

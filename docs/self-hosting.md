@@ -34,6 +34,22 @@ Compose builds a local app image from the checked-out repository and tags it as 
 
 Use Docker Compose if you want one command to start Postgres, Valkey, the web process, and Sidekiq. This is the recommended home lab path.
 
+To serve a custom domain with the bundled Caddy profile, add these values to `.env`:
+
+```env
+APP_URL=https://manga.example.com
+RAILS_HOSTS=manga.example.com
+RAILS_ASSUME_SSL=true
+RAILS_FORCE_SSL=true
+CADDY_DOMAIN=manga.example.com
+```
+
+Then start the stack with Caddy:
+
+```bash
+docker compose --profile caddy up -d
+```
+
 ### Existing Postgres and Valkey
 
 Use the standalone container path if your NAS, homelab stack, or platform already provides PostgreSQL and Redis/Valkey. You still run two Scanarr containers: one web container and one Sidekiq worker.
@@ -52,6 +68,10 @@ DATABASE_URL=postgresql://scanarr:<password>@<postgres-host>:5432/scanarr_produc
 REDIS_URL=redis://<redis-host>:6379/0
 SIDEKIQ_REDIS_URL=redis://<redis-host>:6379/1
 ACTION_CABLE_REDIS_URL=redis://<redis-host>:6379/2
+APP_URL=https://manga.example.com
+RAILS_HOSTS=manga.example.com,scanarr.home.arpa,192.168.1.50
+RAILS_ASSUME_SSL=true
+RAILS_FORCE_SSL=true
 ACTIVE_STORAGE_SERVICE=local
 ACTIVE_STORAGE_LOCAL_ROOT=/rails/storage
 ```
@@ -80,9 +100,42 @@ The web container runs `db:prepare` on startup. Start `scanarr-web` before `scan
 
 If you use `ACTIVE_STORAGE_SERVICE=s3`, omit the `scanarr_storage_data` volume and configure the S3/R2/MinIO variables instead.
 
+### Kamal
+
+Use Kamal when you want deploys over SSH to a server or VPS. The included `config/deploy.yml` is a homelab template with:
+
+- Kamal proxy on the web role with automatic TLS for `scanarr.example.com`
+- A PostgreSQL 18 accessory with persistent `scanarr_postgres_data`
+- A Valkey accessory with persistent `scanarr_redis_data`
+- An app storage volume at `scanarr_storage_data:/rails/storage`
+- Separate `web` and Sidekiq `job` roles
+
+Before deploying, edit `config/deploy.yml`:
+
+- Replace `192.168.0.1` with your server IP or SSH hostname.
+- Replace `scanarr.example.com` with your public or internal domain.
+- Set `registry` to the registry you use for Kamal builds.
+- Set `APP_URL`, `APP_HOST`, and `RAILS_HOSTS` to the same domain users browse.
+
+Export secrets locally or source them from your password manager:
+
+```bash
+export SECRET_KEY_BASE="$(openssl rand -hex 64)"
+export SCANARR_DATABASE_PASSWORD="$(openssl rand -hex 32)"
+```
+
+Then deploy:
+
+```bash
+bin/kamal setup
+bin/kamal deploy
+```
+
+If you terminate TLS in an external proxy instead of Kamal proxy, keep `APP_URL=https://...`, `RAILS_ASSUME_SSL=true`, and `RAILS_FORCE_SSL=true`, but disable or adjust the `proxy` block in `config/deploy.yml`.
+
 ## Services
 
-Docker Compose starts four long-running services:
+Docker Compose starts four long-running services by default. The optional Caddy profile adds a fifth service for reverse proxying:
 
 | Service | Image | Purpose |
 | --- | --- | --- |
@@ -90,6 +143,7 @@ Docker Compose starts four long-running services:
 | `sidekiq` | Built from this repo | Background jobs for downloads, chapter checks, imports, and notifications |
 | `postgres` | `postgres:18-alpine` | Primary application database |
 | `redis` | `valkey/valkey:8-alpine` | Cache, Sidekiq queues, and Action Cable pub/sub |
+| `caddy` | `caddy:2-alpine` | Optional HTTPS reverse proxy when started with the `caddy` profile |
 
 Three explicitly named volumes persist data across restarts, rebuilds, and checkout-directory renames:
 
@@ -98,6 +152,8 @@ Three explicitly named volumes persist data across restarts, rebuilds, and check
 | `scanarr_postgres_data` | `/var/lib/postgresql` | Database data |
 | `scanarr_redis_data` | `/data` | Valkey persistence |
 | `scanarr_storage_data` | `/rails/storage` | Downloaded pages, covers, backups, and Active Storage files |
+
+The Caddy profile also creates `scanarr_caddy_data` and `scanarr_caddy_config` for certificates and proxy state.
 
 Use `docker compose down` for normal stops. Do not use `docker compose down -v` unless you intentionally want to destroy the database, queues, and local media storage.
 
@@ -127,6 +183,14 @@ Copy `.env.example` to `.env` and configure these values.
 | `ACTION_CABLE_REDIS_URL` | `redis://redis:6379/2` | Action Cable pub/sub Redis URL. |
 | `RAILS_LOG_LEVEL` | `info` | Log verbosity: `debug`, `info`, `warn`, `error`, or `fatal`. |
 | `SCANARR_DISABLE_AUTH` | `false` | Set to `true` only for private single-user deployments behind a trusted VPN or reverse proxy. |
+| `APP_URL` | blank | Canonical external URL, for example `https://manga.example.com`. Used for generated links, host authorization, and Action Cable origins. |
+| `APP_HOST` | blank | Hostname override when `APP_URL` is not set. Usually leave blank and use `APP_URL`. |
+| `APP_PROTOCOL` | `http` or `https` | Protocol override when `APP_URL` is not set. |
+| `APP_PORT` | blank | External port for generated URLs when using a non-default port. |
+| `RAILS_HOSTS` | blank | Comma- or space-separated hostnames/IPs Rails should accept, for example `manga.example.com,scanarr.home.arpa,192.168.1.50`. |
+| `RAILS_ASSUME_SSL` | `false` | Treat proxied requests as HTTPS. Set `true` behind Caddy, Kamal proxy, Cloudflare Tunnel, Traefik, or nginx. |
+| `RAILS_FORCE_SSL` | `false` | Use secure cookies, HSTS, and HTTPS redirects. Set `true` when all external traffic reaches Scanarr through HTTPS. |
+| `ACTION_CABLE_ALLOWED_REQUEST_ORIGINS` | `APP_URL` | Optional explicit websocket origins. Use a comma-separated list for multiple domains. |
 | `ACTIVE_STORAGE_SERVICE` | `local` | Set to `local` for the Compose storage volume, or `s3` for AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
 | `ACTIVE_STORAGE_LOCAL_ROOT` | `/rails/storage` | Disk path for local Active Storage files inside the web and Sidekiq containers. |
 | `S3_ENDPOINT` | blank | Custom S3-compatible endpoint. Required for R2 and MinIO; usually blank for AWS S3. |
@@ -135,6 +199,31 @@ Copy `.env.example` to `.env` and configure these values.
 | `S3_SECRET_ACCESS_KEY` | blank | S3-compatible secret key. |
 | `S3_REGION` | `auto` | Region for S3-compatible storage. Use `auto` for Cloudflare R2. |
 | `S3_FORCE_PATH_STYLE` | `true` | Use path-style bucket addressing. Use `false` for most AWS S3 buckets. |
+| `CADDY_DOMAIN` | `:80` | Domain served by the optional Compose Caddy profile. Set this to your public or internal hostname for HTTPS. |
+| `HTTP_PORT` | `80` | Host HTTP port for the optional Caddy profile. |
+| `HTTPS_PORT` | `443` | Host HTTPS port for the optional Caddy profile. |
+
+### Custom Domains
+
+For a public HTTPS domain:
+
+```env
+APP_URL=https://manga.example.com
+RAILS_HOSTS=manga.example.com
+RAILS_ASSUME_SSL=true
+RAILS_FORCE_SSL=true
+```
+
+For an internal homelab DNS name without HTTPS:
+
+```env
+APP_URL=http://scanarr.home.arpa:3000
+RAILS_HOSTS=scanarr.home.arpa,scanarr.local,192.168.1.50
+RAILS_ASSUME_SSL=false
+RAILS_FORCE_SSL=false
+```
+
+`RAILS_HOSTS` is intentionally explicit. Add every hostname or LAN IP that users will type into a browser, otherwise Rails can reject the request as an unknown host.
 
 ## Storage
 
@@ -317,11 +406,32 @@ Then rerun the `docker run` commands from the standalone container setup. Removi
 
 For public access, terminate HTTPS in a reverse proxy and forward to the host port configured by `PORT`.
 
-### Caddy
+### Bundled Caddy Profile
+
+The Compose file includes an optional Caddy service. For a public or internal HTTPS domain, set the domain and Rails URL values in `.env`:
+
+```env
+APP_URL=https://manga.example.com
+RAILS_HOSTS=manga.example.com
+RAILS_ASSUME_SSL=true
+RAILS_FORCE_SSL=true
+CADDY_DOMAIN=manga.example.com
+```
+
+Then start the stack:
+
+```bash
+docker compose --profile caddy up -d
+```
+
+Caddy stores certificates and state in the `scanarr_caddy_data` and `scanarr_caddy_config` volumes.
+
+### External Caddy
 
 ```caddy
 manga.example.com {
-    reverse_proxy localhost:3000
+	encode zstd gzip
+	reverse_proxy localhost:3000
 }
 ```
 

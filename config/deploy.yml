@@ -13,16 +13,17 @@ servers:
       - 192.168.0.1
     cmd: bundle exec sidekiq -C config/sidekiq.yml
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
-# proxy:
-#   ssl: true
-#   host: app.example.com
+# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on
+# a single web server. Change host to your public or internal domain.
+# If used with Cloudflare, set encryption mode in SSL/TLS settings to "Full".
+# Don't use this when deploying to multiple web servers; terminate SSL at your
+# load balancer instead.
+proxy:
+  ssl: true
+  host: scanarr.example.com
+  app_port: 80
+  healthcheck:
+    path: /up
 
 # Where you keep your container images.
 registry:
@@ -40,9 +41,17 @@ registry:
 env:
   secret:
     - SECRET_KEY_BASE
+    - SCANARR_DATABASE_PASSWORD
     # Optional only if you intentionally use Rails encrypted credentials.
     # - RAILS_MASTER_KEY
   clear:
+    APP_URL: https://scanarr.example.com
+    APP_HOST: scanarr.example.com
+    APP_PROTOCOL: https
+    RAILS_HOSTS: scanarr.example.com
+    RAILS_ASSUME_SSL: true
+    RAILS_FORCE_SSL: true
+
     # Default to Kamal redis accessory DNS name: <service>-<accessory>.
     # Override these URLs if you use an external Redis service.
     REDIS_URL: redis://scanarr-redis:6379/0
@@ -57,8 +66,16 @@ env:
     # WEB_CONCURRENCY: 2
 
     # Match this to any external database server to configure Active Record correctly
-    # Use scanarr-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
+    # Use scanarr-postgres for the postgres accessory on the same Kamal network.
+    DB_HOST: scanarr-postgres
+
+    ACTIVE_STORAGE_SERVICE: local
+    ACTIVE_STORAGE_LOCAL_ROOT: /rails/storage
+    # For S3/R2/MinIO, set ACTIVE_STORAGE_SERVICE=s3 and provide:
+    # S3_ENDPOINT:
+    # S3_BUCKET:
+    # S3_REGION: auto
+    # S3_FORCE_PATH_STYLE: true
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
@@ -71,10 +88,10 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
+# Use a persistent storage volume for local Active Storage files.
 # Recommended to change this to a mounted volume path that is backed up off server.
 volumes:
-  - "scanarr_storage:/rails/storage"
+  - "scanarr_storage_data:/rails/storage"
 
 
 # Configure the image builder.
@@ -97,25 +114,24 @@ builder:
 
 # Use accessory services (secrets come from .kamal/secrets).
 accessories:
+  postgres:
+    image: postgres:18-alpine
+    host: 192.168.0.1
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: scanarr
+        POSTGRES_DB: scanarr_production
+      secret:
+        - POSTGRES_PASSWORD
+    files:
+      - docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    directories:
+      - scanarr_postgres_data:/var/lib/postgresql
+
   redis:
     image: valkey/valkey:8
     host: 192.168.0.1
     port: "127.0.0.1:6379:6379"
     directories:
-      - redis_data:/data
-#
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
+      - scanarr_redis_data:/data

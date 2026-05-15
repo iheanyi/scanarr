@@ -52,6 +52,14 @@ services:
       RAILS_LOG_LEVEL: ${RAILS_LOG_LEVEL:-info}
       RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      APP_URL: ${APP_URL:-}
+      APP_HOST: ${APP_HOST:-}
+      APP_PROTOCOL: ${APP_PROTOCOL:-}
+      APP_PORT: ${APP_PORT:-}
+      RAILS_HOSTS: ${RAILS_HOSTS:-}
+      RAILS_ASSUME_SSL: ${RAILS_ASSUME_SSL:-false}
+      RAILS_FORCE_SSL: ${RAILS_FORCE_SSL:-false}
+      ACTION_CABLE_ALLOWED_REQUEST_ORIGINS: ${ACTION_CABLE_ALLOWED_REQUEST_ORIGINS:-}
       ACTIVE_STORAGE_SERVICE: ${ACTIVE_STORAGE_SERVICE:-local}
       ACTIVE_STORAGE_LOCAL_ROOT: ${ACTIVE_STORAGE_LOCAL_ROOT:-/rails/storage}
       S3_ENDPOINT: ${S3_ENDPOINT:-}
@@ -92,6 +100,14 @@ services:
       ACTION_CABLE_REDIS_URL: ${ACTION_CABLE_REDIS_URL:-redis://redis:6379/2}
       REDIS_CACHE_NAMESPACE: scanarr:cache:production
       SIDEKIQ_CONCURRENCY: ${SIDEKIQ_CONCURRENCY:-5}
+      APP_URL: ${APP_URL:-}
+      APP_HOST: ${APP_HOST:-}
+      APP_PROTOCOL: ${APP_PROTOCOL:-}
+      APP_PORT: ${APP_PORT:-}
+      RAILS_HOSTS: ${RAILS_HOSTS:-}
+      RAILS_ASSUME_SSL: ${RAILS_ASSUME_SSL:-false}
+      RAILS_FORCE_SSL: ${RAILS_FORCE_SSL:-false}
+      ACTION_CABLE_ALLOWED_REQUEST_ORIGINS: ${ACTION_CABLE_ALLOWED_REQUEST_ORIGINS:-}
       ACTIVE_STORAGE_SERVICE: ${ACTIVE_STORAGE_SERVICE:-local}
       ACTIVE_STORAGE_LOCAL_ROOT: ${ACTIVE_STORAGE_LOCAL_ROOT:-/rails/storage}
       S3_ENDPOINT: ${S3_ENDPOINT:-}
@@ -104,6 +120,24 @@ services:
     volumes:
       - storage_data:/rails/storage
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    profiles: [ caddy ]
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      CADDY_DOMAIN: ${CADDY_DOMAIN:-:80}
+      CADDY_PROXY_TARGET: ${CADDY_PROXY_TARGET:-web:80}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
 volumes:
   postgres_data:
     name: scanarr_postgres_data
@@ -111,3 +145,7 @@ volumes:
     name: scanarr_redis_data
   storage_data:
     name: scanarr_storage_data
+  caddy_data:
+    name: scanarr_caddy_data
+  caddy_config:
+    name: scanarr_caddy_config

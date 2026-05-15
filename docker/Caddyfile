@@ -1,0 +1,5 @@
+{$CADDY_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy {$CADDY_PROXY_TARGET:web:80}
+}
