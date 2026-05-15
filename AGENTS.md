@@ -36,3 +36,17 @@ See `CLAUDE.md` for model relationships, component patterns, and code convention
 - `bin/dev` also checks for stale Sidekiq PID files in `tmp/pids/` — delete stale files if Foreman fails to start.
 - Search functionality queries live external manga source APIs; some sources may time out or block requests in CI/cloud environments. This is expected behavior, not a bug.
 - The `foreman` gem is installed globally (not in Gemfile) — `bin/dev` auto-installs it if missing.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for `iheanyi/scanarr`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the canonical Matt Pocock skills label vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Domain documentation follows the single-context layout for this Rails monolith. See `docs/agents/domain.md`.
