@@ -9,7 +9,7 @@ Scanarr is a self-hosted manga aggregation and download manager built with Rails
 - Background downloads and scheduled chapter checks through Sidekiq
 - Per-user accounts, admin controls, API keys, and optional single-user auth bypass
 - Mihon/Tachiyomi-compatible import and export workflows
-- Docker Compose deployment with PostgreSQL, Valkey, web, and worker services
+- Self-host deployment with Docker Compose or standalone app containers
 
 ## Quick Start
 
@@ -45,21 +45,6 @@ Default development seed user:
 - Password: `password123`
 
 See [docs/development.md](docs/development.md) for local setup details and queue commands.
-
-## Checks
-
-```bash
-bin/rails test
-yarn test:run
-bin/rubocop
-bin/erblint --lint-all
-bin/brakeman
-bin/bundler-audit
-```
-
-Some scraper/download tests depend on external-source behavior and can fail when sources time out, block requests, or change markup.
-
-Security automation also runs Gitleaks, a blocking OSV lockfile scan, Docker Compose smoke tests, and an advisory image vulnerability scan in GitHub Actions. Dependency review, CodeQL, and blocking image-vulnerability failures are ready to enable with the `ENABLE_DEPENDENCY_REVIEW=true`, `ENABLE_CODEQL=true`, and `TRIVY_BLOCKING=true` repository variables once the matching GitHub security features or upstream image fixes are available.
 
 ## Legal
 

@@ -106,5 +106,8 @@ services:
 
 volumes:
   postgres_data:
+    name: scanarr_postgres_data
   redis_data:
+    name: scanarr_redis_data
   storage_data:
+    name: scanarr_storage_data

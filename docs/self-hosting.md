@@ -1,15 +1,18 @@
-# Self-Hosting Scanarr with Docker Compose
+# Self-Hosting Scanarr
 
-This guide covers the supported self-hosted deployment path for Scanarr.
+This guide covers the supported self-hosted deployment paths for Scanarr.
 
 ## Prerequisites
 
-- Docker 24+ with the Compose plugin (`docker compose`)
+- Docker 24+
+- Docker Compose plugin (`docker compose`) if you use the recommended Compose path
 - 1 GB RAM minimum, 2 GB+ recommended
 - Disk sized for your downloaded manga library
 - Optional: a reverse proxy such as Caddy, nginx, Traefik, or Cloudflare Tunnel for HTTPS
 
 ## Quick Start
+
+Docker Compose is the simplest path when you want Scanarr to manage the app, database, queue, and local file storage together:
 
 ```bash
 git clone https://github.com/iheanyi/scanarr.git
@@ -25,6 +28,58 @@ Before exposing Scanarr outside localhost, edit `.env` and change `SCANARR_DATAB
 
 Compose builds a local app image from the checked-out repository and tags it as `${SCANARR_IMAGE:-scanarr}:${SCANARR_VERSION:-local}`. For a release checkout, set `SCANARR_VERSION=v0.1.0` or the tag you are running.
 
+## Deployment Options
+
+### Docker Compose
+
+Use Docker Compose if you want one command to start Postgres, Valkey, the web process, and Sidekiq. This is the recommended home lab path.
+
+### Existing Postgres and Valkey
+
+Use the standalone container path if your NAS, homelab stack, or platform already provides PostgreSQL and Redis/Valkey. You still run two Scanarr containers: one web container and one Sidekiq worker.
+
+Build the app image:
+
+```bash
+docker build -t scanarr:local .
+docker volume create scanarr_storage_data
+```
+
+Add the external service URLs to `.env`:
+
+```env
+DATABASE_URL=postgresql://scanarr:<password>@<postgres-host>:5432/scanarr_production
+REDIS_URL=redis://<redis-host>:6379/0
+SIDEKIQ_REDIS_URL=redis://<redis-host>:6379/1
+ACTION_CABLE_REDIS_URL=redis://<redis-host>:6379/2
+ACTIVE_STORAGE_SERVICE=local
+ACTIVE_STORAGE_LOCAL_ROOT=/rails/storage
+```
+
+Then run the web and worker containers:
+
+```bash
+docker run -d \
+  --name scanarr-web \
+  --restart unless-stopped \
+  --env-file .env \
+  -p 3000:80 \
+  -v scanarr_storage_data:/rails/storage \
+  scanarr:local
+
+docker run -d \
+  --name scanarr-sidekiq \
+  --restart unless-stopped \
+  --env-file .env \
+  -v scanarr_storage_data:/rails/storage \
+  scanarr:local \
+  bundle exec sidekiq -C config/sidekiq.yml
+```
+
+The web container runs `db:prepare` on startup. Start `scanarr-web` before `scanarr-sidekiq` on first install so migrations run before jobs start.
+
+If you use `ACTIVE_STORAGE_SERVICE=s3`, omit the `scanarr_storage_data` volume and configure the S3/R2/MinIO variables instead.
+
 ## Services
 
 Docker Compose starts four long-running services:
@@ -36,13 +91,15 @@ Docker Compose starts four long-running services:
 | `postgres` | `postgres:18-alpine` | Primary application database |
 | `redis` | `valkey/valkey:8-alpine` | Cache, Sidekiq queues, and Action Cable pub/sub |
 
-Three named volumes persist data across restarts:
+Three explicitly named volumes persist data across restarts, rebuilds, and checkout-directory renames:
 
 | Volume | Mounted at | Contains |
 | --- | --- | --- |
-| `postgres_data` | `/var/lib/postgresql` | Database data |
-| `redis_data` | `/data` | Valkey persistence |
-| `storage_data` | `/rails/storage` | Downloaded pages, covers, backups, and Active Storage files |
+| `scanarr_postgres_data` | `/var/lib/postgresql` | Database data |
+| `scanarr_redis_data` | `/data` | Valkey persistence |
+| `scanarr_storage_data` | `/rails/storage` | Downloaded pages, covers, backups, and Active Storage files |
+
+Use `docker compose down` for normal stops. Do not use `docker compose down -v` unless you intentionally want to destroy the database, queues, and local media storage.
 
 ## Configuration
 
@@ -83,7 +140,14 @@ Copy `.env.example` to `.env` and configure these values.
 
 ### Local Disk
 
-The default storage service writes downloaded pages, covers, generated CBZ archives, and backup artifacts into the `storage_data` volume mounted at `/rails/storage`.
+The default storage service writes downloaded pages, covers, generated CBZ archives, and backup artifacts into the `scanarr_storage_data` volume mounted at `/rails/storage`.
+
+If you prefer a visible host directory for NAS backups, replace the `web` and `sidekiq` storage mounts with a bind mount:
+
+```yaml
+volumes:
+  - /srv/scanarr/storage:/rails/storage
+```
 
 New downloads use readable Active Storage object keys:
 
@@ -136,7 +200,7 @@ S3_FORCE_PATH_STYLE=true
 
 When using S3-compatible storage, back up the bucket separately from the Compose volumes.
 
-## Common Operations
+## Docker Compose Operations
 
 ### View logs
 
@@ -187,14 +251,12 @@ docker compose exec -T postgres psql -U scanarr < scanarr-backup.sql
 
 ### Back up downloaded files
 
-For local disk storage, back up the `storage_data` volume along with the database. For example:
+For local disk storage, back up the `scanarr_storage_data` volume along with the database. For example:
 
 ```bash
 docker run --rm -v scanarr_storage_data:/data -v "$PWD:/backup" alpine \
   tar czf /backup/scanarr-storage.tgz -C /data .
 ```
-
-Adjust the volume name if your Compose project name is not `scanarr`.
 
 For S3-compatible storage, back up or version the object store bucket according to your provider's tooling.
 
@@ -230,6 +292,26 @@ Then apply it:
 ```bash
 docker compose up -d
 ```
+
+## Standalone Container Operations
+
+For standalone Docker installs, logs and health checks use the container names from the example above:
+
+```bash
+docker logs -f scanarr-web
+docker logs -f scanarr-sidekiq
+curl -fsS http://localhost:3000/up
+```
+
+To update a standalone install:
+
+```bash
+docker build -t scanarr:local .
+docker stop scanarr-sidekiq scanarr-web
+docker rm scanarr-sidekiq scanarr-web
+```
+
+Then rerun the `docker run` commands from the standalone container setup. Removing the containers does not delete the `scanarr_storage_data` volume.
 
 ## Reverse Proxy
 
@@ -283,8 +365,8 @@ docker compose down
 3. Remove only the Postgres volume:
 
 ```bash
-docker volume ls | grep postgres_data
-docker volume rm <your_project>_postgres_data
+docker volume ls | grep scanarr_postgres_data
+docker volume rm scanarr_postgres_data
 ```
 
 4. Start fresh Postgres:
