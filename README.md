@@ -1,6 +1,6 @@
 # Scanarr
 
-Scanarr is a self-hosted manga aggregation and download manager built with Rails. It tracks series across supported sources, downloads chapters into local storage, keeps a personal library, and provides a browser-based reader with offline support.
+Scanarr is a self-hosted manga aggregation and download manager built with Rails. It tracks series across supported sources, downloads chapters into configurable local or S3-compatible storage, keeps a personal library, and provides a browser-based reader with offline support.
 
 ## Features
 
@@ -35,7 +35,7 @@ bin/self-host-caddy-smoke
 
 Then open `http://localhost:8080`.
 
-Local media storage uses the named Docker volume `scanarr_storage_data` by default. To store pages, covers, and backups on a server path or NAS mount, set `SCANARR_STORAGE_PATH=/srv/scanarr/storage` before starting Compose.
+Media storage uses the named Docker volume `scanarr_storage_data` by default. To store pages, covers, and backups on a server path or NAS mount, set `SCANARR_STORAGE_PATH=/srv/scanarr/storage` before starting Compose. To avoid storing downloaded media on the app server, set `ACTIVE_STORAGE_SERVICE=s3` and provide the `S3_*` settings for AWS S3, Cloudflare R2, MinIO, or another S3-compatible object store.
 
 See [docs/self-hosting.md](docs/self-hosting.md) for production setup, backups, updates, reverse proxy examples, and troubleshooting.
 See [docs/releasing.md](docs/releasing.md) for the release/tagging policy.

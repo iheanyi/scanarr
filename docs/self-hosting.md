@@ -134,6 +134,18 @@ For VPS block storage, mount the disk on the host first, then set the host-side 
 export SCANARR_STORAGE_PATH=/mnt/scanarr/storage
 ```
 
+For S3-compatible object storage with Kamal, render the deploy config with `ACTIVE_STORAGE_SERVICE=s3`, pass the non-secret bucket settings as environment variables, and provide the access keys as Kamal secrets:
+
+```bash
+export ACTIVE_STORAGE_SERVICE=s3
+export S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+export S3_BUCKET=scanarr
+export S3_REGION=auto
+export S3_FORCE_PATH_STYLE=true
+export S3_ACCESS_KEY_ID=...
+export S3_SECRET_ACCESS_KEY=...
+```
+
 Export secrets locally or source them from your password manager:
 
 ```bash
