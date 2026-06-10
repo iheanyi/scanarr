@@ -1,0 +1,1 @@
+ResultTypes = Scrapers::ResultTypes
