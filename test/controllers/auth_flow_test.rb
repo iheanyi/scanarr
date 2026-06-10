@@ -7,7 +7,7 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     get login_path
 
     assert_response :success
-    assert_includes @response.body, 'data-scanarr-theme="signal-coral"'
+    assert_includes @response.body, %(data-scanarr-theme="#{ScanarrThemes::DEFAULT}")
   end
 
   def test_login_with_valid_credentials

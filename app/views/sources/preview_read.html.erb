@@ -74,7 +74,7 @@
         </div>
       </section>
 
-      <nav class="scanarr-reader-controls sticky top-3 z-20 mx-auto w-fit max-w-full rounded-lg border border-border/80 bg-background/90 p-1.5 shadow-sm backdrop-blur-xl" aria-label="Reader controls" data-reader-target="controls">
+      <nav class="scanarr-reader-controls sticky top-3 z-20 mx-auto w-fit max-w-full rounded-lg border border-border/80 bg-background p-1.5" aria-label="Reader controls" data-reader-target="controls">
         <div class="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
           <% if page_count.positive? %>
             <div class="flex h-8 shrink-0 items-center gap-2 rounded-md bg-surface/55 px-2.5 text-xs text-foreground">
@@ -156,13 +156,13 @@
                           "flex flex-col items-center gap-4"
        end %>
     <% page_class = if is_horizontal
-                      "snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
+                      "scanarr-reader-page-frame snap-start shrink-0 w-[70vw] max-w-2xl flex items-center justify-center p-4 cursor-pointer"
        elsif is_webtoon
-                      "w-full max-w-4xl cursor-pointer"
+                      "scanarr-reader-page-frame w-full max-w-4xl cursor-pointer"
        elsif is_paged_vertical
-                      "snap-start min-h-[82vh] w-full max-w-2xl flex items-center justify-center px-2 py-2 cursor-pointer"
+                      "scanarr-reader-page-frame snap-start min-h-[82vh] w-full max-w-2xl flex items-center justify-center px-2 py-2 cursor-pointer"
        else
-                      "w-full max-w-2xl cursor-pointer"
+                      "scanarr-reader-page-frame w-full max-w-2xl cursor-pointer"
        end %>
     <% image_class = if is_webtoon
                        "w-full max-w-full object-contain pointer-events-none"
@@ -171,7 +171,7 @@
        end %>
 
     <section data-reader-target="viewport"
-             class="scanarr-reader-stage rounded-2xl p-2 md:p-4 <%= viewport_class %>"
+             class="scanarr-reader-stage scanarr-reader-viewport rounded-2xl p-2 md:p-4 <%= viewport_class %>"
              data-reader-rtl="<%= is_rtl %>">
       <% if @source_error.present? %>
         <div class="rounded-lg border border-danger/30 bg-danger-soft p-6 space-y-3 <%= is_horizontal ? "shrink-0 w-screen flex flex-col items-center justify-center" : "" %>">
@@ -204,8 +204,9 @@
       <% @source_pages.each_with_index do |page, idx| %>
         <article data-reader-target="page"
                  data-action="click->reader#openLightboxForPage"
+                 data-reader-image-state="loading"
                  class="<%= page_class %>">
-          <%= image_tag source_preview_image_path(source_slug: source_slug(@source), token: preview_image_token_for(page.url)), alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
+          <%= image_tag source_preview_image_path(source_slug: source_slug(@source), token: preview_image_token_for(page.url)), alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil, data: { action: "load->reader#markImageLoaded error->reader#markImageLoaded" } %>
         </article>
       <% end %>
     </section>

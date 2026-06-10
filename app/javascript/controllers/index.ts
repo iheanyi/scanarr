@@ -25,6 +25,9 @@ application.register("multi-select", MultiSelectController)
 import DrawerController from "./drawer_controller"
 application.register("drawer", DrawerController)
 
+import DialogController from "./dialog_controller"
+application.register("dialog", DialogController)
+
 import ChapterFilterController from "./chapter_filter_controller"
 application.register("chapter-filter", ChapterFilterController)
 

@@ -16,7 +16,7 @@ class CoverDownloaderTest < ActiveSupport::TestCase
 
     assert_predicate @series.cover, :attached?
     assert_equal "cover.jpg", @series.cover.filename.to_s
-    assert_equal "library/weeb_central/one-piece--#{@series.public_id}/covers/cover.jpg", @series.cover.blob.key
+    assert_equal "library/weeb-central/one-piece--#{@series.public_id}/covers/cover.jpg", @series.cover.blob.key
   end
 
   test "follows HTTP redirects" do

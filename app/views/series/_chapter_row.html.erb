@@ -10,6 +10,29 @@
 <% show_offline_remove_icon = offline_status == "complete" %>
 <% chapter_key = "#{source.slug}:#{series.to_param}:#{chapter_identifier(chapter)}" %>
 <% is_read = progress&.status == "completed" %>
+<% failed_download_error = file_asset&.download_status == "failed" ? file_asset.download_error.presence : nil %>
+<% active_download = file_asset&.download_status.in?(%w[queued pending downloading]) %>
+<% download_pages_expected = file_asset&.pages_expected.to_i %>
+<% download_pages_downloaded = file_asset&.pages_downloaded.to_i %>
+<% download_progress_percent = download_pages_expected.positive? ? [ (download_pages_downloaded.to_f / download_pages_expected * 100).round, 100 ].min : 0 %>
+<% progress_text =
+  if active_download
+    if download_pages_expected.positive?
+      "#{file_asset.download_status == "downloading" ? "Downloading" : "Queued"} #{download_pages_downloaded}/#{download_pages_expected} (#{download_progress_percent}%)"
+    elsif file_asset.download_status == "downloading"
+      "Downloading; discovering pages"
+    else
+      "Queued for download"
+    end
+  elsif failed_download_error.present?
+    failed_download_error.truncate(50)
+  elsif progress.present?
+    if progress.status == "in_progress" && progress.page_count.to_i > 0
+      "Page #{progress.page_index}/#{progress.page_count} · Last read #{time_ago_in_words(progress.progressed_at)} ago"
+    else
+      "Last read #{time_ago_in_words(progress.progressed_at)} ago"
+    end
+  end %>
 <li id="<%= dom_id(chapter) %>"
     data-controller="<%= offline_capable ? "offline-cache" : nil %>"
     <% if offline_capable %>
@@ -24,148 +47,198 @@
     <% end %>
     data-chapter-filter-target="item"
     data-chapter-filter-text="chapter <%= chapter.chapter_number %> <%= chapter.title %>"
-    class="scanarr-panel-row group/row rounded-[1.35rem] p-4 transition-all <%= "opacity-70" if is_read %>">
-  <div class="flex gap-3 sm:items-center">
-    <div class="pt-1 sm:pt-0 shrink-0 bulk-checkbox opacity-0 group-hover/row:opacity-100 transition-opacity">
-      <input type="checkbox"
-             value="<%= chapter.id %>"
-             data-bulk-select-target="checkbox"
-             data-action="change->bulk-select#toggle"
-             class="h-4 w-4 rounded border-border text-accent focus:ring-accent cursor-pointer">
-    </div>
-    <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div class="space-y-1">
-      <div class="flex flex-wrap items-center gap-2">
-        <%= link_to "Chapter #{chapter.chapter_number}",
-                    source_series_chapter_path(
-                      source_slug: source.slug,
-                      series_slug: series.to_param,
-                      chapter_identifier: chapter_identifier(chapter)
-                    ),
-                    class: "text-base font-semibold transition-colors #{is_read ? "text-muted" : "text-foreground group-hover/row:text-accent"}" %>
-        <% if offline_capable %>
-          <span data-offline-cache-target="availableIndicator"
-                class="inline-flex h-4 w-4 items-center justify-center text-success"
-                title="Available offline"
-                aria-label="Available offline"
-                <%= "hidden" unless offline_status == "complete" %>>
-            <%= icon "check", class: "h-2.5 w-2.5" %>
-            <span class="sr-only">Available offline</span>
-          </span>
-        <% end %>
-        <%# Single-badge priority: active download > failed > reading progress > download complete %>
-        <span id="<%= dom_id(chapter, :status) %>">
-          <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
-            <% dl_label = file_asset.download_status == "downloading" ? "Downloading" : "Queued" %>
-            <%= render UI::StatusBadgeComponent.new(status: file_asset.download_status, label: dl_label, bordered: true) %>
-          <% elsif file_asset&.download_status == "failed" %>
-            <%= render UI::StatusBadgeComponent.new(status: "failed", label: "Failed", bordered: true) %>
-          <% elsif progress.present? %>
-            <% progress_label = progress.status == "completed" ? "Completed" : "In Progress" %>
-            <%= render UI::StatusBadgeComponent.new(status: progress.status == "completed" ? "completed" : "in progress", label: progress_label, bordered: true) %>
-          <% end %>
-        </span>
-        <% if offline_capable %>
-          <div class="group/offline inline-flex items-center gap-1 rounded-full px-0.5 py-0.5">
-            <span class="max-w-0 overflow-hidden whitespace-nowrap px-0 text-[10px] text-muted-2 tabular-nums text-right opacity-0 transition-all duration-150 group-hover/offline:max-w-8 group-hover/offline:px-1 group-hover/offline:opacity-100 group-focus-within/offline:max-w-8 group-focus-within/offline:px-1 group-focus-within/offline:opacity-100"
-                  <%= "hidden" unless show_offline_cancel_icon %>
-                  data-offline-cache-target="progress"></span>
-            <button type="button"
-                    class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-info/35 hover:bg-surface hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    data-action="click->offline-cache#download"
-                    data-offline-cache-target="downloadButton"
-                    <%= "hidden" unless show_offline_download_icon %>>
-              <%= icon "download", class: "h-3 w-3" %>
-              <span class="sr-only">Download for offline</span>
-            </button>
-            <button type="button"
-                    class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-warning/35 hover:bg-surface hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    data-action="click->offline-cache#cancel"
-                    data-offline-cache-target="cancelButton"
-                    <%= "hidden" unless show_offline_cancel_icon %>>
-              <%= icon "x", class: "h-3 w-3" %>
-              <span class="sr-only">Cancel offline download</span>
-            </button>
-            <button type="button"
-                    class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-danger/35 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    data-action="click->offline-cache#remove"
-                    data-offline-cache-target="removeButton"
-                    <%= "hidden" unless show_offline_remove_icon %>>
-              <%= icon "trash-2", class: "h-3 w-3" %>
-              <span class="sr-only">Remove offline chapter</span>
-            </button>
-          </div>
-        <% end %>
-      </div>
-      <% if chapter.meaningful_title? %>
-        <p class="text-sm text-muted text-pretty"><%= chapter.title %></p>
-      <% end %>
-      <p id="<%= dom_id(chapter, :progress) %>" class="scanarr-panel-progress-pill inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs text-muted-2">
-        <% if file_asset&.download_status == "downloading" && file_asset.pages_expected.present? %>
-          Downloading (<%= file_asset.pages_downloaded %>/<%= file_asset.pages_expected %>)
-        <% elsif file_asset&.download_status == "failed" && file_asset.download_error.present? %>
-          <%= file_asset.download_error.truncate(50) %>
-        <% elsif progress.present? %>
-          <% if progress.status == "in_progress" && progress.page_count.to_i > 0 %>
-            Page <%= progress.page_index %>/<%= progress.page_count %> · Last read <%= time_ago_in_words(progress.progressed_at) %> ago
-          <% else %>
-            Last read <%= time_ago_in_words(progress.progressed_at) %> ago
-          <% end %>
-        <% end %>
-      </p>
-    </div>
-    <div class="flex items-center gap-2">
-      <% if file_asset&.download_status == "complete" %>
-        <%= render UI::ConfirmButtonComponent.new(
-          label: "Remove",
-          url: source_series_chapter_remove_download_path(
-            source_slug: source.slug,
-            series_slug: series.to_param,
-            chapter_identifier: chapter_identifier(chapter)
-          ),
-          method: :delete,
-          variant: :danger,
-          confirm: "Remove download for Chapter #{chapter.chapter_number}?",
-          icon: "trash-2"
-        ) %>
-      <% end %>
-      <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
-        <%= render UI::ConfirmButtonComponent.new(
-          label: "Cancel",
-          url: source_series_chapter_cancel_download_path(
-            source_slug: source.slug,
-            series_slug: series.to_param,
-            chapter_identifier: chapter_identifier(chapter)
-          ),
-          method: :post,
-          variant: :warning,
-          confirm: "Cancel this download?",
-          icon: "x"
-        ) %>
-      <% end %>
-      <% if chapter.source_url.present? %>
-        <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>
-        <% is_complete = file_asset&.download_status == "complete" %>
-        <% unless download_in_progress %>
-          <%= form_with url: source_series_chapter_download_path(
+    class="scanarr-panel-row group/row rounded-2xl px-3 py-2.5 transition-all <%= "opacity-70" if is_read %>">
+  <div class="absolute left-3 top-1/2 z-10 flex h-9 -translate-y-1/2 items-center bulk-checkbox transition-opacity">
+    <input type="checkbox"
+           value="<%= chapter.id %>"
+           data-bulk-select-target="checkbox"
+           data-action="change->bulk-select#toggle"
+           class="m-0 h-4 w-4 rounded border-border text-accent focus:ring-accent cursor-pointer">
+  </div>
+  <div class="scanarr-panel-row-content flex min-w-0 sm:items-center">
+    <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="min-w-0 space-y-1">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+          <%= link_to "Chapter #{chapter.chapter_number}",
+                      source_series_chapter_path(
                         source_slug: source.slug,
                         series_slug: series.to_param,
                         chapter_identifier: chapter_identifier(chapter)
                       ),
-                      method: :post do %>
-            <%= render UI::ButtonComponent.new(
-              type: "submit",
-              variant: :ghost,
-              class: "border-accent/40 text-accent hover:bg-accent-soft",
-              data: { turbo_submits_with: "Queuing..." }
-            ) do %>
-              <%= is_complete ? "Re-download" : "Download" %>
+                      class: "shrink-0 break-words text-base font-semibold tabular-nums transition-colors #{is_read ? "text-muted" : "text-foreground group-hover/row:text-accent"}" %>
+          <% if offline_capable %>
+            <span data-offline-cache-target="availableIndicator"
+                  class="inline-flex h-5 w-5 shrink-0 items-center justify-center text-success"
+                  title="Available offline"
+                  aria-label="Available offline"
+                  <%= "hidden" unless offline_status == "complete" %>>
+              <%= icon "check", class: "h-2.5 w-2.5" %>
+              <span class="sr-only">Available offline</span>
+            </span>
+          <% end %>
+          <%# Single-badge priority: active download > failed > reading progress > download complete %>
+          <span id="<%= dom_id(chapter, :status) %>" class="inline-flex shrink-0">
+            <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
+              <% dl_label = file_asset.download_status == "downloading" ? "Downloading" : "Queued" %>
+              <%= render UI::StatusBadgeComponent.new(status: file_asset.download_status, label: dl_label, bordered: true) %>
+            <% elsif file_asset&.download_status == "failed" %>
+              <%= render UI::StatusBadgeComponent.new(status: "failed", label: "Failed", bordered: true) %>
+            <% elsif progress.present? %>
+              <% progress_label = progress.status == "completed" ? "Completed" : "In Progress" %>
+              <%= render UI::StatusBadgeComponent.new(status: progress.status == "completed" ? "completed" : "in progress", label: progress_label, bordered: true) %>
+            <% end %>
+          </span>
+          <% if progress_text.present? %>
+            <% if failed_download_error.present? %>
+              <span data-controller="dialog" class="inline-flex max-w-full shrink-0">
+                <button type="button"
+                        id="<%= dom_id(chapter, :progress) %>"
+                        class="scanarr-panel-progress-pill scanarr-panel-error-trigger inline-flex min-h-6 max-w-full items-center gap-1 rounded-full px-2 py-1 text-left text-[11px] font-medium leading-none text-muted-2 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        data-action="dialog#open"
+                        aria-haspopup="dialog"
+                        aria-controls="<%= dom_id(chapter, :download_error) %>">
+                  <span class="truncate"><%= progress_text %></span>
+                  <span class="sr-only">Show full download error</span>
+                </button>
+                <dialog id="<%= dom_id(chapter, :download_error) %>"
+                        class="scanarr-panel-error-dialog m-auto w-[min(34rem,calc(100vw-2rem))] max-h-[min(32rem,calc(100dvh-2rem))] overflow-hidden rounded-2xl p-0 text-foreground backdrop:bg-background/80"
+                        data-dialog-target="dialog"
+                        data-action="click->dialog#closeOnBackdrop close->dialog#restoreFocus"
+                        aria-labelledby="<%= dom_id(chapter, :download_error_title) %>"
+                        aria-describedby="<%= dom_id(chapter, :download_error_body) %>">
+                  <div class="flex max-h-[inherit] flex-col">
+                    <div class="flex items-start justify-between gap-4 border-b border-border/70 px-4 py-3">
+                      <div class="min-w-0">
+                        <h2 id="<%= dom_id(chapter, :download_error_title) %>" class="text-sm font-semibold text-danger">Download error</h2>
+                        <p class="mt-1 text-xs text-muted">Chapter <%= chapter.chapter_number %> could not be saved locally.</p>
+                      </div>
+                      <button type="button"
+                              class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background/60 text-muted transition-colors hover:border-danger/40 hover:bg-danger-soft hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                              data-action="dialog#close"
+                              aria-label="Close download error"
+                              autofocus>
+                        <%= icon "x", class: "h-4 w-4", aria: { hidden: true } %>
+                      </button>
+                    </div>
+                    <div class="overflow-auto p-4">
+                      <pre id="<%= dom_id(chapter, :download_error_body) %>"
+                           class="scanarr-panel-error-code max-h-72 whitespace-pre-wrap break-words rounded-xl p-3 text-[11px] leading-relaxed"><code><%= failed_download_error %></code></pre>
+                    </div>
+                  </div>
+                </dialog>
+              </span>
+            <% else %>
+              <span id="<%= dom_id(chapter, :progress) %>" class="scanarr-panel-progress-pill inline-flex min-h-6 max-w-full shrink-0 items-center rounded-full px-2 py-1 text-left text-[11px] font-medium leading-none text-muted-2 tabular-nums">
+                <%= progress_text %>
+              </span>
+            <% end %>
+          <% end %>
+          <% if active_download && download_pages_expected.positive? %>
+            <span id="<%= dom_id(chapter, :download_progress_bar) %>"
+                  class="inline-flex w-24 shrink-0 items-center"
+                  role="progressbar"
+                  aria-label="Download progress"
+                  aria-valuenow="<%= download_pages_downloaded %>"
+                  aria-valuemin="0"
+                  aria-valuemax="<%= download_pages_expected %>">
+              <%= render UI::ProgressBarComponent.new(
+                value: download_pages_downloaded,
+                max: download_pages_expected,
+                color: :info,
+                size: :sm,
+                track: :surface
+              ) %>
+            </span>
+          <% end %>
+        </div>
+        <% if chapter.meaningful_title? %>
+          <p class="text-sm text-muted text-pretty"><%= chapter.title %></p>
+        <% end %>
+      </div>
+      <div class="flex shrink-0 items-center gap-1.5 self-start sm:self-center">
+        <% if offline_capable %>
+          <div class="group/offline inline-flex h-8 shrink-0 items-center gap-1 rounded-lg">
+            <span class="max-w-0 overflow-hidden whitespace-nowrap px-0 text-[10px] text-muted-2 tabular-nums text-right opacity-0 transition-all duration-150 group-hover/offline:max-w-10 group-hover/offline:px-1 group-hover/offline:opacity-100 group-focus-within/offline:max-w-10 group-focus-within/offline:px-1 group-focus-within/offline:opacity-100"
+                  <%= "hidden" unless show_offline_cancel_icon %>
+                  data-offline-cache-target="progress"></span>
+            <button type="button"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/50 text-muted transition-colors hover:border-info/40 hover:bg-info-soft hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    data-action="click->offline-cache#download"
+                    data-offline-cache-target="downloadButton"
+                    <%= "hidden" unless show_offline_download_icon %>>
+              <%= icon "download", class: "h-3.5 w-3.5" %>
+              <span class="sr-only">Download for offline</span>
+            </button>
+            <button type="button"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/50 text-muted transition-colors hover:border-warning/40 hover:bg-warning-soft hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    data-action="click->offline-cache#cancel"
+                    data-offline-cache-target="cancelButton"
+                    <%= "hidden" unless show_offline_cancel_icon %>>
+              <%= icon "x", class: "h-3.5 w-3.5" %>
+              <span class="sr-only">Cancel offline download</span>
+            </button>
+            <button type="button"
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background/50 text-muted transition-colors hover:border-danger/40 hover:bg-danger-soft hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    data-action="click->offline-cache#remove"
+                    data-offline-cache-target="removeButton"
+                    <%= "hidden" unless show_offline_remove_icon %>>
+              <%= icon "trash-2", class: "h-3.5 w-3.5" %>
+              <span class="sr-only">Remove offline chapter</span>
+            </button>
+          </div>
+        <% end %>
+        <% if file_asset&.download_status == "complete" %>
+          <%= render UI::ConfirmButtonComponent.new(
+            label: "Remove",
+            url: source_series_chapter_remove_download_path(
+              source_slug: source.slug,
+              series_slug: series.to_param,
+              chapter_identifier: chapter_identifier(chapter)
+            ),
+            method: :delete,
+            variant: :danger,
+            confirm: "Remove download for Chapter #{chapter.chapter_number}?",
+            icon: "trash-2"
+          ) %>
+        <% end %>
+        <% if file_asset&.download_status.in?(%w[queued pending downloading]) %>
+          <%= render UI::ConfirmButtonComponent.new(
+            label: "Cancel",
+            url: source_series_chapter_cancel_download_path(
+              source_slug: source.slug,
+              series_slug: series.to_param,
+              chapter_identifier: chapter_identifier(chapter)
+            ),
+            method: :post,
+            variant: :warning,
+            confirm: "Cancel this download?",
+            icon: "x"
+          ) %>
+        <% end %>
+        <% if chapter.source_url.present? %>
+          <% download_in_progress = file_asset&.download_status.in?(%w[queued pending downloading]) %>
+          <% has_existing_download = file_asset.present? %>
+          <% unless download_in_progress %>
+            <%= form_with url: source_series_chapter_download_path(
+                          source_slug: source.slug,
+                          series_slug: series.to_param,
+                          chapter_identifier: chapter_identifier(chapter)
+                        ),
+                        method: :post do %>
+              <%= render UI::ButtonComponent.new(
+                type: "submit",
+                variant: :ghost,
+                size: :sm,
+                class: "border-accent/40 text-accent hover:bg-accent-soft",
+                data: { turbo_submits_with: "Queuing..." }
+              ) do %>
+                <%= has_existing_download ? "Re-download" : "Download" %>
+              <% end %>
             <% end %>
           <% end %>
         <% end %>
-      <% end %>
 
-    </div>
+      </div>
     </div>
   </div>
 </li>

@@ -19,6 +19,10 @@
 <% show_offline_download_icon = offline_status.in?(%w[unpinned failed]) %>
 <% show_offline_cancel_icon = offline_status.in?(%w[downloading pinned]) %>
 <% show_offline_remove_icon = offline_status == "complete" %>
+<% download_status = @file_asset&.download_status %>
+<% download_pages_expected = @file_asset&.pages_expected.to_i %>
+<% download_pages_downloaded = @file_asset&.pages_downloaded.to_i %>
+<% download_progress_percent = download_pages_expected.positive? ? [ (download_pages_downloaded.to_f / download_pages_expected * 100).round, 100 ].min : 0 %>
 <main data-controller="<%= [ "reader", (offline_capable ? "offline-cache" : nil) ].compact.join(" ") %>"
       data-reader-style-value="<%= @reading_style %>"
       data-reader-page-count-value="<%= page_count %>"
@@ -121,7 +125,7 @@
         </header>
 
         <% if page_count.positive? %>
-          <div class="rounded-2xl border border-border/80 bg-background/70 p-4 backdrop-blur">
+          <div class="rounded-2xl border border-border/80 bg-background p-4">
             <div class="flex items-center justify-between text-xs text-foreground">
               <span data-reader-target="progressText">Page <%= initial_page_index %> / <%= page_count %></span>
               <span data-reader-target="progressPercent"><%= progress_percent.round %>%</span>
@@ -169,6 +173,8 @@
     <% if @chapter.source_url.present? || @release&.source_url.present? %>
       <% download_label = if @download_in_progress
                             @file_asset&.download_status == "downloading" ? "Downloading..." : "Download queued"
+         elsif @file_asset.present?
+                            "Re-download this chapter"
          else
                             "Download this chapter"
          end %>
@@ -245,18 +251,39 @@
      end %>
 
   <section data-reader-target="viewport"
-           class="scanarr-reader-stage rounded-[2rem] p-3 md:p-5 <%= viewport_class %>"
+           class="scanarr-reader-stage scanarr-reader-viewport rounded-[2rem] p-3 md:p-5 <%= viewport_class %>"
            data-reader-rtl="<%= is_rtl %>">
-    <% if @file_asset&.download_status.present? %>
-      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? "shrink-0 w-full flex items-center justify-center" : "" %>">
-        <% if @file_asset.download_status == "downloading" && @file_asset.pages_expected.present? %>
-          Downloading pages (<%= @file_asset.pages_downloaded %>/<%= @file_asset.pages_expected %>)
-        <% elsif @file_asset.download_status == "failed" %>
+    <% if download_status.present? %>
+      <div class="rounded-lg border border-border bg-surface/40 p-4 text-sm text-foreground <%= is_horizontal ? "shrink-0 w-full" : "" %>">
+        <% if download_status == "downloading" && download_pages_expected.positive? %>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <span class="font-medium text-foreground">Downloading pages</span>
+            <span class="text-xs text-muted tabular-nums"><%= download_pages_downloaded %>/<%= download_pages_expected %> pages · <%= download_progress_percent %>%</span>
+          </div>
+          <div class="mt-3"
+               role="progressbar"
+               aria-label="Download progress"
+               aria-valuenow="<%= download_pages_downloaded %>"
+               aria-valuemin="0"
+               aria-valuemax="<%= download_pages_expected %>">
+            <%= render UI::ProgressBarComponent.new(
+              value: download_pages_downloaded,
+              max: download_pages_expected,
+              color: :info,
+              size: :md,
+              track: :surface
+            ) %>
+          </div>
+        <% elsif download_status == "downloading" %>
+          <span class="font-medium text-foreground">Downloading; discovering pages.</span>
+        <% elsif download_status == "failed" %>
           Download failed. <%= @file_asset.download_error %>
-        <% elsif @file_asset.download_status == "complete" %>
+        <% elsif download_status == "complete" %>
           Download complete.
+        <% elsif download_status.in?(%w[queued pending]) %>
+          Download queued. Waiting for a worker to start.
         <% else %>
-          Download queued.
+          Download <%= download_status %>.
         <% end %>
       </div>
     <% end %>
@@ -291,9 +318,10 @@
     <% @pages.each_with_index do |page, idx| %>
       <article data-reader-target="page"
                data-action="click->reader#openLightboxForPage"
+               data-reader-image-state="<%= page.image.attached? ? "loading" : "error" %>"
                class="<%= page_class %>">
         <% if page.image.attached? %>
-          <%= image_tag url_for(page.display_image), alt: "Page #{page.position}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
+          <%= image_tag url_for(page.display_image), alt: "Page #{page.position}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil, data: { action: "load->reader#markImageLoaded error->reader#markImageLoaded" } %>
         <% else %>
           <p class="text-sm text-muted text-pretty">Image unavailable.</p>
         <% end %>
@@ -302,8 +330,9 @@
     <% @source_pages.each_with_index do |page, idx| %>
       <article data-reader-target="page"
                data-action="click->reader#openLightboxForPage"
+               data-reader-image-state="loading"
                class="<%= page_class %>">
-        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil %>
+        <%= image_tag page.url, alt: "Source page #{page.index}", class: image_class, loading: idx < 3 ? "eager" : "lazy", decoding: idx < 3 ? "sync" : "async", fetchpriority: idx == 0 ? "high" : nil, data: { action: "load->reader#markImageLoaded error->reader#markImageLoaded" } %>
       </article>
     <% end %>
   </section>

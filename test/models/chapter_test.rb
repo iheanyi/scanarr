@@ -10,6 +10,30 @@ class ChapterTest < ActiveSupport::TestCase
     assert_equal chapter.public_id, chapter.to_param
   end
 
+  def test_chapter_number_normalizes_expanded_float_precision
+    series = Series.create!(canonical_title: "Oshi No Ko")
+    chapter = Chapter.create!(
+      series: series,
+      chapter_number: "125.80000305175781",
+      title: "Chapter 125.8"
+    )
+
+    assert_equal "125.8", chapter.chapter_number
+    assert_equal BigDecimal("125.8"), chapter.chapter_number_value
+  end
+
+  def test_chapter_number_normalization_uses_chapter_label_before_volume_number
+    series = Series.create!(canonical_title: "Berserk")
+    chapter = Chapter.create!(
+      series: series,
+      chapter_number: "0.10000000149011612",
+      title: "Vol.4 Ch.0.10 - The Golden Age"
+    )
+
+    assert_equal "0.10", chapter.chapter_number
+    assert_equal BigDecimal("0.10"), chapter.chapter_number_value
+  end
+
   def test_meaningful_title_returns_false_for_blank_title
     series = Series.create!(canonical_title: "One Piece")
     chapter = Chapter.create!(series: series, chapter_number: "1", title: nil)

@@ -44,7 +44,7 @@ module UI
       when :ghost
         "border border-border/80 bg-background/60 text-foreground shadow-none hover:border-accent/20 hover:bg-surface"
       when :danger
-        "border border-danger/30 bg-danger text-foreground shadow-none hover:bg-danger/90"
+        "border border-danger/30 bg-danger text-background shadow-none hover:bg-danger/90"
       else
         "border border-accent/30 bg-accent text-accent-foreground shadow-none hover:border-accent/50 hover:bg-accent-strong"
       end

@@ -56,6 +56,19 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_marks_reader_pages_for_image_loading_skeleton
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/#{series_url}/chapters/1"
+
+      assert_response :success
+      assert_select "section.scanarr-reader-viewport"
+      assert_select "article.scanarr-reader-page-frame[data-reader-image-state='loading']" do
+        assert_select "img.scanarr-reader-image[data-action*='load->reader#markImageLoaded']"
+        assert_select "img.scanarr-reader-image[data-action*='error->reader#markImageLoaded']"
+      end
+    end
+  end
+
   def test_show_supports_decimal_chapter_identifiers
     source = sources(:one)
     Chapter.create!(
@@ -115,6 +128,23 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_show_renders_download_progress_panel
+    file_assets(:two).update!(
+      download_status: "downloading",
+      pages_downloaded: 4,
+      pages_expected: 10
+    )
+
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/#{series_url}/chapters/2"
+
+      assert_response :success
+      assert_includes @response.body, "Downloading pages"
+      assert_includes @response.body, "4/10 pages"
+      assert_select "div[role='progressbar'][aria-valuenow='4'][aria-valuemax='10']"
+    end
+  end
+
   def test_download_enqueues_job
     clear_enqueued_jobs
     assert_no_difference -> { Release.count } do
@@ -143,6 +173,48 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/vnd.turbo-stream.html", @response.media_type
     assert_includes @response.body, "toast-container"
     assert_includes @response.body, "Queued download for Chapter 1"
+  end
+
+  def test_download_requeues_failed_orphaned_file_asset
+    clear_enqueued_jobs
+    release = releases(:one)
+    file_asset = file_assets(:one)
+    file_asset.update!(
+      download_status: "failed",
+      download_error: "Orphaned: blob files missing from storage (detected by cleanup job)",
+      pages_downloaded: 2,
+      path: "library/old-layout"
+    )
+
+    assert_no_difference -> { FileAsset.count } do
+      assert_enqueued_jobs 1 do
+        post "/sources/weeb-central/#{series_url}/chapters/1/download"
+      end
+    end
+
+    file_asset.reload
+    expected_path = "library/weeb-central/one-piece--#{@series.public_id}/chapters/1--#{chapters(:one).public_id}"
+
+    assert_redirected_to "/sources/weeb-central/#{series_url}/chapters/1"
+    assert_equal release.file_asset, file_asset
+    assert_equal "queued", file_asset.download_status
+    assert_nil file_asset.download_error
+    assert_equal 0, file_asset.pages_downloaded
+    assert_equal expected_path, file_asset.path
+  end
+
+  def test_show_labels_failed_download_as_redownload
+    file_assets(:one).update!(
+      download_status: "failed",
+      download_error: "Orphaned: blob files missing from storage (detected by cleanup job)"
+    )
+
+    with_adapter(FakeAdapter.new) do
+      get "/sources/weeb-central/#{series_url}/chapters/1"
+    end
+
+    assert_response :success
+    assert_includes @response.body, "Re-download this chapter"
   end
 
   def test_update_progress_creates_progress

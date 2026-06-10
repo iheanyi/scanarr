@@ -67,8 +67,8 @@ class UserPreferencesTest < ActiveSupport::TestCase
     assert_equal 30, @user.effective_cleanup_days
   end
 
-  def test_effective_theme_defaults_to_signal_coral
-    assert_equal "signal-coral", @user.effective_theme
+  def test_effective_theme_defaults_to_default_theme
+    assert_equal ScanarrThemes::DEFAULT, @user.effective_theme
   end
 
   def test_theme_returns_set_value
@@ -80,7 +80,7 @@ class UserPreferencesTest < ActiveSupport::TestCase
   def test_theme_normalizes_unknown_values_to_default
     @user.update!(theme: "unknown-theme")
 
-    assert_equal "signal-coral", @user.theme
+    assert_equal ScanarrThemes::DEFAULT, @user.theme
   end
 
   def test_preferences_persist_via_jsonb

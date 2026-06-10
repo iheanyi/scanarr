@@ -2,7 +2,7 @@
   <meta name="turbo-refresh-method" content="morph">
   <meta name="turbo-refresh-scroll" content="preserve">
 <% end %>
-<% content_for :page_direction, "panel-pulse" %>
+<% content_for :page_direction, ScanarrThemes::DEFAULT %>
 
 <% chapter_count = @chapters.size
   read_count = @chapter_progress_map.present? ? @chapter_progress_map.count { |_, progress| progress.status == "completed" } : 0
@@ -199,7 +199,7 @@
                     size: :sm,
                     full_width: false,
                     aria: { label: "Reading style" },
-                    class: "h-9 w-auto rounded-md border-border/80 bg-surface pl-8 pr-8 text-xs font-medium shadow-sm hover:border-muted"
+                    class: "h-9 w-auto rounded-md border-border/80 bg-surface pl-8 pr-8 text-xs font-medium hover:border-muted"
                   ) %>
                 </div>
               <% end %>
@@ -217,92 +217,95 @@
   </section>
 
   <section class="scanarr-panel-subtle rounded-[2rem] p-4 md:p-5" data-controller="chapter-filter bulk-select">
-    <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-      <div class="space-y-3">
-        <div class="flex flex-wrap items-center gap-3">
-        <h2 class="text-xl font-semibold text-balance">Chapters</h2>
-          <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= chapter_count %> total</span>
-          <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= read_count %> read</span>
-          <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= unread_count %> unread</span>
+    <div class="space-y-4">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <h2 class="text-xl font-semibold text-balance">Chapters</h2>
+            <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= chapter_count %> total</span>
+            <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= read_count %> read</span>
+            <span class="scanarr-panel-chip inline-flex items-center rounded-full px-3 py-1.5 text-xs text-muted"><%= unread_count %> unread</span>
+          </div>
+          <p class="text-sm text-muted">Chapter state stays close to the title while row actions stay grouped on the right.</p>
         </div>
-        <p class="text-sm text-muted">Unread chapters, active downloads, and progress states sit closer to the title so the list scans faster.</p>
-      </div>
-      <% if @chapters.any? %>
-        <div class="flex items-center gap-2">
-          <% if @in_progress_count > 0 %>
-            <%= render UI::ConfirmButtonComponent.new(
-              label: "Cancel All",
-              url: source_series_cancel_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
-              method: :post,
-              variant: :warning,
-              confirm: "Cancel all #{@in_progress_count} in-progress download(s)?",
-              icon: "x",
-              count: @in_progress_count
-            ) %>
-          <% end %>
-          <% if @downloaded_count > 0 %>
-            <%= render UI::ConfirmButtonComponent.new(
-              label: "Remove All",
-              url: source_series_remove_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
-              method: :delete,
-              variant: :danger,
-              confirm: "Remove all #{@downloaded_count} downloaded chapter(s)? This cannot be undone.",
-              icon: "trash-2",
-              count: @downloaded_count
-            ) %>
-          <% end %>
-          <div data-controller="loading-button">
-            <%= form_with url: source_series_download_all_path(source_slug: @source.slug, series_slug: @series.to_param),
-                          method: :post,
-                          data: { action: "submit->loading-button#submit" } do %>
-              <%= render UI::ButtonComponent.new(
-                type: "submit",
-                disabled: @downloadable_count == 0,
-                class: @downloadable_count > 0 ? "transition-opacity" : "bg-surface-2 text-muted hover:bg-surface-2 cursor-not-allowed",
-                data: {
-                  loading_button_target: "button",
-                  turbo_submits_with: "Queuing..."
-                }
-              ) do %>
-                <span class="hidden" data-loading-button-target="spinner">
-                  <%= render UI::SpinnerComponent.new(size: :sm, class: "text-current") %>
-                </span>
-                <%= icon "download", class: "h-4 w-4", data: { loading_button_target: "icon" } %>
-                <span data-loading-button-target="text">Download All</span>
-                <% if @downloadable_count > 0 %>
-                  <span class="rounded-full bg-background/20 px-1.5 py-0.5 text-xs"><%= @downloadable_count %></span>
+        <% if @chapters.any? %>
+          <div class="flex flex-wrap items-center gap-2">
+            <% if @in_progress_count > 0 %>
+              <%= render UI::ConfirmButtonComponent.new(
+                label: "Cancel All",
+                url: source_series_cancel_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
+                method: :post,
+                variant: :warning,
+                confirm: "Cancel all #{@in_progress_count} in-progress download(s)?",
+                icon: "x",
+                count: @in_progress_count
+              ) %>
+            <% end %>
+            <% if @downloaded_count > 0 %>
+              <%= render UI::ConfirmButtonComponent.new(
+                label: "Remove All",
+                url: source_series_remove_all_downloads_path(source_slug: @source.slug, series_slug: @series.to_param),
+                method: :delete,
+                variant: :danger,
+                confirm: "Remove all #{@downloaded_count} downloaded chapter(s)? This cannot be undone.",
+                icon: "trash-2",
+                count: @downloaded_count
+              ) %>
+            <% end %>
+            <div data-controller="loading-button">
+              <%= form_with url: source_series_download_all_path(source_slug: @source.slug, series_slug: @series.to_param),
+                            method: :post,
+                            data: { action: "submit->loading-button#submit" } do %>
+                <%= render UI::ButtonComponent.new(
+                  type: "submit",
+                  disabled: @downloadable_count == 0,
+                  class: @downloadable_count > 0 ? "transition-opacity" : "bg-surface-2 text-muted hover:bg-surface-2 cursor-not-allowed",
+                  data: {
+                    loading_button_target: "button",
+                    turbo_submits_with: "Queuing..."
+                  }
+                ) do %>
+                  <span class="hidden" data-loading-button-target="spinner">
+                    <%= render UI::SpinnerComponent.new(size: :sm, class: "text-current") %>
+                  </span>
+                  <%= icon "download", class: "h-4 w-4", data: { loading_button_target: "icon" } %>
+                  <span data-loading-button-target="text">Download All</span>
+                  <% if @downloadable_count > 0 %>
+                    <span class="rounded-full bg-background/20 px-1.5 py-0.5 text-xs"><%= @downloadable_count %></span>
+                  <% end %>
                 <% end %>
               <% end %>
-            <% end %>
+            </div>
           </div>
-        </div>
-      <% end %>
-    </div>
-    <%= turbo_stream_from @series, :downloads %>
-    <% if @chapters.any? %>
-      <div class="scanarr-panel-filter-bar flex items-center gap-3 rounded-[1.25rem] p-3">
-        <div class="flex-1">
-          <%= render UI::SearchInputComponent.new(
-            placeholder: "Filter chapters by number or title\u2026",
-            data: { chapter_filter_target: "input", action: "input->chapter-filter#filter:throttled", throttled_wait: "200" }
-          ) %>
-        </div>
-        <span data-chapter-filter-target="count" class="shrink-0 text-xs text-muted-2">
-          <%= @chapters.size %> of <%= @chapters.size %>
-        </span>
+        <% end %>
       </div>
-      <ul class="space-y-3">
-        <%= render partial: "series/chapter_row",
-                   collection: @chapters,
-                   as: :chapter,
-                   locals: {
-                     source: @source,
-                     series: @series,
-                     chapter_progress_map: @chapter_progress_map,
-                     latest_release_map: @latest_release_map,
-                     offline_manifest_map: @offline_manifest_map
-                   } %>
-      </ul>
+      <%= turbo_stream_from @series, :downloads %>
+      <% if @chapters.any? %>
+        <div class="space-y-3">
+          <div class="scanarr-panel-filter-bar flex flex-col gap-3 rounded-[1.25rem] p-3 sm:flex-row sm:items-center">
+            <div class="min-w-0 flex-1">
+              <%= render UI::SearchInputComponent.new(
+                placeholder: "Filter chapters by number or title\u2026",
+                data: { chapter_filter_target: "input", action: "input->chapter-filter#filter:throttled", throttled_wait: "200" }
+              ) %>
+            </div>
+            <span data-chapter-filter-target="count" class="shrink-0 self-end text-xs text-muted-2 sm:self-auto">
+              <%= @chapters.size %> of <%= @chapters.size %>
+            </span>
+          </div>
+          <ul class="space-y-2">
+            <%= render partial: "series/chapter_row",
+                       collection: @chapters,
+                       as: :chapter,
+                       locals: {
+                         source: @source,
+                         series: @series,
+                         chapter_progress_map: @chapter_progress_map,
+                         latest_release_map: @latest_release_map,
+                         offline_manifest_map: @offline_manifest_map
+                       } %>
+          </ul>
+        </div>
 
       <%# Bulk action floating bar %>
       <div data-bulk-select-target="actionBar" data-turbo-temporary class="hidden sticky bottom-4 z-10">
@@ -332,7 +335,7 @@
                 <%= render UI::ButtonComponent.new(
                   type: "button",
                   variant: :danger,
-                  class: "border border-danger/40 bg-transparent text-danger hover:bg-danger-soft",
+                  class: "border-danger/60 bg-danger text-background hover:border-danger hover:bg-danger/90",
                   data: { action_name: "remove", action: "click->bulk-select#submitAction" }
                 ) do %>
                   <%= icon "trash-2", class: "h-4 w-4" %>
@@ -374,6 +377,7 @@
           </div>
         <% end %>
       <% end %>
-    <% end %>
+      <% end %>
+    </div>
   </section>
 </div>

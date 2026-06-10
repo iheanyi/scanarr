@@ -156,6 +156,7 @@ export default class extends Controller {
     if (this.pageTargets.length > 0) {
       const initialIndex = this.resolveInitialIndex()
       this.currentIndex = initialIndex
+      this.syncImageLoadingStates()
       this.prepareImagesForInitialScroll(initialIndex)
       // Use instant scroll on initial load
       this.scrollToIndex(this.currentIndex, "instant")
@@ -239,6 +240,11 @@ export default class extends Controller {
       this.syncState()
       this.openLightbox()
     }
+  }
+
+  markImageLoaded(event: Event) {
+    const image = event.currentTarget as HTMLImageElement
+    this.markPageImageLoaded(image)
   }
 
   toggleLightbox(event?: Event) {
@@ -704,6 +710,23 @@ export default class extends Controller {
       if (!image) return
       if (image.loading === "lazy") image.loading = "eager"
     })
+  }
+
+  private syncImageLoadingStates() {
+    this.pageTargets.forEach((page) => {
+      const image = page.querySelector("img") as HTMLImageElement | null
+      if (!image) return
+      if (image.complete && image.naturalWidth > 0) {
+        page.dataset.readerImageState = "loaded"
+      }
+    })
+  }
+
+  private markPageImageLoaded(image: HTMLImageElement) {
+    const page = image.closest("[data-reader-target~='page']") as HTMLElement | null
+    if (!page) return
+
+    page.dataset.readerImageState = image.naturalWidth > 0 ? "loaded" : "error"
   }
 
   private setupInitialScrollCorrection(index: number) {

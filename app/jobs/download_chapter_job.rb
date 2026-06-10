@@ -148,6 +148,9 @@ class DownloadChapterJob < ApplicationJob
     if @file_asset
       # Clean up old pages when re-downloading
       unless @file_asset.download_status == "downloading"
+        semantic_path = library_path_builder.chapter_path(@chapter)
+
+        @file_asset.archive.purge if @file_asset.archive.attached?
         # Purge old page blobs to avoid orphans
         @file_asset.pages.includes(image_attachment: :blob).each do |page|
           page.image.purge if page.image.attached?
@@ -159,7 +162,7 @@ class DownloadChapterJob < ApplicationJob
           download_error: nil,
           pages_downloaded: 0,
           pages_expected: nil,
-          path: @file_asset.path.presence || library_path_builder.chapter_path(@chapter)
+          path: semantic_path.presence || @file_asset.path
         )
       end
     else

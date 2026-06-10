@@ -44,7 +44,7 @@ class SeriesImporterTest < ActiveSupport::TestCase
     assert_equal "left_to_right", series.reading_style
     series_source = SeriesSource.find_by!(series: series, source: source, source_series_id: "series-123")
 
-    assert_equal "library/weeb_central/one-piece--#{series.public_id}", series_source.library_base_path
+    assert_equal "library/weeb-central/one-piece--#{series.public_id}", series_source.library_base_path
     assert_equal 2, series.chapters.where(source: source).count
     assert_equal "https://weebcentral.com/chapters/01CHAPTER", series.chapters.find_by(chapter_number: "1").source_url
     assert_equal "1", series.chapters.find_by(chapter_number: "1").volume&.volume_number

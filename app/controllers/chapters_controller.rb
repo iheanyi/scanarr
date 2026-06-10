@@ -13,7 +13,7 @@ class ChaptersController < ApplicationController
     @release = latest_release
     file_asset = @release&.file_asset
     @pages = if file_asset&.download_status == "complete"
-               pages = file_asset.pages.includes(image_attachment: :blob).order(:position).select { |page| page.image.attached? }
+               pages = file_asset.pages.includes(:image_attachment).order(:position).select { |page| page.image.attached? }
 
                # Verify blobs actually exist on disk (spot-check first page)
                if pages.any?
@@ -370,7 +370,7 @@ class ChaptersController < ApplicationController
 
   def latest_release
     releases = @chapter.releases.where(source: @source)
-                       .includes(file_asset: { pages: { image_attachment: :blob } })
+                       .includes(:file_asset)
                        .order(created_at: :desc)
 
     # Prefer the newest release whose downloaded files actually exist on disk
@@ -378,10 +378,11 @@ class ChaptersController < ApplicationController
       fa = release.file_asset
       next unless fa&.download_status == "complete"
 
-      first_page = fa.pages.min_by(&:position)
-      next unless first_page&.image&.blob
+      first_page = fa.pages.order(:position).first
+      blob = first_page&.image_attachment&.blob
+      next unless blob
 
-      if ActiveStorage::Blob.service.exist?(first_page.image.blob.key)
+      if ActiveStorage::Blob.service.exist?(blob.key)
         return release
       end
     end

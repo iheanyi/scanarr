@@ -5,7 +5,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     get settings_path
 
     assert_response :success
-    assert_includes @response.body, 'data-scanarr-theme="signal-coral"'
+    assert_includes @response.body, %(data-scanarr-theme="#{ScanarrThemes::DEFAULT}")
     assert_includes @response.body, "Settings"
     assert_includes @response.body, "Appearance"
     assert_includes @response.body, "Reading Preferences"
@@ -57,7 +57,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to settings_path
     user = User.find_by(email: "admin@scanarr.local")
 
-    assert_equal "signal-coral", user.theme
+    assert_equal ScanarrThemes::DEFAULT, user.theme
   end
 
   def test_update_via_turbo_stream

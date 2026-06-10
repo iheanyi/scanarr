@@ -106,6 +106,66 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes @response.body, "In Progress"
   end
 
+  def test_show_renders_failed_download_error_dialog
+    series = series(:one)
+    chapter = chapters(:one)
+    release = chapter.releases.create!(source: sources(:one), format: "pages", source_url: chapter.source_url)
+    release.create_file_asset!(
+      format: "pages",
+      download_status: "failed",
+      download_error: "NameError: uninitialized constant BaseAdapter::HttpClient"
+    )
+
+    get library_series_path(series_slug: series.to_param)
+
+    assert_response :success
+    progress_id = dom_id(chapter, :progress)
+    dialog_id = dom_id(chapter, :download_error)
+    dialog_title_id = dom_id(chapter, :download_error_title)
+    dialog_body_id = dom_id(chapter, :download_error_body)
+
+    assert_select "details.scanarr-panel-error-details", 0
+    assert_select(
+      "button##{progress_id}[aria-haspopup='dialog'][aria-controls='#{dialog_id}']",
+      /NameError: uninitialized constant BaseAdapter::/
+    )
+    assert_select(
+      "dialog##{dialog_id}.scanarr-panel-error-dialog[aria-labelledby='#{dialog_title_id}'][aria-describedby='#{dialog_body_id}']"
+    ) do
+      assert_select "button[aria-label='Close download error']"
+      assert_select "pre##{dialog_body_id} code", "NameError: uninitialized constant BaseAdapter::HttpClient"
+    end
+  end
+
+  def test_show_renders_download_progress_with_page_counts
+    series = series(:one)
+    chapter = chapters(:two)
+    file_asset = file_assets(:two)
+    file_asset.update!(
+      download_status: "downloading",
+      pages_downloaded: 4,
+      pages_expected: 10
+    )
+
+    get library_series_path(series_slug: series.to_param)
+
+    assert_response :success
+    assert_includes @response.body, "Downloading 4/10 (40%)"
+    assert_select(
+      "span##{dom_id(chapter, :download_progress_bar)}[role='progressbar'][aria-valuenow='4'][aria-valuemax='10']"
+    )
+  end
+
+  def test_show_renders_queued_download_state
+    series = series(:one)
+    file_assets(:two).update!(download_status: "queued", pages_downloaded: 0, pages_expected: nil)
+
+    get library_series_path(series_slug: series.to_param)
+
+    assert_response :success
+    assert_includes @response.body, "Queued for download"
+  end
+
   def test_show_displays_download_all_button
     series = series(:one)
     get library_series_path(series_slug: series.to_param)

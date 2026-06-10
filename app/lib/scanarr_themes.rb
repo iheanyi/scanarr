@@ -1,7 +1,19 @@
 module ScanarrThemes
-  DEFAULT = "signal-coral"
+  DEFAULT = "midnight-panel"
 
   THEMES = [
+    {
+      id: "midnight-panel",
+      name: "Midnight Panel",
+      mood: "Cinematic manga-tech",
+      accent: "#93a7ff",
+      surface: "#101827",
+      base: "#060914",
+      summary: "The default Scanarr theme: near-black navy, muted periwinkle command state, and crisp manga-tech control surfaces.",
+      best_for: "The best fit for Scanarr's cinematic reader mood, crisp controls, strong covers, and clear action hierarchy.",
+      tags: [ "Default", "Cinematic", "Cool", "Command" ],
+      meta_color: "#060914"
+    },
     {
       id: "signal-coral",
       name: "Signal Coral",
@@ -11,8 +23,32 @@ module ScanarrThemes
       base: "#0a0c10",
       summary: "Charcoal UI with a coral action language. Still expressive, but warmer and less arcade than cyan.",
       best_for: "Download queues, destructive actions, hot/new status, and pages that need sharper command hierarchy.",
-      tags: [ "Default", "Command", "Warm", "Direct" ],
+      tags: [ "Archive", "Command", "Warm", "Direct" ],
       meta_color: "#0a0c10"
+    },
+    {
+      id: "paper-shadow",
+      name: "Paper Shadow",
+      mood: "Ink and page light",
+      accent: "#e8d8b0",
+      surface: "#141310",
+      base: "#070706",
+      summary: "Graphite-black chrome with a warm manga-page command color. It feels physical and readable without drifting into bookstore luxury.",
+      best_for: "A quieter default candidate for long reading sessions, library browsing, and pages where covers should own nearly all saturated color.",
+      tags: [ "Candidate", "Warm", "Reader", "Tactile" ],
+      meta_color: "#070706"
+    },
+    {
+      id: "riso-noir",
+      name: "Riso Noir",
+      mood: "Graphic night print",
+      accent: "#b68cff",
+      surface: "#12101b",
+      base: "#07060c",
+      summary: "A deep black system with controlled violet command state. It is distinctive and manga-adjacent without becoming neon cyberpunk.",
+      best_for: "A bolder default candidate when Scanarr should feel sharper, stranger, and more memorable while staying usable.",
+      tags: [ "Candidate", "Graphic", "Violet", "Distinct" ],
+      meta_color: "#07060c"
     },
     {
       id: "archive-noir",

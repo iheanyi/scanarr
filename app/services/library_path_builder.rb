@@ -8,7 +8,7 @@ class LibraryPathBuilder
     title = slug(@series.canonical_title)
     return nil if title.blank?
 
-    source = slug(@source&.key.presence || @source&.slug.presence).presence || "unknown_source"
+    source = slug(@source&.slug.presence || @source&.key.presence).presence || "unknown-source"
     series_id = slug(@series.public_id.presence || @series.id).presence || "unsaved"
 
     [ "library", source, "#{title}--#{series_id}" ].join("/")
@@ -18,10 +18,12 @@ class LibraryPathBuilder
     base = base_path
     return nil if base.blank?
 
-    volume_segment = normalize_numeric(chapter.volume&.volume_number).presence || "unknown"
     chapter_number = normalize_numeric(chapter.chapter_number.presence || chapter.public_id).presence || "unknown"
     chapter_id = slug(chapter.public_id.presence || chapter.id).presence || "unsaved"
     chapter_segment = "#{chapter_number}--#{chapter_id}"
+    volume_segment = normalize_numeric(chapter.volume&.volume_number).presence
+
+    return [ base, "chapters", chapter_segment ].join("/") if volume_segment.blank?
 
     [ base, "volumes", volume_segment, "chapters", chapter_segment ].join("/")
   end

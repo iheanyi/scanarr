@@ -77,11 +77,11 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     series_source = SeriesSource.find_by(source: release.source, series: release.chapter.series)
 
     assert_equal "SERIES123", series_source.source_series_id
-    assert_equal "library/weeb_central/one-piece--#{release.chapter.series.public_id}", series_source.library_base_path
+    assert_equal "library/weeb-central/one-piece--#{release.chapter.series.public_id}", series_source.library_base_path
 
     file_asset = release.file_asset
 
-    assert_equal "library/weeb_central/one-piece--#{release.chapter.series.public_id}/volumes/unknown/chapters/1--#{release.chapter.public_id}", file_asset.path
+    assert_equal "library/weeb-central/one-piece--#{release.chapter.series.public_id}/chapters/1--#{release.chapter.public_id}", file_asset.path
     pages = file_asset.pages.order(:position).to_a
 
     assert_equal [ 1, 2 ], pages.map(&:position)
@@ -225,6 +225,52 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     assert_nil file_asset.pages_expected
     assert_equal 0, file_asset.pages.count
     assert_nil step.cursor
+  end
+
+  def test_perform_recovers_failed_orphaned_file_asset_with_semantic_paths
+    release = Release.create!(
+      chapter: chapters(:one),
+      source: sources(:one),
+      format: "pages",
+      source_url: "https://weebcentral.com/chapters/recover-#{SecureRandom.hex(4)}"
+    )
+    file_asset = release.create_file_asset!(
+      format: "pages",
+      download_status: "failed",
+      pages_downloaded: 1,
+      pages_expected: 2,
+      download_error: "Orphaned: blob files missing from storage (detected by cleanup job)",
+      path: "library/old-layout"
+    )
+    stale_page = file_asset.pages.create!(position: 1)
+    stale_page.image.attach(io: StringIO.new("missing-page"), filename: "001.jpg", content_type: "image/jpeg")
+    ActiveStorage::Blob.service.delete(stale_page.image.blob.key)
+
+    http = FakeHttpClient.new(
+      "https://img.example.com/page-1.jpg" => tiny_png,
+      "https://img.example.com/page-2.jpg" => tiny_png
+    )
+
+    DownloadChapterJob.new.perform(
+      release.source_url,
+      source_key: release.source.key,
+      series_title: release.chapter.series.canonical_title,
+      chapter_number: release.chapter.chapter_number,
+      chapter_title: release.chapter.title,
+      release_id: release.id,
+      adapter: FakeAdapter.new,
+      http: http
+    )
+
+    file_asset.reload
+
+    expected_path = "library/weeb-central/one-piece--#{release.chapter.series.public_id}/chapters/1--#{release.chapter.public_id}"
+
+    assert_equal "complete", file_asset.download_status
+    assert_nil file_asset.download_error
+    assert_equal expected_path, file_asset.path
+    assert_equal [ "#{expected_path}/pages/001.png", "#{expected_path}/pages/002.png" ], file_asset.pages.order(:position).map { |page| page.image.blob.key }
+    assert_equal "#{expected_path}/chapter.cbz", file_asset.archive.blob.key
   end
 
   def test_ensure_runtime_entities_raises_when_rehydration_is_incomplete

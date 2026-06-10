@@ -15,7 +15,7 @@ class CleanupOrphanedDownloadsJob < ApplicationJob
       unless ActiveStorage::Blob.service.exist?(first_page.image.blob.key)
         file_asset.update!(
           download_status: "failed",
-          download_error: "Orphaned: blob files missing from storage (detected by cleanup job)"
+          download_error: FileAsset::ORPHANED_BLOBS_ERROR
         )
         orphaned_count += 1
         Rails.logger.warn "[CleanupOrphanedDownloadsJob] Marked file_asset #{file_asset.id} as failed (orphaned blobs)"

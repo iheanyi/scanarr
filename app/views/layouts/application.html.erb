@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <% immersive_reader = (controller_name == "chapters" && action_name == "show") || (controller_name == "sources" && action_name == "preview_read") %>
-    <% page_direction = content_for(:page_direction).presence || "panel-pulse" %>
+    <% page_direction = content_for(:page_direction).presence || ScanarrThemes::DEFAULT %>
     <% app_theme = ScanarrThemes.normalize(content_for(:scanarr_theme).presence || current_user&.effective_theme) %>
     <title>Scanarr</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -32,7 +32,7 @@
   <body data-page-direction="<%= page_direction %>" data-scanarr-theme="<%= app_theme %>" class="min-h-dvh overflow-x-hidden bg-background text-pretty text-foreground">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-accent-foreground">Skip to content</a>
     <div data-controller="drawer" class="scanarr-app-shell min-h-dvh lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <header class="flex items-center gap-3 border-b border-border/70 px-4 py-3 backdrop-blur-xl lg:hidden <%= immersive_reader ? "bg-background/85" : "bg-background/70" %>">
+      <header class="flex items-center gap-3 border-b border-border/70 px-4 py-3 lg:hidden <%= immersive_reader ? "bg-background/95" : "bg-background" %>">
         <button type="button"
                 class="inline-flex items-center justify-center rounded-md border border-border bg-surface/85 p-2 text-foreground transition-colors hover:border-accent/30 hover:bg-surface-2"
                 data-action="click->drawer#open"
