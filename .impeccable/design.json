@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-01T21:18:00Z",
+  "title": "Design System: Scanarr",
+  "extensions": {
+    "colorMeta": {
+      "midnight-panel-bg": {
+        "role": "neutral",
+        "displayName": "Midnight Base",
+        "canonical": "#060914",
+        "tonalRamp": [
+          "oklch(12% 0.012 255)",
+          "oklch(18% 0.014 255)",
+          "oklch(25% 0.014 255)",
+          "oklch(34% 0.013 255)",
+          "oklch(48% 0.012 255)",
+          "oklch(65% 0.01 255)",
+          "oklch(82% 0.008 255)",
+          "oklch(95% 0.005 255)"
+        ]
+      },
+      "midnight-panel-surface": {
+        "role": "neutral",
+        "displayName": "Panel Navy",
+        "canonical": "#101827",
+        "tonalRamp": [
+          "oklch(14% 0.014 255)",
+          "oklch(19% 0.015 255)",
+          "oklch(25% 0.015 255)",
+          "oklch(33% 0.014 255)",
+          "oklch(45% 0.013 255)",
+          "oklch(62% 0.011 255)",
+          "oklch(80% 0.008 255)",
+          "oklch(94% 0.005 255)"
+        ]
+      },
+      "midnight-panel-surface-2": {
+        "role": "neutral",
+        "displayName": "Raised Navy",
+        "canonical": "#19243a",
+        "tonalRamp": [
+          "oklch(16% 0.015 255)",
+          "oklch(22% 0.016 255)",
+          "oklch(29% 0.016 255)",
+          "oklch(38% 0.015 255)",
+          "oklch(50% 0.014 255)",
+          "oklch(66% 0.011 255)",
+          "oklch(82% 0.008 255)",
+          "oklch(95% 0.005 255)"
+        ]
+      },
+      "midnight-panel-accent": {
+        "role": "primary",
+        "displayName": "Panel Periwinkle",
+        "canonical": "#93a7ff",
+        "tonalRamp": [
+          "oklch(22% 0.06 275)",
+          "oklch(34% 0.09 275)",
+          "oklch(48% 0.12 275)",
+          "oklch(66% 0.13 275)",
+          "oklch(76% 0.11 275)",
+          "oklch(84% 0.08 275)",
+          "oklch(92% 0.05 275)",
+          "oklch(97% 0.025 275)"
+        ]
+      },
+      "semantic-success": {
+        "role": "semantic",
+        "displayName": "Download Mint",
+        "canonical": "#77d7ba",
+        "tonalRamp": [
+          "oklch(22% 0.05 160)",
+          "oklch(34% 0.08 160)",
+          "oklch(46% 0.1 160)",
+          "oklch(60% 0.11 160)",
+          "oklch(70% 0.1 160)",
+          "oklch(80% 0.08 160)",
+          "oklch(90% 0.045 160)",
+          "oklch(96% 0.025 160)"
+        ]
+      },
+      "semantic-warning": {
+        "role": "semantic",
+        "displayName": "Queue Amber",
+        "canonical": "#f2b86d",
+        "tonalRamp": [
+          "oklch(24% 0.055 75)",
+          "oklch(36% 0.08 75)",
+          "oklch(48% 0.1 75)",
+          "oklch(62% 0.11 75)",
+          "oklch(74% 0.1 75)",
+          "oklch(84% 0.075 75)",
+          "oklch(92% 0.045 75)",
+          "oklch(97% 0.025 75)"
+        ]
+      },
+      "semantic-danger": {
+        "role": "semantic",
+        "displayName": "Failure Rose",
+        "canonical": "#ff7892",
+        "tonalRamp": [
+          "oklch(22% 0.065 15)",
+          "oklch(34% 0.11 15)",
+          "oklch(47% 0.16 15)",
+          "oklch(63% 0.18 15)",
+          "oklch(74% 0.15 15)",
+          "oklch(84% 0.1 15)",
+          "oklch(92% 0.06 15)",
+          "oklch(97% 0.03 15)"
+        ]
+      },
+      "semantic-info": {
+        "role": "semantic",
+        "displayName": "Reader Blue",
+        "canonical": "#7fc7ff",
+        "tonalRamp": [
+          "oklch(22% 0.05 235)",
+          "oklch(34% 0.075 235)",
+          "oklch(46% 0.09 235)",
+          "oklch(60% 0.095 235)",
+          "oklch(72% 0.08 235)",
+          "oklch(82% 0.06 235)",
+          "oklch(91% 0.035 235)",
+          "oklch(97% 0.018 235)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Large page and series titles only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section framing and major product panels."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cards, list headings, and compact panel titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions, metadata, and explanatory UI copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Short markers, chips, and compact system labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "flat-surface",
+        "value": "none",
+        "purpose": "Default for ordinary product panels and controls."
+      },
+      {
+        "name": "inset-surface-line",
+        "value": "inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+        "purpose": "Subtle top line on panels and metric blocks."
+      },
+      {
+        "name": "cover-depth",
+        "value": "0 20px 50px rgba(0, 0, 0, 0.28)",
+        "purpose": "Depth reserved for manga covers and media surfaces."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease-out",
+        "purpose": "Button, chip, and control state changes."
+      },
+      {
+        "name": "state-standard",
+        "value": "200ms ease-out",
+        "purpose": "Cover hover and panel affordance transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action control for reading, importing, downloading, and saving.",
+      "html": "<button class=\"ds-btn-primary\">Continue reading</button>",
+      "css": ".ds-btn-primary { display: inline-flex; height: 40px; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border: 1px solid rgba(147, 167, 255, 0.34); background: #93a7ff; color: #070a18; padding: 0 16px; font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; line-height: 1; transition: background-color 150ms ease-out, border-color 150ms ease-out; } .ds-btn-primary:hover { background: #c0cbff; border-color: rgba(147, 167, 255, 0.55); } .ds-btn-primary:focus-visible { outline: 2px solid rgba(147, 167, 255, 0.4); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action that stays visible without competing with the primary command.",
+      "html": "<button class=\"ds-btn-ghost\">Migrate</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; height: 40px; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border: 1px solid rgba(43, 56, 84, 0.8); background: rgba(6, 9, 20, 0.6); color: #f2f6ff; padding: 0 16px; font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 700; line-height: 1; transition: background-color 150ms ease-out, border-color 150ms ease-out; } .ds-btn-ghost:hover { background: #101827; border-color: rgba(147, 167, 255, 0.24); } .ds-btn-ghost:focus-visible { outline: 2px solid rgba(147, 167, 255, 0.4); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Search field for filtering series, chapters, and sources.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg><input placeholder=\"Filter series...\" /></label>",
+      "css": ".ds-search { position: relative; display: block; width: 320px; max-width: 100%; color: #77849e; } .ds-search svg { pointer-events: none; position: absolute; left: 12px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); } .ds-search input { width: 100%; height: 40px; border-radius: 8px; border: 1px solid rgba(43, 56, 84, 0.8); background: #101827; color: #f2f6ff; padding: 10px 16px 10px 40px; font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1; } .ds-search input::placeholder { color: #77849e; opacity: 1; } .ds-search input:focus { border-color: #93a7ff; outline: 2px solid rgba(147, 167, 255, 0.4); outline-offset: 0; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "chip-default",
+      "description": "Compact metadata and state marker with text always present.",
+      "html": "<span class=\"ds-chip ds-chip-success\">Completed</span>",
+      "css": ".ds-chip { display: inline-flex; min-height: 24px; align-items: center; border-radius: 9999px; padding: 4px 10px; font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; line-height: 1; } .ds-chip-success { background: rgba(119, 215, 186, 0.16); color: #77d7ba; border: 1px solid rgba(119, 215, 186, 0.3); }"
+    },
+    {
+      "name": "Cover Tile",
+      "kind": "custom",
+      "refersTo": "series-cover",
+      "description": "Signature manga cover shell with fixed 2:3 ratio and content-first depth.",
+      "html": "<div class=\"ds-cover-tile\"><div class=\"ds-cover-art\">Cover</div></div>",
+      "css": ".ds-cover-tile { position: relative; width: 180px; overflow: hidden; border-radius: 20px; border: 1px solid rgba(168, 181, 204, 0.14); background: #101827; padding: 7px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28); } .ds-cover-art { aspect-ratio: 2 / 3; display: grid; place-items: center; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.06); background: linear-gradient(160deg, #19243a, #060914); color: #a8b5cc; font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif; font-size: 12px; }"
+    },
+    {
+      "name": "Panel Surface",
+      "kind": "card",
+      "refersTo": "surface-panel",
+      "description": "Default product panel using tonal depth instead of decorative shadow.",
+      "html": "<section class=\"ds-panel\"><h3>Library</h3><p>1,008 series tracked across sources.</p></section>",
+      "css": ".ds-panel { border-radius: 24px; border: 1px solid rgba(168, 181, 204, 0.14); background: rgba(16, 24, 39, 0.86); padding: 24px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); color: #f2f6ff; font-family: Geist, Inter, ui-sans-serif, system-ui, sans-serif; } .ds-panel h3 { margin: 0; font-size: 18px; line-height: 1.3; font-weight: 700; } .ds-panel p { margin: 8px 0 0; max-width: 60ch; color: #a8b5cc; font-size: 14px; line-height: 1.6; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Reader Control Room",
+    "overview": "Scanarr is a product UI for managing a personal manga library, not a marketing surface. The design should feel like a tuned control room around the reader's collection: dark, compact, fast to scan, and confident enough to handle sources, downloads, progress, and admin state without turning into a generic SaaS dashboard.\n\nThe system uses quiet controls and strong content. Manga covers, series titles, chapter progress, and source state should carry the emotional weight. Buttons, filters, chips, and panels should be precise, familiar, and restrained so the user can move from discovery to reading without fighting the chrome.",
+    "keyCharacteristics": [
+      "Cover-led: manga art gets the visual attention before decorative UI does.",
+      "Restrained color: periwinkle marks action and command state, not decoration.",
+      "Flat by default: depth comes from tonal surfaces, borders, and cover treatment.",
+      "Dense but legible: lists, grids, filters, and controls can be compact when state remains clear.",
+      "Product-first: every flourish must support browsing, library management, downloading, or reading."
+    ],
+    "rules": [
+      {
+        "name": "The Cover Owns Color Rule",
+        "body": "Manga covers are allowed to be the most colorful part of most screens. The interface should use accent color sparingly so cover art remains dominant.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Command Color Rule",
+        "body": "Panel Periwinkle is for action, selection, and focus. Do not use it as generic decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Product Scale Rule",
+        "body": "Use fixed rem sizes for app UI. Avoid fluid display type on task surfaces.",
+        "section": "typography"
+      },
+      {
+        "name": "The Short Label Rule",
+        "body": "Uppercase tracked text is allowed only for short labels, not sentence copy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Chrome Rule",
+        "body": "Do not add ambient shadows to ordinary product panels. Raise the surface tone or border instead.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Content Depth Rule",
+        "body": "Depth belongs to covers, reader pages, overlays, and active media surfaces.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep Panel Periwinkle rare and tied to action, selection, and focus.",
+      "Do let covers and manga artwork carry most of the color on browse and library screens.",
+      "Do use full-perimeter 1px borders for selected, active, warning, and hover states.",
+      "Do preserve WCAG AA contrast for body text, metadata, placeholders, and controls.",
+      "Do use semantic color with text labels or icons so color is never the only signal.",
+      "Do keep app UI familiar: standard buttons, selects, search fields, drawers, and side navigation."
+    ],
+    "donts": [
+      "Don't make Scanarr look like a generic SaaS dashboard.",
+      "Don't turn the palette into neon cyberpunk, even when using Panel Pulse or Acid Zine.",
+      "Don't make the library feel like an editorial luxury magazine.",
+      "Don't make controls look like a harsh terminal-first developer tool.",
+      "Don't use border-left or border-right greater than 1px as an accent marker.",
+      "Don't add decorative gradients, gradient text, or glass effects as default chrome.",
+      "Don't add color randomly. Every colored element needs a role."
+    ]
+  }
+}

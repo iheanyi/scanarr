@@ -1,0 +1,8 @@
+{
+  "files": [
+    "app/views/layouts/application.html.erb"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}
