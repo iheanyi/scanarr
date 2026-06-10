@@ -47,7 +47,7 @@ Three named volumes persist data across restarts:
 |-----------------|-------------------------------|-----------------------------|
 | `postgres_data` | `/var/lib/postgresql/data`    | All database data           |
 | `redis_data`    | `/data`                       | Redis/Valkey persistence    |
-| `storage_data`  | `/rails/storage`              | Downloaded manga pages      |
+| `storage_data`  | `/rails/storage`              | Downloaded manga pages when using local storage |
 
 ## Configuration
 
@@ -75,6 +75,50 @@ All configuration is done via environment variables in `.env`. Copy `.env.exampl
 | `ACTION_CABLE_REDIS_URL` | `redis://redis:6379/2` | Redis URL for Action Cable pub/sub. |
 | `RAILS_LOG_LEVEL`     | `info`    | Log verbosity (`debug`, `info`, `warn`, `error`).|
 | `SCANARR_DISABLE_AUTH`| `false`   | Set to `true` to skip login (single-user/VPN).   |
+| `ACTIVE_STORAGE_SERVICE` | `local` | Set to `local` for disk storage or `s3` for AWS S3, Cloudflare R2, MinIO, and compatible object stores. |
+| `ACTIVE_STORAGE_LOCAL_ROOT` | `/rails/storage` | Disk path used by the local Active Storage service inside the containers. |
+| `S3_ENDPOINT` | blank | Custom S3-compatible endpoint. Required for R2 and MinIO; usually blank for AWS S3. |
+| `S3_BUCKET` | blank | Bucket name for `ACTIVE_STORAGE_SERVICE=s3`. |
+| `S3_ACCESS_KEY_ID` | blank | S3-compatible access key. |
+| `S3_SECRET_ACCESS_KEY` | blank | S3-compatible secret key. |
+| `S3_REGION` | `auto` | Region for S3-compatible storage. Use `auto` for Cloudflare R2. |
+| `S3_FORCE_PATH_STYLE` | `true` | Use path-style bucket addressing. Use `false` for most AWS S3 buckets. |
+
+## Storage
+
+### Local Disk
+
+By default, Scanarr writes downloaded pages, covers, and generated archives through Rails Active Storage to the `storage_data` Docker volume mounted at `/rails/storage`.
+
+For a host path or NAS mount, replace the `storage_data:/rails/storage` mount in `docker-compose.yml` with the host path:
+
+```yaml
+volumes:
+  - /srv/scanarr/storage:/rails/storage
+```
+
+Keep `ACTIVE_STORAGE_LOCAL_ROOT=/rails/storage` unless you also change the in-container mount target.
+
+### S3-Compatible Storage
+
+Set `ACTIVE_STORAGE_SERVICE=s3` to store media in AWS S3, Cloudflare R2, MinIO, or another S3-compatible object store:
+
+```env
+ACTIVE_STORAGE_SERVICE=s3
+S3_BUCKET=scanarr
+S3_ACCESS_KEY_ID=...
+S3_SECRET_ACCESS_KEY=...
+S3_REGION=auto
+S3_FORCE_PATH_STYLE=true
+```
+
+For Cloudflare R2 or MinIO, also set `S3_ENDPOINT`:
+
+```env
+S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+```
+
+When using S3-compatible storage, back up or version the object store bucket according to your provider's tooling.
 
 ## Kamal Redis defaults
 
@@ -269,3 +313,5 @@ To move storage to a specific host path, edit `docker-compose.yml`:
 volumes:
   - /path/to/manga:/rails/storage
 ```
+
+For S3-compatible storage, set `ACTIVE_STORAGE_SERVICE=s3` and confirm the `S3_*` values are present in both the web and Sidekiq containers.

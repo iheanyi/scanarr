@@ -29,8 +29,9 @@ Rails.application.configure do
     namespace: ENV.fetch("REDIS_CACHE_NAMESPACE", "scanarr:cache:development")
   }
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Store uploaded files through Active Storage. Use ACTIVE_STORAGE_SERVICE=s3
+  # with S3_* env vars for AWS S3, Cloudflare R2, MinIO, or another S3-compatible service.
+  config.active_storage.service = ENV.fetch("ACTIVE_STORAGE_SERVICE", "local").to_sym
 
   # Serve files directly (proxy) instead of redirecting, saving an HTTP roundtrip per image.
   config.active_storage.resolve_model_to_route = :rails_storage_proxy
