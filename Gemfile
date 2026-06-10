@@ -32,7 +32,7 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 # S3-compatible Active Storage service support for AWS S3, Cloudflare R2, and MinIO.
-gem "aws-sdk-s3", "~> 1.176"
+gem "aws-sdk-s3", "~> 1.225", require: false
 
 # HTML parsing for scrapers
 gem "nokogiri", "~> 1.16"
