@@ -219,10 +219,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Map sort option to MangaFire's sort parameter
     def sort_value(sort)
       case sort.to_s.downcase

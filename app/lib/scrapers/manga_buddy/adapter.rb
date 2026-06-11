@@ -257,10 +257,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Parse search result items from MadTheme `.book-detailed-item` cards
     def parse_search_items(doc)
       doc.css(".book-detailed-item").map do |item|

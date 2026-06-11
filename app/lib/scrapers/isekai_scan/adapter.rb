@@ -146,10 +146,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     def xhr_headers
       { "X-Requested-With" => "XMLHttpRequest" }
     end

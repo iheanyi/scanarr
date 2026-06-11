@@ -13,7 +13,7 @@ module Scrapers
     def search(query, filters: {})
       _ = filters
       # AsuraScans search via query param
-      response = http.get("#{BASE_URL}/series", params: { name: query })
+      response = http.get("#{base_url}/series", params: { name: query })
       return [] unless response.status == 200
 
       doc = Nokogiri::HTML(response.body)
@@ -29,9 +29,9 @@ module Scrapers
         full_url = if href.start_with?("http")
           href
         elsif href.start_with?("/")
-          "#{BASE_URL}#{href}"
+          "#{base_url}#{href}"
         else
-          "#{BASE_URL}/#{href}"
+          "#{base_url}/#{href}"
         end
 
         ResultTypes::SearchResult.new(
@@ -101,7 +101,7 @@ module Scrapers
         href = link["href"]
         # Ensure proper URL - add leading slash if needed
         href = "/#{href}" unless href.start_with?("/") || href.start_with?("http")
-        full_url = href.start_with?("http") ? href : "#{BASE_URL}#{href}"
+        full_url = href.start_with?("http") ? href : "#{base_url}#{href}"
 
         # Extract chapter number from URL (format: .../chapter/123 or .../chapter/123.5)
         chapter_num = href[/\/chapter\/#{CHAPTER_NUMBER_PATTERN}/, 1] || extract_chapter_number(link.text)
@@ -175,9 +175,9 @@ module Scrapers
       if id_or_url.start_with?("http")
         id_or_url
       elsif id_or_url.include?("/")
-        "#{BASE_URL}/#{id_or_url}"
+        "#{base_url}/#{id_or_url}"
       else
-        "#{BASE_URL}/series/#{id_or_url}"
+        "#{base_url}/series/#{id_or_url}"
       end
     end
 

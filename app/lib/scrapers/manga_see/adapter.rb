@@ -10,7 +10,7 @@ module Scrapers
     def search(query, filters: {})
       _ = filters
       # MangaSee uses a JSON directory for search
-      response = http.get("#{BASE_URL}/_search.php")
+      response = http.get("#{base_url}/_search.php")
       return [] unless response.status == 200
 
       directory = JSON.parse(response.body)
@@ -26,7 +26,7 @@ module Scrapers
         ResultTypes::SearchResult.new(
           id: entry["i"],
           title: entry["s"],
-          url: "#{BASE_URL}/manga/#{entry['i']}",
+          url: "#{base_url}/manga/#{entry['i']}",
           cover_url: "https://temp.compsci88.com/cover/#{entry['i']}.jpg",
           author: entry["a"]&.join(", ")
         )
@@ -38,7 +38,7 @@ module Scrapers
 
     def series(id_or_url)
       slug = extract_slug(id_or_url)
-      response = http.get("#{BASE_URL}/manga/#{slug}")
+      response = http.get("#{base_url}/manga/#{slug}")
       return nil unless response.status == 200
 
       doc = Nokogiri::HTML(response.body)
@@ -64,7 +64,7 @@ module Scrapers
         tags: [],
         series_type: "manga",
         cover_url: cover_url,
-        url: "#{BASE_URL}/manga/#{slug}"
+        url: "#{base_url}/manga/#{slug}"
       )
     rescue StandardError => e
       Rails.logger.error "[MangaSee] Series error: #{e.message}"
@@ -73,7 +73,7 @@ module Scrapers
 
     def chapters(series_url)
       slug = extract_slug(series_url)
-      response = http.get("#{BASE_URL}/manga/#{slug}")
+      response = http.get("#{base_url}/manga/#{slug}")
       return [] unless response.status == 200
 
       # Extract chapters from JavaScript variable
@@ -200,7 +200,7 @@ module Scrapers
 
     def chapter_url(slug, chapter_code)
       chapter_str = decode_chapter_for_url(chapter_code)
-      "#{BASE_URL}/read-online/#{slug}-chapter-#{chapter_str}.html"
+      "#{base_url}/read-online/#{slug}-chapter-#{chapter_str}.html"
     end
   end
   end

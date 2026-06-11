@@ -30,7 +30,7 @@ module Scrapers
     # @return [Array<ResultTypes::BrowseResult>]
     def browse(sort: "latest", page: 1, limit: 20, filters: {})
       _ = filters
-      response = http.get(BASE_URL)
+      response = http.get(base_url)
       return [] unless response.status == 200
 
       doc = Nokogiri::HTML(response.body)
@@ -50,7 +50,7 @@ module Scrapers
       _ = filters
       # MangaPill uses a simple search query param
       encoded_query = CGI.escape(query)
-      response = http.get("#{BASE_URL}/search", params: { q: encoded_query })
+      response = http.get("#{base_url}/search", params: { q: encoded_query })
       return [] unless response.status == 200
 
       doc = Nokogiri::HTML(response.body)
@@ -68,7 +68,7 @@ module Scrapers
         ResultTypes::SearchResult.new(
           id: href.split("/").last,
           title: title,
-          url: "#{BASE_URL}#{href}",
+          url: "#{base_url}#{href}",
           cover_url: img&.[]("data-src") || img&.[]("src"),
           author: nil
         )
@@ -137,7 +137,7 @@ module Scrapers
 
       chapter_links.map do |link|
         href = link["href"]
-        full_url = href.start_with?("http") ? href : "#{BASE_URL}#{href}"
+        full_url = href.start_with?("http") ? href : "#{base_url}#{href}"
         chapter_text = link.text.strip
 
         # Extract chapter number from text or URL
@@ -174,7 +174,7 @@ module Scrapers
 
         images << ResultTypes::Page.new(
           index: idx,
-          url: src.start_with?("http") ? src : "#{BASE_URL}#{src}",
+          url: src.start_with?("http") ? src : "#{base_url}#{src}",
           mime_type: guess_mime_type(src)
         )
       end
@@ -187,7 +187,7 @@ module Scrapers
 
           images << ResultTypes::Page.new(
             index: idx,
-            url: src.start_with?("http") ? src : "#{BASE_URL}#{src}",
+            url: src.start_with?("http") ? src : "#{base_url}#{src}",
             mime_type: guess_mime_type(src)
           )
         end
@@ -246,7 +246,7 @@ module Scrapers
         results << ResultTypes::BrowseResult.new(
           id: manga_id,
           title: title,
-          url: "#{BASE_URL}#{href}",
+          url: "#{base_url}#{href}",
           cover_url: img&.[]("data-src") || img&.[]("src"),
           language: "en",
           author: nil,
@@ -321,7 +321,7 @@ module Scrapers
         results << ResultTypes::BrowseResult.new(
           id: manga_id,
           title: title,
-          url: "#{BASE_URL}#{href}",
+          url: "#{base_url}#{href}",
           cover_url: img&.[]("data-src") || img&.[]("src"),
           language: "en",
           author: nil,
@@ -347,9 +347,9 @@ module Scrapers
       if id_or_url.start_with?("http")
         id_or_url
       elsif id_or_url.include?("/")
-        "#{BASE_URL}/manga/#{id_or_url}"
+        "#{base_url}/manga/#{id_or_url}"
       else
-        "#{BASE_URL}/manga/#{id_or_url}"
+        "#{base_url}/manga/#{id_or_url}"
       end
     end
 

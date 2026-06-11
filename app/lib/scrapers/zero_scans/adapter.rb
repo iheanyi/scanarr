@@ -169,10 +169,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Fetch the full comics catalog from the API
     # @return [Array<Hash>] List of comic data hashes
     def fetch_comics_data

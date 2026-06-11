@@ -94,5 +94,14 @@ module Scrapers
         "ongoing"
       end
     end
+
+    private
+
+    # Registry-built configs always carry "base_url" (manifest, adoption, or
+    # operator pin); the adapter's BASE_URL constant only backs bare
+    # instantiation outside the registry.
+    def base_url
+      config["base_url"] || self.class::BASE_URL
+    end
   end
 end

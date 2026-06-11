@@ -74,6 +74,17 @@ class MangaPillAdapterTest < ActiveSupport::TestCase
     assert_kind_of ResultTypes::SearchResult, results.first
   end
 
+  def test_search_requests_the_configured_base_url_over_the_constant
+    moved = "https://mangapill.moved.example"
+    http = FakeHttpClient.new(mapping: { "GET #{moved}/search?q=one%2Bpiece" => search_fixture }, base_url: moved)
+    adapter = Scrapers::MangaPill::Adapter.new(config: { "base_url" => moved }, http: http)
+
+    results = adapter.search("one piece")
+
+    assert_equal 2, results.size
+    assert_equal "#{moved}#{@series_path}", results.first.url
+  end
+
   def test_series_parses_metadata
     series = @adapter.series(@series_path.delete_prefix("/manga/"))
 
