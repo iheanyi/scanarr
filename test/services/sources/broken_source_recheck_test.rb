@@ -42,21 +42,29 @@ module Sources
     end
 
     test "successful probe of the current domain records success and adopts nothing" do
+      stale = series_sources(:one)
+      stale.update!(consecutive_failures: 12)
       registry = FakeRegistry.new(FakeAdapter.new(nil => OK_RESULT))
 
       BrokenSourceRecheck.new(@source, adapter_registry: registry).call
 
       assert_equal [ "success" ], @source.scraper_runs.where(run_type: "recheck").pluck(:status)
       assert_nil @source.reload.adopted_base_url
+      # Recovery must un-stale the series whose streaks only reflected the outage
+      assert_equal 0, stale.reload.consecutive_failures
     end
 
     test "failed probe with no upstream alternative records one failed run" do
+      stale = series_sources(:one)
+      stale.update!(consecutive_failures: 12)
       registry = FakeRegistry.new(FakeAdapter.new(nil => :down))
 
       BrokenSourceRecheck.new(@source, adapter_registry: registry).call
 
       assert_equal [ "failed" ], @source.scraper_runs.where(run_type: "recheck").pluck(:status)
       assert_nil @source.reload.adopted_base_url
+      # No recovery, no reset
+      assert_equal 12, stale.reload.consecutive_failures
     end
 
     test "adopts the upstream domain when the current one fails and upstream works" do

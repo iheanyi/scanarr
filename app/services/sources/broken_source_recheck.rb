@@ -17,15 +17,25 @@ module Sources
     end
 
     def call
-      return if probe(base_url: nil)
+      return restore_series! if probe(base_url: nil)
 
       upstream_url = upstream_alternative
       return unless upstream_url
 
-      @source.update!(adopted_base_url: upstream_url) if probe(base_url: upstream_url)
+      if probe(base_url: upstream_url)
+        @source.update!(adopted_base_url: upstream_url)
+        restore_series!
+      end
     end
 
     private
+
+    # The mirror of sync's probation reset: a recovered source must retry
+    # series whose failure streaks (including 10+ stale-listed ones) only
+    # ever reflected the outage, or scheduled checks would skip them forever.
+    def restore_series!
+      @source.series_sources.where("consecutive_failures > 0").update_all(consecutive_failures: 0)
+    end
 
     def probe(base_url:)
       run = ScraperRun.create!(source: @source, run_type: "recheck", status: "running", started_at: Time.current)

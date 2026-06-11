@@ -2,13 +2,17 @@
 
 module Sources
   # Title similarity scoring shared by migration discovery and auto-linking.
-  # Returns 1.0 for an exact normalized match, 0.8 for containment, otherwise
-  # the shared-word ratio.
+  # Scores are strict tiers, not a continuous scale: 1.0 is reserved for an
+  # exact normalized match, 0.8 for containment, and the shared-word ratio is
+  # capped below containment so overlap can never impersonate a higher tier
+  # (ten-of-eleven shared words, or the same words reordered, must not link
+  # a series unattended).
   module TitleMatcher
-    # Above the 0.8 containment score on purpose: only an exact normalized
-    # title match may link a series unattended. Containment ("Berserk" inside
-    # "Berserk of Gluttony") is a suggestion for a human, not a link.
-    AUTO_LINK_CONFIDENCE = 0.9
+    # Only an exact normalized title match may link unattended. Containment
+    # ("Berserk" inside "Berserk of Gluttony") and word overlap are
+    # suggestions for a human, not links.
+    AUTO_LINK_CONFIDENCE = 1.0
+    WORD_OVERLAP_CAP = 0.75
 
     module_function
 
@@ -23,7 +27,7 @@ module Sources
       largest_term_count = [ normalized.split.size, normalized_candidate.split.size ].max
       return 0.0 if largest_term_count.zero?
 
-      (shared_terms.to_f / largest_term_count).round(2)
+      [ (shared_terms.to_f / largest_term_count).round(2), WORD_OVERLAP_CAP ].min
     end
 
     # Best [result, confidence] pair at or above min_confidence, or [nil, 0.0].
