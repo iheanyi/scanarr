@@ -86,14 +86,31 @@ module Sources
 
     test "removing the dead flag resurrects health to a fresh probation" do
       source = sources(:one)
-      source.update!(adapter_version: 1, health_status: "dead", enabled: false)
+      source.update!(
+        adapter_version: 1,
+        health_status: "dead",
+        enabled: false,
+        adapter_version_synced_at: 2.weeks.ago,
+        rate_limited_until: 1.hour.from_now
+      )
+      # Stale pre-death failures that a fresh probation must window out
+      3.times do |i|
+        ScraperRun.create!(
+          source: source, run_type: "smoke", status: "failed",
+          started_at: (i + 1).days.ago, finished_at: (i + 1).days.ago, created_at: (i + 1).days.ago
+        )
+      end
 
       SyncService.new(entries: [ entry_for(source, dead: false) ]).call
       source.reload
 
       assert_equal "healthy", source.health_status
+      assert_nil source.rate_limited_until
       # Operator agency: resurrection does not auto-re-enable
       refute source.enabled
+      # The probation is real: stale evidence is windowed out, so the
+      # evaluator does not immediately flip the source back to broken
+      assert_equal "healthy", HealthEvaluator.new(source).derived_status
     end
 
     test "merges manifest capabilities over existing ones without dropping operator keys" do

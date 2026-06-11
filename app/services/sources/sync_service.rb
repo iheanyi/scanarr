@@ -58,7 +58,11 @@ module Sources
         source.enabled = false
         assign_health(source, "dead")
       elsif source.health_status == "dead"
+        # A real probation needs the evidence window moved too, or the
+        # evaluator would re-derive broken from stale pre-death failures.
         assign_health(source, "healthy")
+        source.adapter_version_synced_at = Time.current
+        source.rate_limited_until = nil
       end
 
       apply_version(source, entry)
