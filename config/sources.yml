@@ -188,7 +188,7 @@ default: &default
     max_retries: 2
     headers:
       User-Agent: "ScanarrScraper/0.1"
-      Referer: "https://natomanga.com/"
+      Referer: "https://www.natomanga.com/"
   manga_fire:
     delay_ms: 500
     open_timeout: 10
