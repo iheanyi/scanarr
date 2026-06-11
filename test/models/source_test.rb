@@ -64,6 +64,16 @@ class SourceTest < ActiveSupport::TestCase
     assert_not @source.mature_content?
   end
 
+  def test_effective_base_url_prefers_adoption
+    @source.update!(base_url: "https://canonical.example")
+
+    assert_equal "https://canonical.example", @source.effective_base_url
+
+    @source.update!(adopted_base_url: "https://moved.example")
+
+    assert_equal "https://moved.example", @source.effective_base_url
+  end
+
   def test_mature_content_uses_capabilities_override
     @source.update!(capabilities: { mature_content: true })
 

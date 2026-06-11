@@ -258,8 +258,8 @@
                 <%= render UI::BadgeComponent.new(label: "Rate Limited", variant: :warning) %>
               <% end %>
             </div>
-            <% if source.base_url.present? %>
-              <p class="text-xs text-muted-2 truncate"><%= source.base_url %></p>
+            <% if source.effective_base_url.present? %>
+              <p class="text-xs text-muted-2 truncate"><%= source.effective_base_url %></p>
             <% end %>
           </div>
 
