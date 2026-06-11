@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "resolv"
-
 module Sources
   # Recovery probe for a broken source. Probes the current domain first; if
   # that fails and the upstream catalog knows a different domain, probes it
@@ -12,7 +10,7 @@ module Sources
   class BrokenSourceRecheck
     PROBE_QUERY = "one piece"
 
-    def initialize(source, adapter_registry: Scrapers::AdapterRegistry, resolver: Resolv.method(:getaddresses))
+    def initialize(source, adapter_registry: Scrapers::AdapterRegistry, resolver: PublicUrl::SYSTEM_RESOLVER)
       @source = source
       @adapter_registry = adapter_registry
       @resolver = resolver

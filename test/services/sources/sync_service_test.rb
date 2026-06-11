@@ -43,6 +43,8 @@ module Sources
         rate_limited_until: 1.hour.from_now,
         adopted_base_url: "https://weebcentral.moved"
       )
+      stale_streak = series_sources(:one)
+      stale_streak.update!(consecutive_failures: 5)
 
       SyncService.new.call
       source.reload
@@ -53,6 +55,8 @@ module Sources
       assert_nil source.rate_limited_until
       # The bump may ship a corrected domain; a stale adoption must not outrank it
       assert_nil source.adopted_base_url
+      # Stale per-series streaks must not count toward post-probation health
+      assert_equal 0, stale_streak.reload.consecutive_failures
     end
 
     test "unchanged version leaves health alone" do

@@ -62,14 +62,7 @@ module Sources
         source.enabled = false
         assign_health(source, "dead")
       elsif source.health_status == "dead"
-        # A real probation needs the evidence window moved too, or the
-        # evaluator would re-derive broken from stale pre-death failures.
-        # The adoption predates death and must not outrank the manifest's
-        # canonical domain on the way back.
-        assign_health(source, "healthy")
-        source.adapter_version_synced_at = Time.current
-        source.rate_limited_until = nil
-        source.adopted_base_url = nil
+        grant_probation(source)
       end
 
       apply_version(source, entry)
@@ -79,12 +72,21 @@ module Sources
       return if source.adapter_version == entry.version
 
       source.adapter_version = entry.version
+      grant_probation(source)
+      assign_health(source, "dead") if entry.dead
+    end
+
+    # A fresh probation must reset every piece of failure evidence, or the
+    # evaluator re-derives broken from stale signals: the window anchor moves,
+    # per-series failure streaks restart (a fixed adapter should retry series
+    # that were failing, including ones stale-listed at 10+), the rate limit
+    # clears, and a stale adopted domain stops outranking the manifest URL.
+    def grant_probation(source)
+      assign_health(source, "healthy")
       source.adapter_version_synced_at = Time.current
-      assign_health(source, entry.dead ? "dead" : "healthy")
       source.rate_limited_until = nil
-      # The bump ships a fix, which may include a corrected domain. A stale
-      # adopted URL would outrank the new manifest base_url forever.
       source.adopted_base_url = nil
+      source.series_sources.update_all(consecutive_failures: 0) unless source.new_record?
     end
 
     def assign_health(source, status)

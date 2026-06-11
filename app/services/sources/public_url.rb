@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "ipaddr"
-require "resolv"
+require "socket"
 
 module Sources
   # SSRF guard for URLs that originate in third-party data (the upstream
@@ -34,10 +34,21 @@ module Sources
       false
     end
 
-    # Literal checks plus DNS resolution. An unresolvable host is allowed
+    # The system resolver (getaddrinfo), not Resolv: Net::HTTP connects via
+    # the socket layer, which also accepts noncanonical IPv4 forms like
+    # "127.1" or "2130706433" that IPAddr refuses to parse and DNS would not
+    # answer for. Guarding with anything weaker than what the fetch path
+    # uses leaves a bypass.
+    SYSTEM_RESOLVER = lambda do |host|
+      Addrinfo.getaddrinfo(host, nil, nil, :STREAM).map(&:ip_address)
+    rescue SocketError
+      []
+    end
+
+    # Literal checks plus resolution. An unresolvable host is allowed
     # through: it cannot be fetched anyway, and a DNS flake must not reject
     # a legitimate domain.
-    def resolves_internal?(host, resolver: Resolv.method(:getaddresses))
+    def resolves_internal?(host, resolver: SYSTEM_RESOLVER)
       return true if internal_host?(host)
 
       resolver.call(host.to_s).any? { |address| internal_address?(address) }
