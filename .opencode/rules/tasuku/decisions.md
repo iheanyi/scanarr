@@ -90,3 +90,19 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: User decision overriding my initial pushback. The derivation-vs-events tension resolved cleanly: the evaluator keeps deriving, and the machine's value is per-edge declared consequences plus AASM::InvalidTransition on undeclared edges, making partial resets and rogue health writes structurally harder. Non-bang events assigning in memory preserved SyncService idempotency exactly.
 
+## ssrf-connection-time-pinning (2026-06-11)
+
+**Chose**: Pin the resolved public address with Net::HTTP#ipaddr= via the faraday-net_http adapter config block in Scrapers::HttpClient, resolving per request through Sources::PublicUrl::SYSTEM_RESOLVER and refusing hosts with no public address (InternalHostRefusedError)
+
+**Over**: Faraday middleware rewriting the URL host to the IP plus Host header (breaks TLS: SNI and cert verification would run against the IP), Subclassing the NetHttp adapter to override net_http_connection (more code for the same effect as the supported config block hook), Re-checking resolves_internal? before each request without pinning (narrows but does not close the TOCTOU since Net::HTTP re-resolves at connect)
+
+**Because**: ipaddr= is the native net-http mechanism: conn_address uses @ipaddr for the TCP connect while Host header, TLS SNI, and post_connection_check stay keyed to @address (the hostname), so certificate verification is unchanged. Verified against installed gem sources (faraday-net_http 3.4.2 calls @config_block per request in configure_request; net-http 0.9.1 connect). Proxied connections skip the pin (Net::HTTP connects to the proxy; the proxy resolves). Unresolvable hosts pass through unpinned, matching PublicUrl's DNS-flake stance and keeping VCR/WebMock tests hermetic offline; residual SERVFAIL-then-internal channel accepted and documented.
+
+## adapter-base-url-mechanism (2026-06-11)
+
+**Chose**: Single private Scrapers::BaseAdapter#base_url helper (config["base_url"] || self.class::BASE_URL), per-adapter copies deleted, applied via a committed rerunnable codemod, regression-guarded by two adapter_coverage_test conformance checks (override preferred, BASE_URL referenced only at its definition)
+
+**Over**: Keeping per-adapter base_url helper copies (20 identical implementations), Per-adapter bespoke edits without a shared mechanism, Rewriting adapters to relative request paths resolved by HttpClient (larger, riskier sweep for no behavior gain)
+
+**Because**: Issue #54: adapters building URLs from BASE_URL constants ignored operator pins and adopted domains. 20 adapters had already converged on the exact same helper shape, so hoisting it is consolidation, not invention; only asura_scans, manga_see, manga_pill needed real conversion. Constants stay as bare-instantiation fallbacks. Finding: manga_nato constant (www.natomanga.com) disagrees with manifest (natomanga.com); reported in PR #57, not silently changed.
+
