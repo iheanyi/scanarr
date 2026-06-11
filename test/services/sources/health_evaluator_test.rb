@@ -114,6 +114,19 @@ module Sources
       assert_equal "healthy", HealthEvaluator.new(@source).derived_status
     end
 
+    test "healing from degraded also un-stales series" do
+      @source.update!(health_status: "degraded")
+      series = create_series("Minority Stale")
+      stale = SeriesSource.create!(
+        series: series, source: @source, source_series_id: "STALE_MINORITY",
+        last_checked_at: 2.hours.ago, consecutive_failures: 12
+      )
+      create_run("success", at: Time.current)
+
+      assert_equal "healthy", HealthEvaluator.new(@source).call
+      assert_equal 0, stale.reload.consecutive_failures
+    end
+
     test "degraded when rate limited" do
       @source.update!(rate_limited_until: 10.minutes.from_now)
 

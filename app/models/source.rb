@@ -31,9 +31,11 @@ class Source < ApplicationRecord
 
     after_all_transitions :touch_health_changed_at
 
+    # Any heal restores per-series streaks: a degraded source can carry a
+    # minority of series stale-listed at 10+ failures, and scheduled checks
+    # would skip those forever after recovery.
     event :mark_healthy do
-      transitions from: :broken, to: :healthy, after: :restore_series_streaks!
-      transitions from: :degraded, to: :healthy
+      transitions from: [ :broken, :degraded ], to: :healthy, after: :restore_series_streaks!
     end
 
     event :mark_degraded do

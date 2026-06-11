@@ -124,11 +124,12 @@ class SourceMigrationService
     end
   end
 
+  # Buckets are disjoint: a linked series whose priority moves counts as
+  # migrated, one with nothing to change is already_on_target. The completion
+  # toast sums them, so a series must never appear in both.
   def migrate_series(series)
     if series.sources.include?(@to_source)
-      # Already has target source — just update priority
-      update_source_priority(series)
-      @already_on_target << series
+      @already_on_target << series unless update_source_priority(series)
     elsif auto_link_series(series)
       update_source_priority(series)
       @migrated << series unless @migrated.include?(series)
@@ -174,7 +175,7 @@ class SourceMigrationService
       .joins(:library_series)
       .where(library_series: { id: series.library_series_id })
       .first
-    return unless follow
+    return false unless follow
 
     priority = follow.source_priority || []
 
@@ -184,5 +185,6 @@ class SourceMigrationService
 
     follow.update!(source_priority: priority)
     @migrated << series
+    true
   end
 end

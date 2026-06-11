@@ -110,6 +110,8 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
 
     assert result.success
     assert_includes result.migrated, @series
+    # Buckets are disjoint; the toast sums them
+    refute_includes result.already_on_target, @series
 
     @follow.reload
 

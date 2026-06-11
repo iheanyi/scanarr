@@ -82,3 +82,11 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Every transitioned field is Source state or a Source association, and 14 review rounds on PR #52 showed call-site transition logic decays into partial-reset bugs (a transition moving one piece of evidence and leaving another stale). One named home on the model makes the next partial reset structurally hard to write.
 
+## source-health-state-machine (2026-06-11)
+
+**Chose**: aasm state machine on Source's enum-backed health_status column (enum: true, create_scopes: false, whiny_persistence: true): mark_healthy/mark_degraded/mark_broken events for evaluator-derived writes, pin_dead/resurrect for manifest-curated edges, evidence resets as per-edge after-callbacks, after_all_transitions touching health_changed_at. transition_health! maps derived status to bang events; grant_probation stays a plain method (a version bump on a healthy source resets evidence with no state change, which is not an edge); enabled stays sync-owned operator policy.
+
+**Over**: Hand-rolled transition methods on Source (previous iteration; worked but allowed silent undeclared edges), no_direct_assignment (would break ~20 legitimate test/seed direct writes), aasm-generated scopes (Rails enum already provides them)
+
+**Because**: User decision overriding my initial pushback. The derivation-vs-events tension resolved cleanly: the evaluator keeps deriving, and the machine's value is per-edge declared consequences plus AASM::InvalidTransition on undeclared edges, making partial resets and rogue health writes structurally harder. Non-bang events assigning in memory preserved SyncService idempotency exactly.
+
