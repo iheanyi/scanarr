@@ -17,6 +17,10 @@ class ScraperSmokeJob < ApplicationJob
     adapter = adapter_for(source)
 
     results = adapter.search("one piece")
+    # An adapter that silently breaks returns [] instead of raising; a
+    # success here would heal the source and window out real evidence
+    raise Scrapers::Errors::ScraperError, "search returned no results" if results.empty?
+
     series = results.first && adapter.series(results.first.url)
     chapters = series ? adapter.chapters(series.url) : []
     pages = chapters.first ? adapter.pages(chapters.first.url) : []
