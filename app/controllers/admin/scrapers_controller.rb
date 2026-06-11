@@ -42,6 +42,8 @@ module Admin
         variant = :danger
       end
 
+      Sources::HealthEvaluator.new(source).call if source
+
       respond_with_toast(
         redirect_path: admin_scrapers_path,
         message: message,

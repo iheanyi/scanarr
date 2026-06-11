@@ -1,0 +1,203 @@
+# Single source of truth for source adapters.
+#
+# Each entry declares a source's identity, its adapter class, and an integer
+# `version` (the Mihon extVersionCode analog). Bump `version` whenever an
+# adapter's behavior changes (new domain, fixed selectors, changed parsing) so
+# Sources::SyncService can record the update and reset health probation.
+#
+# Fields:
+#   name:        Display name.
+#   adapter:     Fully-qualified adapter class. Must inherit Scrapers::BaseAdapter.
+#   version:     Integer >= 1. Bump on any behavior change.
+#   base_url:    Canonical site URL. Operators can override HTTP tuning
+#                (timeouts, delays, proxies) per-source in config/sources.yml.
+#   source_type: "api" or "html".
+#   priority:    Default ordering priority (lower wins).
+#   enabled:     Default enabled state applied at creation. Sync never clobbers
+#                an operator's later toggle, except when `dead: true`.
+#   dead:        The site is gone for good. Force-disables the source on sync.
+#   capabilities: Curation flags persisted to sources.capabilities (jsonb).
+#
+# Database rows are synced from this file by Sources::SyncService (db/seeds.rb
+# runs it; it is idempotent). The adapter registry is built from this file.
+api_version: 1
+sources:
+  mangadex:
+    name: MangaDex
+    adapter: Scrapers::Mangadex::Adapter
+    version: 1
+    base_url: https://api.mangadex.org
+    source_type: api
+    priority: 10
+  comick:
+    name: Comick
+    adapter: Scrapers::Comick::Adapter
+    version: 1
+    base_url: https://comick.live
+    source_type: api
+    priority: 15
+  weeb_central:
+    name: Weeb Central
+    adapter: Scrapers::WeebCentral::Adapter
+    version: 1
+    base_url: https://weebcentral.com
+    source_type: html
+    priority: 20
+  manga_see:
+    name: MangaSee
+    adapter: Scrapers::MangaSee::Adapter
+    version: 1
+    base_url: https://mangasee123.com
+    source_type: html
+    priority: 30
+  asura_scans:
+    name: Asura Scans
+    adapter: Scrapers::AsuraScans::Adapter
+    version: 1
+    base_url: https://asuracomic.net
+    source_type: html
+    priority: 40
+  manga_pill:
+    name: MangaPill
+    adapter: Scrapers::MangaPill::Adapter
+    version: 1
+    base_url: https://mangapill.com
+    source_type: html
+    priority: 50
+  tcb_scans:
+    name: TCB Scans
+    adapter: Scrapers::TcbScans::Adapter
+    version: 1
+    base_url: https://tcbonepiecechapters.com
+    source_type: html
+    priority: 55
+  manga_kakalot:
+    name: MangaKakalot
+    adapter: Scrapers::MangaKakalot::Adapter
+    version: 1
+    base_url: https://www.mangakakalot.gg
+    source_type: html
+    priority: 60
+  flame_comics:
+    name: Flame Comics
+    adapter: Scrapers::FlameComics::Adapter
+    version: 1
+    base_url: https://flamecomics.xyz
+    source_type: api
+    priority: 65
+  batoto:
+    name: BatoTo
+    adapter: Scrapers::Batoto::Adapter
+    version: 1
+    base_url: https://bato.to
+    source_type: html
+    priority: 70
+  manga_here:
+    name: MangaHere
+    adapter: Scrapers::MangaHere::Adapter
+    version: 1
+    base_url: https://www.mangahere.cc
+    source_type: html
+    priority: 75
+  manga_clash:
+    name: MangaClash
+    adapter: Scrapers::MangaClash::Adapter
+    version: 1
+    base_url: https://toonclash.com
+    source_type: html
+    priority: 80
+  manga_buddy:
+    name: MangaBuddy
+    adapter: Scrapers::MangaBuddy::Adapter
+    version: 1
+    base_url: https://mangabuddy.com
+    source_type: html
+    priority: 85
+  zero_scans:
+    name: Zero Scans
+    adapter: Scrapers::ZeroScans::Adapter
+    version: 1
+    base_url: https://zscans.com
+    source_type: api
+    priority: 90
+  manhua_plus:
+    name: ManhuaPlus
+    adapter: Scrapers::ManhuaPlus::Adapter
+    version: 1
+    base_url: https://manhuaplus.com
+    source_type: html
+    priority: 95
+  isekai_scan:
+    name: IsekaiScan
+    adapter: Scrapers::IsekaiScan::Adapter
+    version: 1
+    base_url: https://isekaiscan.top
+    source_type: html
+    priority: 100
+  toonily:
+    name: Toonily
+    adapter: Scrapers::Toonily::Adapter
+    version: 1
+    base_url: https://toonily.me
+    source_type: html
+    priority: 105
+    capabilities:
+      mature_content: true
+  drake_scans:
+    name: Drake Scans
+    adapter: Scrapers::DrakeScans::Adapter
+    version: 1
+    base_url: https://drakecomic.org
+    source_type: html
+    priority: 110
+  like_manga:
+    name: LikeManga
+    adapter: Scrapers::LikeManga::Adapter
+    version: 1
+    base_url: https://likemanga.ink
+    source_type: html
+    priority: 115
+  manga_freak:
+    name: MangaFreak
+    adapter: Scrapers::MangaFreak::Adapter
+    version: 1
+    base_url: https://ww2.mangafreak.me
+    source_type: html
+    priority: 120
+  manga_read:
+    name: MangaRead
+    adapter: Scrapers::MangaRead::Adapter
+    version: 1
+    base_url: https://www.mangaread.org
+    source_type: html
+    priority: 125
+  manga_geko:
+    name: MangaGeko
+    adapter: Scrapers::MangaGeko::Adapter
+    version: 1
+    base_url: https://www.mgeko.cc
+    source_type: html
+    priority: 130
+  manhwa18:
+    name: Manhwa18
+    adapter: Scrapers::Manhwa18::Adapter
+    version: 1
+    base_url: https://manhwa18.net
+    source_type: html
+    priority: 135
+    capabilities:
+      mature_content: true
+  manga_nato:
+    name: MangaNato
+    adapter: Scrapers::MangaNato::Adapter
+    version: 1
+    base_url: https://natomanga.com
+    source_type: html
+    priority: 140
+  manga_fire:
+    name: MangaFire
+    adapter: Scrapers::MangaFire::Adapter
+    version: 1
+    base_url: https://mangafire.to
+    source_type: html
+    priority: 145

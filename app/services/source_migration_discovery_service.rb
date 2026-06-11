@@ -99,28 +99,7 @@ class SourceMigrationDiscoveryService
   end
 
   def best_match_for(results)
-    scored = results.filter_map do |result|
-      confidence = score_result(result)
-      next if confidence < MIN_CONFIDENCE
-
-      [ result, confidence ]
-    end
-
-    scored.max_by { |(_, confidence)| confidence } || [ nil, 0.0 ]
-  end
-
-  def score_result(result)
-    series_title = normalize(@series.canonical_title)
-    result_title = normalize(result.title)
-    return 0.0 if series_title.blank? || result_title.blank?
-    return 1.0 if result_title == series_title
-    return 0.8 if result_title.include?(series_title) || series_title.include?(result_title)
-
-    shared_terms = (series_title.split & result_title.split).size
-    largest_term_count = [ series_title.split.size, result_title.split.size ].max
-    return 0.0 if largest_term_count.zero?
-
-    (shared_terms.to_f / largest_term_count).round(2)
+    Sources::TitleMatcher.best_match(@series.canonical_title, results, min_confidence: MIN_CONFIDENCE)
   end
 
   def chapter_count_for(adapter, result)
@@ -139,9 +118,5 @@ class SourceMigrationDiscoveryService
     candidates.sort_by do |candidate|
       [ candidate.chapter_count.nil? ? 1 : 0, -(candidate.chapter_count || 0), -candidate.confidence, candidate.source.name.to_s.downcase ]
     end
-  end
-
-  def normalize(value)
-    value.to_s.downcase.gsub(/[^a-z0-9]+/, " ").squish
   end
 end

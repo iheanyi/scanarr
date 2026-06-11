@@ -3,10 +3,12 @@
 class SourceMigrationService
   Result = Data.define(:success, :migrated, :no_match, :already_on_target, :errors)
 
-  def initialize(from_source:, to_source:, user:, series_ids: nil)
+  def initialize(from_source:, to_source:, user:, series_ids: nil, auto_link: true, adapter_registry: Scrapers::AdapterRegistry)
     @from_source = from_source
     @to_source = to_source
     @user = user
+    @auto_link = auto_link
+    @adapter_registry = adapter_registry
     @selected_series_ids = if series_ids.nil?
       nil
     else
@@ -37,12 +39,12 @@ class SourceMigrationService
     )
   end
 
-  # Execute the migration
+  # Execute the migration. Each series migrates independently so one failure
+  # (or a slow source) cannot roll back or block the rest; re-running
+  # converges because linked series take the already_on_target path.
   def execute!
-    ActiveRecord::Base.transaction do
-      affected_series.each do |series|
-        migrate_series(series)
-      end
+    affected_series.each do |series|
+      migrate_series(series)
     end
 
     Result.new(
@@ -89,12 +91,42 @@ class SourceMigrationService
       # Already has target source — just update priority
       update_source_priority(series)
       @already_on_target << series
+    elsif auto_link_series(series)
+      update_source_priority(series)
+      @migrated << series unless @migrated.include?(series)
     else
-      # Series doesn't exist on target source — can't auto-migrate
       @no_match << series
     end
   rescue => e
     @errors << "#{series.canonical_title}: #{e.message}"
+  end
+
+  # Search the target source for the series and link it when the best result
+  # clears the auto-link confidence bar. Below the bar, the series stays
+  # no_match for the user to resolve manually via discovery.
+  def auto_link_series(series)
+    return false unless @auto_link
+    return false unless @adapter_registry.registered?(@to_source.key)
+
+    adapter = @adapter_registry.for(@to_source)
+    results = adapter.search(series.canonical_title).first(5)
+    match, _confidence = Sources::TitleMatcher.best_match(
+      series.canonical_title,
+      results,
+      min_confidence: Sources::TitleMatcher::AUTO_LINK_CONFIDENCE
+    )
+    return false unless match
+
+    target_series = adapter.series(match.url)
+    source_series_id = target_series.id.to_s.strip
+    return false if source_series_id.blank?
+
+    series.series_sources.create!(source: @to_source, source_series_id: source_series_id)
+    series.sources.reset
+    true
+  rescue Scrapers::Errors::ScraperError, Scrapers::AdapterRegistry::UnknownSourceError => e
+    @errors << "#{series.canonical_title}: #{e.message}"
+    false
   end
 
   def update_source_priority(series)

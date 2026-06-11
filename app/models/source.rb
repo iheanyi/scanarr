@@ -1,5 +1,4 @@
 class Source < ApplicationRecord
-  MATURE_SOURCE_KEYS = %w[manhwa18 toonily].freeze
   MATURE_CAPABILITY_KEY = "mature_content".freeze
 
   has_many :series_sources, dependent: :destroy
@@ -7,6 +6,8 @@ class Source < ApplicationRecord
   has_many :chapters, dependent: :nullify
   has_many :releases, dependent: :nullify
   has_many :scraper_runs, dependent: :destroy
+
+  enum :health_status, { healthy: "healthy", degraded: "degraded", broken: "broken", dead: "dead" }, validate: true
 
   validates :key, presence: true, uniqueness: true
   validates :slug, presence: true, uniqueness: true
@@ -50,7 +51,8 @@ class Source < ApplicationRecord
 
     return ActiveModel::Type::Boolean.new.cast(explicit_flag) unless explicit_flag.nil?
 
-    self.class.mature_source_key?(key)
+    manifest_capability = Scrapers::Manifest.entry_for(key)&.capabilities&.fetch(MATURE_CAPABILITY_KEY, nil)
+    ActiveModel::Type::Boolean.new.cast(manifest_capability) || false
   end
 
   def display_name
@@ -59,12 +61,6 @@ class Source < ApplicationRecord
 
   def display_name_with_content_rating
     mature_content? ? "#{display_name} (18+)" : display_name
-  end
-
-  class << self
-    def mature_source_key?(source_key)
-      MATURE_SOURCE_KEYS.include?(source_key.to_s)
-    end
   end
 
   private

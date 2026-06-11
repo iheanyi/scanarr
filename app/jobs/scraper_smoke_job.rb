@@ -32,12 +32,14 @@ class ScraperSmokeJob < ApplicationJob
         page_count: pages.size
       }
     )
+    Sources::HealthEvaluator.new(source).call
   rescue StandardError => error
     run&.update!(
       status: "failed",
       finished_at: Time.current,
       error: "#{error.class}: #{error.message}"
     )
+    Sources::HealthEvaluator.new(source).call if source
     raise
   end
 

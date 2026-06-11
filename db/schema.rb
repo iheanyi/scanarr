@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_114000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -283,12 +283,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_114000) do
   end
 
   create_table "sources", force: :cascade do |t|
-    t.string "api_version"
+    t.integer "adapter_version", default: 0, null: false
+    t.datetime "adapter_version_synced_at"
     t.string "base_url"
     t.jsonb "capabilities"
     t.datetime "created_at", null: false
     t.integer "default_priority", default: 50, null: false
     t.boolean "enabled", default: true, null: false
+    t.datetime "health_changed_at"
+    t.string "health_status", default: "healthy", null: false
     t.string "key", null: false
     t.string "name"
     t.datetime "rate_limited_until"
@@ -297,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_114000) do
     t.datetime "updated_at", null: false
     t.index ["enabled", "name"], name: "index_sources_on_enabled_and_name"
     t.index ["enabled"], name: "index_sources_on_enabled"
+    t.index ["health_status"], name: "index_sources_on_health_status"
     t.index ["key"], name: "index_sources_on_key", unique: true
     t.index ["name"], name: "index_sources_on_name"
     t.index ["slug"], name: "index_sources_on_slug", unique: true
