@@ -58,3 +58,19 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Signals already exist in three models but nothing answers 'is this source usable?' in one place. Derivation (not stored transitions) means recomputation converges regardless of crashes or ordering, and windowing evidence to the current adapter version gives a shipped fix a clean probation period instead of being damned by stale failures. Auto-marking a source dead risks false positives from transient Cloudflare blocks, so dead stays a curation decision.
 
+## upstream-catalog-piggyback (2026-06-11)
+
+**Chose**: Mirror the keiyoushi (Mihon community) extensions index daily into an upstream_sources table as a data-only, schema-validated catalog; link our manifest entries by curated mihon_id; functional parity stays adapter-by-adapter since the feed carries no scraping logic or selectors.
+
+**Over**: Maintain our own remote definitions feed, Blindly adopt feed baseUrls for working sources, Import feed sources directly into the sources table
+
+**Because**: The user did not want to maintain a feed. The keiyoushi index gives canonical name/lang/baseUrl/nsfw/version for ~2100 sources for free, but its baseUrl can lag reality (their Asura entry points at asurascans.com while asuracomic.net is what works), so blind adoption can break working adapters. Keeping catalog rows out of the sources table keeps thousands of unimplemented entries from polluting every operator dropdown and scraping query.
+
+## broken-source-recovery (2026-06-11)
+
+**Chose**: Broken sources are skipped by all scheduled work and recovered by a single cheap recheck probe inside the hourly health sweep, on a downtime-scaled backoff (6h under 3 days broken, daily under 14 days, weekly after). When the current domain fails the probe, it tries the upstream catalog's domain and adopts it stickily (persisted as sources.adopted_base_url) on success. Dead remains curated-only.
+
+**Over**: A separate daily active probe fleet (cancelled by user as redundant with the hourly sweep), Conditional base_url override while broken (rejected: heals then flips back to the dead domain), No active recovery (rejected: skipped sources produce no signals and could never self-heal)
+
+**Because**: Skipping checks for broken sources removes the very traffic that would notice recovery, so recovery needs exactly one knock on a polite schedule. Sticky adoption converges: once the new domain works the source stays on it. The health evaluator also discounts series-check failures older than the latest successful run, otherwise stale failure rows that nothing updates would keep a healed source broken forever.
+
