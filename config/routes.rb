@@ -108,6 +108,8 @@ Rails.application.routes.draw do
   namespace :admin do
     get "scrapers", to: "scrapers#index", as: :scrapers
     post "scrapers/:source_id/smoke", to: "scrapers#run_smoke", as: :scraper_smoke
+    get "source_catalog", to: "source_catalog#index", as: :source_catalog
+    post "source_catalog/refresh", to: "source_catalog#refresh", as: :source_catalog_refresh
     get "downloads", to: "downloads#index", as: :downloads
     post "downloads/refresh_all_covers", to: "downloads#refresh_all_covers", as: :refresh_all_covers
     post "downloads/refresh_all_metadata", to: "downloads#refresh_all_metadata", as: :refresh_all_metadata

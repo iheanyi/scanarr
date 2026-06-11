@@ -73,7 +73,8 @@ module Sources
         priority: 20,
         enabled: true,
         dead: true,
-        capabilities: {}
+        capabilities: {},
+        mihon_id: nil
       )
       source = sources(:one)
       source.update!(enabled: true)

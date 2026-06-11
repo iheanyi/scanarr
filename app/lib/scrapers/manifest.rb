@@ -21,7 +21,8 @@ module Scrapers
       :priority,
       :enabled,
       :dead,
-      :capabilities
+      :capabilities,
+      :mihon_id
     ) do
       def adapter_class
         adapter_class_name.constantize
@@ -78,7 +79,8 @@ module Scrapers
           priority: attrs.fetch("priority"),
           enabled: attrs.fetch("enabled", true),
           dead: attrs.fetch("dead", false),
-          capabilities: (attrs["capabilities"] || {}).deep_stringify_keys
+          capabilities: (attrs["capabilities"] || {}).deep_stringify_keys,
+          mihon_id: attrs["mihon_id"]&.to_s
         )
       end
 
@@ -91,6 +93,7 @@ module Scrapers
         problems << "base_url must be a valid http(s) URL" unless valid_url?(attrs["base_url"])
         problems << "source_type must be one of #{SOURCE_TYPES.join(', ')}" unless SOURCE_TYPES.include?(attrs["source_type"])
         problems << "priority must be an Integer" unless attrs["priority"].is_a?(Integer)
+        problems << "mihon_id must be a digit string" if attrs.key?("mihon_id") && !attrs["mihon_id"].to_s.match?(/\A\d+\z/)
 
         return if problems.empty?
 

@@ -5,16 +5,16 @@ module Scrapers
     class UnknownSourceError < StandardError; end
 
     class << self
-      def for(source_or_key)
+      def for(source_or_key, base_url: nil)
         key = source_or_key.is_a?(String) ? source_or_key : source_or_key.key
-        adapter_for_key(key)
+        adapter_for_key(key, base_url: base_url)
       end
 
-      def adapter_for_key(key)
+      def adapter_for_key(key, base_url: nil)
         entry = Manifest.entry_for(key)
         raise UnknownSourceError, "Unknown source: #{key}" unless entry
 
-        entry.adapter_class.new(config: source_config(entry))
+        entry.adapter_class.new(config: source_config(entry, base_url_override: base_url))
       end
 
       def registered_keys
@@ -27,10 +27,18 @@ module Scrapers
 
       private
 
-      # Manifest provides the canonical base_url; config/sources.yml remains an
-      # operator override layer for HTTP tuning (timeouts, delays, proxies).
-      def source_config(entry)
-        { "base_url" => entry.base_url }.merge(operator_overrides(entry.key))
+      # base_url precedence, lowest to highest: manifest, a domain adopted from
+      # the upstream catalog after it healed a broken source, the operator's
+      # config/sources.yml override, an explicit caller override (probes).
+      def source_config(entry, base_url_override: nil)
+        config = { "base_url" => adopted_base_url(entry.key) || entry.base_url }
+        config = config.merge(operator_overrides(entry.key))
+        config["base_url"] = base_url_override if base_url_override
+        config
+      end
+
+      def adopted_base_url(key)
+        Source.find_by(key: key)&.adopted_base_url.presence
       end
 
       def operator_overrides(key)
