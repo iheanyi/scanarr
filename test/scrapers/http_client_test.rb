@@ -4,6 +4,16 @@ module Scrapers
   class HttpClientTest < ActiveSupport::TestCase
     PUBLIC_ADDR = "93.184.216.34"
 
+    test "a public-resolving host is fetched normally" do
+      stub_request(:get, "https://manga.example/feed").to_return(status: 200, body: "ok")
+      client = HttpClient.new(config: { "delay_ms" => 0 }, resolver: ->(_host) { [ PUBLIC_ADDR ] })
+
+      response = client.get("https://manga.example/feed")
+
+      assert_equal 200, response.status
+      assert_equal "ok", response.body
+    end
+
     test "refuses a host whose every resolved address is internal at connection time" do
       client = HttpClient.new(config: {}, resolver: ->(_host) { [ "10.0.0.1" ] })
 
