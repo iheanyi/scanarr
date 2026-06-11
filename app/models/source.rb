@@ -26,6 +26,65 @@ class Source < ApplicationRecord
     (successful.to_f / total).round(2)
   end
 
+  # -- Health and domain transitions ------------------------------------
+  # Every transition below resets ALL the evidence it invalidates. The bug
+  # class that dominated PR #52's review was partial resets: a transition
+  # that moved one piece of state (health, window anchor, streaks, adopted
+  # domain) and left another stale. Add new transitions here, not at call
+  # sites.
+  #
+  # Non-bang methods assign without saving so SyncService's changed?-based
+  # idempotency bookkeeping stays intact; bang methods persist immediately.
+
+  def assign_health(status)
+    return if health_status == status
+
+    self.health_status = status
+    self.health_changed_at = Time.current
+  end
+
+  # Manifest says dead: force-disabled and health pinned so scheduled work
+  # skips it. Sync is the only way back out (see HealthEvaluator).
+  def pin_dead
+    self.enabled = false
+    assign_health("dead")
+  end
+
+  # A fresh start after a version bump or resurrection: the evidence window
+  # moves, per-series failure streaks restart (a fixed adapter should retry
+  # series that were failing, including ones stale-listed at 10+), the rate
+  # limit clears, and a stale adopted domain stops outranking the manifest.
+  def grant_probation
+    assign_health("healthy")
+    self.adapter_version_synced_at = Time.current
+    self.rate_limited_until = nil
+    self.adopted_base_url = nil
+    restore_series_streaks! unless new_record?
+  end
+
+  # Runtime health writes converge here (sweep recheck, admin smoke, the
+  # chapter-check failure path), so the broken-to-healthy streak restore
+  # cannot be skipped by any heal path.
+  def transition_health!(status)
+    unless health_status == status
+      was_broken = broken?
+      update!(health_status: status, health_changed_at: Time.current)
+      restore_series_streaks! if was_broken && status == "healthy"
+    end
+    status
+  end
+
+  # Sticky domain adoption after recovery. Stored chapter and release URLs
+  # are absolute on the dead domain and feed straight into adapter.pages,
+  # so they move with the adoption.
+  def adopt_domain!(new_base_url)
+    previous = adopted_base_url.presence || Scrapers::Manifest.entry_for(key)&.base_url
+    update!(adopted_base_url: new_base_url)
+    remap_stored_urls(previous, new_base_url)
+  end
+
+  # ----------------------------------------------------------------------
+
   # Check if this source is currently rate-limited
   def rate_limited?
     rate_limited_until.present? && rate_limited_until > Time.current
@@ -81,6 +140,21 @@ class Source < ApplicationRecord
   end
 
   private
+
+  def restore_series_streaks!
+    series_sources.where("consecutive_failures > 0").update_all(consecutive_failures: 0)
+  end
+
+  def remap_stored_urls(old_base, new_base)
+    old_prefix = old_base.to_s.chomp("/")
+    new_prefix = new_base.to_s.chomp("/")
+    return if old_prefix.blank? || old_prefix == new_prefix
+
+    [ chapters, releases ].each do |scope|
+      scope.where("source_url LIKE ?", "#{self.class.sanitize_sql_like(old_prefix)}%")
+        .update_all([ "source_url = REPLACE(source_url, ?, ?)", old_prefix, new_prefix ])
+    end
+  end
 
   def generate_slug_from_key
     self.slug = key.to_s.tr("_", "-") if key.present? && (slug.blank? || key_changed?)

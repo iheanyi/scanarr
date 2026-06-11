@@ -17,39 +17,19 @@ module Sources
     end
 
     # Streak restoration is not done here: the health sweep runs the
-    # evaluator right after this probe, and its broken-to-healthy transition
-    # owns the per-series reset for every heal path.
+    # evaluator right after this probe, and Source#transition_health!'s
+    # broken-to-healthy transition owns the per-series reset for every
+    # heal path.
     def call
       return if probe(base_url: nil)
 
       upstream_url = upstream_alternative
       return unless upstream_url
 
-      adopt!(upstream_url) if probe(base_url: upstream_url)
+      @source.adopt_domain!(upstream_url) if probe(base_url: upstream_url)
     end
 
     private
-
-    def adopt!(upstream_url)
-      previous = @source.adopted_base_url.presence || Scrapers::Manifest.entry_for(@source.key)&.base_url
-      @source.update!(adopted_base_url: upstream_url)
-      remap_stored_urls!(previous, upstream_url)
-    end
-
-    # Stored chapter and release URLs are absolute on the dead domain;
-    # download and read paths feed them straight into adapter.pages, so
-    # without a remap only newly discovered chapters would use the healed
-    # domain.
-    def remap_stored_urls!(old_base, new_base)
-      old_prefix = old_base.to_s.chomp("/")
-      new_prefix = new_base.to_s.chomp("/")
-      return if old_prefix.blank? || old_prefix == new_prefix
-
-      [ @source.chapters, @source.releases ].each do |scope|
-        scope.where("source_url LIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(old_prefix)}%")
-          .update_all([ "source_url = REPLACE(source_url, ?, ?)", old_prefix, new_prefix ])
-      end
-    end
 
     def probe(base_url:)
       run = ScraperRun.create!(source: @source, run_type: "recheck", status: "running", started_at: Time.current)
