@@ -1,20 +1,24 @@
 require "faraday"
 require "faraday/retry"
 require "uri"
+require "timeout"
 
 module Scrapers
   class HttpClient
     Response = Struct.new(:status, :body, :headers, :url, keyword_init: true)
 
-    def initialize(config:)
+    def initialize(config:, resolver: Sources::PublicUrl::SYSTEM_RESOLVER)
       @config = config
+      @resolver = resolver
       @last_request_at = nil
       @connection = Faraday.new(url: @config["base_url"], proxy: proxy_url) do |conn|
         conn.request :url_encoded
         conn.request :retry, retry_options
         conn.options.open_timeout = @config.fetch("open_timeout", 10)
         conn.options.timeout = @config.fetch("read_timeout", 20)
-        conn.adapter Faraday.default_adapter
+        conn.adapter Faraday.default_adapter do |http|
+          pin_public_address(http)
+        end
       end
     end
 
@@ -52,6 +56,44 @@ module Scrapers
     end
 
     private
+
+    # Adoption-time guards (Sources::PublicUrl) classify a hostname before
+    # the fetch, but Net::HTTP re-resolves at connect, so a split-horizon
+    # name can answer public for the guard and internal for the socket.
+    # Net::HTTP#ipaddr= closes that race: the TCP connection goes to the
+    # address resolved here, while the Host header, TLS SNI, and certificate
+    # verification stay keyed to #address (the original hostname).
+    def pin_public_address(http)
+      return if http.proxy?
+
+      host = http.address
+      raise Errors::InternalHostRefusedError, "refusing connection to internal host #{host}" if Sources::PublicUrl.internal_host?(host)
+
+      # Fail closed. An empty resolution must never fall through to an
+      # unpinned connect: Net::HTTP would re-resolve at #start, which is the
+      # exact rebinding window this pin exists to close (answer empty to the
+      # check, internal to the socket). PublicUrl tolerates unresolvable
+      # hosts when classifying catalog URLs to ride out DNS blips, but at the
+      # fetch boundary an unpinned connection is not an option.
+      address = first_public_address(host)
+      raise Errors::InternalHostRefusedError, "#{host} did not resolve to a usable public address" unless address
+
+      http.ipaddr = address
+    end
+
+    # Resolve and pick the first public address. Bounded by open_timeout
+    # because this runs before Net::HTTP#connect, outside the timeout that
+    # otherwise covers DNS plus TCP setup, so a stalling nameserver cannot
+    # hang past the request budget. A timeout fails closed (nil), same as an
+    # internal-only or empty answer. Pinning a single address forgoes
+    # Net::HTTP's multi-record failover; accepted, since the alternative is
+    # connection racing this client does not need.
+    def first_public_address(host)
+      addresses = Timeout.timeout(@config.fetch("open_timeout", 10)) { @resolver.call(host) }
+      addresses.find { |candidate| !Sources::PublicUrl.internal_address?(candidate) }
+    rescue Timeout::Error
+      nil
+    end
 
     def build_url(path_or_url)
       uri = URI(path_or_url.to_s)
