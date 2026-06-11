@@ -64,14 +64,17 @@ class SourceTest < ActiveSupport::TestCase
     assert_not @source.mature_content?
   end
 
-  def test_effective_base_url_prefers_adoption
-    @source.update!(base_url: "https://canonical.example")
+  def test_effective_base_url_falls_back_for_unregistered_sources
+    # example_source has no manifest entry, so the registry returns nil and
+    # the model falls back to its own columns
+    unregistered = sources(:two)
+    unregistered.update!(base_url: "https://canonical.example")
 
-    assert_equal "https://canonical.example", @source.effective_base_url
+    assert_equal "https://canonical.example", unregistered.effective_base_url
 
-    @source.update!(adopted_base_url: "https://moved.example")
+    unregistered.update!(adopted_base_url: "https://moved.example")
 
-    assert_equal "https://moved.example", @source.effective_base_url
+    assert_equal "https://moved.example", unregistered.effective_base_url
   end
 
   def test_mature_content_uses_capabilities_override

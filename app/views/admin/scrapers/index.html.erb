@@ -24,7 +24,7 @@
               <td class="px-4 py-3 text-muted"><%= source.key %></td>
               <td class="px-4 py-3 text-muted">
                 <%= source.effective_base_url %>
-                <% if source.adopted_base_url.present? %>
+                <% if source.adopted_base_url.present? && source.effective_base_url == source.adopted_base_url %>
                   <span class="ml-1 text-xs text-warning">(adopted)</span>
                 <% end %>
               </td>

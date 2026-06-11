@@ -24,6 +24,15 @@ module Scrapers
       assert_equal "https://probe.example", adapter.config["base_url"]
     end
 
+    test "effective_base_url reflects the full precedence chain" do
+      assert_equal Manifest.entry_for("weeb_central").base_url, AdapterRegistry.effective_base_url("weeb_central")
+
+      sources(:one).update!(adopted_base_url: "https://weebcentral.moved")
+
+      assert_equal "https://weebcentral.moved", AdapterRegistry.effective_base_url("weeb_central")
+      assert_nil AdapterRegistry.effective_base_url("not_a_source")
+    end
+
     test "an adopted domain rewrites a shipped Referer header to the new host" do
       Source.create!(
         key: "asura_scans", name: "Asura Scans",

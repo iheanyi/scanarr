@@ -31,6 +31,15 @@ module Scrapers
         operator_overrides(key).key?("base_url")
       end
 
+      # The domain scraping will actually use, with full precedence applied.
+      # The single truth for operator-facing views.
+      def effective_base_url(key)
+        entry = Manifest.entry_for(key)
+        return nil unless entry
+
+        source_config(entry)["base_url"]
+      end
+
       private
 
       # base_url precedence, lowest to highest: manifest, a domain adopted from

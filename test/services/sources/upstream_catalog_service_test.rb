@@ -58,6 +58,20 @@ module Sources
       assert_equal "https://mangadex.moved", UpstreamSource.find_by!(mihon_id: "2499283573021220255").base_url
     end
 
+    test "daily refreshes preserve the first-seen created_at" do
+      UpstreamCatalogService.new(payload: PAYLOAD).call
+      first_seen = UpstreamSource.find_by!(mihon_id: "2499283573021220255").created_at
+
+      travel 1.day do
+        UpstreamCatalogService.new(payload: PAYLOAD).call
+      end
+
+      row = UpstreamSource.find_by!(mihon_id: "2499283573021220255")
+
+      assert_equal first_seen, row.created_at
+      assert_operator row.last_seen_at, :>, first_seen
+    end
+
     test "sources missing from a later fetch keep their rows" do
       UpstreamCatalogService.new(payload: PAYLOAD).call
       UpstreamCatalogService.new(payload: [ PAYLOAD[0] ]).call

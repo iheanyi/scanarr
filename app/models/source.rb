@@ -65,10 +65,11 @@ class Source < ApplicationRecord
     nil
   end
 
-  # The domain scraping actually uses: a sticky adoption from health
-  # recovery outranks the manifest-synced column (mirrors AdapterRegistry).
+  # The domain scraping actually uses, from the registry's full precedence
+  # chain (manifest < adoption < operator pin). Falls back for sources
+  # without a manifest entry.
   def effective_base_url
-    adopted_base_url.presence || base_url
+    Scrapers::AdapterRegistry.effective_base_url(key) || adopted_base_url.presence || base_url
   end
 
   def display_name

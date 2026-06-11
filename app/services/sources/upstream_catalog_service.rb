@@ -42,7 +42,12 @@ module Sources
 
       rows.uniq! { |row| row[:mihon_id] }
       rows.each_slice(500) do |slice|
-        UpstreamSource.upsert_all(slice, unique_by: :mihon_id)
+        # update_only keeps created_at as the row's first-seen timestamp
+        UpstreamSource.upsert_all(
+          slice,
+          unique_by: :mihon_id,
+          update_only: %i[name lang base_url nsfw extension_pkg extension_version_code last_seen_at]
+        )
       end
 
       Result.new(upserted: rows.size, skipped: skipped)
