@@ -65,6 +65,32 @@ module Sources
       assert UpstreamSource.exists?(mihon_id: "11111")
     end
 
+    test "rejects baseUrls pointing at internal or reserved hosts" do
+      internal_urls = [
+        "http://localhost:3000",
+        "http://127.0.0.1",
+        "http://10.0.0.5",
+        "http://192.168.1.1",
+        "http://169.254.169.254/latest/meta-data",
+        "http://[::1]",
+        "http://[fd00::1]",
+        "http://nas.internal",
+        "http://0.0.0.0"
+      ]
+      payload = [ {
+        "name" => "Ext", "pkg" => "x.y.z", "lang" => "en", "code" => 1, "nsfw" => 0,
+        "sources" => internal_urls.each_with_index.map do |url, i|
+          { "name" => "Internal #{i}", "lang" => "en", "id" => (50_000 + i).to_s, "baseUrl" => url }
+        end
+      } ]
+
+      UpstreamCatalogService.new(payload: payload).call
+
+      internal_urls.each_index do |i|
+        assert_nil UpstreamSource.find_by!(mihon_id: (50_000 + i).to_s).base_url
+      end
+    end
+
     test "never touches Source records" do
       assert_no_changes -> { Source.order(:id).pluck(:updated_at, :enabled) } do
         UpstreamCatalogService.new(payload: PAYLOAD).call
