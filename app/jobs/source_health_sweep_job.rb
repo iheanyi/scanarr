@@ -1,16 +1,44 @@
 # frozen_string_literal: true
 
 # Recomputes every source's health from passive signals (smoke-run history,
-# per-series check failures). Makes no network requests, so it is safe to run
-# frequently. Active probing stays a manual admin action.
+# per-series check failures). Broken sources get one cheap recheck probe on a
+# backoff schedule; everything else stays network-free. The recheck is the
+# recovery path: scheduled chapter checks skip broken sources, so without it
+# a returning site would never produce a fresh signal and could never heal.
 class SourceHealthSweepJob < ApplicationJob
   queue_as :default
 
+  # Backoff by how long the source has been broken: eager for fresh breakage,
+  # polite for sites that have been gone for weeks.
+  RECHECK_BACKOFF = [
+    [ 3.days, 6.hours ],
+    [ 14.days, 24.hours ]
+  ].freeze
+  LONG_DOWNTIME_RECHECK_INTERVAL = 7.days
+
   def perform
     Source.find_each do |source|
+      Sources::BrokenSourceRecheck.new(source).call if source.broken? && recheck_due?(source)
       Sources::HealthEvaluator.new(source).call
     rescue StandardError => e
       Rails.logger.error "[SourceHealthSweepJob] #{source.key}: #{e.message}"
     end
+  end
+
+  private
+
+  def recheck_due?(source)
+    last_attempt = source.scraper_runs.where(status: %w[success failed]).maximum(:created_at)
+    return true if last_attempt.nil?
+
+    last_attempt < recheck_interval(source).ago
+  end
+
+  def recheck_interval(source)
+    broken_for = Time.current - (source.health_changed_at || Time.current)
+    RECHECK_BACKOFF.each do |max_age, interval|
+      return interval if broken_for < max_age
+    end
+    LONG_DOWNTIME_RECHECK_INTERVAL
   end
 end

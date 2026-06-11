@@ -53,6 +53,27 @@ module Sources
       assert_equal "broken", HealthEvaluator.new(@source).derived_status
     end
 
+    test "a successful run outweighs older series failures so a healed source recovers" do
+      4.times do |i|
+        series = create_series("Stale Failure #{i}")
+        SeriesSource.create!(
+          series: series,
+          source: @source,
+          source_series_id: "STALE#{i}",
+          last_checked_at: 2.hours.ago,
+          last_check_error: "boom",
+          last_check_error_at: 2.hours.ago,
+          consecutive_failures: 5
+        )
+      end
+
+      assert_equal "broken", HealthEvaluator.new(@source).derived_status
+
+      create_run("success", at: Time.current)
+
+      assert_equal "healthy", HealthEvaluator.new(@source).derived_status
+    end
+
     test "degraded when rate limited" do
       @source.update!(rate_limited_until: 10.minutes.from_now)
 

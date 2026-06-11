@@ -60,23 +60,27 @@ module Sources
         if tracked < MIN_TRACKED_SERIES
           0.0
         else
-          failing = @source.series_sources
-            .where("consecutive_failures >= 3")
-            .where(windowed_failure_condition)
-            .count
-          failing.to_f / tracked
+          failing = @source.series_sources.where("consecutive_failures >= 3")
+          failing = failing.where(last_check_error_at: series_evidence_cutoff..) if series_evidence_cutoff
+          failing.count.to_f / tracked
         end
       end
+    end
+
+    # Series failures recorded before the last version bump or the last
+    # successful run are stale evidence. Without this cutoff a broken source
+    # whose checks are skipped could never recover: a successful recheck must
+    # outweigh failure rows that nothing will ever update.
+    def series_evidence_cutoff
+      return @series_evidence_cutoff if defined?(@series_evidence_cutoff)
+
+      latest_success_at = windowed(@source.scraper_runs).where(status: "success").maximum(:created_at)
+      @series_evidence_cutoff = [ @source.adapter_version_synced_at, latest_success_at ].compact.max
     end
 
     def windowed(runs)
       synced_at = @source.adapter_version_synced_at
       synced_at ? runs.where(created_at: synced_at..) : runs
-    end
-
-    def windowed_failure_condition
-      synced_at = @source.adapter_version_synced_at
-      synced_at ? { last_check_error_at: synced_at.. } : {}
     end
   end
 end

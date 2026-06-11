@@ -20,6 +20,7 @@ class CheckNewChaptersJob < ApplicationJob
     skipped_interval = 0
     skipped_rate_limit = 0
     skipped_stale = 0
+    skipped_unhealthy = 0
 
     follows.find_each do |follow|
       follow.library_series.series.each do |series|
@@ -29,6 +30,13 @@ class CheckNewChaptersJob < ApplicationJob
           # Skip stale sources (10+ consecutive failures)
           if ss.stale?
             skipped_stale += 1
+            next
+          end
+
+          # Skip broken/dead sources; the health sweep's recheck probe owns
+          # their recovery traffic
+          if ss.source.broken? || ss.source.dead?
+            skipped_unhealthy += 1
             next
           end
 
@@ -59,7 +67,7 @@ class CheckNewChaptersJob < ApplicationJob
 
     Rails.logger.info "[CheckNewChaptersJob] Enqueued #{enqueued} checks " \
       "(skipped #{skipped_interval} interval, #{skipped_rate_limit} rate-limited, " \
-      "#{skipped_stale} stale) for #{count} follows"
+      "#{skipped_stale} stale, #{skipped_unhealthy} broken/dead) for #{count} follows"
   end
 
   private

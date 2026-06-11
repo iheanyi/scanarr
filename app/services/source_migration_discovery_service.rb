@@ -18,7 +18,14 @@ class SourceMigrationDiscoveryService
   end
 
   def call
-    sources = Source.where(enabled: true).where.not(id: @from_source.id).order(:name).to_a
+    # Candidate targets exclude broken/dead sources: suggesting a migration
+    # onto a source that cannot serve chapters helps nobody, and each one
+    # would eat the full search timeout. The from_source may itself be broken
+    # or dead; discovery never makes a request to it.
+    sources = Source.where(enabled: true)
+      .where.not(health_status: %w[broken dead])
+      .where.not(id: @from_source.id)
+      .order(:name).to_a
     discovery = discover_candidates(sources)
     Result.new(candidates: sort_candidates(discovery[:candidates]), errors: discovery[:errors])
   end

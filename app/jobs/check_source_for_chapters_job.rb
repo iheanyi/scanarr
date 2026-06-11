@@ -14,8 +14,10 @@ class CheckSourceForChaptersJob < ApplicationJob
 
     return unless series && follow && source
 
-    # Double-check rate limit at execution time (may have been set since enqueue)
-    return if source.rate_limited?
+    # Double-check at execution time (state may have changed since enqueue).
+    # Broken/dead sources are skipped entirely; the health sweep's recheck
+    # probe is the only scheduled traffic they receive.
+    return if source.rate_limited? || source.broken? || source.dead?
 
     adapter = Scrapers::AdapterRegistry.for(source)
     series_source = series.series_sources.find_by(source: source)
