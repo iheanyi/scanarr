@@ -5,6 +5,8 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     @user = users(:admin)
     @from_source = sources(:one) # weeb_central
     @to_source = sources(:two)   # example_source
+    # The fixture ships disabled; migration targets must be usable
+    @to_source.update!(enabled: true)
     @series = series(:one)       # One Piece, linked to library_series :one
     @follow = user_series_follows(:one)
   end
@@ -50,8 +52,22 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
 
     [ service.preview, service.execute! ].each do |result|
       refute result.success
-      assert_match(/cannot be a migration target/, result.errors.first)
+      assert_match(/is broken and cannot be a migration target/, result.errors.first)
       assert_empty result.migrated
+    end
+  end
+
+  def test_preview_and_execute_reject_a_disabled_target_source
+    @to_source.update!(enabled: false, health_status: "healthy")
+    service = SourceMigrationService.new(
+      from_source: @from_source,
+      to_source: @to_source,
+      user: @user
+    )
+
+    [ service.preview, service.execute! ].each do |result|
+      refute result.success
+      assert_match(/is disabled and cannot be a migration target/, result.errors.first)
     end
   end
 

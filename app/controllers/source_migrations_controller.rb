@@ -23,6 +23,16 @@ class SourceMigrationsController < ApplicationController
       series_ids: selected_series_ids
     ).preview
 
+    unless result.success
+      respond_with_toast(
+        redirect_path: source_migrations_path,
+        message: result.errors.first,
+        variant: :danger,
+        turbo_redirect: true
+      )
+      return
+    end
+
     @from_source = from_source
     @to_source = to_source
     @result = result

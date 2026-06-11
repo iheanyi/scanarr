@@ -1,6 +1,22 @@
 require "test_helper"
 
 class SourceMigrationsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    # The fixture ships disabled; migration targets must be usable
+    sources(:two).update!(enabled: true)
+  end
+
+  test "preview with an unusable target redirects with an error toast" do
+    sources(:two).update!(health_status: "broken")
+
+    post preview_source_migrations_path,
+         params: { from_source_id: sources(:one).id, to_source_id: sources(:two).id },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to source_migrations_path
+    assert_includes flash[:alert], "cannot be a migration target"
+  end
+
   test "create turbo request redirects with flash" do
     post source_migrations_path,
          params: { from_source_id: sources(:one).id, to_source_id: sources(:two).id },

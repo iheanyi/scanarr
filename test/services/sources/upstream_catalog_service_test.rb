@@ -87,7 +87,9 @@ module Sources
         "http://[::1]",
         "http://[fd00::1]",
         "http://nas.internal",
-        "http://0.0.0.0"
+        "http://0.0.0.0",
+        "http://100.64.0.1",
+        "http://198.18.0.1"
       ]
       payload = [ {
         "name" => "Ext", "pkg" => "x.y.z", "lang" => "en", "code" => 1, "nsfw" => 0,

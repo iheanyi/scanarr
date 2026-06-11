@@ -12,6 +12,15 @@ module Sources
   module PublicUrl
     INTERNAL_SUFFIXES = [ ".localhost", ".internal", ".local" ].freeze
 
+    # Non-global ranges IPAddr's predicates don't cover: "this network",
+    # CGNAT, IETF reserved, documentation/benchmark nets, multicast, and
+    # class E, plus their IPv6 analogues.
+    RESERVED_RANGES = %w[
+      0.0.0.0/8 100.64.0.0/10 192.0.0.0/24 192.0.2.0/24 198.18.0.0/15
+      198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4
+      ::/128 100::/64 2001:db8::/32 ff00::/8
+    ].map { |cidr| IPAddr.new(cidr) }.freeze
+
     module_function
 
     def internal_host?(host)
@@ -36,7 +45,8 @@ module Sources
 
     def internal_address?(value)
       addr = value.is_a?(IPAddr) ? value : IPAddr.new(value.to_s)
-      addr.loopback? || addr.private? || addr.link_local? || addr == IPAddr.new("0.0.0.0")
+      addr.loopback? || addr.private? || addr.link_local? ||
+        RESERVED_RANGES.any? { |range| range.include?(addr) }
     rescue IPAddr::InvalidAddressError
       false
     end

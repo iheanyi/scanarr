@@ -37,10 +37,24 @@ module Scrapers
       # the upstream catalog after it healed a broken source, the operator's
       # config/sources.yml override, an explicit caller override (probes).
       def source_config(entry, base_url_override: nil)
-        config = { "base_url" => adopted_base_url(entry.key) || entry.base_url }
-        config = config.merge(operator_overrides(entry.key))
+        adopted = adopted_base_url(entry.key)
+        config = { "base_url" => adopted || entry.base_url }.merge(operator_overrides(entry.key))
         config["base_url"] = base_url_override if base_url_override
+
+        # Shipped Referer headers point at the source's own domain. When the
+        # effective domain moved (adoption or a probe override), the stale
+        # Referer would fail hotlink checks on the new host.
+        effective = base_url_override || adopted
+        if effective && config["base_url"] == effective
+          config["headers"] = rewrite_referer(config["headers"], effective)
+        end
         config
+      end
+
+      def rewrite_referer(headers, base_url)
+        return headers unless headers.is_a?(Hash) && headers["Referer"]
+
+        headers.merge("Referer" => "#{base_url.chomp("/")}/")
       end
 
       def adopted_base_url(key)

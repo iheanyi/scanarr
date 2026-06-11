@@ -87,19 +87,21 @@ class SourceMigrationService
   private
 
   # Migrating FROM a broken source is the whole point of migration; migrating
-  # TO one would search and prioritize a source the rest of the app skips.
+  # TO a broken, dead, or operator-disabled one would search and prioritize a
+  # source the rest of the app skips.
   def target_unusable?
-    @to_source.broken? || @to_source.dead?
+    !@to_source.enabled? || @to_source.broken? || @to_source.dead?
   end
 
   def unusable_target_result
+    reason = @to_source.enabled? ? @to_source.health_status : "disabled"
     Result.new(
       success: false,
       migrated: [],
       no_match: [],
       already_on_target: [],
       link_candidates: [],
-      errors: [ "#{@to_source.name} is #{@to_source.health_status} and cannot be a migration target" ]
+      errors: [ "#{@to_source.name} is #{reason} and cannot be a migration target" ]
     )
   end
 

@@ -23,5 +23,19 @@ module Scrapers
 
       assert_equal "https://probe.example", adapter.config["base_url"]
     end
+
+    test "an adopted domain rewrites a shipped Referer header to the new host" do
+      Source.create!(
+        key: "asura_scans", name: "Asura Scans",
+        base_url: "https://asuracomic.net", adopted_base_url: "https://asura.moved"
+      )
+
+      adapter = AdapterRegistry.for("asura_scans")
+
+      assert_equal "https://asura.moved", adapter.config["base_url"]
+      assert_equal "https://asura.moved/", adapter.config["headers"]["Referer"]
+      # Other shipped headers survive the rewrite
+      assert_equal "ScanarrScraper/0.1", adapter.config["headers"]["User-Agent"]
+    end
   end
 end
