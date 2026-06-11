@@ -89,6 +89,17 @@ class MangaSeeAdapterTest < ActiveSupport::TestCase
     assert_kind_of ResultTypes::Page, pages.first
   end
 
+  def test_search_requests_the_configured_base_url_over_the_constant
+    moved = "https://mangasee.moved.example"
+    http = FakeHttpClient.new(mapping: { "GET #{moved}/_search.php" => search_fixture }, base_url: moved)
+    adapter = Scrapers::MangaSee::Adapter.new(config: { "base_url" => moved }, http: http)
+
+    results = adapter.search("naruto")
+
+    assert_equal 2, results.size
+    assert_equal "#{moved}/manga/Naruto", results.first.url
+  end
+
   def test_returns_empty_or_nil_on_missing_fixture
     error_http = FakeHttpClient.new(mapping: {}, base_url: @base_url)
     adapter = Scrapers::MangaSee::Adapter.new(config: { "base_url" => @base_url }, http: error_http)

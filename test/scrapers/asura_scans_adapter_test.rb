@@ -1,8 +1,42 @@
 require "test_helper"
 
 class AsuraScansAdapterTest < ActiveSupport::TestCase
+  class FakeHttpClient
+    Response = Struct.new(:status, :body, :headers, :url, keyword_init: true)
+
+    def initialize(mapping:)
+      @mapping = mapping
+    end
+
+    def get(path_or_url, params: {}, headers: {})
+      body = @mapping["GET #{path_or_url}"]
+      return Response.new(status: 404, body: "", headers: {}, url: path_or_url) unless body
+
+      Response.new(status: 200, body: body, headers: {}, url: path_or_url)
+    end
+  end
+
   def setup
     @adapter = Scrapers::AsuraScans::Adapter.new(config: {}, http: nil)
+  end
+
+  test "search requests the configured base_url over the constant" do
+    moved = "https://asura.moved.example"
+    fixture = <<~HTML
+      <div class="grid">
+        <a href="/series/solo-leveling-abc123">
+          <span class="block">Solo Leveling</span>
+          <img src="https://cdn.example.com/cover.jpg" />
+        </a>
+      </div>
+    HTML
+    http = FakeHttpClient.new(mapping: { "GET #{moved}/series" => fixture })
+    adapter = Scrapers::AsuraScans::Adapter.new(config: { "base_url" => moved }, http: http)
+
+    results = adapter.search("solo leveling")
+
+    assert_equal 1, results.size
+    assert_equal "#{moved}/series/solo-leveling-abc123", results.first.url
   end
 
   # Test the CHAPTER_NUMBER_PATTERN constant directly
