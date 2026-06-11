@@ -170,6 +170,26 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     assert_nil @series_source.last_checked_at
   end
 
+  test "re-derives health immediately when a check fails" do
+    # Three other series already critically failing; this job's failure makes
+    # the fourth attempted series, crossing the broken ratio without waiting
+    # for the hourly sweep
+    3.times do |i|
+      library = LibrarySeries.create!(canonical_title: "Failing #{i}", status: "ongoing")
+      failing_series = Series.create!(canonical_title: "Failing #{i}", library_series: library)
+      SeriesSource.create!(
+        series: failing_series, source: @source, source_series_id: "FAIL#{i}",
+        last_check_error: "boom", last_check_error_at: Time.current, consecutive_failures: 5
+      )
+    end
+
+    with_raising_adapter(StandardError.new("site exploded")) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    assert_equal "broken", @source.reload.health_status
+  end
+
   test "records rate limit when adapter raises 429 error" do
     with_raising_adapter(RuntimeError.new("HTTP 429 Too Many Requests")) do
       CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
