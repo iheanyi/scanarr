@@ -18,13 +18,18 @@ module Sources
     end
 
     class FakeRegistry
-      def initialize(adapter)
+      def initialize(adapter, pinned: false)
         @adapter = adapter
+        @pinned = pinned
       end
 
       def for(_source, base_url: nil)
         @adapter.base_url = base_url
         @adapter
+      end
+
+      def operator_pinned_base_url?(_key)
+        @pinned
       end
     end
 
@@ -101,6 +106,21 @@ module Sources
       BrokenSourceRecheck.new(@source, adapter_registry: registry).call
 
       assert_equal [ "failed" ], @source.scraper_runs.where(run_type: "recheck").pluck(:status)
+    end
+
+    test "does not probe the upstream domain when an operator pinned base_url" do
+      UpstreamSource.create!(
+        mihon_id: "2131019126180322627", name: "Weeb Central", lang: "en",
+        base_url: "https://weebcentral.moved", last_seen_at: Time.current
+      )
+      registry = FakeRegistry.new(FakeAdapter.new(nil => :down, "https://weebcentral.moved" => OK_RESULT), pinned: true)
+
+      BrokenSourceRecheck.new(@source, adapter_registry: registry, resolver: PUBLIC_RESOLVER).call
+
+      # A success on the unpinned domain would heal health while real traffic
+      # kept failing on the pin; only the current-domain probe may run
+      assert_equal [ "failed" ], @source.scraper_runs.where(run_type: "recheck").pluck(:status)
+      assert_nil @source.reload.adopted_base_url
     end
 
     test "skips the upstream domain when it matches the current one" do

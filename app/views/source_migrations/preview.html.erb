@@ -28,13 +28,13 @@
     </div>
   </section>
 
-  <%= form_with url: source_migrations_path, method: :post, class: "space-y-6", data: { controller: "selection-toggle" } do |f| %>
+  <%= form_with url: source_migrations_path, method: :post, class: "space-y-6" do |f| %>
     <%= f.hidden_field :from_source_id, value: @from_source.id %>
     <%= f.hidden_field :to_source_id, value: @to_source.id %>
     <%= hidden_field_tag "series_ids[]", "" %>
 
     <% if selectable_count.positive? %>
-      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4" data-controller="selection-toggle">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 class="text-lg font-semibold text-success">Select Series to Migrate (<%= selectable_count %>)</h2>
           <div class="flex items-center gap-2">
@@ -96,8 +96,23 @@
     <% end %>
 
     <% if auto_link_count.positive? %>
-      <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
-        <h2 class="text-lg font-semibold text-warning">Auto-Link Candidates (<%= auto_link_count %>)</h2>
+      <section class="rounded-lg border border-border bg-surface p-6 space-y-4" data-controller="selection-toggle">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-warning">Auto-Link Candidates (<%= auto_link_count %>)</h2>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-muted" data-selection-toggle-target="count">0 selected</span>
+            <button type="button"
+                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
+                    data-action="selection-toggle#selectAll">
+              Check all
+            </button>
+            <button type="button"
+                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
+                    data-action="selection-toggle#clearAll">
+              Clear all
+            </button>
+          </div>
+        </div>
         <p class="text-sm text-muted">These series are not linked on the target source yet. Check them to attempt an exact-title auto-link during migration, or link them manually via per-series migrate.</p>
 
         <div class="grid gap-3 sm:grid-cols-2">

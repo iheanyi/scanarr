@@ -47,6 +47,11 @@ module Sources
     end
 
     def upstream_alternative
+      # An operator-pinned base_url outranks adoption in the registry, so a
+      # successful upstream probe would heal the source while normal traffic
+      # kept using the pinned domain. Respect the pin and don't probe around it.
+      return nil if @adapter_registry.operator_pinned_base_url?(@source.key)
+
       entry = Scrapers::Manifest.entry_for(@source.key)
       return nil unless entry&.mihon_id
 

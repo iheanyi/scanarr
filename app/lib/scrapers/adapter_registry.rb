@@ -25,6 +25,12 @@ module Scrapers
         Manifest.entry_for(key).present?
       end
 
+      # An operator pin in config/sources.yml outranks any adopted domain, so
+      # callers like BrokenSourceRecheck must not adopt around it.
+      def operator_pinned_base_url?(key)
+        operator_overrides(key).key?("base_url")
+      end
+
       private
 
       # base_url precedence, lowest to highest: manifest, a domain adopted from
