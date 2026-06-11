@@ -73,11 +73,22 @@ module Sources
         base_url: "https://weebcentral.moved", last_seen_at: Time.current
       )
       registry = FakeRegistry.new(FakeAdapter.new(nil => :down, "https://weebcentral.moved" => OK_RESULT))
+      chapter = series(:one).chapters.create!(
+        chapter_number: "1", language: "en", source: @source,
+        source_url: "https://weebcentral.com/chapters/1"
+      )
+      foreign_chapter = series(:one).chapters.create!(
+        chapter_number: "2", language: "en", source: @source,
+        source_url: "https://elsewhere.example/chapters/2"
+      )
 
       BrokenSourceRecheck.new(@source, adapter_registry: registry, resolver: PUBLIC_RESOLVER).call
 
       assert_equal %w[failed success], @source.scraper_runs.where(run_type: "recheck").order(:created_at).pluck(:status)
       assert_equal "https://weebcentral.moved", @source.reload.adopted_base_url
+      # Stored URLs on the dead domain follow the adoption; others are untouched
+      assert_equal "https://weebcentral.moved/chapters/1", chapter.reload.source_url
+      assert_equal "https://elsewhere.example/chapters/2", foreign_chapter.reload.source_url
     end
 
     test "refuses an upstream domain that resolves to an internal address" do

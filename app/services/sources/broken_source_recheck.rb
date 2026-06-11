@@ -22,10 +22,7 @@ module Sources
       upstream_url = upstream_alternative
       return unless upstream_url
 
-      if probe(base_url: upstream_url)
-        @source.update!(adopted_base_url: upstream_url)
-        restore_series!
-      end
+      adopt!(upstream_url) if probe(base_url: upstream_url)
     end
 
     private
@@ -35,6 +32,28 @@ module Sources
     # ever reflected the outage, or scheduled checks would skip them forever.
     def restore_series!
       @source.series_sources.where("consecutive_failures > 0").update_all(consecutive_failures: 0)
+    end
+
+    def adopt!(upstream_url)
+      previous = @source.adopted_base_url.presence || Scrapers::Manifest.entry_for(@source.key)&.base_url
+      @source.update!(adopted_base_url: upstream_url)
+      remap_stored_urls!(previous, upstream_url)
+      restore_series!
+    end
+
+    # Stored chapter and release URLs are absolute on the dead domain;
+    # download and read paths feed them straight into adapter.pages, so
+    # without a remap only newly discovered chapters would use the healed
+    # domain.
+    def remap_stored_urls!(old_base, new_base)
+      old_prefix = old_base.to_s.chomp("/")
+      new_prefix = new_base.to_s.chomp("/")
+      return if old_prefix.blank? || old_prefix == new_prefix
+
+      [ @source.chapters, @source.releases ].each do |scope|
+        scope.where("source_url LIKE ?", "#{ActiveRecord::Base.sanitize_sql_like(old_prefix)}%")
+          .update_all([ "source_url = REPLACE(source_url, ?, ?)", old_prefix, new_prefix ])
+      end
     end
 
     def probe(base_url:)
