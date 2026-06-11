@@ -42,3 +42,51 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Preserves expected navigation flow for actions that should move users to a different page, while still providing fast in-place feedback where the user stays on the current screen.
 
+## adapter-update-distribution (2026-06-11)
+
+**Chose**: In-tree Ruby adapters shipped with app releases, plus a declarative source manifest (config/sources/manifest.yml) as the single source of truth for identity, metadata, per-adapter integer version (Mihon extVersionCode analog), and curation flags (enabled/dead). An optional remote data-only definitions override is designed but deferred.
+
+**Over**: Mihon-literal remote extension loading (runtime-loaded Ruby adapter packages from a repo index), Gem-per-adapter with Bundler-managed versions
+
+**Because**: Runtime-loading remote Ruby into a self-hosted server is RCE-by-design; Mihon only gets away with APK loading because Android sandboxes and signs packages. Gems add 25 release pipelines without removing the deploy step. For a self-hosted Docker monolith, the app image IS the distribution channel; what needs out-of-band updating is data (domains, dead flags, theme params), which a schema-validated manifest covers safely. Mirrors what keiyoushi multisrc converged to: most extension churn is domain changes and theme-param tweaks.
+
+## source-health-model (2026-06-11)
+
+**Chose**: A derived health_status enum on Source (healthy/degraded/broken/dead) recomputed idempotently from existing signals (smoke-run history, series_source consecutive failures), with evidence windowed to runs after the last adapter_version bump; dead is manifest-curated only, never automatic.
+
+**Over**: Event-sourced health state machine with explicit transitions, Keep health implicit in reliability_score + consecutive_failures with no unified status
+
+**Because**: Signals already exist in three models but nothing answers 'is this source usable?' in one place. Derivation (not stored transitions) means recomputation converges regardless of crashes or ordering, and windowing evidence to the current adapter version gives a shipped fix a clean probation period instead of being damned by stale failures. Auto-marking a source dead risks false positives from transient Cloudflare blocks, so dead stays a curation decision.
+
+## upstream-catalog-piggyback (2026-06-11)
+
+**Chose**: Mirror the keiyoushi (Mihon community) extensions index daily into an upstream_sources table as a data-only, schema-validated catalog; link our manifest entries by curated mihon_id; functional parity stays adapter-by-adapter since the feed carries no scraping logic or selectors.
+
+**Over**: Maintain our own remote definitions feed, Blindly adopt feed baseUrls for working sources, Import feed sources directly into the sources table
+
+**Because**: The user did not want to maintain a feed. The keiyoushi index gives canonical name/lang/baseUrl/nsfw/version for ~2100 sources for free, but its baseUrl can lag reality (their Asura entry points at asurascans.com while asuracomic.net is what works), so blind adoption can break working adapters. Keeping catalog rows out of the sources table keeps thousands of unimplemented entries from polluting every operator dropdown and scraping query.
+
+## broken-source-recovery (2026-06-11)
+
+**Chose**: Broken sources are skipped by all scheduled work and recovered by a single cheap recheck probe inside the hourly health sweep, on a downtime-scaled backoff (6h under 3 days broken, daily under 14 days, weekly after). When the current domain fails the probe, it tries the upstream catalog's domain and adopts it stickily (persisted as sources.adopted_base_url) on success. Dead remains curated-only.
+
+**Over**: A separate daily active probe fleet (cancelled by user as redundant with the hourly sweep), Conditional base_url override while broken (rejected: heals then flips back to the dead domain), No active recovery (rejected: skipped sources produce no signals and could never self-heal)
+
+**Because**: Skipping checks for broken sources removes the very traffic that would notice recovery, so recovery needs exactly one knock on a polite schedule. Sticky adoption converges: once the new domain works the source stays on it. The health evaluator also discounts series-check failures older than the latest successful run, otherwise stale failure rows that nothing updates would keep a healed source broken forever.
+
+## source-transition-home (2026-06-11)
+
+**Chose**: Source model owns all health/domain transition semantics: assign_health, pin_dead, grant_probation (non-saving assigns, preserving SyncService changed?-based idempotency) and transition_health!, adopt_domain! (persisting). SyncService, HealthEvaluator, BrokenSourceRecheck are thin callers. New transitions go on the model, never at call sites.
+
+**Over**: A Sources::Transitions service object (new layer over state the model already owns), Keeping the two informal choke points in SyncService and HealthEvaluator (the partial-reset bug class that dominated PR #52 review)
+
+**Because**: Every transitioned field is Source state or a Source association, and 14 review rounds on PR #52 showed call-site transition logic decays into partial-reset bugs (a transition moving one piece of evidence and leaving another stale). One named home on the model makes the next partial reset structurally hard to write.
+
+## source-health-state-machine (2026-06-11)
+
+**Chose**: aasm state machine on Source's enum-backed health_status column (enum: true, create_scopes: false, whiny_persistence: true): mark_healthy/mark_degraded/mark_broken events for evaluator-derived writes, pin_dead/resurrect for manifest-curated edges, evidence resets as per-edge after-callbacks, after_all_transitions touching health_changed_at. transition_health! maps derived status to bang events; grant_probation stays a plain method (a version bump on a healthy source resets evidence with no state change, which is not an edge); enabled stays sync-owned operator policy.
+
+**Over**: Hand-rolled transition methods on Source (previous iteration; worked but allowed silent undeclared edges), no_direct_assignment (would break ~20 legitimate test/seed direct writes), aasm-generated scopes (Rails enum already provides them)
+
+**Because**: User decision overriding my initial pushback. The derivation-vs-events tension resolved cleanly: the evaluator keeps deriving, and the machine's value is per-edge declared consequences plus AASM::InvalidTransition on undeclared edges, making partial resets and rogue health writes structurally harder. Non-bang events assigning in memory preserved SyncService idempotency exactly.
+

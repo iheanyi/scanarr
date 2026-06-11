@@ -42,6 +42,8 @@ module Admin
         variant = :danger
       end
 
+      Sources::HealthEvaluator.new(source).call if source
+
       respond_with_toast(
         redirect_path: admin_scrapers_path,
         message: message,
@@ -54,6 +56,10 @@ module Admin
     def run_smoke_for(source)
       adapter = adapter_for(source)
       results = adapter.search("one piece")
+      # Mirrors ScraperSmokeJob and BrokenSourceRecheck: empty search is a
+      # failure, or a silently broken adapter would heal the source
+      raise Scrapers::Errors::ScraperError, "search returned no results" if results.empty?
+
       series = results.first && adapter.series(results.first.url)
       chapters = series ? adapter.chapters(series.url) : []
       pages = chapters.first ? adapter.pages(chapters.first.url) : []

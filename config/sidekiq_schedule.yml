@@ -3,6 +3,14 @@ development:
     class: "RestartStalledDownloadsJob"
     cron: "* * * * *"
     queue: default
+  source_health_sweep:
+    class: "SourceHealthSweepJob"
+    cron: "15 * * * *"
+    queue: default
+  refresh_upstream_catalog:
+    class: "RefreshUpstreamCatalogJob"
+    cron: "45 4 * * *"
+    queue: default
   check_new_chapters:
     class: "CheckNewChaptersJob"
     cron: "*/30 * * * *"
@@ -20,6 +28,14 @@ production:
   restart_stalled_downloads:
     class: "RestartStalledDownloadsJob"
     cron: "* * * * *"
+    queue: default
+  source_health_sweep:
+    class: "SourceHealthSweepJob"
+    cron: "15 * * * *"
+    queue: default
+  refresh_upstream_catalog:
+    class: "RefreshUpstreamCatalogJob"
+    cron: "45 4 * * *"
     queue: default
   check_new_chapters:
     class: "CheckNewChaptersJob"

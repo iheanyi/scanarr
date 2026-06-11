@@ -1,12 +1,19 @@
 # frozen_string_literal: true
 
-class SourceMigrationService
-  Result = Data.define(:success, :migrated, :no_match, :already_on_target, :errors)
+require "timeout"
 
-  def initialize(from_source:, to_source:, user:, series_ids: nil)
+class SourceMigrationService
+  # Bound per-series network time so one hanging target source cannot tie up
+  # the migration request and starve the remaining series.
+  AUTO_LINK_TIMEOUT_SECONDS = 20
+  Result = Data.define(:success, :migrated, :no_match, :already_on_target, :link_candidates, :errors)
+
+  def initialize(from_source:, to_source:, user:, series_ids: nil, auto_link: true, adapter_registry: Scrapers::AdapterRegistry)
     @from_source = from_source
     @to_source = to_source
     @user = user
+    @auto_link = auto_link
+    @adapter_registry = adapter_registry
     @selected_series_ids = if series_ids.nil?
       nil
     else
@@ -18,11 +25,20 @@ class SourceMigrationService
     @errors = []
   end
 
-  # Preview what would happen without making changes
+  # Preview what would happen without making changes or network calls.
+  # Unlinked series are auto-link candidates, not failures: execute! will
+  # search the target for them and link exact title matches, so the preview
+  # must represent that attempt rather than declaring no_match up front.
   def preview
+    return unusable_target_result if target_unusable?
+
+    link_candidates = []
+
     affected_series.each do |series|
       if series.sources.include?(@to_source)
         @already_on_target << series
+      elsif @auto_link
+        link_candidates << series
       else
         @no_match << series
       end
@@ -33,16 +49,19 @@ class SourceMigrationService
       migrated: [],
       no_match: @no_match,
       already_on_target: @already_on_target,
+      link_candidates: link_candidates,
       errors: []
     )
   end
 
-  # Execute the migration
+  # Execute the migration. Each series migrates independently so one failure
+  # (or a slow source) cannot roll back or block the rest; re-running
+  # converges because linked series take the already_on_target path.
   def execute!
-    ActiveRecord::Base.transaction do
-      affected_series.each do |series|
-        migrate_series(series)
-      end
+    return unusable_target_result if target_unusable?
+
+    affected_series.each do |series|
+      migrate_series(series)
     end
 
     Result.new(
@@ -50,6 +69,7 @@ class SourceMigrationService
       migrated: @migrated,
       no_match: @no_match,
       already_on_target: @already_on_target,
+      link_candidates: [],
       errors: @errors
     )
   rescue => e
@@ -59,11 +79,31 @@ class SourceMigrationService
       migrated: @migrated,
       no_match: @no_match,
       already_on_target: @already_on_target,
+      link_candidates: [],
       errors: @errors
     )
   end
 
   private
+
+  # Migrating FROM a broken source is the whole point of migration; migrating
+  # TO a broken, dead, or operator-disabled one would search and prioritize a
+  # source the rest of the app skips.
+  def target_unusable?
+    @to_source.migration_target_rejection.present?
+  end
+
+  def unusable_target_result
+    reason = @to_source.migration_target_rejection
+    Result.new(
+      success: false,
+      migrated: [],
+      no_match: [],
+      already_on_target: [],
+      link_candidates: [],
+      errors: [ "#{@to_source.name} is #{reason} and cannot be a migration target" ]
+    )
+  end
 
   def affected_series
     @affected_series ||= begin
@@ -84,17 +124,50 @@ class SourceMigrationService
     end
   end
 
+  # Buckets are disjoint: a linked series whose priority moves counts as
+  # migrated, one with nothing to change is already_on_target. The completion
+  # toast sums them, so a series must never appear in both.
   def migrate_series(series)
     if series.sources.include?(@to_source)
-      # Already has target source — just update priority
+      @already_on_target << series unless update_source_priority(series)
+    elsif auto_link_series(series)
       update_source_priority(series)
-      @already_on_target << series
+      @migrated << series unless @migrated.include?(series)
     else
-      # Series doesn't exist on target source — can't auto-migrate
       @no_match << series
     end
   rescue => e
     @errors << "#{series.canonical_title}: #{e.message}"
+  end
+
+  # Search the target source for the series and link it when the best result
+  # clears the auto-link confidence bar. Below the bar, the series stays
+  # no_match for the user to resolve manually via discovery.
+  def auto_link_series(series)
+    return false unless @auto_link
+    return false unless @adapter_registry.registered?(@to_source.key)
+
+    adapter = @adapter_registry.for(@to_source)
+    source_series_id = Timeout.timeout(AUTO_LINK_TIMEOUT_SECONDS) do
+      results = adapter.search(series.canonical_title).first(5)
+      match, _confidence = Sources::TitleMatcher.best_match(
+        series.canonical_title,
+        results,
+        min_confidence: Sources::TitleMatcher::AUTO_LINK_CONFIDENCE
+      )
+      match ? adapter.series(match.url).id.to_s.strip : nil
+    end
+    return false if source_series_id.blank?
+
+    series.series_sources.create!(source: @to_source, source_series_id: source_series_id)
+    series.sources.reset
+    true
+  rescue Timeout::Error
+    @errors << "#{series.canonical_title}: timed out searching #{@to_source.name}"
+    false
+  rescue Scrapers::Errors::ScraperError, Scrapers::AdapterRegistry::UnknownSourceError => e
+    @errors << "#{series.canonical_title}: #{e.message}"
+    false
   end
 
   def update_source_priority(series)
@@ -102,7 +175,7 @@ class SourceMigrationService
       .joins(:library_series)
       .where(library_series: { id: series.library_series_id })
       .first
-    return unless follow
+    return false unless follow
 
     priority = follow.source_priority || []
 
@@ -112,5 +185,6 @@ class SourceMigrationService
 
     follow.update!(source_priority: priority)
     @migrated << series
+    true
   end
 end

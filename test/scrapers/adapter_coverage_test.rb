@@ -9,6 +9,57 @@ class AdapterCoverageTest < ActiveSupport::TestCase
     assert_empty missing, "Missing dedicated adapter tests for: #{missing.join(', ')}"
   end
 
+  def test_manifest_parses_and_validates
+    assert_operator Scrapers::Manifest.entries.size, :>=, 1
+    assert_equal 1, Scrapers::Manifest.api_version
+  end
+
+  def test_every_adapter_directory_is_registered_in_the_manifest
+    adapter_dirs = Rails.root.glob("app/lib/scrapers/*/adapter.rb").map { |path| path.parent.basename.to_s }
+    unregistered = adapter_dirs - Scrapers::Manifest.keys
+
+    assert_empty unregistered,
+      "Adapters with no manifest entry (add them to config/sources/manifest.yml): #{unregistered.join(', ')}"
+  end
+
+  def test_every_manifest_entry_resolves_to_a_base_adapter_subclass
+    Scrapers::Manifest.entries.each do |entry|
+      klass = entry.adapter_class
+
+      assert_operator klass, :<, Scrapers::BaseAdapter,
+        "#{entry.key}: #{entry.adapter_class_name} must inherit from Scrapers::BaseAdapter"
+    end
+  end
+
+  def test_every_adapter_honors_the_browse_contract
+    Scrapers::AdapterRegistry.registered_keys.each do |key|
+      adapter = Scrapers::AdapterRegistry.adapter_for_key(key)
+      next unless adapter.supports_browse?
+
+      sorts = adapter.browse_sort_options
+
+      assert_kind_of Array, sorts, "#{key}: browse_sort_options must return an array"
+      assert_not_empty sorts, "#{key}: browse adapter must declare at least one sort option"
+      assert(sorts.all? { |sort| sort.is_a?(String) }, "#{key}: browse sort options must be strings")
+      assert_operator adapter.browse_page_size, :>, 0, "#{key}: browse_page_size must be positive"
+    end
+  end
+
+  def test_filter_options_are_label_value_pairs
+    Scrapers::AdapterRegistry.registered_keys.each do |key|
+      adapter = Scrapers::AdapterRegistry.adapter_for_key(key)
+
+      [ adapter.search_filter_options, adapter.browse_filter_options ].each do |options|
+        options.each do |group, pairs|
+          assert_kind_of Array, pairs, "#{key}: filter group #{group} must be an array"
+          pairs.each do |pair|
+            assert_equal 2, Array(pair).size, "#{key}: filter group #{group} entries must be [label, value] pairs"
+          end
+        end
+      end
+    end
+  end
+
   def test_all_registered_adapters_implement_filter_capability_contract
     Scrapers::AdapterRegistry.registered_keys.each do |key|
       adapter = Scrapers::AdapterRegistry.adapter_for_key(key)

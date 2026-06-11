@@ -14,8 +14,10 @@ class CheckSourceForChaptersJob < ApplicationJob
 
     return unless series && follow && source
 
-    # Double-check rate limit at execution time (may have been set since enqueue)
-    return if source.rate_limited?
+    # Double-check at execution time (state may have changed since enqueue).
+    # Broken/dead sources are skipped entirely; the health sweep's recheck
+    # probe is the only scheduled traffic they receive.
+    return if source.rate_limited? || source.broken? || source.dead?
 
     adapter = Scrapers::AdapterRegistry.for(source)
     series_source = series.series_sources.find_by(source: source)
@@ -80,6 +82,15 @@ class CheckSourceForChaptersJob < ApplicationJob
 
     series_source&.record_check_failure!(e.message)
     Rails.logger.error "[CheckSourceForChaptersJob] Error checking series #{series_id}: #{e.message}"
+
+    # Re-derive health on the failure path so a newly broken source stops
+    # receiving scheduled traffic now instead of after the next hourly sweep.
+    # Success paths stay evaluation-free; failures are the rare case.
+    begin
+      Sources::HealthEvaluator.new(source).call if source
+    rescue StandardError => health_error
+      Rails.logger.error "[CheckSourceForChaptersJob] health evaluate #{source&.key}: #{health_error.message}"
+    end
   end
 
   private

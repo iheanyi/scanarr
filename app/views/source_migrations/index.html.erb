@@ -40,11 +40,15 @@
             <% end %>
           </div>
 
-          <% if health && health.stale_count.to_i > 0 %>
-            <%= render UI::BadgeComponent.new(label: "Stale", variant: :danger) %>
-          <% elsif health && health.attention_count.to_i > 0 %>
+          <% case source.health_status %>
+          <% when "dead" %>
+            <%= render UI::BadgeComponent.new(label: "Dead", variant: :danger) %>
+          <% when "broken" %>
+            <% broken_label = source.health_changed_at ? "Broken for #{time_ago_in_words(source.health_changed_at)}" : "Broken" %>
+            <%= render UI::BadgeComponent.new(label: broken_label, variant: :danger) %>
+          <% when "degraded" %>
             <%= render UI::BadgeComponent.new(label: "Degraded", variant: :warning) %>
-          <% elsif health %>
+          <% else %>
             <%= render UI::BadgeComponent.new(label: "Healthy", variant: :success) %>
           <% end %>
         </div>

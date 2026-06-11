@@ -99,3 +99,5 @@ group :development do
   gem "stackprof"       # ?pp=flamegraph CPU profiling
   gem "memory_profiler"  # ?pp=profile-memory
 end
+
+gem "aasm", "~> 5.5"

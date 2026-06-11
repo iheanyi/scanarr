@@ -12,7 +12,11 @@ class SearchController < ApplicationController
 
   def index
     @include_mature = ActiveModel::Type::Boolean.new.cast(params[:include_mature])
-    all_sources = Source.where(enabled: true).order(:name, :key).to_a
+    # Broken/dead sources are excluded from fan-out: each one would burn the
+    # full search timeout for results we know it cannot deliver.
+    all_sources = Source.where(enabled: true)
+      .where.not(health_status: %w[broken dead])
+      .order(:name, :key).to_a
     @mature_source_count = all_sources.count(&:mature_content?)
     @sources = @include_mature ? all_sources : all_sources.reject(&:mature_content?)
     @hidden_mature_count = @include_mature ? 0 : @mature_source_count

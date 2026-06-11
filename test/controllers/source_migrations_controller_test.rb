@@ -1,6 +1,38 @@
 require "test_helper"
 
 class SourceMigrationsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    # The fixture ships disabled; migration targets must be usable
+    sources(:two).update!(enabled: true)
+  end
+
+  test "preview with an unusable target redirects with an error toast" do
+    sources(:two).update!(health_status: "broken")
+
+    post preview_source_migrations_path,
+         params: { from_source_id: sources(:one).id, to_source_id: sources(:two).id },
+         headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
+
+    assert_redirected_to source_migrations_path
+    assert_includes flash[:alert], "cannot be a migration target"
+  end
+
+  test "series_create rejects an unusable target before creating any link" do
+    series = series(:one)
+    sources(:two).update!(health_status: "broken")
+
+    post library_series_migrate_path(series_slug: series.to_param), params: {
+      from_source_id: sources(:one).id,
+      to_source_id: sources(:two).id,
+      target_series_url: "https://example.com/one-piece"
+    }
+
+    assert_redirected_to library_series_path(series_slug: series.to_param)
+    assert_includes flash[:alert], "cannot be a migration target"
+    # The guard must run before link_series_to_target!
+    assert_nil SeriesSource.find_by(series: series, source: sources(:two))
+  end
+
   test "create turbo request redirects with flash" do
     post source_migrations_path,
          params: { from_source_id: sources(:one).id, to_source_id: sources(:two).id },

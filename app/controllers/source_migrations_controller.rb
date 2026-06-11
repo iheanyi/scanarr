@@ -23,6 +23,16 @@ class SourceMigrationsController < ApplicationController
       series_ids: selected_series_ids
     ).preview
 
+    unless result.success
+      respond_with_toast(
+        redirect_path: source_migrations_path,
+        message: result.errors.first,
+        variant: :danger,
+        turbo_redirect: true
+      )
+      return
+    end
+
     @from_source = from_source
     @to_source = to_source
     @result = result
@@ -84,6 +94,19 @@ class SourceMigrationsController < ApplicationController
     @series = Series.find_by_param!(params[:series_slug])
     @from_source = Source.find(params[:from_source_id])
     @to_source = Source.find(params[:to_source_id])
+
+    # Validate the target before link_series_to_target! so a rejected
+    # migration cannot leave behind a fresh SeriesSource link
+    if (reason = @to_source.migration_target_rejection)
+      respond_with_toast(
+        redirect_path: library_series_path(series_slug: @series.to_param),
+        message: "#{@to_source.name} is #{reason} and cannot be a migration target",
+        variant: :danger,
+        status: :unprocessable_entity,
+        turbo_redirect: true
+      )
+      return
+    end
 
     unless @series.sources.exists?(id: @to_source.id)
       target_series_url = params[:target_series_url].to_s
@@ -158,7 +181,7 @@ class SourceMigrationsController < ApplicationController
   end
 
   def build_chapter_count_map(result)
-    series_ids = (result.already_on_target + result.no_match).map(&:id).uniq
+    series_ids = (result.already_on_target + result.link_candidates + result.no_match).map(&:id).uniq
     return {} if series_ids.empty?
 
     source_ids = [ @from_source.id, @to_source.id ]

@@ -4,59 +4,73 @@ module Scrapers
   class AdapterRegistry
     class UnknownSourceError < StandardError; end
 
-    ADAPTERS = {
-      "mangadex" => -> { Scrapers::Mangadex::Adapter },
-      "weeb_central" => -> { Scrapers::WeebCentral::Adapter },
-      "manga_see" => -> { Scrapers::MangaSee::Adapter },
-      "asura_scans" => -> { Scrapers::AsuraScans::Adapter },
-      "manga_pill" => -> { Scrapers::MangaPill::Adapter },
-      "comick" => -> { Scrapers::Comick::Adapter },
-      "tcb_scans" => -> { Scrapers::TcbScans::Adapter },
-      "manga_kakalot" => -> { Scrapers::MangaKakalot::Adapter },
-      "flame_comics" => -> { Scrapers::FlameComics::Adapter },
-      "batoto" => -> { Scrapers::Batoto::Adapter },
-      "manga_here" => -> { Scrapers::MangaHere::Adapter },
-      "manga_clash" => -> { Scrapers::MangaClash::Adapter },
-      "manga_buddy" => -> { Scrapers::MangaBuddy::Adapter },
-      "zero_scans" => -> { Scrapers::ZeroScans::Adapter },
-      "manhua_plus" => -> { Scrapers::ManhuaPlus::Adapter },
-      "isekai_scan" => -> { Scrapers::IsekaiScan::Adapter },
-      "toonily" => -> { Scrapers::Toonily::Adapter },
-      "drake_scans" => -> { Scrapers::DrakeScans::Adapter },
-      "like_manga" => -> { Scrapers::LikeManga::Adapter },
-      "manga_freak" => -> { Scrapers::MangaFreak::Adapter },
-      "manga_read" => -> { Scrapers::MangaRead::Adapter },
-      "manga_geko" => -> { Scrapers::MangaGeko::Adapter },
-      "manhwa18" => -> { Scrapers::Manhwa18::Adapter },
-      "manga_nato" => -> { Scrapers::MangaNato::Adapter },
-      "manga_fire" => -> { Scrapers::MangaFire::Adapter }
-    }.freeze
-
     class << self
-      def for(source_or_key)
+      def for(source_or_key, base_url: nil)
         key = source_or_key.is_a?(String) ? source_or_key : source_or_key.key
-        adapter_for_key(key)
+        adapter_for_key(key, base_url: base_url)
       end
 
-      def adapter_for_key(key)
-        adapter_proc = ADAPTERS[key]
-        raise UnknownSourceError, "Unknown source: #{key}" unless adapter_proc
+      def adapter_for_key(key, base_url: nil)
+        entry = Manifest.entry_for(key)
+        raise UnknownSourceError, "Unknown source: #{key}" unless entry
 
-        config = source_config(key)
-        adapter_proc.call.new(config: config)
+        entry.adapter_class.new(config: source_config(entry, base_url_override: base_url))
       end
 
       def registered_keys
-        ADAPTERS.keys
+        Manifest.keys
       end
 
       def registered?(key)
-        ADAPTERS.key?(key)
+        Manifest.entry_for(key).present?
+      end
+
+      # An operator pin in config/sources.yml outranks any adopted domain, so
+      # callers like BrokenSourceRecheck must not adopt around it.
+      def operator_pinned_base_url?(key)
+        operator_overrides(key).key?("base_url")
+      end
+
+      # The domain scraping will actually use, with full precedence applied.
+      # The single truth for operator-facing views.
+      def effective_base_url(key)
+        entry = Manifest.entry_for(key)
+        return nil unless entry
+
+        source_config(entry)["base_url"]
       end
 
       private
 
-      def source_config(key)
+      # base_url precedence, lowest to highest: manifest, a domain adopted from
+      # the upstream catalog after it healed a broken source, the operator's
+      # config/sources.yml override, an explicit caller override (probes).
+      def source_config(entry, base_url_override: nil)
+        adopted = adopted_base_url(entry.key)
+        config = { "base_url" => adopted || entry.base_url }.merge(operator_overrides(entry.key))
+        config["base_url"] = base_url_override if base_url_override
+
+        # Shipped Referer headers point at the source's own domain. When the
+        # effective domain moved (adoption or a probe override), the stale
+        # Referer would fail hotlink checks on the new host.
+        effective = base_url_override || adopted
+        if effective && config["base_url"] == effective
+          config["headers"] = rewrite_referer(config["headers"], effective)
+        end
+        config
+      end
+
+      def rewrite_referer(headers, base_url)
+        return headers unless headers.is_a?(Hash) && headers["Referer"]
+
+        headers.merge("Referer" => "#{base_url.chomp("/")}/")
+      end
+
+      def adopted_base_url(key)
+        Source.find_by(key: key)&.adopted_base_url.presence
+      end
+
+      def operator_overrides(key)
         Rails.application.config_for(:sources).fetch(key.to_sym, {}).to_h.deep_stringify_keys
       rescue RuntimeError
         {}

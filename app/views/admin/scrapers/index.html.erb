@@ -22,7 +22,12 @@
             <tr>
               <td class="px-4 py-3 font-semibold"><%= source.name || source.key %></td>
               <td class="px-4 py-3 text-muted"><%= source.key %></td>
-              <td class="px-4 py-3 text-muted"><%= source.base_url %></td>
+              <td class="px-4 py-3 text-muted">
+                <%= source.effective_base_url %>
+                <% if source.adopted_base_url.present? && source.effective_base_url == source.adopted_base_url %>
+                  <span class="ml-1 text-xs text-warning">(adopted)</span>
+                <% end %>
+              </td>
               <td class="px-4 py-3">
                 <%= button_to "Run smoke test",
                               admin_scraper_smoke_path(source_id: source.id),
