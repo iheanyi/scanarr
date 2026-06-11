@@ -22,7 +22,12 @@ module Sources
     def call
       status = derived_status
       unless @source.health_status == status
+        was_broken = @source.broken?
         @source.update!(health_status: status, health_changed_at: Time.current)
+        # Every heal path converges here (sweep recheck, admin smoke, the
+        # chapter-check failure path), so this is the one place to un-stale
+        # series whose 10+ failure streaks only ever reflected the outage.
+        restore_series! if was_broken && status == "healthy"
       end
       status
     end
@@ -36,6 +41,10 @@ module Sources
     end
 
     private
+
+    def restore_series!
+      @source.series_sources.where("consecutive_failures > 0").update_all(consecutive_failures: 0)
+    end
 
     def smoke_streak_broken?
       recent_run_statuses.size >= BROKEN_RUN_STREAK && recent_run_statuses.all?("failed")

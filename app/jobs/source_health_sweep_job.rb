@@ -40,8 +40,13 @@ class SourceHealthSweepJob < ApplicationJob
 
   private
 
+  # Only runs since the source entered its current (broken) state count as
+  # recovery attempts; a success just before the breakage must not suppress
+  # the first probe for a full backoff interval.
   def recheck_due?(source)
-    last_attempt = source.scraper_runs.where(status: %w[success failed]).maximum(:created_at)
+    attempts = source.scraper_runs.where(status: %w[success failed])
+    attempts = attempts.where(created_at: source.health_changed_at..) if source.health_changed_at
+    last_attempt = attempts.maximum(:created_at)
     return true if last_attempt.nil?
 
     last_attempt < recheck_interval(source).ago

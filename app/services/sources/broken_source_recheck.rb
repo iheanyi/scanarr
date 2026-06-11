@@ -16,8 +16,11 @@ module Sources
       @resolver = resolver
     end
 
+    # Streak restoration is not done here: the health sweep runs the
+    # evaluator right after this probe, and its broken-to-healthy transition
+    # owns the per-series reset for every heal path.
     def call
-      return restore_series! if probe(base_url: nil)
+      return if probe(base_url: nil)
 
       upstream_url = upstream_alternative
       return unless upstream_url
@@ -27,18 +30,10 @@ module Sources
 
     private
 
-    # The mirror of sync's probation reset: a recovered source must retry
-    # series whose failure streaks (including 10+ stale-listed ones) only
-    # ever reflected the outage, or scheduled checks would skip them forever.
-    def restore_series!
-      @source.series_sources.where("consecutive_failures > 0").update_all(consecutive_failures: 0)
-    end
-
     def adopt!(upstream_url)
       previous = @source.adopted_base_url.presence || Scrapers::Manifest.entry_for(@source.key)&.base_url
       @source.update!(adopted_base_url: upstream_url)
       remap_stored_urls!(previous, upstream_url)
-      restore_series!
     end
 
     # Stored chapter and release URLs are absolute on the dead domain;

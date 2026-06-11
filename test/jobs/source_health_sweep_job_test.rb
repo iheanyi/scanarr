@@ -34,6 +34,13 @@ class SourceHealthSweepJobTest < ActiveSupport::TestCase
     assert_equal 7.days, @job.send(:recheck_interval, @source)
   end
 
+  test "a successful run before the breakage does not suppress the first probe" do
+    ScraperRun.create!(source: @source, run_type: "smoke", status: "success", started_at: 2.days.ago, finished_at: 2.days.ago, created_at: 2.days.ago)
+    @source.update!(health_changed_at: 1.hour.ago)
+
+    assert @job.send(:recheck_due?, @source)
+  end
+
   test "recheck is due with no prior runs and not due right after one" do
     assert @job.send(:recheck_due?, @source)
 
