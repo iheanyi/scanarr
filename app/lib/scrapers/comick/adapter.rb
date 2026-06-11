@@ -4,7 +4,7 @@ require "nokogiri"
 module Scrapers
   module Comick
   class Adapter < Scrapers::BaseAdapter
-    SITE_URL = "https://comick.live"
+    BASE_URL = "https://comick.live"
     IMAGE_CDN = "https://meo.comick.pictures"
 
     # Status codes from the Comick API
@@ -150,10 +150,6 @@ module Scrapers
     end
 
     private
-
-    def base_url
-      config.fetch("base_url", SITE_URL)
-    end
 
     def comic_url(slug)
       "#{base_url}/comic/#{slug}"

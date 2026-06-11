@@ -110,10 +110,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Parse search results using MangaThemesia selectors
     def parse_search_results(doc)
       doc.css(".utao .uta .imgu, .listupd .bs .bsx").map do |element|

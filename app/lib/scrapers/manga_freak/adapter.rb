@@ -183,10 +183,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     def normalize_series_url(id_or_url)
       if id_or_url.start_with?("http")
         id_or_url

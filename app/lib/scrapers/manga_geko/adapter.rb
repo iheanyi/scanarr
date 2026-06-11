@@ -117,10 +117,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Parse search results from the AJAX HTML response
     def parse_search_results(html)
       doc = Nokogiri::HTML.fragment(html)

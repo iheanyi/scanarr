@@ -126,10 +126,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     def fetch_all_projects
       response = http.get("#{base_url}/projects")
       return [] unless response.status == 200
