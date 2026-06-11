@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "resolv"
+
 module Sources
   # Recovery probe for a broken source. Probes the current domain first; if
   # that fails and the upstream catalog knows a different domain, probes it
@@ -10,9 +12,10 @@ module Sources
   class BrokenSourceRecheck
     PROBE_QUERY = "one piece"
 
-    def initialize(source, adapter_registry: Scrapers::AdapterRegistry)
+    def initialize(source, adapter_registry: Scrapers::AdapterRegistry, resolver: Resolv.method(:getaddresses))
       @source = source
       @adapter_registry = adapter_registry
+      @resolver = resolver
     end
 
     def call
@@ -49,6 +52,9 @@ module Sources
 
       upstream_url = UpstreamSource.find_by(mihon_id: entry.mihon_id)&.base_url.presence
       return nil unless upstream_url
+      # Ingest only rejects internal IP literals; a poisoned hostname must be
+      # caught here, where it is about to be fetched for the first time.
+      return nil if PublicUrl.resolves_internal?(URI(upstream_url).host, resolver: @resolver)
 
       current = @source.adopted_base_url.presence || entry.base_url
       upstream_url == current ? nil : upstream_url

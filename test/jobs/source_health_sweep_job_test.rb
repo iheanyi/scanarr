@@ -12,6 +12,14 @@ class SourceHealthSweepJobTest < ActiveSupport::TestCase
     )
   end
 
+  test "operator-disabled sources get no recheck probes" do
+    @source.update!(enabled: false)
+
+    @job.perform
+
+    assert_empty @source.scraper_runs.where(run_type: "recheck")
+  end
+
   test "recheck backs off based on how long the source has been broken" do
     @source.update!(health_changed_at: 1.day.ago)
 

@@ -18,7 +18,11 @@ class SourceHealthSweepJob < ApplicationJob
 
   def perform
     Source.find_each do |source|
-      Sources::BrokenSourceRecheck.new(source).call if source.broken? && recheck_due?(source)
+      # Operator-disabled sources get no probe traffic; passive evaluation
+      # still runs so their health stays current if signals exist.
+      if source.enabled? && source.broken? && recheck_due?(source)
+        Sources::BrokenSourceRecheck.new(source).call
+      end
       Sources::HealthEvaluator.new(source).call
     rescue StandardError => e
       Rails.logger.error "[SourceHealthSweepJob] #{source.key}: #{e.message}"

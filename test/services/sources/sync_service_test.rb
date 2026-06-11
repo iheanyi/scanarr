@@ -35,12 +35,13 @@ module Sources
       refute source.reload.enabled
     end
 
-    test "adapter version bump resets health probation and rate limit" do
+    test "adapter version bump resets health probation, rate limit, and adopted URL" do
       source = sources(:one)
       source.update!(
         adapter_version: 0,
         health_status: "broken",
-        rate_limited_until: 1.hour.from_now
+        rate_limited_until: 1.hour.from_now,
+        adopted_base_url: "https://weebcentral.moved"
       )
 
       SyncService.new.call
@@ -50,6 +51,8 @@ module Sources
       assert_not_nil source.adapter_version_synced_at
       assert_equal "healthy", source.health_status
       assert_nil source.rate_limited_until
+      # The bump may ship a corrected domain; a stale adoption must not outrank it
+      assert_nil source.adopted_base_url
     end
 
     test "unchanged version leaves health alone" do
@@ -113,15 +116,18 @@ module Sources
       assert_equal "healthy", HealthEvaluator.new(source).derived_status
     end
 
-    test "merges manifest capabilities over existing ones without dropping operator keys" do
+    test "never writes capabilities so operator overrides and manifest removals both work" do
       source = sources(:mature)
       source.update!(capabilities: { "mature_content" => false, "operator_flag" => true })
 
       SyncService.new.call
       source.reload
 
-      assert source.capabilities["mature_content"]
+      # Operator-owned column is untouched; manifest capabilities are
+      # consulted at runtime instead of being synced into the row
+      refute source.capabilities["mature_content"]
       assert source.capabilities["operator_flag"]
+      refute_predicate source, :mature_content?
     end
 
     private

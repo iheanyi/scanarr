@@ -29,6 +29,7 @@ module Sources
     end
 
     OK_RESULT = [ Scrapers::ResultTypes::SearchResult.new(id: "1", title: "One Piece", url: "https://x/1") ].freeze
+    PUBLIC_RESOLVER = ->(_host) { [ "93.184.216.34" ] }
 
     setup do
       @source = sources(:one) # weeb_central
@@ -60,10 +61,25 @@ module Sources
       )
       registry = FakeRegistry.new(FakeAdapter.new(nil => :down, "https://weebcentral.moved" => OK_RESULT))
 
-      BrokenSourceRecheck.new(@source, adapter_registry: registry).call
+      BrokenSourceRecheck.new(@source, adapter_registry: registry, resolver: PUBLIC_RESOLVER).call
 
       assert_equal %w[failed success], @source.scraper_runs.where(run_type: "recheck").order(:created_at).pluck(:status)
       assert_equal "https://weebcentral.moved", @source.reload.adopted_base_url
+    end
+
+    test "refuses an upstream domain that resolves to an internal address" do
+      UpstreamSource.create!(
+        mihon_id: "2131019126180322627", name: "Weeb Central", lang: "en",
+        base_url: "https://weebcentral.moved", last_seen_at: Time.current
+      )
+      registry = FakeRegistry.new(FakeAdapter.new(nil => :down, "https://weebcentral.moved" => OK_RESULT))
+
+      internal_resolver = ->(_host) { [ "169.254.169.254" ] }
+      BrokenSourceRecheck.new(@source, adapter_registry: registry, resolver: internal_resolver).call
+
+      # Only the current-domain probe ran; the poisoned domain was never fetched
+      assert_equal [ "failed" ], @source.scraper_runs.where(run_type: "recheck").pluck(:status)
+      assert_nil @source.reload.adopted_base_url
     end
 
     test "does not adopt when the upstream domain also fails" do
@@ -73,7 +89,7 @@ module Sources
       )
       registry = FakeRegistry.new(FakeAdapter.new(nil => :down, "https://weebcentral.moved" => :down))
 
-      BrokenSourceRecheck.new(@source, adapter_registry: registry).call
+      BrokenSourceRecheck.new(@source, adapter_registry: registry, resolver: PUBLIC_RESOLVER).call
 
       assert_equal %w[failed failed], @source.scraper_runs.where(run_type: "recheck").order(:created_at).pluck(:status)
       assert_nil @source.reload.adopted_base_url

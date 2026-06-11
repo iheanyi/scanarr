@@ -5,6 +5,11 @@ module Sources
   # against an unchanged manifest is a no-op. An adapter version bump records
   # the update and grants the source a fresh health probation, so old failure
   # evidence cannot keep a fixed source marked broken.
+  #
+  # The capabilities column is operator-owned and never written here: manifest
+  # capabilities are consulted at runtime (see Source#mature_content?), so a
+  # manifest change or removal takes effect without fighting stale synced
+  # copies, and explicit operator overrides keep winning.
   class SyncService
     Result = Data.define(:created, :updated, :unchanged)
 
@@ -47,7 +52,6 @@ module Sources
       source.base_url = entry.base_url
       source.source_type = entry.source_type
       source.default_priority = entry.priority
-      source.capabilities = merged_capabilities(source, entry)
 
       # Operator toggles win over the manifest default, but a dead source is
       # force-disabled and its health pinned to dead so scheduled work skips
@@ -75,6 +79,9 @@ module Sources
       source.adapter_version_synced_at = Time.current
       assign_health(source, entry.dead ? "dead" : "healthy")
       source.rate_limited_until = nil
+      # The bump ships a fix, which may include a corrected domain. A stale
+      # adopted URL would outrank the new manifest base_url forever.
+      source.adopted_base_url = nil
     end
 
     def assign_health(source, status)
@@ -82,12 +89,6 @@ module Sources
 
       source.health_status = status
       source.health_changed_at = Time.current
-    end
-
-    def merged_capabilities(source, entry)
-      existing = source.capabilities.is_a?(Hash) ? source.capabilities.deep_stringify_keys : {}
-      merged = existing.merge(entry.capabilities)
-      merged.empty? ? nil : merged
     end
   end
 end

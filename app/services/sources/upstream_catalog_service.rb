@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "net/http"
-require "ipaddr"
 
 module Sources
   # Mirrors the keiyoushi (Mihon/Tachiyomi community) extensions index into
@@ -75,27 +74,17 @@ module Sources
 
     # The feed is third-party data. A poisoned baseUrl pointing at an internal
     # or reserved address would otherwise be stored, then adopted and probed
-    # by the recovery job, turning the catalog into an SSRF vector. Reject
-    # anything that isn't a public hostname or public IP literal.
+    # by the recovery job, turning the catalog into an SSRF vector. Literal
+    # hosts are rejected here; hostnames get a DNS resolution check at
+    # adoption time in BrokenSourceRecheck.
     def valid_url(value)
       uri = URI.parse(value.to_s)
       return nil unless uri.is_a?(URI::HTTP) && uri.host.present?
-      return nil if internal_host?(uri.host)
+      return nil if PublicUrl.internal_host?(uri.host)
 
       value.to_s
     rescue URI::InvalidURIError
       nil
-    end
-
-    def internal_host?(host)
-      bare = host.delete_prefix("[").delete_suffix("]")
-      return true if bare.casecmp?("localhost") || bare.downcase.end_with?(".localhost", ".internal", ".local")
-
-      addr = IPAddr.new(bare)
-      addr.loopback? || addr.private? || addr.link_local? || addr == IPAddr.new("0.0.0.0")
-    rescue IPAddr::InvalidAddressError
-      # Not an IP literal; a normal hostname is allowed.
-      false
     end
 
     def fetch_index
