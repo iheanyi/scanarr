@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class SourceMigrationService
-  Result = Data.define(:success, :migrated, :no_match, :already_on_target, :errors)
+  Result = Data.define(:success, :migrated, :no_match, :already_on_target, :link_candidates, :errors)
 
   def initialize(from_source:, to_source:, user:, series_ids: nil, auto_link: true, adapter_registry: Scrapers::AdapterRegistry)
     @from_source = from_source
@@ -20,11 +20,18 @@ class SourceMigrationService
     @errors = []
   end
 
-  # Preview what would happen without making changes
+  # Preview what would happen without making changes or network calls.
+  # Unlinked series are auto-link candidates, not failures: execute! will
+  # search the target for them and link exact title matches, so the preview
+  # must represent that attempt rather than declaring no_match up front.
   def preview
+    link_candidates = []
+
     affected_series.each do |series|
       if series.sources.include?(@to_source)
         @already_on_target << series
+      elsif @auto_link
+        link_candidates << series
       else
         @no_match << series
       end
@@ -35,6 +42,7 @@ class SourceMigrationService
       migrated: [],
       no_match: @no_match,
       already_on_target: @already_on_target,
+      link_candidates: link_candidates,
       errors: []
     )
   end
@@ -52,6 +60,7 @@ class SourceMigrationService
       migrated: @migrated,
       no_match: @no_match,
       already_on_target: @already_on_target,
+      link_candidates: [],
       errors: @errors
     )
   rescue => e
@@ -61,6 +70,7 @@ class SourceMigrationService
       migrated: @migrated,
       no_match: @no_match,
       already_on_target: @already_on_target,
+      link_candidates: [],
       errors: @errors
     )
   end

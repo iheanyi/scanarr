@@ -53,6 +53,23 @@ module Sources
       assert_equal "broken", HealthEvaluator.new(@source).derived_status
     end
 
+    test "series whose checks have only ever failed still count as broken evidence" do
+      4.times do |i|
+        series = create_series("Never Succeeded #{i}")
+        SeriesSource.create!(
+          series: series,
+          source: @source,
+          source_series_id: "NEVER#{i}",
+          last_checked_at: nil,
+          last_check_error: "boom",
+          last_check_error_at: Time.current,
+          consecutive_failures: 5
+        )
+      end
+
+      assert_equal "broken", HealthEvaluator.new(@source).derived_status
+    end
+
     test "a successful run outweighs older series failures so a healed source recovers" do
       4.times do |i|
         series = create_series("Stale Failure #{i}")

@@ -158,7 +158,7 @@ class SourceMigrationsController < ApplicationController
   end
 
   def build_chapter_count_map(result)
-    series_ids = (result.already_on_target + result.no_match).map(&:id).uniq
+    series_ids = (result.already_on_target + result.link_candidates + result.no_match).map(&:id).uniq
     return {} if series_ids.empty?
 
     source_ids = [ @from_source.id, @to_source.id ]

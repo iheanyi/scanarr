@@ -50,8 +50,16 @@ module Sources
       source.capabilities = merged_capabilities(source, entry)
 
       # Operator toggles win over the manifest default, but a dead source is
-      # force-disabled: there is nothing to scrape.
-      source.enabled = false if entry.dead
+      # force-disabled and its health pinned to dead so scheduled work skips
+      # it: there is nothing to scrape. Sync is also the only way out of dead
+      # (the evaluator keeps it sticky), so a resurrected entry gets a fresh
+      # healthy probation for the evaluator to re-derive from.
+      if entry.dead
+        source.enabled = false
+        assign_health(source, "dead")
+      elsif source.health_status == "dead"
+        assign_health(source, "healthy")
+      end
 
       apply_version(source, entry)
     end
@@ -61,9 +69,15 @@ module Sources
 
       source.adapter_version = entry.version
       source.adapter_version_synced_at = Time.current
-      source.health_status = "healthy"
-      source.health_changed_at = Time.current
+      assign_health(source, entry.dead ? "dead" : "healthy")
       source.rate_limited_until = nil
+    end
+
+    def assign_health(source, status)
+      return if source.health_status == status
+
+      source.health_status = status
+      source.health_changed_at = Time.current
     end
 
     def merged_capabilities(source, entry)

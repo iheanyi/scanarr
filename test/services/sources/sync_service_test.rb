@@ -62,26 +62,38 @@ module Sources
       assert_equal "degraded", source.reload.health_status
     end
 
-    test "dead manifest entry force-disables the source" do
-      dead_entry = Scrapers::Manifest::Entry.new(
-        key: "weeb_central",
-        name: "Weeb Central",
-        adapter_class_name: "Scrapers::WeebCentral::Adapter",
-        version: 2,
-        base_url: "https://weebcentral.com",
-        source_type: "html",
-        priority: 20,
-        enabled: true,
-        dead: true,
-        capabilities: {},
-        mihon_id: nil
-      )
+    test "dead manifest entry force-disables the source and pins health to dead" do
       source = sources(:one)
-      source.update!(enabled: true)
+      source.update!(enabled: true, health_status: "healthy", adapter_version: 1)
 
-      SyncService.new(entries: [ dead_entry ]).call
+      SyncService.new(entries: [ entry_for(source, dead: true) ]).call
+      source.reload
 
-      refute source.reload.enabled
+      refute source.enabled
+      assert_equal "dead", source.health_status
+    end
+
+    test "version bump on a dead entry does not resurrect health" do
+      source = sources(:one)
+      source.update!(adapter_version: 1, health_status: "dead", enabled: false)
+
+      SyncService.new(entries: [ entry_for(source, dead: true, version: 2) ]).call
+      source.reload
+
+      assert_equal 2, source.adapter_version
+      assert_equal "dead", source.health_status
+    end
+
+    test "removing the dead flag resurrects health to a fresh probation" do
+      source = sources(:one)
+      source.update!(adapter_version: 1, health_status: "dead", enabled: false)
+
+      SyncService.new(entries: [ entry_for(source, dead: false) ]).call
+      source.reload
+
+      assert_equal "healthy", source.health_status
+      # Operator agency: resurrection does not auto-re-enable
+      refute source.enabled
     end
 
     test "merges manifest capabilities over existing ones without dropping operator keys" do
@@ -93,6 +105,24 @@ module Sources
 
       assert source.capabilities["mature_content"]
       assert source.capabilities["operator_flag"]
+    end
+
+    private
+
+    def entry_for(source, dead:, version: 1)
+      Scrapers::Manifest::Entry.new(
+        key: source.key,
+        name: source.name,
+        adapter_class_name: "Scrapers::WeebCentral::Adapter",
+        version: version,
+        base_url: source.base_url,
+        source_type: source.source_type,
+        priority: source.default_priority || 20,
+        enabled: true,
+        dead: dead,
+        capabilities: {},
+        mihon_id: nil
+      )
     end
   end
 end

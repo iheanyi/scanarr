@@ -25,8 +25,9 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     assert_empty result.no_match
   end
 
-  def test_preview_identifies_unmatchable_series
-    # Series is on from_source but not on to_source
+  def test_preview_classifies_unlinked_series_as_link_candidates
+    # Series is on from_source but not on to_source; execute! would attempt
+    # an auto-link, so preview must present it as a candidate, not a no_match
     result = SourceMigrationService.new(
       from_source: @from_source,
       to_source: @to_source,
@@ -34,7 +35,22 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     ).preview
 
     assert result.success
+    assert_includes result.link_candidates, @series
+    assert_empty result.no_match
+    assert_empty result.already_on_target
+  end
+
+  def test_preview_without_auto_link_identifies_unmatchable_series
+    result = SourceMigrationService.new(
+      from_source: @from_source,
+      to_source: @to_source,
+      user: @user,
+      auto_link: false
+    ).preview
+
+    assert result.success
     assert_includes result.no_match, @series
+    assert_empty result.link_candidates
     assert_empty result.already_on_target
   end
 

@@ -56,7 +56,13 @@ module Sources
 
     def series_failure_ratio
       @series_failure_ratio ||= begin
-        tracked = @source.series_sources.where.not(last_checked_at: nil).count
+        # A series whose checks have only ever failed never gets
+        # last_checked_at set, so count error timestamps as evidence of an
+        # attempted check too. Otherwise a source that is down from the first
+        # check can never accumulate enough tracked series to be marked broken.
+        attempted = @source.series_sources.where.not(last_checked_at: nil)
+          .or(@source.series_sources.where.not(last_check_error_at: nil))
+        tracked = attempted.count
         if tracked < MIN_TRACKED_SERIES
           0.0
         else
