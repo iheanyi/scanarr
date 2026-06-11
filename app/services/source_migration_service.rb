@@ -90,11 +90,11 @@ class SourceMigrationService
   # TO a broken, dead, or operator-disabled one would search and prioritize a
   # source the rest of the app skips.
   def target_unusable?
-    !@to_source.enabled? || @to_source.broken? || @to_source.dead?
+    @to_source.migration_target_rejection.present?
   end
 
   def unusable_target_result
-    reason = @to_source.enabled? ? @to_source.health_status : "disabled"
+    reason = @to_source.migration_target_rejection
     Result.new(
       success: false,
       migrated: [],

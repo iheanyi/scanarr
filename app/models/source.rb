@@ -55,6 +55,16 @@ class Source < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(manifest_capability) || false
   end
 
+  # Why a source cannot receive migrations, or nil when it can. Shared by the
+  # bulk service and the per-series controller so the link-then-validate
+  # ordering cannot diverge between the two paths.
+  def migration_target_rejection
+    return "disabled" unless enabled?
+    return health_status if broken? || dead?
+
+    nil
+  end
+
   def display_name
     name.presence || key
   end

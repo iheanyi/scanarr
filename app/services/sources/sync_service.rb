@@ -64,9 +64,12 @@ module Sources
       elsif source.health_status == "dead"
         # A real probation needs the evidence window moved too, or the
         # evaluator would re-derive broken from stale pre-death failures.
+        # The adoption predates death and must not outrank the manifest's
+        # canonical domain on the way back.
         assign_health(source, "healthy")
         source.adapter_version_synced_at = Time.current
         source.rate_limited_until = nil
+        source.adopted_base_url = nil
       end
 
       apply_version(source, entry)

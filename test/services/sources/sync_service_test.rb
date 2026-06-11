@@ -94,7 +94,8 @@ module Sources
         health_status: "dead",
         enabled: false,
         adapter_version_synced_at: 2.weeks.ago,
-        rate_limited_until: 1.hour.from_now
+        rate_limited_until: 1.hour.from_now,
+        adopted_base_url: "https://weebcentral.recovered"
       )
       # Stale pre-death failures that a fresh probation must window out
       3.times do |i|
@@ -109,6 +110,8 @@ module Sources
 
       assert_equal "healthy", source.health_status
       assert_nil source.rate_limited_until
+      # The pre-death adoption must not outrank the manifest's domain
+      assert_nil source.adopted_base_url
       # Operator agency: resurrection does not auto-re-enable
       refute source.enabled
       # The probation is real: stale evidence is windowed out, so the

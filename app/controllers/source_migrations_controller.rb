@@ -95,6 +95,19 @@ class SourceMigrationsController < ApplicationController
     @from_source = Source.find(params[:from_source_id])
     @to_source = Source.find(params[:to_source_id])
 
+    # Validate the target before link_series_to_target! so a rejected
+    # migration cannot leave behind a fresh SeriesSource link
+    if (reason = @to_source.migration_target_rejection)
+      respond_with_toast(
+        redirect_path: library_series_path(series_slug: @series.to_param),
+        message: "#{@to_source.name} is #{reason} and cannot be a migration target",
+        variant: :danger,
+        status: :unprocessable_entity,
+        turbo_redirect: true
+      )
+      return
+    end
+
     unless @series.sources.exists?(id: @to_source.id)
       target_series_url = params[:target_series_url].to_s
       if target_series_url.blank?
