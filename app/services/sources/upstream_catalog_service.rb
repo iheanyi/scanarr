@@ -63,7 +63,7 @@ module Sources
         name: name,
         lang: lang,
         base_url: valid_url(source["baseUrl"]),
-        nsfw: extension["nsfw"].to_i == 1,
+        nsfw: ActiveModel::Type::Boolean.new.cast(extension["nsfw"]) == true,
         extension_pkg: extension["pkg"].is_a?(String) ? extension["pkg"] : nil,
         extension_version_code: extension["code"].is_a?(Integer) ? extension["code"] : nil,
         last_seen_at: now,

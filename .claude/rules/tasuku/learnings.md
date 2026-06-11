@@ -21,6 +21,7 @@ _Auto-synced from .tasuku/context/learnings.md_
 - Always avoid cache-first auto-caching for all image fetches in service workers for authenticated apps; only serve explicitly offline-marked images from cache to prevent unbounded growth and accidental private-content persistence.
 - Always set OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES when running the full parallel Rails test suite on macOS to avoid objc fork-safety crashes/hangs in child processes.
 - Always prefer native Rails mechanisms over hand-rolled equivalents in this repo: string-backed `enum (validate: true)` instead of a constant + inclusion validation + define_method predicates; generated enum scopes instead of custom ones. User flagged hand-rolled status plumbing on Source as churn ("Rails can handle this natively").
+- Never use created_at time windows to detect new PR review comments during a babysit loop; bot reviews (Codex) submit top-level reviews whose inline comments can land seconds after a window cutoff and get silently missed. Instead, list all top-level review comments AND pull request reviews, and treat any thread without an own-account reply as untriaged.
 
 ## Insights
 

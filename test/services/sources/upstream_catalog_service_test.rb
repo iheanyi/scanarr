@@ -65,6 +65,18 @@ module Sources
       assert UpstreamSource.exists?(mihon_id: "11111")
     end
 
+    test "tolerates boolean nsfw values instead of aborting the refresh" do
+      payload = [ {
+        "name" => "Bool Ext", "pkg" => "x.bool", "lang" => "en", "code" => 1, "nsfw" => true,
+        "sources" => [ { "name" => "Bool Source", "lang" => "en", "id" => "77777", "baseUrl" => "https://bool.example" } ]
+      } ]
+
+      result = UpstreamCatalogService.new(payload: payload).call
+
+      assert_equal 1, result.upserted
+      assert UpstreamSource.find_by!(mihon_id: "77777").nsfw
+    end
+
     test "rejects baseUrls pointing at internal or reserved hosts" do
       internal_urls = [
         "http://localhost:3000",

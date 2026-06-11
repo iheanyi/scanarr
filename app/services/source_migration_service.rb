@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
+require "timeout"
+
 class SourceMigrationService
+  # Bound per-series network time so one hanging target source cannot tie up
+  # the migration request and starve the remaining series.
+  AUTO_LINK_TIMEOUT_SECONDS = 20
   Result = Data.define(:success, :migrated, :no_match, :already_on_target, :link_candidates, :errors)
 
   def initialize(from_source:, to_source:, user:, series_ids: nil, auto_link: true, adapter_registry: Scrapers::AdapterRegistry)
@@ -25,6 +30,8 @@ class SourceMigrationService
   # search the target for them and link exact title matches, so the preview
   # must represent that attempt rather than declaring no_match up front.
   def preview
+    return unusable_target_result if target_unusable?
+
     link_candidates = []
 
     affected_series.each do |series|
@@ -51,6 +58,8 @@ class SourceMigrationService
   # (or a slow source) cannot roll back or block the rest; re-running
   # converges because linked series take the already_on_target path.
   def execute!
+    return unusable_target_result if target_unusable?
+
     affected_series.each do |series|
       migrate_series(series)
     end
@@ -76,6 +85,23 @@ class SourceMigrationService
   end
 
   private
+
+  # Migrating FROM a broken source is the whole point of migration; migrating
+  # TO one would search and prioritize a source the rest of the app skips.
+  def target_unusable?
+    @to_source.broken? || @to_source.dead?
+  end
+
+  def unusable_target_result
+    Result.new(
+      success: false,
+      migrated: [],
+      no_match: [],
+      already_on_target: [],
+      link_candidates: [],
+      errors: [ "#{@to_source.name} is #{@to_source.health_status} and cannot be a migration target" ]
+    )
+  end
 
   def affected_series
     @affected_series ||= begin
@@ -119,21 +145,23 @@ class SourceMigrationService
     return false unless @adapter_registry.registered?(@to_source.key)
 
     adapter = @adapter_registry.for(@to_source)
-    results = adapter.search(series.canonical_title).first(5)
-    match, _confidence = Sources::TitleMatcher.best_match(
-      series.canonical_title,
-      results,
-      min_confidence: Sources::TitleMatcher::AUTO_LINK_CONFIDENCE
-    )
-    return false unless match
-
-    target_series = adapter.series(match.url)
-    source_series_id = target_series.id.to_s.strip
+    source_series_id = Timeout.timeout(AUTO_LINK_TIMEOUT_SECONDS) do
+      results = adapter.search(series.canonical_title).first(5)
+      match, _confidence = Sources::TitleMatcher.best_match(
+        series.canonical_title,
+        results,
+        min_confidence: Sources::TitleMatcher::AUTO_LINK_CONFIDENCE
+      )
+      match ? adapter.series(match.url).id.to_s.strip : nil
+    end
     return false if source_series_id.blank?
 
     series.series_sources.create!(source: @to_source, source_series_id: source_series_id)
     series.sources.reset
     true
+  rescue Timeout::Error
+    @errors << "#{series.canonical_title}: timed out searching #{@to_source.name}"
+    false
   rescue Scrapers::Errors::ScraperError, Scrapers::AdapterRegistry::UnknownSourceError => e
     @errors << "#{series.canonical_title}: #{e.message}"
     false

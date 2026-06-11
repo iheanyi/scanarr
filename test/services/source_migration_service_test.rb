@@ -40,6 +40,35 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     assert_empty result.already_on_target
   end
 
+  def test_preview_and_execute_reject_a_broken_target_source
+    @to_source.update!(health_status: "broken")
+    service = SourceMigrationService.new(
+      from_source: @from_source,
+      to_source: @to_source,
+      user: @user
+    )
+
+    [ service.preview, service.execute! ].each do |result|
+      refute result.success
+      assert_match(/cannot be a migration target/, result.errors.first)
+      assert_empty result.migrated
+    end
+  end
+
+  def test_migrating_from_a_broken_source_still_works
+    @from_source.update!(health_status: "broken")
+    SeriesSource.create!(series: @series, source: @to_source, source_series_id: "TARGET123")
+
+    result = SourceMigrationService.new(
+      from_source: @from_source,
+      to_source: @to_source,
+      user: @user
+    ).execute!
+
+    assert result.success
+    assert_includes result.migrated, @series
+  end
+
   def test_preview_without_auto_link_identifies_unmatchable_series
     result = SourceMigrationService.new(
       from_source: @from_source,

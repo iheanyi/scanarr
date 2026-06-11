@@ -70,6 +70,29 @@ module Sources
       assert_equal "broken", HealthEvaluator.new(@source).derived_status
     end
 
+    test "stale pre-window series do not dilute the failure ratio" do
+      @source.update!(adapter_version_synced_at: 1.hour.ago)
+
+      # Old attempts from before the evidence window
+      4.times do |i|
+        series = create_series("Stale OK #{i}")
+        SeriesSource.create!(
+          series: series, source: @source, source_series_id: "OLD#{i}",
+          last_checked_at: 2.days.ago, consecutive_failures: 0
+        )
+      end
+      # Every series actually attempted since the window opened is failing
+      4.times do |i|
+        series = create_series("Fresh Fail #{i}")
+        SeriesSource.create!(
+          series: series, source: @source, source_series_id: "FRESH#{i}",
+          last_check_error: "boom", last_check_error_at: Time.current, consecutive_failures: 5
+        )
+      end
+
+      assert_equal "broken", HealthEvaluator.new(@source).derived_status
+    end
+
     test "a successful run outweighs older series failures so a healed source recovers" do
       4.times do |i|
         series = create_series("Stale Failure #{i}")
