@@ -67,13 +67,26 @@ module Scrapers
       assert_equal PUBLIC_ADDR, http.ipaddr
     end
 
-    test "leaves an unresolvable host unpinned so Net::HTTP fails with its own error" do
+    test "fails closed when a host resolves to nothing" do
+      # An empty answer must refuse, not connect unpinned: Net::HTTP would
+      # re-resolve at #start, reopening the rebinding window the pin closes.
       client = HttpClient.new(config: {}, resolver: ->(_host) { [] })
       http = Net::HTTP.new("nxdomain.example", 443, nil)
 
-      client.send(:pin_public_address, http)
-
+      assert_raises(Errors::InternalHostRefusedError) do
+        client.send(:pin_public_address, http)
+      end
       assert_nil http.ipaddr
+    end
+
+    test "fails closed when resolution exceeds the open timeout" do
+      stalling_resolver = ->(_host) { sleep 5; [ PUBLIC_ADDR ] }
+      client = HttpClient.new(config: { "open_timeout" => 0.1 }, resolver: stalling_resolver)
+      http = Net::HTTP.new("slow-dns.example", 443, nil)
+
+      assert_raises(Errors::InternalHostRefusedError) do
+        client.send(:pin_public_address, http)
+      end
     end
 
     test "leaves proxied connections to the proxy" do

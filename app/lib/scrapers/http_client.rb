@@ -1,6 +1,7 @@
 require "faraday"
 require "faraday/retry"
 require "uri"
+require "timeout"
 
 module Scrapers
   class HttpClient
@@ -68,13 +69,30 @@ module Scrapers
       host = http.address
       raise Errors::InternalHostRefusedError, "refusing connection to internal host #{host}" if Sources::PublicUrl.internal_host?(host)
 
-      addresses = @resolver.call(host)
-      return if addresses.empty?
-
-      address = addresses.find { |candidate| !Sources::PublicUrl.internal_address?(candidate) }
-      raise Errors::InternalHostRefusedError, "#{host} resolves only to internal addresses" unless address
+      # Fail closed. An empty resolution must never fall through to an
+      # unpinned connect: Net::HTTP would re-resolve at #start, which is the
+      # exact rebinding window this pin exists to close (answer empty to the
+      # check, internal to the socket). PublicUrl tolerates unresolvable
+      # hosts when classifying catalog URLs to ride out DNS blips, but at the
+      # fetch boundary an unpinned connection is not an option.
+      address = first_public_address(host)
+      raise Errors::InternalHostRefusedError, "#{host} did not resolve to a usable public address" unless address
 
       http.ipaddr = address
+    end
+
+    # Resolve and pick the first public address. Bounded by open_timeout
+    # because this runs before Net::HTTP#connect, outside the timeout that
+    # otherwise covers DNS plus TCP setup, so a stalling nameserver cannot
+    # hang past the request budget. A timeout fails closed (nil), same as an
+    # internal-only or empty answer. Pinning a single address forgoes
+    # Net::HTTP's multi-record failover; accepted, since the alternative is
+    # connection racing this client does not need.
+    def first_public_address(host)
+      addresses = Timeout.timeout(@config.fetch("open_timeout", 10)) { @resolver.call(host) }
+      addresses.find { |candidate| !Sources::PublicUrl.internal_address?(candidate) }
+    rescue Timeout::Error
+      nil
     end
 
     def build_url(path_or_url)
