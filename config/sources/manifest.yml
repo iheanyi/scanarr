@@ -49,7 +49,7 @@ sources:
   manga_see:
     name: MangaSee
     adapter: Scrapers::MangaSee::Adapter
-    version: 1
+    version: 2
     base_url: https://mangasee123.com
     source_type: html
     priority: 30
@@ -57,7 +57,7 @@ sources:
     mihon_id: "6247824327199706550"
     name: Asura Scans
     adapter: Scrapers::AsuraScans::Adapter
-    version: 1
+    version: 2
     base_url: https://asuracomic.net
     source_type: html
     priority: 40
@@ -65,7 +65,7 @@ sources:
     mihon_id: "8448310129093543312"
     name: MangaPill
     adapter: Scrapers::MangaPill::Adapter
-    version: 1
+    version: 2
     base_url: https://mangapill.com
     source_type: html
     priority: 50

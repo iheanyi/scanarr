@@ -1,6 +1,34 @@
 require "test_helper"
 
 class AdapterCoverageTest < ActiveSupport::TestCase
+  # Stands in for Scrapers::HttpClient, recording every requested URL and
+  # answering with an empty 200 so adapters return without parsing anything.
+  class RecordingHttpClient
+    attr_reader :urls
+
+    def initialize(base_url:)
+      @base_url = base_url
+      @urls = []
+    end
+
+    def get(path_or_url, **)
+      record(path_or_url)
+    end
+
+    def post(path_or_url, **)
+      record(path_or_url)
+    end
+
+    private
+
+    def record(path_or_url)
+      uri = URI(path_or_url.to_s)
+      uri = URI.join(@base_url, path_or_url.to_s) if uri.host.nil?
+      @urls << uri.to_s
+      Scrapers::HttpClient::Response.new(status: 200, body: "{}", headers: {}, url: uri.to_s)
+    end
+  end
+
   def test_every_registered_adapter_has_a_dedicated_test_file
     missing = Scrapers::AdapterRegistry.registered_keys.reject do |key|
       Rails.root.join("test/scrapers/#{key}_adapter_test.rb").exist?
@@ -57,6 +85,24 @@ class AdapterCoverageTest < ActiveSupport::TestCase
           end
         end
       end
+    end
+  end
+
+  # Operator base_url pins and moved-domain adoption only work when adapters
+  # build requests from config["base_url"] instead of their class constant.
+  def test_every_adapter_requests_only_the_configured_base_url
+    override = "https://moved-domain.example"
+
+    Scrapers::Manifest.entries.each do |entry|
+      http = RecordingHttpClient.new(base_url: override)
+      adapter = entry.adapter_class.new(config: { "base_url" => override }, http: http)
+      adapter.supports_search? ? adapter.search("naruto") : adapter.browse
+
+      hosts = http.urls.map { |url| URI(url).host }.uniq
+
+      assert_not_empty hosts, "#{entry.key}: adapter issued no requests"
+      assert_equal [ "moved-domain.example" ], hosts,
+        "#{entry.key}: requested #{hosts.join(', ')} despite the base_url override"
     end
   end
 
