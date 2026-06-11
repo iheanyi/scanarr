@@ -210,8 +210,8 @@ sources:
     mihon_id: "1024627298672457456"
     name: MangaNato
     adapter: Scrapers::MangaNato::Adapter
-    version: 1
-    base_url: https://natomanga.com
+    version: 2
+    base_url: https://www.natomanga.com
     source_type: html
     priority: 140
   manga_fire:
