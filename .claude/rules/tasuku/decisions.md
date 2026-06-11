@@ -74,3 +74,11 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Skipping checks for broken sources removes the very traffic that would notice recovery, so recovery needs exactly one knock on a polite schedule. Sticky adoption converges: once the new domain works the source stays on it. The health evaluator also discounts series-check failures older than the latest successful run, otherwise stale failure rows that nothing updates would keep a healed source broken forever.
 
+## source-transition-home (2026-06-11)
+
+**Chose**: Source model owns all health/domain transition semantics: assign_health, pin_dead, grant_probation (non-saving assigns, preserving SyncService changed?-based idempotency) and transition_health!, adopt_domain! (persisting). SyncService, HealthEvaluator, BrokenSourceRecheck are thin callers. New transitions go on the model, never at call sites.
+
+**Over**: A Sources::Transitions service object (new layer over state the model already owns), Keeping the two informal choke points in SyncService and HealthEvaluator (the partial-reset bug class that dominated PR #52 review)
+
+**Because**: Every transitioned field is Source state or a Source association, and 14 review rounds on PR #52 showed call-site transition logic decays into partial-reset bugs (a transition moving one piece of evidence and leaving another stale). One named home on the model makes the next partial reset structurally hard to write.
+

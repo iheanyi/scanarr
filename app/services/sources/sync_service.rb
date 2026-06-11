@@ -53,13 +53,15 @@ module Sources
       source.source_type = entry.source_type
       source.default_priority = entry.priority
 
-      # Operator toggles win over the manifest default. Dead pinning and
-      # probation semantics live on Source; sync just decides which
-      # transition the manifest asks for.
+      # Operator toggles win over the manifest default, but a dead entry is
+      # always force-disabled: there is nothing to scrape, and that policy
+      # belongs to sync, not to the health machine. The state transitions
+      # themselves are aasm events on Source.
       if entry.dead
-        source.pin_dead
-      elsif source.health_status == "dead"
-        source.grant_probation
+        source.enabled = false
+        source.pin_dead if source.may_pin_dead?
+      elsif source.dead?
+        source.resurrect
       end
 
       apply_version(source, entry)
@@ -70,7 +72,6 @@ module Sources
 
       source.adapter_version = entry.version
       source.grant_probation
-      source.assign_health("dead") if entry.dead
     end
   end
 end
