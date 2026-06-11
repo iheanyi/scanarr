@@ -45,6 +45,36 @@ class AdapterCoverageTest < ActiveSupport::TestCase
     end
   end
 
+  def test_every_adapter_with_a_base_url_constant_prefers_the_configured_base_url
+    override = "https://override.example"
+
+    Scrapers::Manifest.entries.each do |entry|
+      klass = entry.adapter_class
+      next unless klass.const_defined?(:BASE_URL, false)
+
+      configured = klass.new(config: { "base_url" => override }, http: nil)
+      bare = klass.new(config: {}, http: nil)
+
+      assert_equal override, configured.send(:base_url),
+        "#{entry.key}: a configured base_url (operator pin or adopted domain) must win over the constant"
+      assert_equal klass::BASE_URL, bare.send(:base_url),
+        "#{entry.key}: the BASE_URL constant must back bare instantiation without config"
+    end
+  end
+
+  def test_no_adapter_builds_urls_from_its_base_url_constant
+    offenders = Rails.root.glob("app/lib/scrapers/*/adapter.rb").flat_map do |path|
+      path.readlines.each_with_index.filter_map do |line, index|
+        next if line.match?(/\A\s*BASE_URL\s*=/)
+
+        "#{path.relative_path_from(Rails.root)}:#{index + 1}" if line.include?("BASE_URL")
+      end
+    end
+
+    assert_empty offenders,
+      "Use the base_url helper (honors config[\"base_url\"]) instead of the BASE_URL constant at: #{offenders.join(', ')}"
+  end
+
   def test_filter_options_are_label_value_pairs
     Scrapers::AdapterRegistry.registered_keys.each do |key|
       adapter = Scrapers::AdapterRegistry.adapter_for_key(key)
