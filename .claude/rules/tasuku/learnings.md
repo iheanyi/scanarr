@@ -20,6 +20,7 @@ _Auto-synced from .tasuku/context/learnings.md_
 - Always run `rails assets:precompile` in production Docker builds when using Propshaft; `yarn build` alone only writes to app/assets/builds and does not create public/assets digests or .manifest.json.
 - Always avoid cache-first auto-caching for all image fetches in service workers for authenticated apps; only serve explicitly offline-marked images from cache to prevent unbounded growth and accidental private-content persistence.
 - Always set OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES when running the full parallel Rails test suite on macOS to avoid objc fork-safety crashes/hangs in child processes.
+- Always prefer native Rails mechanisms over hand-rolled equivalents in this repo: string-backed `enum (validate: true)` instead of a constant + inclusion validation + define_method predicates; generated enum scopes instead of custom ones. User flagged hand-rolled status plumbing on Source as churn ("Rails can handle this natively").
 
 ## Insights
 

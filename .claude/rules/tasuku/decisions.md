@@ -42,3 +42,19 @@ _Auto-synced from .tasuku/context/decisions.md_
 
 **Because**: Preserves expected navigation flow for actions that should move users to a different page, while still providing fast in-place feedback where the user stays on the current screen.
 
+## adapter-update-distribution (2026-06-11)
+
+**Chose**: In-tree Ruby adapters shipped with app releases, plus a declarative source manifest (config/sources/manifest.yml) as the single source of truth for identity, metadata, per-adapter integer version (Mihon extVersionCode analog), and curation flags (enabled/dead). An optional remote data-only definitions override is designed but deferred.
+
+**Over**: Mihon-literal remote extension loading (runtime-loaded Ruby adapter packages from a repo index), Gem-per-adapter with Bundler-managed versions
+
+**Because**: Runtime-loading remote Ruby into a self-hosted server is RCE-by-design; Mihon only gets away with APK loading because Android sandboxes and signs packages. Gems add 25 release pipelines without removing the deploy step. For a self-hosted Docker monolith, the app image IS the distribution channel; what needs out-of-band updating is data (domains, dead flags, theme params), which a schema-validated manifest covers safely. Mirrors what keiyoushi multisrc converged to: most extension churn is domain changes and theme-param tweaks.
+
+## source-health-model (2026-06-11)
+
+**Chose**: A derived health_status enum on Source (healthy/degraded/broken/dead) recomputed idempotently from existing signals (smoke-run history, series_source consecutive failures), with evidence windowed to runs after the last adapter_version bump; dead is manifest-curated only, never automatic.
+
+**Over**: Event-sourced health state machine with explicit transitions, Keep health implicit in reliability_score + consecutive_failures with no unified status
+
+**Because**: Signals already exist in three models but nothing answers 'is this source usable?' in one place. Derivation (not stored transitions) means recomputation converges regardless of crashes or ordering, and windowing evidence to the current adapter version gives a shipped fix a clean probation period instead of being damned by stale failures. Auto-marking a source dead risks false positives from transient Cloudflare blocks, so dead stays a curation decision.
+

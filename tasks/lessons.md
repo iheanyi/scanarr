@@ -21,3 +21,8 @@
 - 2026-02-02: If the user expects live visibility, do work on `main` (or merge immediately). Avoid keeping changes only in worktrees unless explicitly requested.
 - 2026-02-02: When a user specifies design inspiration, follow it exactly; do not substitute sources.
 - 2026-02-01: Avoid unnecessary tool calls; never generate images unless explicitly requested.
+
+## Prefer native Rails over hand-rolled mechanisms (2026-06-10)
+
+- Correction: hand-rolled `HEALTH_STATUSES` constant + inclusion validation + `define_method` predicates on `Source` flagged as churn ("Rails can handle this natively").
+- Rule: reach for string-backed `enum(..., validate: true)`, delegated types, generated scopes, and ActiveModel casting before writing any status/variant plumbing by hand. Re-scan a diff for one-caller wrappers and speculative scopes before presenting it.
