@@ -94,5 +94,14 @@ module Scrapers
         "ongoing"
       end
     end
+
+    private
+
+    # The registry config carries the effective base_url (manifest, adopted
+    # domain, or operator pin, in rising precedence). The class constant only
+    # backs direct construction without a registry config.
+    def base_url
+      config["base_url"] || self.class::BASE_URL
+    end
   end
 end

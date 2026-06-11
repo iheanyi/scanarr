@@ -166,10 +166,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Parse search results from LikeManga search page
     # Selector: div.card-body div.card
     def parse_search_results(doc)

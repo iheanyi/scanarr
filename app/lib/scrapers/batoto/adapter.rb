@@ -144,10 +144,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     # Parse search results from the search page HTML
     # BatoTo search results are in a grid of items with cover images and title links
     def parse_search_results(doc)

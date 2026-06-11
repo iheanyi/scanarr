@@ -246,10 +246,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config.fetch("base_url", BASE_URL)
-    end
-
     def normalize_query(query)
       result = query.downcase
       VIETNAMESE_MAP.each { |from, to| result = result.gsub(from, to) }

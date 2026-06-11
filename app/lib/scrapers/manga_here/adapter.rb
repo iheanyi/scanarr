@@ -155,10 +155,6 @@ module Scrapers
 
     private
 
-    def base_url
-      config["base_url"] || BASE_URL
-    end
-
     def default_headers
       { "Cookie" => "isAdult=1" }
     end
