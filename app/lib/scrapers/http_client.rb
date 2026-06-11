@@ -6,15 +6,18 @@ module Scrapers
   class HttpClient
     Response = Struct.new(:status, :body, :headers, :url, keyword_init: true)
 
-    def initialize(config:)
+    def initialize(config:, resolver: Sources::PublicUrl::SYSTEM_RESOLVER)
       @config = config
+      @resolver = resolver
       @last_request_at = nil
       @connection = Faraday.new(url: @config["base_url"], proxy: proxy_url) do |conn|
         conn.request :url_encoded
         conn.request :retry, retry_options
         conn.options.open_timeout = @config.fetch("open_timeout", 10)
         conn.options.timeout = @config.fetch("read_timeout", 20)
-        conn.adapter Faraday.default_adapter
+        conn.adapter Faraday.default_adapter do |http|
+          pin_public_address(http)
+        end
       end
     end
 
@@ -52,6 +55,27 @@ module Scrapers
     end
 
     private
+
+    # Adoption-time guards (Sources::PublicUrl) classify a hostname before
+    # the fetch, but Net::HTTP re-resolves at connect, so a split-horizon
+    # name can answer public for the guard and internal for the socket.
+    # Net::HTTP#ipaddr= closes that race: the TCP connection goes to the
+    # address resolved here, while the Host header, TLS SNI, and certificate
+    # verification stay keyed to #address (the original hostname).
+    def pin_public_address(http)
+      return if http.proxy?
+
+      host = http.address
+      raise Errors::InternalHostRefusedError, "refusing connection to internal host #{host}" if Sources::PublicUrl.internal_host?(host)
+
+      addresses = @resolver.call(host)
+      return if addresses.empty?
+
+      address = addresses.find { |candidate| !Sources::PublicUrl.internal_address?(candidate) }
+      raise Errors::InternalHostRefusedError, "#{host} resolves only to internal addresses" unless address
+
+      http.ipaddr = address
+    end
 
     def build_url(path_or_url)
       uri = URI(path_or_url.to_s)
