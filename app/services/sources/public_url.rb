@@ -56,6 +56,9 @@ module Sources
 
     def internal_address?(value)
       addr = value.is_a?(IPAddr) ? value : IPAddr.new(value.to_s)
+      # ::ffff:100.64.0.1 must be judged as 100.64.0.1, or the IPv4
+      # reserved ranges never apply to it.
+      addr = addr.native if addr.ipv6? && addr.ipv4_mapped?
       addr.loopback? || addr.private? || addr.link_local? ||
         RESERVED_RANGES.any? { |range| range.include?(addr) }
     rescue IPAddr::InvalidAddressError
