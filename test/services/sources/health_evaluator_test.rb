@@ -22,6 +22,14 @@ module Sources
       assert_equal "broken", HealthEvaluator.new(@source).derived_status
     end
 
+    test "a failed recovery probe cannot demote broken to degraded" do
+      @source.update!(health_status: "broken")
+      create_run("failed")
+
+      # Degraded would resume chapter fan-out and end recovery probing
+      assert_equal "broken", HealthEvaluator.new(@source).derived_status
+    end
+
     test "recovers to healthy when the latest run succeeds" do
       3.times { |i| create_run("failed", at: (i + 1).minutes.ago) }
       create_run("success", at: Time.current)

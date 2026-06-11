@@ -26,7 +26,13 @@ module Sources
     def derived_status
       return "dead" if @source.dead?
       return "broken" if smoke_streak_broken? || series_failure_ratio >= BROKEN_SERIES_RATIO
-      return "degraded" if last_smoke_failed? || series_failure_ratio >= DEGRADED_SERIES_RATIO || @source.rate_limited?
+
+      if last_smoke_failed? || series_failure_ratio >= DEGRADED_SERIES_RATIO || @source.rate_limited?
+        # Failure evidence can never improve a broken source: demoting to
+        # degraded would resume chapter fan-out and end recovery probing
+        # (the sweep only probes broken sources). Only a success heals.
+        return @source.broken? ? "broken" : "degraded"
+      end
 
       "healthy"
     end
