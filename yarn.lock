@@ -1369,10 +1369,10 @@ tslib@^2.4.0, tslib@^2.8.1:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
 
-turbo_power@^0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/turbo_power/-/turbo_power-0.7.1.tgz#591769f37cca9b8149ea07682021081039c9f32c"
-  integrity sha512-xnB1Yb3xXSVcDQyiqZV8kLjbHdCmyBfQYZJeJklEnEz+jM5xl6JUNo2yy5vc/8ZPKKMzS05INvvvLxafQYJVuQ==
+turbo_power@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/turbo_power/-/turbo_power-0.8.0.tgz#09c6145f650ab2b0fb9b938c32082740afdbbefe"
+  integrity sha512-cbcdXJziGUqYWleXg/ehZOSL9gLOdtSArP8yCveOO0CueRv6OsnybH2d9owI0Ibp8fW/oanw8w8iOkXR62MHzA==
 
 typescript@^5.9.3:
   version "5.9.3"
