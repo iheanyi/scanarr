@@ -10,26 +10,30 @@ class ChapterPackager
     pages = @file_asset.pages.includes(image_attachment: :blob).order(:position).to_a
     return if pages.empty?
 
-    buffer = Zip::OutputStream.write_buffer do |zip|
-      pages.each do |page|
-        filename = page.image.filename.to_s
-        zip.put_next_entry(filename)
-        page.image.open do |image_io|
-          IO.copy_stream(image_io, zip)
+    # Keep the archive on disk: concurrent downloads must not each retain an
+    # entire chapter's compressed images in the worker's Ruby heap.
+    Tempfile.create([ "scanarr-chapter-", ".cbz" ]) do |archive|
+      Zip::OutputStream.open(archive.path) do |zip|
+        pages.each do |page|
+          filename = page.image.filename.to_s
+          zip.put_next_entry(filename)
+          page.image.open do |image_io|
+            IO.copy_stream(image_io, zip)
+          end
         end
       end
+
+      archive.rewind
+      attach_options = {
+        io: archive,
+        filename: "chapter-#{@file_asset.release.public_id}.cbz",
+        content_type: "application/vnd.comicbook+zip"
+      }
+      key = archive_key
+      attach_options[:key] = key if key.present?
+
+      @file_asset.archive.attach(attach_options)
     end
-
-    buffer.rewind
-    attach_options = {
-      io: buffer,
-      filename: "chapter-#{@file_asset.release.public_id}.cbz",
-      content_type: "application/vnd.comicbook+zip"
-    }
-    key = archive_key
-    attach_options[:key] = key if key.present?
-
-    @file_asset.archive.attach(attach_options)
   end
 
   private

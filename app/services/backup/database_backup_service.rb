@@ -70,12 +70,33 @@ module Backup
       env = {}
       env["PGPASSWORD"] = db_config[:password] if db_config[:password]
 
-      stdout, stderr, status = Open3.capture3(env, *cmd)
+      Open3.popen3(env, *cmd) do |stdin, stdout, stderr, wait_thread|
+        stdin.close
+        # Drain stderr concurrently so a verbose pg_dump cannot block stdout.
+        # Keep only a bounded diagnostic tail, even for very large failures.
+        error_reader = Thread.new do
+          tail = +""
+          begin
+            loop do
+              tail << stderr.readpartial(16 * 1024)
+              tail = tail.byteslice(-500, 500) if tail.bytesize > 500
+            end
+          rescue EOFError
+            tail
+          end
+        end
 
-      raise "pg_dump failed: #{stderr.last(500)}" unless status.success?
-
-      Zlib::GzipWriter.open(output_path.to_s) do |gz|
-        gz.write(stdout)
+        begin
+          Zlib::GzipWriter.open(output_path.to_s) do |gz|
+            IO.copy_stream(stdout, gz)
+          end
+          error_message = error_reader.value
+          raise "pg_dump failed: #{error_message}" unless wait_thread.value.success?
+        ensure
+          # Closing stdout also unblocks a child if writing the gzip fails.
+          stdout.close unless stdout.closed?
+          error_reader.join
+        end
       end
     end
 
@@ -90,22 +111,27 @@ module Backup
     end
 
     def export_blob_metadata(output_path)
-      blobs = ActiveStorage::Blob.find_each.map do |blob|
-        {
-          key: blob.key,
-          filename: blob.filename.to_s,
-          content_type: blob.content_type,
-          byte_size: blob.byte_size,
-          checksum: blob.checksum,
-          service_name: blob.service_name,
-          created_at: blob.created_at.iso8601,
-          attachments: blob.attachments.map do |att|
-            { record_type: att.record_type, record_id: att.record_id, name: att.name }
-          end
-        }
+      File.open(output_path, "w") do |output|
+        output.write("[")
+        first = true
+        ActiveStorage::Blob.preload(:attachments).find_each do |blob|
+          output.write(",") unless first
+          first = false
+          output.write(JSON.generate({
+            key: blob.key,
+            filename: blob.filename.to_s,
+            content_type: blob.content_type,
+            byte_size: blob.byte_size,
+            checksum: blob.checksum,
+            service_name: blob.service_name,
+            created_at: blob.created_at.iso8601,
+            attachments: blob.attachments.map do |att|
+              { record_type: att.record_type, record_id: att.record_id, name: att.name }
+            end
+          }))
+        end
+        output.write("]")
       end
-
-      File.write(output_path, JSON.pretty_generate(blobs))
     end
 
     def copy_config(config_dir)
