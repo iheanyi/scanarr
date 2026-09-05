@@ -19,6 +19,7 @@ For current active backlog and missing adapter swarm targets, see
 | Source | Status | Type | Keiyoushi Reference |
 |--------|--------|------|---------------------|
 | [MangaDex](mangadex.md) | ✅ Implemented | API | [extensions-source/src/all/mangadex](https://github.com/keiyoushi/extensions-source/tree/main/src/all/mangadex) |
+| [Comix](comix.md) | Planned; browser runtime required | Browser + protected API | [extensions-source/src/en/comix](https://github.com/keiyoushi/extensions-source/tree/main/src/en/comix) |
 | [WeebCentral](weeb_central.md) | ✅ Implemented | HTML | N/A (newer site) |
 | MangaSee | ✅ Implemented | HTML | [extensions-source/src/en/mangasee](https://github.com/keiyoushi/extensions-source/tree/main/src/en/mangasee) |
 | AsuraScans | ✅ Implemented | HTML (Madara) | [lib-multisrc/madara](https://github.com/keiyoushi/extensions-source/tree/main/lib-multisrc/madara) |
@@ -28,6 +29,24 @@ For current active backlog and missing adapter swarm targets, see
 | TCBScans | ✅ Implemented | HTML | [extensions-source/src/en/tcbscans](https://github.com/keiyoushi/extensions-source/tree/main/src/en/tcbscans) |
 
 ## Adding a New Source Adapter
+
+### Provider challenges
+
+The shared HTTP client recognizes Cloudflare's `cf-mitigated: challenge`
+response header and raises `ChallengeRequiredError` before an adapter parses
+the response. Existing source and reader error views display the explanation.
+It also recognizes Comix's observed `/@waf/challenge` redirect. This does not
+solve CAPTCHAs or detect every provider's custom verification page.
+
+A future human-assisted resolution flow needs a browser session on the server,
+provider-scoped session storage, an authenticated operator interface, expiration
+handling, and bounded job retries. Provider requests must use the verified session;
+opening the provider in a user's separate browser is not sufficient. Do not store
+clearance cookies in public source configuration or logs. Comix additionally needs
+the runtime and image-processing work described in its source document.
+
+References: [Cloudflare challenge detection](https://developers.cloudflare.com/cloudflare-challenges/challenge-types/challenge-pages/detect-response/)
+and [clearance semantics](https://developers.cloudflare.com/cloudflare-challenges/concepts/clearance/).
 
 ### 1. Research the Source
 

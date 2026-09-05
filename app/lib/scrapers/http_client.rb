@@ -29,6 +29,7 @@ module Scrapers
           req.headers.update(request_headers(headers))
           params.each { |k, v| req.params[k] = v } unless params.empty?
         end
+        check_challenge!(response)
         Response.new(
           status: response.status,
           body: response.body,
@@ -46,6 +47,7 @@ module Scrapers
           params.each { |k, v| req.params[k] = v } unless params.empty?
           req.body = body unless body.empty?
         end
+        check_challenge!(response)
         Response.new(
           status: response.status,
           body: response.body,
@@ -56,6 +58,21 @@ module Scrapers
     end
 
     private
+
+    # Recognize Cloudflare interstitials (even HTTP 200) and Comix's custom
+    # verification redirect before an adapter tries to parse them as manga.
+    def check_challenge!(response)
+      cloudflare = response.headers["cf-mitigated"].to_s.casecmp?("challenge")
+      location = response.headers["location"].to_s
+      custom_challenge = response.status.between?(300, 399) &&
+        location.match?(%r{\A(?:https?://[^/]+)?/@waf/challenge(?:\?|\z)})
+      return unless cloudflare || custom_challenge
+
+      raise Errors::ChallengeRequiredError,
+        "This provider requires browser verification (CAPTCHA or anti-bot challenge). " \
+        "Scanarr cannot complete it automatically. Try another source or retry later; " \
+        "verification in your own browser may not unblock the Scanarr server."
+    end
 
     # Adoption-time guards (Sources::PublicUrl) classify a hostname before
     # the fetch, but Net::HTTP re-resolves at connect, so a split-horizon

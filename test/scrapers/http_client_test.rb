@@ -4,6 +4,45 @@ module Scrapers
   class HttpClientTest < ActiveSupport::TestCase
     PUBLIC_ADDR = "93.184.216.34"
 
+    test "GET and POST challenges raise an actionable error without retrying" do
+      client = HttpClient.new(config: { "delay_ms" => 0 }, resolver: ->(_host) { [ PUBLIC_ADDR ] })
+
+      [ :get, :post ].product([ 200, 403, 503 ]).each do |method, status|
+        url = "https://manga.example/challenge/#{method}/#{status}"
+        request = stub_request(method, url).to_return(
+          status: status, body: "<html>Just a moment...</html>",
+          headers: { "CF-Mitigated" => "challenge", "Content-Type" => "text/html" }
+        )
+
+        error = assert_raises(Errors::ChallengeRequiredError) { client.public_send(method, url) }
+
+        assert_includes error.message, "requires browser verification"
+        assert_requested request, times: 1
+      end
+    end
+
+    test "ordinary forbidden pages and pages mentioning captcha are not classified as challenges" do
+      stub_request(:get, "https://manga.example/feed").to_return(status: 403, body: "A manga about CAPTCHA")
+      client = HttpClient.new(config: { "delay_ms" => 0 }, resolver: ->(_host) { [ PUBLIC_ADDR ] })
+
+      assert_equal 403, client.get("https://manga.example/feed").status
+    end
+
+    test "Comix custom verification redirects are reported before parsing an empty response" do
+      client = HttpClient.new(config: { "delay_ms" => 0 }, resolver: ->(_host) { [ PUBLIC_ADDR ] })
+      stub_request(:get, "https://comix.to/browse").to_return(
+        status: 302, headers: { "Location" => "/@waf/challenge?return=%2Fbrowse" }
+      )
+
+      assert_raises(Errors::ChallengeRequiredError) { client.get("https://comix.to/browse") }
+
+      stub_request(:get, "https://comix.to/title/old").to_return(
+        status: 302, headers: { "Location" => "/title/new" }
+      )
+
+      assert_equal 302, client.get("https://comix.to/title/old").status
+    end
+
     test "a public-resolving host is fetched normally" do
       stub_request(:get, "https://manga.example/feed").to_return(status: 200, body: "ok")
       client = HttpClient.new(config: { "delay_ms" => 0 }, resolver: ->(_host) { [ PUBLIC_ADDR ] })

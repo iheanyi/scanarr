@@ -144,8 +144,13 @@ module Scrapers
       doc = Nokogiri::HTML(response.body)
       images = chapter_images(doc)
 
-      images = images.select { |src| content_image?(src) }
-      images.map.with_index do |src, idx|
+      images = images.select { |image| content_image?(image) }
+      if images.empty?
+        raise Errors::SourceUnavailableError, "The source did not return any chapter pages. Try again later or choose another source."
+      end
+
+      images.map.with_index do |image, idx|
+        src = image["data-src"].presence || image["src"]
         ResultTypes::Page.new(index: idx + 1, url: normalize_url(src), mime_type: nil)
       end
     end
@@ -204,14 +209,14 @@ module Scrapers
     end
 
     def chapter_images(doc)
-      images_url = doc.css("[hx-get]").map { |node| node["hx-get"] }.compact.find { |path| path.include?("/images") }
+      images_url = doc.css("[hx-get], [data-hx-get]").map { |node| node["hx-get"] || node["data-hx-get"] }.compact.find { |path| path.include?("/images") }
       if images_url
         response = http.get(images_url, params: { reading_style: "long_strip" })
         images_doc = Nokogiri::HTML(response.body)
-        return images_doc.css(PAGE_IMAGE_SELECTOR).map { |img| img["data-src"] || img["src"] }.compact
+        return images_doc.css(PAGE_IMAGE_SELECTOR)
       end
 
-      doc.css(PAGE_IMAGE_SELECTOR).map { |img| img["data-src"] || img["src"] }.compact
+      doc.css(PAGE_IMAGE_SELECTOR)
     end
 
     def extract_labeled_text(doc, label)
@@ -247,12 +252,17 @@ module Scrapers
       cleaned
     end
 
-    def content_image?(src)
-      return false if src.nil?
+    def content_image?(image)
+      src = image["data-src"].presence || image["src"]
+      return false if src.blank?
 
-      return false if src.match?(%r{/assets/}i) || src.match?(/logo|icon/i)
+      return false if src.match?(%r{/(assets|static)/}i) || image["alt"].to_s.match?(/logo/i)
 
-      src.include?("/chapters/") || src.include?("/manga/") || src.match?(/\.(jpg|jpeg|png|webp)(\?|$)/i)
+      # A file extension alone also matches site branding, avatars, and ads.
+      # Require a known chapter path, page label, or explicit reader container.
+      src.include?("/chapters/") || src.include?("/manga/") ||
+        image["alt"].to_s.match?(/\APage\s+\d+\z/i) ||
+        image.ancestors.any? { |node| node["class"].to_s.split.include?("reader-content") }
     end
 
     def dedupe_results(results)

@@ -42,7 +42,7 @@ sources:
     mihon_id: "2131019126180322627"
     name: Weeb Central
     adapter: Scrapers::WeebCentral::Adapter
-    version: 1
+    version: 2
     base_url: https://weebcentral.com
     source_type: html
     priority: 20

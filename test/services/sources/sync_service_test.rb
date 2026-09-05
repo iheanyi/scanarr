@@ -49,7 +49,7 @@ module Sources
       SyncService.new.call
       source.reload
 
-      assert_equal 1, source.adapter_version
+      assert_equal Scrapers::Manifest.entry_for(source.key).version, source.adapter_version
       assert_not_nil source.adapter_version_synced_at
       assert_equal "healthy", source.health_status
       assert_nil source.rate_limited_until

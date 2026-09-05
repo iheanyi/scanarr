@@ -83,6 +83,48 @@ class WeebCentralAdapterTest < ActiveSupport::TestCase
     assert_match %r{/manga/}, pages.first.url
   end
 
+  def test_pages_rejects_site_shell_instead_of_returning_brand_images
+    @fixtures["GET #{@base_url}/chapters/01CHAPTER0001"] = <<~HTML
+      <html><body>
+        <img src="/static/images/brand.png" alt="Weeb Central Logo" width="250" height="80">
+        <img src="/static/images/brand.png" alt="Weeb Central Logo" width="125" height="40">
+        <img src="https://example.test/affiliation/product.jpg" alt="Advertisement">
+      </body></html>
+    HTML
+
+    error = assert_raises(Scrapers::Errors::SourceUnavailableError) do
+      @adapter.pages("#{@base_url}/chapters/01CHAPTER0001")
+    end
+
+    assert_match(/Try again later or choose another source/, error.message)
+  end
+
+  def test_pages_rejects_logo_only_response_from_images_endpoint
+    @fixtures["GET #{@base_url}/chapters/01CHAPTER0001/images?is_prev=False&current_page=1&reading_style=long_strip"] =
+      '<img src="/static/images/brand.png" alt="Weeb Central Logo">'
+
+    assert_raises(Scrapers::Errors::SourceUnavailableError) do
+      @adapter.pages("#{@base_url}/chapters/01CHAPTER0001")
+    end
+  end
+
+  def test_pages_supports_data_hx_endpoint_and_labelled_cdn_pages
+    @fixtures["GET #{@base_url}/chapters/01CHAPTER0001"] =
+      '<section data-hx-get="/chapters/01CHAPTER0001/images"></section>'
+    @fixtures["GET #{@base_url}/chapters/01CHAPTER0001/images?reading_style=long_strip"] = <<~HTML
+      <section>
+        <img src="/static/images/brand.png" alt="Weeb Central Logo">
+        <img src="https://example.test/files/001.webp" alt="Page 1">
+        <img data-src="https://example.test/files/002.webp" alt="Page 2">
+      </section>
+    HTML
+
+    pages = @adapter.pages("#{@base_url}/chapters/01CHAPTER0001")
+
+    assert_equal [ "https://example.test/files/001.webp", "https://example.test/files/002.webp" ], pages.map(&:url)
+    assert_equal [ 1, 2 ], pages.map(&:index)
+  end
+
   def test_supports_browse
     assert_predicate @adapter, :supports_browse?
   end
