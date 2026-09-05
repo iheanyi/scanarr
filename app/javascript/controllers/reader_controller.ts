@@ -131,6 +131,7 @@ export default class extends Controller {
   private lightboxCloseTimeout?: ReturnType<typeof setTimeout>
   private lightboxImageSwapTimeout?: ReturnType<typeof setTimeout>
   private handleOnlineBound?: () => void
+  private readonly handlePageHide = () => this.flushPendingProgress()
   private documentScrollFrame?: number
   private lastDocumentScrollY = 0
   private hasUserNavigated = false
@@ -149,6 +150,7 @@ export default class extends Controller {
   connect() {
     this.handleKeydown = this.handleKeydown.bind(this)
     window.addEventListener("keydown", this.handleKeydown)
+    window.addEventListener("pagehide", this.handlePageHide)
     this.handleOnlineBound = () => { void this.flushQueuedProgressUpdates() }
     window.addEventListener("online", this.handleOnlineBound)
     void this.flushQueuedProgressUpdates()
@@ -169,6 +171,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.flushPendingProgress()
+    window.removeEventListener("pagehide", this.handlePageHide)
     window.removeEventListener("keydown", this.handleKeydown)
     if (this.handleOnlineBound) window.removeEventListener("online", this.handleOnlineBound)
     this.observer?.disconnect()
@@ -186,7 +190,10 @@ export default class extends Controller {
 
   private handleKeydown(event: KeyboardEvent) {
     // Don't handle if typing in an input
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
+    if (event.target instanceof Element && event.target.closest(
+      "input, textarea, select, button, a, [contenteditable]:not([contenteditable='false']), [role='button'], [role='combobox']"
+    )) return
+    if (event.altKey || event.ctrlKey || event.metaKey) return
     
     if (event.key === "Escape" && this.lightboxOpen) {
       this.closeLightbox()
@@ -736,7 +743,7 @@ export default class extends Controller {
     const pendingImages = this.pageTargets
       .slice(0, index + 1)
       .map((page) => page.querySelector("img") as HTMLImageElement | null)
-      .filter((image): image is HTMLImageElement => Boolean(image) && (!image.complete || image.naturalHeight === 0))
+      .filter((image): image is HTMLImageElement => image !== null && (!image.complete || image.naturalHeight === 0))
 
     const correctInitialScroll = () => {
       if (this.hasUserNavigated || this.lightboxOpen) return
@@ -911,6 +918,7 @@ export default class extends Controller {
     // Debounce progress saves to avoid hammering the server
     if (this.pendingProgressSave) clearTimeout(this.pendingProgressSave)
     this.pendingProgressSave = setTimeout(() => {
+      this.pendingProgressSave = undefined
       this.persistProgress()
     }, 500)
   }
@@ -941,42 +949,46 @@ export default class extends Controller {
     }
   }
 
+  private flushPendingProgress() {
+    if (!this.pendingProgressSave) return
+    clearTimeout(this.pendingProgressSave)
+    this.pendingProgressSave = undefined
+    this.persistProgress()
+  }
+
   private persistProgress() {
     if (!this.hasProgressUrlValue || !this.progressUrlValue) return
-    
-    const pageIndex = this.currentIndex + 1
-    const pageCount = this.pageCountValue || this.pageTargets.length
-    
-    const token = document
-      .querySelector('meta[name="csrf-token"]')
-      ?.getAttribute("content")
 
-    fetch(this.progressUrlValue, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-CSRF-Token": token || ""
-      },
-      body: JSON.stringify({ page_index: pageIndex, page_count: pageCount })
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          await enqueueProgressUpdate({
-            progressUrl: this.progressUrlValue,
-            pageIndex,
-            pageCount
-          })
-        }
-      })
-      .catch(async (error) => {
-        console.warn("Failed to save reading progress:", error)
-        await enqueueProgressUpdate({
-          progressUrl: this.progressUrlValue,
-          pageIndex,
-          pageCount
+    // Queue synchronously before network work, including when leaving the reader.
+    // The queue survives navigation and is retried when connectivity returns.
+    const progress = {
+      progressUrl: this.progressUrlValue,
+      pageIndex: this.currentIndex + 1,
+      pageCount: this.pageCountValue || this.pageTargets.length
+    }
+    void enqueueProgressUpdate(progress).then(async (queued) => {
+      if (queued) {
+        await this.flushQueuedProgressUpdates()
+        return
+      }
+
+      // Browser storage may be unavailable or full; online progress must still save.
+      try {
+        await fetch(progress.progressUrl, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
+          },
+          credentials: "same-origin",
+          keepalive: true,
+          body: JSON.stringify({ page_index: progress.pageIndex, page_count: progress.pageCount })
         })
-      })
+      } catch (error) {
+        console.warn("Failed to save reading progress:", error)
+      }
+    })
   }
 
   private async flushQueuedProgressUpdates() {

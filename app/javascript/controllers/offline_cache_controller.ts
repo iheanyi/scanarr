@@ -16,7 +16,7 @@ import {
 const IMAGE_CACHE = "scanarr-images-v1"
 
 export default class extends Controller {
-  static targets = ["progress", "downloadButton", "cancelButton", "removeButton", "availableIndicator"]
+  static targets = ["progress", "downloadButton", "cancelButton", "removeButton", "availableIndicator", "error"]
   static values = {
     chapterKey: String,
     chapterPublicId: String,
@@ -40,6 +40,9 @@ export default class extends Controller {
   declare readonly hasAvailableIndicatorTarget: boolean
   declare readonly availableIndicatorTarget: HTMLElement
 
+  declare readonly hasErrorTarget: boolean
+  declare readonly errorTarget: HTMLElement
+
   declare readonly chapterKeyValue: string
   declare readonly chapterPublicIdValue: string
   declare readonly sourceSlugValue: string
@@ -53,6 +56,7 @@ export default class extends Controller {
   private busy = false
   private abortController?: AbortController
   private cancelRequested = false
+  private failureMessage?: string
 
   connect() {
     void this.refreshLocalState()
@@ -75,7 +79,9 @@ export default class extends Controller {
 
     this.busy = true
     this.cancelRequested = false
+    this.failureMessage = undefined
     this.setButtonsEnabled(false)
+    if (this.hasCancelButtonTarget) this.cancelButtonTarget.disabled = false
 
     try {
       await pinChapter(this.pinUrlValue, this.csrfToken())
@@ -203,6 +209,7 @@ export default class extends Controller {
   }
 
   private async markFailed(message: string) {
+    this.failureMessage = message
     const failedRecord = await patchOfflineChapter(this.chapterKeyValue, {
       status: "failed",
       lastError: message,
@@ -232,7 +239,12 @@ export default class extends Controller {
   private renderState(record: OfflineChapterRecord | null) {
     const isComplete = !!record && record.status === "complete"
     const isDownloading = !!record && ["downloading", "queued", "pinned"].includes(record.status)
-    const isFailed = !!record && record.status === "failed"
+    const isFailed = (!!record && record.status === "failed") || !!this.failureMessage
+
+    if (this.hasErrorTarget) {
+      this.errorTarget.textContent = isFailed ? (this.failureMessage || record?.lastError || "Device download failed. Try again.") : ""
+      this.errorTarget.hidden = !isFailed
+    }
 
     if (this.hasProgressTarget) {
       if (!record || !record.pageCount || !isDownloading) {

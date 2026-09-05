@@ -67,4 +67,17 @@ describe("progress_queue", () => {
     expect(queue).toHaveLength(1)
     expect(queue[0].progressUrl).toBe("/progress/1")
   })
+
+  it("preserves newer progress queued while an older request is in flight", async () => {
+    await enqueueProgressUpdate({ progressUrl: "/race-progress", pageIndex: 2, pageCount: 20 })
+    let finish!: (response: Response) => void
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((resolve) => { finish = resolve })))
+    const flushing = flushQueuedProgress("token")
+    await enqueueProgressUpdate({ progressUrl: "/race-progress", pageIndex: 8, pageCount: 20 })
+    finish(new Response("{}", { status: 200 }))
+    await flushing
+
+    const queue = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "[]")
+    expect(queue.find((entry: { progressUrl: string }) => entry.progressUrl === "/race-progress").pageIndex).toBe(8)
+  })
 })

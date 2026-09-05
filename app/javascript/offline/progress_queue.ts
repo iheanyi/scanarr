@@ -6,8 +6,9 @@ interface ProgressQueueEntry {
 }
 
 const STORAGE_KEY = "scanarr:offline_progress_queue"
+let activeFlush: Promise<void> | undefined
 
-export async function enqueueProgressUpdate(entry: Omit<ProgressQueueEntry, "queuedAt">): Promise<void> {
+export async function enqueueProgressUpdate(entry: Omit<ProgressQueueEntry, "queuedAt">): Promise<boolean> {
   const queue = readQueue()
 
   // Keep only the newest entry per chapter progress endpoint.
@@ -17,14 +18,26 @@ export async function enqueueProgressUpdate(entry: Omit<ProgressQueueEntry, "que
     queuedAt: new Date().toISOString()
   })
 
-  writeQueue(deduped)
+  return writeQueue(deduped)
 }
 
 export async function flushQueuedProgress(csrfToken: string): Promise<void> {
+  if (activeFlush) {
+    await activeFlush
+    return flushQueuedProgress(csrfToken)
+  }
+
+  activeFlush = sendQueuedProgress(csrfToken)
+  try {
+    await activeFlush
+  } finally {
+    activeFlush = undefined
+  }
+}
+
+async function sendQueuedProgress(csrfToken: string): Promise<void> {
   const queue = readQueue()
   if (queue.length === 0) return
-
-  const failed: ProgressQueueEntry[] = []
 
   for (const entry of queue) {
     try {
@@ -39,16 +52,19 @@ export async function flushQueuedProgress(csrfToken: string): Promise<void> {
           page_index: entry.pageIndex,
           page_count: entry.pageCount
         }),
-        credentials: "same-origin"
+        credentials: "same-origin",
+        keepalive: true
       })
 
-      if (!response.ok) failed.push(entry)
+      if (response.ok) {
+        // A new page may have been queued while this request was in flight.
+        // Remove only the snapshot that was acknowledged by the server.
+        writeQueue(readQueue().filter((current) => JSON.stringify(current) !== JSON.stringify(entry)))
+      }
     } catch {
-      failed.push(entry)
+      // Keep this entry for the next connection or reader visit.
     }
   }
-
-  writeQueue(failed)
 }
 
 function readQueue(): ProgressQueueEntry[] {
@@ -62,10 +78,12 @@ function readQueue(): ProgressQueueEntry[] {
   }
 }
 
-function writeQueue(entries: ProgressQueueEntry[]) {
+function writeQueue(entries: ProgressQueueEntry[]): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
+    return true
   } catch {
     // Ignore quota/storage errors. Queueing is best-effort only.
+    return false
   }
 }
