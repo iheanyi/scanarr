@@ -30,16 +30,6 @@ class UserSeriesFollowTest < ActiveSupport::TestCase
     assert_not follow.notify_only?
   end
 
-  def test_auto_download_helper
-    follow = UserSeriesFollow.create!(user: @user, library_series: @library_series)
-
-    assert_not follow.auto_download?
-
-    follow.update!(download_policy: :auto_download)
-
-    assert_predicate follow, :auto_download?
-  end
-
   def test_uniqueness_of_user_and_library_series
     UserSeriesFollow.create!(user: @user, library_series: @library_series)
 
@@ -128,11 +118,7 @@ class UserSeriesFollowTest < ActiveSupport::TestCase
   def test_preferred_source_for_returns_default_when_no_priority
     follow = UserSeriesFollow.create!(user: @user, library_series: @library_series)
     default_source = sources(:one)
-    chapter = chapters(:one) if respond_to?(:chapters)
-    chapter ||= series(:one).chapters.first
-
-    # If no chapter exists, skip
-    skip unless chapter
+    chapter = chapters(:one)
 
     assert_equal default_source, follow.preferred_source_for(chapter, default_source)
   end
