@@ -1,10 +1,10 @@
 class LibraryController < ApplicationController
   STATUS_OPTIONS = [
     [ "All", "" ],
-    [ "Downloaded", "downloaded" ],
-    [ "In Progress", "in_progress" ],
+    [ "Saved to server", "downloaded" ],
+    [ "Downloading", "in_progress" ],
     [ "Not Started", "not_started" ],
-    [ "Completed", "completed" ],
+    [ "Has read chapters", "completed" ],
     [ "Following", "following" ]
   ].freeze
 
@@ -24,6 +24,7 @@ class LibraryController < ApplicationController
   }.freeze
 
   def index
+    @continue_reading = continue_reading
     @status = normalized_status_param
     @source_ids = normalized_source_ids
     @genres = normalized_genres
@@ -165,6 +166,20 @@ class LibraryController < ApplicationController
   end
 
   private
+
+  def continue_reading
+    # One unfinished chapter per series, newest first. Keep the shelf bounded
+    # and only link chapters the source-scoped reader can actually resolve.
+    latest_ids = current_user.chapter_progresses.where(status: "in_progress")
+      .joins(chapter: :source)
+      .where("EXISTS (SELECT 1 FROM series_sources WHERE series_sources.series_id = chapters.series_id AND series_sources.source_id = chapters.source_id)")
+      .select("DISTINCT ON (chapters.series_id) chapter_progresses.id")
+      .order(Arel.sql("chapters.series_id, chapter_progresses.progressed_at DESC, chapter_progresses.id DESC"))
+
+    current_user.chapter_progresses.where(id: latest_ids)
+      .includes(chapter: [ :source, { series: { cover_attachment: :blob } } ])
+      .order(progressed_at: :desc, id: :desc).limit(3)
+  end
 
   def normalized_status_param
     status = params[:status].to_s

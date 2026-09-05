@@ -19,6 +19,9 @@ application.register("toggle-button", ToggleButtonController)
 import AutoSubmitController from "./auto_submit_controller"
 application.register("auto-submit", AutoSubmitController)
 
+import LibraryFilterController from "./library_filter_controller"
+application.register("library-filter", LibraryFilterController)
+
 import MultiSelectController from "./multi_select_controller"
 application.register("multi-select", MultiSelectController)
 

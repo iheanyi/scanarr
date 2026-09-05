@@ -1,6 +1,42 @@
 require "test_helper"
 
 class LibraryControllerTest < ActionDispatch::IntegrationTest
+  test "home opens the library with the current user's latest unfinished chapter per series" do
+    ChapterProgress.create!(user: @test_user, chapter: chapters(:one), page_index: 2, page_count: 20, status: "in_progress", progressed_at: 2.days.ago)
+    ChapterProgress.create!(user: @test_user, chapter: chapters(:two), page_index: 7, page_count: 20, status: "in_progress", progressed_at: 1.day.ago)
+    ChapterProgress.create!(user: users(:member), chapter: chapters(:one), page_index: 10, page_count: 20, status: "in_progress", progressed_at: Time.current)
+
+    get root_path
+
+    assert_response :success
+    assert_select "h1", "Library"
+    assert_select "section[aria-labelledby='continue-reading-heading']" do
+      assert_select "a[aria-label^='Continue ']", count: 1
+      assert_select "a[href$='/chapters/#{chapters(:two).public_id}']"
+      assert_select "p", text: "Page 7 of 20"
+    end
+  end
+
+  test "library has no continue shelf for completed reading" do
+    ChapterProgress.create!(user: @test_user, chapter: chapters(:one), page_index: 20, page_count: 20, status: "completed", progressed_at: Time.current)
+
+    get library_path
+
+    assert_select "#continue-reading-heading", count: 0
+  end
+
+  test "filter response keeps controls random action and empty reset together" do
+    get library_path(status: "following", q: "No matching manga"), headers: { "Turbo-Frame" => "library-content" }
+
+    assert_response :success
+    assert_select "turbo-frame#library-content[data-turbo-action='advance']" do
+      assert_select "input[name=q][value='No matching manga']"
+      assert_select "select[name=sort_by] option[value=recently_updated]"
+      assert_select "a[href*='/library/random'][href*='status=following'][data-turbo-frame='_top']"
+      assert_select "a[href='/library'][data-turbo-frame='library-content']", text: "Clear filters"
+    end
+  end
+
   test "index shows all series" do
     get library_path
 
@@ -111,7 +147,7 @@ class LibraryControllerTest < ActionDispatch::IntegrationTest
     assert_select %(form[action="#{library_path}"][data-turbo-frame="library-content"]) do
       assert_select "select[name='status'] option", text: "All"
       assert_select "select[name='status'] option", text: "Not Started"
-      assert_select "select[name='status'] option", text: "Completed"
+      assert_select "select[name='status'] option", text: "Has read chapters"
       assert_select "input[type='checkbox'][name='source_ids[]']"
       assert_select "input[type='checkbox'][name='genres[]'][value='action']"
       assert_select "input[name='q'][placeholder='Filter series...'][data-action='input->auto-submit#submitDebounced']"

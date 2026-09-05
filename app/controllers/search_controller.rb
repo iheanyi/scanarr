@@ -34,7 +34,7 @@ class SearchController < ApplicationController
 
     selected_sources = @sources.select { |source| @selected_source_ids.include?(source.id.to_s) }
     search_sources(selected_sources)
-    attach_library_series_to_results! if advanced_filters_active?
+    attach_library_series_to_results!
     apply_advanced_filters!
     sort_results_by_chapter_count!
   end

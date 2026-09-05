@@ -22,7 +22,8 @@ Rails.application.routes.draw do
   get "/manifest.json" => "rails/pwa#manifest", as: :pwa_manifest
   get "/service-worker.js" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  root "sources#index"
+  root "library#index"
+  get "/sources", to: "sources#index", as: :sources
   get "/library", to: "library#index", as: :library
   get "/offline-library", to: "offline_library#show", as: :offline_library
   get "/library/random", to: "library#random", as: :library_random

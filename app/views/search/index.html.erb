@@ -1,7 +1,7 @@
 <div class="space-y-6">
   <%= render UI::PageHeaderComponent.new(
     title: "Search",
-    description: "Search across multiple sources and import series into your library."
+    description: "Find a series, preview it, and add it to your library."
   ) %>
 
   <section class="rounded-lg border border-border bg-surface p-4">
@@ -46,7 +46,7 @@
         <% advanced_filters_active = @genres.present? || @status.present? %>
         <details class="rounded-lg border border-border/70 bg-surface/40 p-3" <%= "open" if advanced_filters_active %>>
           <summary class="cursor-pointer select-none text-sm font-medium text-muted hover:text-foreground">
-            Advanced filters
+            Filter matches in your library
           </summary>
           <div class="mt-3 grid gap-3 md:grid-cols-3">
             <%= render UI::MultiSelectComponent.new(
@@ -74,7 +74,7 @@
             </div>
           </div>
           <p class="mt-3 text-xs text-muted-2">
-            Genres and reading status are matched against imported series metadata in your library.
+            These filters only show series already in your library. Leave them clear to discover new titles.
           </p>
         </details>
       </div>
@@ -137,18 +137,36 @@
         <span class="text-sm text-muted tabular-nums"><%= @results.size %> matches</span>
       </div>
       <% if @results.any? %>
+        <% if @results.any? { |item| item[:library_series].nil? } %>
+          <p class="text-xs text-muted">
+            Adding a series follows it for updates.
+            <% if current_user.effective_download_policy == "auto_download" %>
+              New follows automatically download all chapters to your server.
+            <% else %>
+              New follows notify you about updates. Chapters download when you choose.
+            <% end %>
+            Existing follows keep their download setting.
+          </p>
+        <% end %>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <% @results.each do |item| %>
             <% source = item[:source] %>
             <% result = item[:result] %>
+            <% imported_series = item[:library_series] %>
+            <% preview_path = source_preview_path(source_slug: source_slug(source), series_url: result.url) %>
             <div class="flex flex-col rounded-lg border border-border/80 bg-surface/40 p-4 hover:border-accent/40 transition-colors">
               <div class="flex flex-1 gap-4">
-                <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "#{result.title} cover", size: :lg, class: "shrink-0") %>
+                <%= link_to preview_path, class: "shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent", aria: { label: "Preview #{result.title}" } do %>
+                  <%= render UI::SeriesCoverComponent.new(url: result.cover_url, alt: "", size: :lg) %>
+                <% end %>
                 <div class="flex min-w-0 flex-1 flex-col">
                   <span class="mb-1 inline-flex w-fit items-center rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium text-accent-strong">
                     <%= source.name || source.key %>
                   </span>
-                  <p class="line-clamp-2 font-semibold text-balance text-foreground"><%= result.title %></p>
+                  <%= link_to result.title, preview_path, class: "line-clamp-2 font-semibold text-balance text-foreground hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent" %>
+                  <% if imported_series %>
+                    <p class="mt-1 text-xs font-medium text-success">In your library</p>
+                  <% end %>
                   <p class="mt-1 text-xs text-muted tabular-nums">
                     <% if result.respond_to?(:chapter_count) && result.chapter_count.present? %>
                       <%= result.chapter_count %> <%= "chapter".pluralize(result.chapter_count) %>
@@ -162,12 +180,18 @@
                 </div>
               </div>
               <div class="mt-3 border-t border-border pt-3">
-                <%= button_to "Import",
+                <% if imported_series %>
+                  <%= render UI::ButtonComponent.new(variant: :primary, href: library_series_path(series_slug: imported_series.to_param), class: "w-full") do %>
+                    Open in library
+                  <% end %>
+                <% else %>
+                  <%= button_to "Add to library",
                               source_import_path(source_slug: source_slug(source)),
                               method: :post,
                               params: { series_url: result.url },
                               class: "inline-flex w-full items-center justify-center rounded-lg border border-accent/40 px-3 py-1.5 text-sm font-semibold text-accent-strong hover:bg-accent-ghost",
-                              data: { turbo_submits_with: "Importing..." } %>
+                              data: { turbo_submits_with: "Adding..." } %>
+                <% end %>
               </div>
             </div>
           <% end %>

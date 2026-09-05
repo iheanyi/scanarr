@@ -33,6 +33,13 @@ class SourcesController < ApplicationController
     @mature_source_count = ordered_sources.count(&:mature_content?)
     @sources = @include_mature ? ordered_sources : ordered_sources.reject(&:mature_content?)
     @hidden_mature_count = @include_mature ? 0 : @mature_source_count
+    @source_capabilities = @sources.index_with do |source|
+      entry = Scrapers::Manifest.entry_for(source.key)
+      # Capabilities are local adapter declarations; no HTTP client or source request is needed.
+      adapter = entry&.adapter_class&.new(config: {}, http: nil)
+      { browse: adapter&.supports_browse? || false, search: adapter&.supports_search? || false }
+    end
+    @source_library_counts = SeriesSource.where(source_id: @sources.map(&:id)).group(:source_id).count
   end
 
   def browse

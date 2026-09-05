@@ -7,11 +7,18 @@
     ) %>
   </section>
 
-  <% if @error.present? %>
-    <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
-  <% else %>
-    <% has_filter_options = @browse_filter_options.values.any?(&:present?) %>
-    <%= turbo_frame_tag "browse-content", class: "has-loading-overlay" do %>
+  <%= turbo_frame_tag "browse-content", class: "has-loading-overlay" do %>
+    <% if @error.present? %>
+      <%= turbo_frame_tag "browse-page-#{@page}" do %>
+        <div class="col-span-full space-y-3 py-4">
+          <%= render UI::FlashMessageComponent.new(variant: :danger, message: @error) %>
+          <%= link_to "Try again", source_browse_path(source_browse_params(page: @page)),
+                      class: "text-sm text-accent hover:underline",
+                      data: { turbo_frame: @page > 1 ? "browse-page-#{@page}" : "browse-content" } %>
+        </div>
+      <% end %>
+    <% else %>
+      <% has_filter_options = @browse_filter_options.values.any?(&:present?) %>
       <section class="scanarr-subtle-panel rounded-lg p-4">
         <%= form_with url: source_browse_path(source_slug: source_slug(@source)),
                       method: :get,
@@ -149,6 +156,10 @@
                 <% end %>
               <% end %>
             <% end %>
+          <% end %>
+        <% elsif @page > 1 %>
+          <%= turbo_frame_tag "browse-page-#{@page}" do %>
+            <p class="col-span-full py-6 text-center text-sm text-muted">You've reached the end.</p>
           <% end %>
         <% else %>
           <%= render UI::EmptyStateComponent.new(

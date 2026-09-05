@@ -6,7 +6,7 @@
 
   <%= turbo_frame_tag "sources-content", class: "has-loading-overlay" do %>
     <div class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-2 text-sm text-muted-2">
         <p><%= @sources.length %> sources</p>
         <% if @hidden_mature_count.positive? %>
@@ -18,7 +18,7 @@
         <%= render UI::ButtonComponent.new(
           variant: @include_mature ? :secondary : :ghost,
           size: :sm,
-          href: root_path(sort_by: @sort_by, include_mature: (@include_mature ? nil : "1")),
+          href: sources_path(sort_by: @sort_by, include_mature: (@include_mature ? nil : "1")),
           data: { turbo_frame: "sources-content" }
         ) do %>
           <%= icon(@include_mature ? "eye-off" : "eye", class: "h-3.5 w-3.5") %>
@@ -30,7 +30,7 @@
           items: @sort_options.map { |key, label|
             {
               label: label,
-              href: root_path(sort_by: key, include_mature: (@include_mature ? "1" : nil)),
+              href: sources_path(sort_by: key, include_mature: (@include_mature ? "1" : nil)),
               selected: @sort_by == key
             }
           }
@@ -39,12 +39,14 @@
     </div>
 
     <% if @sources.any? %>
-      <section class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+      <section class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))]">
         <% @sources.each do |source| %>
-          <div class="group rounded-lg border border-border/80 bg-surface/40 p-5 hover:border-accent/40 transition-colors">
+          <% capabilities = @source_capabilities.fetch(source) %>
+          <% library_count = @source_library_counts.fetch(source.id, 0) %>
+          <article class="group min-w-0 rounded-lg border border-border/80 bg-surface/40 p-5 hover:border-accent/40 transition-colors" aria-label="<%= source.display_name %>">
             <div class="space-y-4">
               <div class="space-y-1">
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                   <%= icon "globe", class: "h-4 w-4 text-accent" %>
                   <h2 class="text-lg font-semibold text-balance"><%= source.display_name %></h2>
                   <% if source.mature_content? %>
@@ -53,7 +55,21 @@
                 </div>
                 <p class="text-sm text-muted-2 truncate"><%= source.effective_base_url %></p>
               </div>
-              <div class="flex items-center gap-2">
+              <% if source.dead? %>
+                <%= render UI::BadgeComponent.new(label: "No longer available", variant: :warning) %>
+                <p class="text-sm text-muted">Downloaded chapters remain in your library. Try another source for new chapters.</p>
+              <% elsif source.broken? %>
+                <%= render UI::BadgeComponent.new(label: "Currently unavailable", variant: :warning) %>
+                <p class="text-sm text-muted">This source has been failing. Try another source or check back later; downloaded chapters remain in your library.</p>
+              <% elsif source.degraded? %>
+                <%= render UI::BadgeComponent.new(label: "Some requests failing", variant: :warning) %>
+                <p class="text-sm text-muted">Results may be incomplete. You can retry or try another source.</p>
+              <% end %>
+              <% unless capabilities[:browse] || capabilities[:search] %>
+                <p class="text-sm text-muted">Browsing and search are not supported for this source yet. Choose another source to discover new series.</p>
+              <% end %>
+              <div class="flex flex-wrap items-center gap-2">
+                <% if capabilities[:browse] %>
                 <%= render UI::ButtonComponent.new(
                   variant: :primary,
                   size: :sm,
@@ -61,18 +77,22 @@
                   data: { turbo_frame: "_top" }
                 ) do %>
                   <%= icon "compass", class: "h-3.5 w-3.5" %>
-                  Discover
+                  Browse
                 <% end %>
+                <% end %>
+                <% if library_count.positive? %>
                 <%= render UI::ButtonComponent.new(
                   variant: :secondary,
                   size: :sm,
                   href: source_series_index_path(source_slug: source.slug),
                   data: { turbo_frame: "_top" }
                 ) do %>
-                  Series
+                  In library (<%= library_count %>)
                 <% end %>
+                <% end %>
+                <% if capabilities[:search] %>
                 <%= render UI::ButtonComponent.new(
-                  variant: :ghost,
+                  variant: capabilities[:browse] ? :ghost : :primary,
                   size: :sm,
                   href: source_search_path(source_slug: source.slug),
                   data: { turbo_frame: "_top" }
@@ -80,9 +100,10 @@
                   <%= icon "search", class: "h-3.5 w-3.5" %>
                   Search
                 <% end %>
+                <% end %>
               </div>
             </div>
-          </div>
+          </article>
         <% end %>
       </section>
     <% else %>

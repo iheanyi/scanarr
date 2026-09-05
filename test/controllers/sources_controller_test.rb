@@ -104,7 +104,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_index_returns_success
-    get "/"
+    get sources_path
 
     assert_response :success
     assert_includes @response.body, "Weeb Central"
@@ -113,7 +113,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_index_hides_mature_sources_by_default
-    get "/"
+    get sources_path
 
     assert_response :success
     assert_not_includes @response.body, "Manhwa18"
@@ -121,7 +121,7 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_index_can_include_mature_sources
-    get "/", params: { include_mature: "1" }
+    get sources_path, params: { include_mature: "1" }
 
     assert_response :success
     assert_includes @response.body, "Manhwa18"
@@ -130,14 +130,14 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_index_navigation_buttons_escape_turbo_frame
-    get "/"
+    get sources_path
 
     assert_response :success
     assert_select %(turbo-frame#sources-content a[data-turbo-frame="_top"]), minimum: 3
   end
 
   def test_sources_turbo_frame_links_always_declare_navigation_target
-    get "/"
+    get sources_path
 
     assert_response :success
     assert_select "turbo-frame#sources-content a[href]:not([href^='#']):not([data-turbo-frame])", 0
@@ -174,6 +174,66 @@ class SourcesControllerTest < ActionDispatch::IntegrationTest
       assert_includes @response.body, "Advanced filters"
       assert_includes @response.body, 'name="genres[]"'
       assert_includes @response.body, 'name="statuses[]"'
+    end
+  end
+
+  def test_browse_filter_error_keeps_the_requested_frame_and_retry_filters
+    adapter = FakeAdapter.new
+    adapter.define_singleton_method(:browse) { |**| raise Timeout::Error, "Source timed out" }
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/browse",
+          params: { sort: "popular", genres: [ "action" ] },
+          headers: { "Turbo-Frame" => "browse-content" }
+
+      assert_response :success
+      assert_select "turbo-frame#browse-content" do
+        assert_select "div", text: /Source timed out/, minimum: 1
+        assert_select "a[data-turbo-frame='browse-content']", text: "Try again" do |links|
+          query = Rack::Utils.parse_nested_query(URI.parse(links.first["href"]).query)
+
+          assert_equal "popular", query["sort"]
+          assert_equal [ "action" ], query["genres"]
+        end
+      end
+    end
+  end
+
+  def test_browse_later_page_error_keeps_the_requested_frame_and_can_retry
+    adapter = FakeAdapter.new
+    adapter.define_singleton_method(:browse) { |**| raise Timeout::Error, "Source timed out" }
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/browse",
+          params: { page: 2 },
+          headers: { "Turbo-Frame" => "browse-page-2" }
+
+      assert_response :success
+      assert_select "turbo-frame#browse-page-2" do
+        assert_select "div", text: /Source timed out/, minimum: 1
+        assert_select "a[data-turbo-frame='browse-page-2']", text: "Try again" do |links|
+          query = Rack::Utils.parse_nested_query(URI.parse(links.first["href"]).query)
+
+          assert_equal "2", query["page"]
+        end
+      end
+    end
+  end
+
+  def test_browse_empty_later_page_finishes_infinite_scroll_in_the_requested_frame
+    adapter = FakeAdapter.new
+    adapter.define_singleton_method(:browse) { |**| [] }
+
+    with_adapter(adapter) do
+      get "/sources/weeb-central/browse",
+          params: { page: 2 },
+          headers: { "Turbo-Frame" => "browse-page-2" }
+
+      assert_response :success
+      assert_select "turbo-frame#browse-page-2" do
+        assert_select "p", text: "You've reached the end."
+        assert_select "[data-controller='lazy-frame']", count: 0
+      end
     end
   end
 

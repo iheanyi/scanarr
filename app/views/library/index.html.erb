@@ -1,71 +1,80 @@
-<div class="space-y-8">
-  <section class="scanarr-hero-panel rounded-[2rem] p-5 md:p-6">
-    <%= render UI::PageHeaderComponent.new(title: "Library") do |header| %>
-      <% header.with_description_content do %>
-        <div class="flex flex-wrap items-center gap-2 text-sm text-muted tabular-nums">
-          <span class="scanarr-stat-chip inline-flex items-center gap-1 rounded-full px-3 py-1.5">
-            <span class="font-semibold text-foreground"><%= number_with_delimiter(@total_series) %></span>
-            <span class="text-muted-2">series</span>
-          </span>
-          <span class="scanarr-stat-chip inline-flex items-center gap-1 rounded-full px-3 py-1.5">
-            <span class="font-semibold text-foreground"><%= number_with_delimiter(@total_chapters) %></span>
-            <span class="text-muted-2">chapters</span>
-          </span>
-          <span class="scanarr-stat-chip inline-flex items-center gap-1 rounded-full px-3 py-1.5">
-            <span class="font-semibold text-foreground"><%= number_with_delimiter(@downloaded_chapters) %></span>
-            <span class="text-muted-2">downloaded</span>
-          </span>
-        </div>
-      <% end %>
+<div class="space-y-8" data-controller="library-filter" data-action="turbo:before-frame-render->library-filter#preserveFocus">
+  <header class="flex flex-wrap items-center justify-between gap-4">
+    <div class="space-y-2">
+      <h1 class="text-3xl font-semibold text-balance">Library</h1>
+      <p class="text-sm text-muted tabular-nums"><%= number_with_delimiter(@total_series) %> series in your collection</p>
+    </div>
+    <%= render UI::ButtonComponent.new(variant: :primary, href: search_path) do %>
+      <%= icon "search", class: "h-4 w-4", aria: { hidden: true } %>
+      Find manga
     <% end %>
-  </section>
+  </header>
 
-  <section class="scanarr-subtle-panel rounded-[2rem] p-4 md:p-5">
+  <% if @continue_reading.any? %>
+    <section aria-labelledby="continue-reading-heading" class="space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <h2 id="continue-reading-heading" class="text-lg font-semibold">Continue reading</h2>
+        <%= link_to "Reading history", reading_history_path, class: "text-sm text-muted hover:text-foreground" %>
+      </div>
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <% @continue_reading.each do |progress| %>
+          <%= render UI::ContinueReadingComponent.new(progress: progress) %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%= turbo_frame_tag "library-content", class: "block space-y-5 has-loading-overlay", data: { turbo_action: "advance" } do %>
+  <section aria-label="Filter your library" class="space-y-3">
+    <h2 class="text-lg font-semibold">Your collection</h2>
     <%= form_with url: library_path,
                   method: :get,
                   class: "space-y-3",
                   data: { turbo_frame: "library-content" } do |f| %>
-    <div class="flex items-center gap-3 overflow-x-auto pb-1">
-      <div class="shrink-0" data-controller="auto-submit">
+    <div class="grid grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_10rem_11rem_auto]">
+      <div class="col-span-2 min-w-0 sm:col-span-3 lg:col-span-1" data-controller="auto-submit" data-auto-submit-delay-value="200">
+        <label for="q" class="sr-only">Search your library</label>
+        <%= render UI::SearchInputComponent.new(
+          form: f,
+          name: :q,
+          value: params[:q],
+          placeholder: "Filter series...",
+          class: "h-11",
+          data: { action: "input->auto-submit#submitDebounced" }
+        ) %>
+      </div>
+
+      <div class="min-w-0" data-controller="auto-submit">
         <%= render UI::SelectComponent.new(
           form: f,
           method: :status,
           options: @status_options,
           selected: @status,
           full_width: false,
-          class: "h-9 w-40",
+          class: "h-11 w-full",
           aria: { label: "Filter status" },
           data: { action: "change->auto-submit#submit" }
         ) %>
       </div>
 
-      <div class="shrink-0" data-controller="auto-submit">
+      <div class="min-w-0" data-controller="auto-submit">
         <%= render UI::SelectComponent.new(
           form: f,
           method: :sort_by,
           options: @sort_options.map { |key, label| [ label, key ] },
           selected: @sort_by,
           full_width: false,
-          class: "h-9 w-44",
+          class: "h-11 w-full",
           aria: { label: "Sort series" },
           data: { action: "change->auto-submit#submit" }
         ) %>
       </div>
 
-      <div class="min-w-72 flex-1" data-controller="auto-submit" data-auto-submit-delay-value="200">
-        <%= render UI::SearchInputComponent.new(
-          form: f,
-          name: :q,
-          value: params[:q],
-          placeholder: "Filter series...",
-          class: "h-9",
-          data: { action: "input->auto-submit#submitDebounced" }
-        ) %>
-      </div>
-
-      <div class="shrink-0 ml-auto">
+      <div class="col-span-2 sm:col-span-1">
         <%= render UI::ButtonComponent.new(
           variant: :ghost,
+          data: { turbo_frame: "_top" },
+          class: "h-11 w-full",
           href: library_random_path(
             status: @status.presence,
             q: params[:q],
@@ -113,29 +122,32 @@
         <div class="flex items-end">
           <%= link_to "Clear advanced filters",
                       library_path(status: @status.presence, q: params[:q], sort_by: @sort_by),
-                      class: "inline-flex h-9 items-center rounded-md border border-border px-3 text-sm text-muted hover:text-foreground hover:border-muted" %>
+                      data: { turbo_frame: "library-content" },
+                      class: "inline-flex h-11 items-center rounded-md border border-border px-3 text-sm text-muted hover:text-foreground hover:border-muted" %>
         </div>
       </div>
     </details>
     <% end %>
   </section>
 
-  <%= turbo_frame_tag "library-content", class: "has-loading-overlay", autoscroll: true, data: { autoscroll_block: "start" } do %>
     <div class="space-y-4">
     <% if @series.empty? %>
       <% has_filters = params[:q].present? || @status.present? || @source_ids.present? || @genres.present? %>
       <%= render UI::EmptyStateComponent.new(
         title: has_filters ? "No series match your filters" : "Your library is empty",
-        description: has_filters ? nil : "Import series from a source to get started."
+        description: has_filters ? "Try a different title or clear the filters to see your collection." : "Find a manga to start reading, or bring over a library you already have."
       ) do |empty| %>
         <% empty.with_icon do %>
           <%= icon "book-open", class: "h-6 w-6" %>
         <% end %>
         <% empty.with_action do %>
           <% if has_filters %>
-            <%= link_to "Clear filters", library_path, class: "text-sm text-info hover:text-info" %>
+            <%= link_to "Clear filters", library_path, data: { turbo_frame: "library-content" }, class: "text-sm text-info hover:text-info" %>
           <% else %>
-            <%= link_to "Browse sources", root_path, class: "text-sm text-info hover:text-info" %>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <%= link_to "Find manga", search_path, data: { turbo_frame: "_top" }, class: "inline-flex min-h-11 items-center rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground" %>
+              <%= link_to "Import a library", export_path, data: { turbo_frame: "_top" }, class: "inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-foreground" %>
+            </div>
           <% end %>
         <% end %>
       <% end %>
@@ -150,7 +162,7 @@
           <% unread = @status == "following" ? @unread_counts&.dig(series.library_series_id).to_i : 0 %>
 
           <% cache [ series, series.cover_image_url, progress[:downloaded], progress[:total], progress[:downloading], source&.slug, followed, unread, @status ] do %>
-          <%= link_to series_path, class: "group/series flex min-w-0 flex-col", data: { turbo_frame: "_top" } do %>
+          <%= link_to series_path, class: "group/series flex min-w-0 flex-col", aria: { label: series.canonical_title }, data: { turbo_frame: "_top" } do %>
             <%# Cover zone %>
             <div class="scanarr-cover-tile transition-all duration-200 group-hover/series:-translate-y-1 group-hover/series:border-accent/30">
               <%= render UI::SeriesCoverComponent.new(
@@ -188,7 +200,7 @@
                     <div class="absolute inset-x-0 bottom-0 bg-background/90 p-2 transition-opacity duration-200 group-hover/series:opacity-0">
                       <div class="flex items-center justify-between text-xs">
                         <span class="<%= progress[:downloaded] == progress[:total] ? "text-success" : "text-muted" %>">
-                          <%= progress[:downloaded] %>/<%= progress[:total] %>
+                          <%= progress[:downloaded] %>/<%= progress[:total] %> saved
                         </span>
                         <% if progress[:downloading] > 0 %>
                           <span class="flex items-center gap-1 text-warning">
