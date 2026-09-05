@@ -26,3 +26,7 @@
 
 - Correction: hand-rolled `HEALTH_STATUSES` constant + inclusion validation + `define_method` predicates on `Source` flagged as churn ("Rails can handle this natively").
 - Rule: reach for string-backed `enum(..., validate: true)`, delegated types, generated scopes, and ActiveModel casting before writing any status/variant plumbing by hand. Re-scan a diff for one-caller wrappers and speculative scopes before presenting it.
+
+## Source replacement discovery (2026-09-05)
+
+- Source replacement should expose plausible matches across all eligible providers by default. Keep provider filtering optional; bound and progressively render the network work instead of making users search providers one at a time.
