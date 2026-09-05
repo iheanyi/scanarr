@@ -1,0 +1,41 @@
+<div data-source-matches="<%= params[:to_source_id] %>" data-source-error="<%= @discovery_errors.any? %>" data-match-count="<%= @candidates.size %>" class="space-y-4">
+  <% if @discovery_errors.any? %>
+    <%= render UI::FlashMessageComponent.new(variant: :warning) do %>
+      <p class="font-medium">This provider could not be checked. Your source is unchanged.</p>
+      <% @discovery_errors.each do |error| %>
+        <p class="mt-1 break-words text-sm"><%= error %></p>
+      <% end %>
+      <p class="mt-2 text-sm">Retry this provider or choose a match from another provider.</p>
+    <% end %>
+  <% end %>
+
+  <% @candidates.each do |candidate| %>
+    <section class="rounded-lg border border-border bg-surface p-5 space-y-4">
+      <div class="flex gap-4">
+        <%= render UI::SeriesCoverComponent.new(url: candidate.result.cover_url, alt: candidate.result.title, size: :sm, rounded: :md, class: "shrink-0") %>
+        <div class="min-w-0 space-y-2">
+          <h3 class="break-words font-semibold"><%= candidate.result.title %></h3>
+          <% if candidate.result.author.present? %><p class="text-sm text-muted"><%= candidate.result.author %></p><% end %>
+          <p class="text-sm text-muted"><%= candidate.source.name %> · <%= candidate.linked ? "Previously linked to this series" : candidate.confidence >= 0.9 ? "Strong title match" : "Similar title — check carefully" %></p>
+          <p class="text-sm text-muted tabular-nums"><%= candidate.chapter_count.nil? ? "Chapter count not checked" : "#{candidate.chapter_count} chapters listed" %></p>
+          <p class="text-xs text-muted">A chapter listing does not guarantee that every page is accessible.</p>
+        </div>
+      </div>
+      <% if candidate.chapter_count == 0 %>
+        <p class="text-sm text-warning">This provider lists no chapters yet. Choose another provider to keep reading.</p>
+      <% else %>
+        <%= form_with url: library_series_migrate_path(series_slug: @series.to_param), method: :post do |f| %>
+          <%= f.hidden_field :from_source_id, value: @from_source.id %>
+          <%= f.hidden_field :to_source_id, value: candidate.source.id %>
+          <%= f.hidden_field :target_series_url, value: candidate.result.url unless candidate.linked %>
+          <%= f.submit "Use this match", class: "min-h-11 cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground", aria: { label: "Use #{candidate.result.title} from #{candidate.source.name}" }, data: { turbo_submits_with: "Switching source…" } %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+
+  <% if @candidates.empty? && @discovery_errors.empty? %>
+    <p class="text-sm text-muted">No matching title found on this provider.</p>
+  <% end %>
+
+</div>

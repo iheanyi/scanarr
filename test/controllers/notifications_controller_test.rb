@@ -15,6 +15,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate notification.reload, :read?
     assert_includes @response.body, "toast-container"
     assert_includes @response.body, "Notification marked as read"
+    assert_select "turbo-stream[action=replace][targets='[data-notification-count]']"
   end
 
   def test_mark_all_read_returns_turbo_toast_and_marks_all_read
@@ -29,6 +30,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate second.reload, :read?
     assert_includes @response.body, "toast-container"
     assert_includes @response.body, "All notifications marked as read"
+    assert_select "turbo-stream[action=replace][targets='[data-notification-count]']"
   end
 
   def test_mark_read_missing_notification_turbo_request_redirects_with_flash

@@ -266,6 +266,41 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     assert_nil @series.series_sources.find_by(source: @to_source)
   end
 
+  def test_execute_requires_manual_selection_for_distinct_exact_title_matches
+    # The second exact title is beyond the old five-result cutoff. Inspect
+    # every returned result before deciding that a match is unambiguous.
+    results = [ Scrapers::ResultTypes::SearchResult.new(id: "OP", title: "One Piece", url: "https://target.example/original") ]
+    4.times do |index|
+      results << Scrapers::ResultTypes::SearchResult.new(id: "OTHER#{index}", title: "Another manga", url: "https://target.example/other-#{index}")
+    end
+    results << Scrapers::ResultTypes::SearchResult.new(id: "OP_COLOR", title: "One Piece", url: "https://target.example/color")
+    adapter = FakeAdapter.new(search_results: results,
+      series_result: Scrapers::ResultTypes::Series.new(id: "OP", title: "One Piece", url: "https://target.example/original"))
+    @follow.update!(source_priority: [ @from_source.key ])
+
+    result = SourceMigrationService.new(from_source: @from_source, to_source: @to_source,
+      user: @user, adapter_registry: FakeRegistry.new(adapter)).execute!
+
+    assert result.success
+    assert_equal [ @series ], result.no_match
+    assert_empty result.migrated
+    assert_nil @series.series_sources.find_by(source: @to_source)
+    assert_equal [ @from_source.key ], @follow.reload.source_priority
+  end
+
+  def test_duplicate_search_rows_for_the_same_target_do_not_prevent_auto_linking
+    match = Scrapers::ResultTypes::SearchResult.new(id: "OP", title: "One Piece", url: "https://target.example/original")
+    adapter = FakeAdapter.new(search_results: [ match, match.dup ],
+      series_result: Scrapers::ResultTypes::Series.new(id: "OP", title: "One Piece", url: match.url))
+
+    result = SourceMigrationService.new(from_source: @from_source, to_source: @to_source,
+      user: @user, adapter_registry: FakeRegistry.new(adapter)).execute!
+
+    assert result.success
+    assert_equal [ @series ], result.migrated
+    assert_equal "OP", @series.series_sources.find_by!(source: @to_source).source_series_id
+  end
+
   def test_execute_leaves_low_confidence_matches_unlinked
     adapter = FakeAdapter.new(
       search_results: [ Scrapers::ResultTypes::SearchResult.new(id: "X", title: "Completely Different Title", url: "https://target.example/x") ],
@@ -339,5 +374,86 @@ class SourceMigrationServiceTest < ActiveSupport::TestCase
     @follow.reload
 
     assert_equal [ @from_source.key ], @follow.source_priority
+  end
+  def test_replacement_moves_an_existing_lower_priority_target_to_the_front
+    SeriesSource.create!(series: @series, source: @to_source, source_series_id: "TARGET123")
+    @follow.update!(source_priority: [ "other_source", @to_source.key, @from_source.key ])
+
+    result = migration_service.execute!
+
+    assert result.success
+    assert_equal [ @to_source.key, "other_source" ], @follow.reload.source_priority
+    assert_equal @to_source, @follow.preferred_source_for(chapters(:one), @from_source)
+  end
+
+  def test_repeated_execution_does_not_rewrite_follow_or_accumulate_results
+    SeriesSource.create!(series: @series, source: @to_source, source_series_id: "TARGET123")
+    service = migration_service
+    service.preview
+    first = service.execute!
+    writes = []
+    subscriber = ->(_name, _start, _finish, _id, payload) do
+      writes << payload[:sql] if payload[:sql].match?(/UPDATE "user_series_follows"/)
+    end
+    second = ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") { service.execute! }
+
+    assert_equal [ @series ], first.migrated
+    assert_empty first.already_on_target
+    assert_empty second.migrated
+    assert_equal [ @series ], second.already_on_target
+    assert_empty writes
+  end
+
+  def test_same_source_is_rejected_without_changing_preferences
+    @follow.update!(source_priority: [ "other_source", @from_source.key ])
+    service = SourceMigrationService.new(from_source: @from_source, to_source: @from_source, user: @user)
+
+    [ service.preview, service.execute! ].each do |result|
+      refute result.success
+      assert_match(/different from the current source/, result.errors.first)
+    end
+    assert_equal [ "other_source", @from_source.key ], @follow.reload.source_priority
+  end
+
+  def test_replacement_preserves_other_users_preferences_saved_files_and_reading_progress
+    SeriesSource.create!(series: @series, source: @to_source, source_series_id: "TARGET123")
+    other_follow = UserSeriesFollow.create!(user: users(:member), library_series: @series.library_series,
+      source_priority: [ @from_source.key ], download_policy: :auto_download)
+    @follow.update!(download_policy: :auto_download, check_interval_minutes: 60)
+    progress = ChapterProgress.create!(user: @user, chapter: chapters(:one), page_index: 3,
+      page_count: 10, status: "in_progress", progressed_at: Time.current)
+    original_progress = progress.attributes
+    original_asset = file_assets(:one).attributes
+    original_release = releases(:one).attributes
+    original_chapter = chapters(:one).attributes
+
+    assert migration_service.execute!.success
+
+    assert_equal [ @from_source.key ], other_follow.reload.source_priority
+    assert_equal "auto_download", @follow.reload.download_policy
+    assert_equal 60, @follow.check_interval_minutes
+    assert_equal original_progress, progress.reload.attributes
+    assert_equal original_asset, file_assets(:one).reload.attributes
+    assert_equal original_release, releases(:one).reload.attributes
+    assert_equal original_chapter, chapters(:one).reload.attributes
+    assert @series.series_sources.exists?(source: @from_source)
+  end
+
+  def test_selected_series_not_followed_by_the_user_cannot_be_migrated
+    SeriesSource.create!(series: @series, source: @to_source, source_series_id: "TARGET123")
+    @follow.update!(source_priority: [ @from_source.key ])
+    result = SourceMigrationService.new(from_source: @from_source, to_source: @to_source,
+      user: users(:member), series_ids: [ @series.id ]).execute!
+
+    assert result.success
+    assert_empty result.migrated
+    assert_empty result.already_on_target
+    assert_equal [ @from_source.key ], @follow.reload.source_priority
+  end
+
+  private
+
+  def migration_service
+    SourceMigrationService.new(from_source: @from_source, to_source: @to_source, user: @user)
   end
 end

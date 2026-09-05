@@ -35,7 +35,9 @@ class SeriesController < ApplicationController
 
   def show_from_library
     @series = Series.find_by_param!(params[:series_slug])
-    @source = @series.primary_source || @series.sources.first
+    follow = current_user&.user_series_follows&.find_by(library_series_id: @series.library_series_id)
+    sources = @series.sources.to_a
+    @source = Array(follow&.source_priority).filter_map { |key| sources.find { |source| source.key == key } }.first || @series.primary_source || sources.first
     raise ActiveRecord::RecordNotFound, "No source found for series" unless @source
 
     load_show_data
@@ -140,21 +142,23 @@ class SeriesController < ApplicationController
   def bulk_action
     @series = find_series_by_param!
     chapter_ids = params[:chapter_ids].to_s.split(",").map(&:to_i)
-    chapters = @series.chapters.where(id: chapter_ids, source: @source)
+    chapters = @series.chapters.where(id: chapter_ids)
     chapters_to_broadcast = []
     message = "No action performed"
     variant = :warning
 
     case params[:action_name]
     when "download"
-      series_source = @series.series_sources.find_by(source: @source)
       enqueued = 0
-      chapters.includes(releases: :file_asset).each do |chapter|
-        next if chapter.source_url.blank?
-        latest = chapter.releases.to_a.max_by(&:created_at)
-        next if latest&.file_asset&.download_status.in?(%w[queued pending downloading complete])
+      chapters.includes(:source, releases: [ :source, :file_asset ]).each do |chapter|
+        next if chapter.releases.any? { |release| release.file_asset&.download_status.in?(%w[queued pending downloading complete]) }
+        latest = chapter.releases.select { |release| release.source_id == @source.id }.max_by(&:created_at)
+        download_source = latest&.source || chapter.source
+        source_url = latest&.source_url.presence || (chapter.source_url if chapter.source_id == download_source&.id)
+        next if source_url.blank? || download_source.nil?
+        series_source = @series.series_sources.find_by(source: download_source)
 
-        release = chapter.releases.find_or_create_by!(source: @source)
+        release = latest || chapter.releases.find_or_create_by!(source: download_source) { |row| row.source_url = source_url }
         next if release.file_asset&.download_status.in?(%w[queued pending downloading complete])
 
         file_asset = if release.file_asset
@@ -172,8 +176,8 @@ class SeriesController < ApplicationController
         broadcast_admin_download_update(file_asset)
         chapters_to_broadcast << chapter
         DownloadChapterJob.perform_later(
-          chapter.source_url,
-          source_key: @source.key,
+          source_url,
+          source_key: download_source.key,
           series_title: @series.canonical_title,
           source_series_id: series_source&.source_series_id,
           chapter_number: chapter.chapter_number,
@@ -270,7 +274,6 @@ class SeriesController < ApplicationController
     # DISTINCT ON requires matching leading ORDER BY, so we pick rows in a subquery
     # then re-sort for display.
     deduped_ids = @series.chapters
-                         .where(source: @source)
                          .select("DISTINCT ON (chapter_number_value, chapter_number) id")
                          .order(
                            Arel.sql("chapter_number_value ASC NULLS LAST"),
@@ -279,7 +282,7 @@ class SeriesController < ApplicationController
                          )
     @chapters = @series.chapters
                        .where(id: deduped_ids)
-                       .includes(releases: :file_asset)
+                       .includes(:source, releases: [ :source, :file_asset ])
                        .order(
                          Arel.sql("chapter_number_value ASC NULLS LAST"),
                          Arel.sql("title ASC NULLS LAST"),
@@ -291,7 +294,9 @@ class SeriesController < ApplicationController
     # Uses the already-preloaded releases association for in-memory lookup
     @latest_release_map = {}
     @chapters.each do |chapter|
-      @latest_release_map[chapter.id] = chapter.releases.to_a.max_by(&:created_at)
+      releases = chapter.releases.to_a
+      @latest_release_map[chapter.id] = releases.select { |release| release.file_asset&.download_status == "complete" }.max_by(&:created_at) ||
+        releases.select { |release| release.source_id == @source.id }.max_by(&:created_at) || releases.max_by(&:created_at)
     end
 
     # Pre-compute chapter stats
@@ -348,11 +353,7 @@ class SeriesController < ApplicationController
     target_chapter = reading_target_chapter(started_reading: started_reading)
     return unless target_chapter
 
-    @reading_cta_path = source_series_chapter_path(
-      source_slug: @source.slug,
-      series_slug: @series.to_param,
-      chapter_identifier: chapter_identifier(target_chapter)
-    )
+    @reading_cta_path = chapter_public_path(public_id: target_chapter.public_id)
     @reading_cta_label = started_reading ? "Continue reading" : "Start reading"
   end
 

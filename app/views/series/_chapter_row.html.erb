@@ -2,6 +2,7 @@
 <% progress = progress || chapter_progress_map&.dig(chapter.id) %>
 <% latest_release = latest_release || latest_release_map&.dig(chapter.id) || (chapter.releases.loaded? ? chapter.releases.to_a.max_by(&:created_at) : nil) %>
 <% file_asset = latest_release&.file_asset %>
+<% source = latest_release&.source || chapter.source || source %>
 <% offline_manifest_entry = offline_manifest_entry || offline_manifest_map&.dig(chapter.id) %>
 <% offline_status = offline_manifest_entry&.status || "unpinned" %>
 <% offline_capable = local_downloads_enabled? && (chapter.source_url.present? || latest_release&.source_url.present? || file_asset&.download_status == "complete") %>

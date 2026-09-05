@@ -19,10 +19,7 @@ class SourceMigrationService
     else
       Array(series_ids).filter_map { |id| Integer(id, exception: false) }.uniq
     end
-    @migrated = []
-    @no_match = []
-    @already_on_target = []
-    @errors = []
+    reset_results
   end
 
   # Preview what would happen without making changes or network calls.
@@ -30,6 +27,7 @@ class SourceMigrationService
   # search the target for them and link exact title matches, so the preview
   # must represent that attempt rather than declaring no_match up front.
   def preview
+    reset_results
     return unusable_target_result if target_unusable?
 
     link_candidates = []
@@ -58,6 +56,7 @@ class SourceMigrationService
   # (or a slow source) cannot roll back or block the rest; re-running
   # converges because linked series take the already_on_target path.
   def execute!
+    reset_results
     return unusable_target_result if target_unusable?
 
     affected_series.each do |series|
@@ -86,22 +85,35 @@ class SourceMigrationService
 
   private
 
+  def reset_results
+    @migrated = []
+    @no_match = []
+    @already_on_target = []
+    @errors = []
+    @affected_series = nil
+  end
+
   # Migrating FROM a broken source is the whole point of migration; migrating
   # TO a broken, dead, or operator-disabled one would search and prioritize a
   # source the rest of the app skips.
   def target_unusable?
-    @to_source.migration_target_rejection.present?
+    @from_source == @to_source || @to_source.migration_target_rejection.present?
   end
 
   def unusable_target_result
     reason = @to_source.migration_target_rejection
+    message = if @from_source == @to_source
+      "Choose a replacement source different from the current source"
+    else
+      "#{@to_source.name} is #{reason} and cannot be a migration target"
+    end
     Result.new(
       success: false,
       migrated: [],
       no_match: [],
       already_on_target: [],
       link_candidates: [],
-      errors: [ "#{@to_source.name} is #{reason} and cannot be a migration target" ]
+      errors: [ message ]
     )
   end
 
@@ -140,22 +152,18 @@ class SourceMigrationService
     @errors << "#{series.canonical_title}: #{e.message}"
   end
 
-  # Search the target source for the series and link it when the best result
-  # clears the auto-link confidence bar. Below the bar, the series stays
-  # no_match for the user to resolve manually via discovery.
+  # Only a unique exact title match can link unattended. Distinct editions
+  # with the same title need a human choice, even when both score perfectly.
   def auto_link_series(series)
     return false unless @auto_link
     return false unless @adapter_registry.registered?(@to_source.key)
 
     adapter = @adapter_registry.for(@to_source)
     source_series_id = Timeout.timeout(AUTO_LINK_TIMEOUT_SECONDS) do
-      results = adapter.search(series.canonical_title).first(5)
-      match, _confidence = Sources::TitleMatcher.best_match(
-        series.canonical_title,
-        results,
-        min_confidence: Sources::TitleMatcher::AUTO_LINK_CONFIDENCE
-      )
-      match ? adapter.series(match.url).id.to_s.strip : nil
+      matches = adapter.search(series.canonical_title).select do |result|
+        Sources::TitleMatcher.score(series.canonical_title, result.title) >= Sources::TitleMatcher::AUTO_LINK_CONFIDENCE
+      end.uniq { |result| result.id.presence || result.url }
+      matches.one? ? adapter.series(matches.first.url).id.to_s.strip : nil
     end
     return false if source_series_id.blank?
 
@@ -177,14 +185,17 @@ class SourceMigrationService
       .first
     return false unless follow
 
-    priority = follow.source_priority || []
+    follow.with_lock do
+      # Existing target links may already be lower in the preference list.
+      # Always move the replacement first, preserving unrelated fallbacks.
+      priority = [ @to_source.key ] + Array(follow.source_priority)
+        .reject { |key| key == @from_source.key || key == @to_source.key }
+        .uniq
+      return false if follow.source_priority == priority
 
-    # Remove the old source from priority and add the new one at the top
-    priority = priority.reject { |k| k == @from_source.key }
-    priority.unshift(@to_source.key) unless priority.include?(@to_source.key)
-
-    follow.update!(source_priority: priority)
-    @migrated << series
-    true
+      follow.update!(source_priority: priority)
+      @migrated << series
+      true
+    end
   end
 end

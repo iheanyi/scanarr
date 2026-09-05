@@ -3,18 +3,18 @@ require "timeout"
 class SourceMigrationDiscoveryService
   Result = Data.define(:candidates, :errors)
   Candidate = Data.define(:source, :result, :chapter_count, :confidence, :linked)
-  WorkerResult = Data.define(:candidate, :error)
+  WorkerResult = Data.define(:candidates, :error)
 
   SEARCH_TIMEOUT_SECONDS = 8
-  CHAPTER_COUNT_TIMEOUT_SECONDS = 12
-  WORKER_WAIT_TIMEOUT_SECONDS = SEARCH_TIMEOUT_SECONDS + 2
+  DISCOVERY_TIMEOUT_SECONDS = SEARCH_TIMEOUT_SECONDS + 2
   MAX_WORKERS = 4
   MIN_CONFIDENCE = 0.45
 
-  def initialize(series:, from_source:)
+  def initialize(series:, from_source:, source_id: nil)
     @series = series
     @from_source = from_source
-    @linked_source_ids = @series.sources.pluck(:id)
+    @source_id = source_id
+    @linked_series_ids = @series.series_sources.pluck(:source_id, :source_series_id).to_h
   end
 
   def call
@@ -25,7 +25,13 @@ class SourceMigrationDiscoveryService
     sources = Source.where(enabled: true)
       .where.not(health_status: %w[broken dead])
       .where.not(id: @from_source.id)
-      .order(:name).to_a
+      .order(:name)
+    sources = sources.where(id: @source_id) if @source_id.present?
+    sources = sources.to_a
+    if @source_id.present? && sources.empty?
+      return Result.new(candidates: [], errors: [ "This source is no longer available for replacement. Refresh to see available sources." ])
+    end
+
     discovery = discover_candidates(sources)
     Result.new(candidates: sort_candidates(discovery[:candidates]), errors: discovery[:errors])
   end
@@ -34,10 +40,17 @@ class SourceMigrationDiscoveryService
 
   def discover_candidates(sources)
     return { candidates: [], errors: [] } if sources.empty?
+    if sources.one?
+      # The interactive flow checks one provider. Stay in the Rails request
+      # executor so adapter autoloading does not contend with a waiting thread.
+      result = discover_source_candidate(sources.first)
+      return { candidates: result.candidates, errors: [ result.error ].compact }
+    end
 
     executor = Concurrent::FixedThreadPool.new([ MAX_WORKERS, sources.size ].min)
     candidates = []
     errors = []
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + DISCOVERY_TIMEOUT_SECONDS
     begin
       futures = sources.map do |source|
         Concurrent::Promises.future_on(executor, source) do |candidate_source|
@@ -47,9 +60,10 @@ class SourceMigrationDiscoveryService
 
       futures.each_with_index do |future, index|
         source = sources[index]
-        worker_result = future.value!(WORKER_WAIT_TIMEOUT_SECONDS)
+        remaining = [ deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), 0 ].max
+        worker_result = future.value!(remaining)
         if worker_result.nil?
-          errors << "#{source.name}: search timed out after #{SEARCH_TIMEOUT_SECONDS}s"
+          errors << "#{source.name}: discovery timed out; try searching this source on its own"
           next
         end
 
@@ -58,13 +72,13 @@ class SourceMigrationDiscoveryService
           next
         end
 
-        candidates << worker_result.candidate if worker_result.candidate.present?
+        candidates.concat(worker_result.candidates)
         errors << worker_result.error if worker_result.error.present?
       rescue StandardError => e
         errors << "#{source.name}: #{e.message.truncate(100)}"
       end
     ensure
-      executor.shutdown
+      executor.kill
       executor.wait_for_termination(1)
     end
 
@@ -73,57 +87,67 @@ class SourceMigrationDiscoveryService
 
   def discover_source_candidate(source)
     unless Scrapers::AdapterRegistry.registered?(source.key)
-      return WorkerResult.new(candidate: nil, error: "#{source.name}: adapter not implemented")
+      return WorkerResult.new(candidates: [], error: "#{source.name}: adapter not implemented")
     end
 
-    adapter = Scrapers::AdapterRegistry.for(source)
-    results = Timeout.timeout(SEARCH_TIMEOUT_SECONDS) do
-      adapter.search(@series.canonical_title).first(5)
+    matches = Timeout.timeout(SEARCH_TIMEOUT_SECONDS) do
+      adapter = Scrapers::AdapterRegistry.for(source)
+      if @linked_series_ids[source.id].present?
+        [ linked_match_for(adapter, @linked_series_ids.fetch(source.id)) ]
+      else
+        matches_for(adapter.search(@series.canonical_title))
+      end
     end
-    best_match, confidence = best_match_for(results)
-    return WorkerResult.new(candidate: nil, error: nil) if best_match.nil?
-
-    chapter_count = chapter_count_for(adapter, best_match)
-
-    WorkerResult.new(
-      candidate: Candidate.new(
+    candidates = matches.map do |result, confidence|
+      # Fetch chapter details only after the reader chooses an edition.
+      chapter_count = search_chapter_count(result)
+      Candidate.new(
         source: source,
-        result: best_match,
+        result: result,
         chapter_count: chapter_count,
         confidence: confidence,
-        linked: @linked_source_ids.include?(source.id)
-      ),
-      error: nil
-    )
+        linked: @linked_series_ids[source.id].present?
+      )
+    end
+    WorkerResult.new(candidates: candidates, error: nil)
   rescue Timeout::Error
-    WorkerResult.new(candidate: nil, error: "#{source.name}: search timed out after #{SEARCH_TIMEOUT_SECONDS}s")
+    WorkerResult.new(candidates: [], error: "#{source.name}: search timed out after #{SEARCH_TIMEOUT_SECONDS}s")
   rescue Scrapers::Errors::RateLimitError
-    WorkerResult.new(candidate: nil, error: "#{source.name}: blocked by anti-bot protection")
+    WorkerResult.new(candidates: [], error: "#{source.name}: rate limited; try again later")
   rescue Scrapers::Errors::SourceUnavailableError => e
-    WorkerResult.new(candidate: nil, error: "#{source.name}: #{e.message.truncate(100)}")
+    WorkerResult.new(candidates: [], error: "#{source.name}: #{e.message.truncate(100)}")
   rescue StandardError => e
-    WorkerResult.new(candidate: nil, error: "#{source.name}: #{e.message.truncate(100)}")
+    WorkerResult.new(candidates: [], error: "#{source.name}: #{e.message.truncate(100)}")
   end
 
-  def best_match_for(results)
-    Sources::TitleMatcher.best_match(@series.canonical_title, results, min_confidence: MIN_CONFIDENCE)
+  def linked_match_for(adapter, source_series_id)
+    linked_series = adapter.series(source_series_id)
+    result = ResultTypes::SearchResult.new(
+      id: source_series_id,
+      title: linked_series.title,
+      url: linked_series.url,
+      cover_url: linked_series.cover_url
+    )
+    [ result, Sources::TitleMatcher.score(@series.canonical_title, linked_series.title) ]
   end
 
-  def chapter_count_for(adapter, result)
-    if result.respond_to?(:chapter_count) && result.chapter_count.present?
-      return result.chapter_count.to_i
-    end
+  def matches_for(results)
+    results.filter_map do |result|
+      next if result.id.blank? || result.url.blank?
 
-    Timeout.timeout(CHAPTER_COUNT_TIMEOUT_SECONDS) do
-      adapter.chapters(result.url).size
-    end
-  rescue StandardError
-    nil
+      confidence = Sources::TitleMatcher.score(@series.canonical_title, result.title)
+      [ result, confidence ] if confidence >= MIN_CONFIDENCE
+    end.sort_by { |(_, confidence)| -confidence }
+      .uniq { |(result, _)| result.id.to_s }
+  end
+
+  def search_chapter_count(result)
+    result.chapter_count.to_i if result.respond_to?(:chapter_count) && result.chapter_count.present?
   end
 
   def sort_candidates(candidates)
     candidates.sort_by do |candidate|
-      [ candidate.chapter_count.nil? ? 1 : 0, -(candidate.chapter_count || 0), -candidate.confidence, candidate.source.name.to_s.downcase ]
+      [ -candidate.confidence, candidate.chapter_count.nil? ? 1 : 0, -(candidate.chapter_count || 0), candidate.source.name.to_s.downcase ]
     end
   end
 end

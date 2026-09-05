@@ -30,8 +30,8 @@
   </li>
 <% end %>
 
-<%= turbo_stream.replace "notification-count" do %>
-  <span id="notification-count" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full <%= unread_notification_count > 0 ? "bg-accent text-[10px] font-semibold text-accent-foreground" : "" %>">
+<%= turbo_stream.replace_all "[data-notification-count]" do %>
+  <span data-notification-count="true" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full <%= unread_notification_count > 0 ? "bg-accent text-[10px] font-semibold text-accent-foreground" : "" %>">
     <%= unread_notification_count > 0 ? (unread_notification_count > 9 ? "9+" : unread_notification_count) : "" %>
   </span>
 <% end %>

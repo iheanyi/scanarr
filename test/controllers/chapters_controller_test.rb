@@ -43,7 +43,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       get "/sources/weeb-central/#{series_url}/chapters/1"
 
       assert_response :success
-      assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/2"
+      assert_includes @response.body, chapter_public_path(public_id: chapters(:two).public_id)
     end
   end
 
@@ -52,7 +52,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       get "/sources/weeb-central/#{series_url}/chapters/2"
 
       assert_response :success
-      assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/1"
+      assert_includes @response.body, chapter_public_path(public_id: chapters(:one).public_id)
     end
   end
 
@@ -98,7 +98,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
       get "/sources/weeb-central/#{series_url}/chapters/10"
 
       assert_response :success
-      assert_includes @response.body, "/sources/weeb-central/#{series_url}/chapters/10.5"
+      assert_includes @response.body, chapter_public_path(public_id: @series.chapters.find_by!(chapter_number: "10.5").public_id)
     end
   end
 
@@ -214,7 +214,7 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_includes @response.body, "Re-download this chapter"
+    assert_includes @response.body, "Download again to server"
   end
 
   def test_update_progress_creates_progress
@@ -483,6 +483,64 @@ class ChaptersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Cancelled by user", file_asset.download_error
     assert_equal 0, file_asset.pages_downloaded
     assert_nil file_asset.pages_expected
+  end
+
+  test "canonical reader chooses replacement release while retaining chapter progress" do
+    source = sources(:two)
+    SeriesSource.create!(series: @series, source: source, source_series_id: "replacement")
+    chapter = chapters(:two)
+    release = chapter.releases.create!(source: source, format: "pages", source_url: "https://example.com/replacement/2")
+    user_series_follows(:one).update!(source_priority: [ source.key ])
+    progress = ChapterProgress.create!(user: users(:admin), chapter: chapter, page_index: 2, page_count: 3, status: "in_progress", progressed_at: Time.current)
+    adapter = FakeAdapter.new(pages: (1..3).map { |number| Scrapers::ResultTypes::Page.new(index: number, url: "https://example.com/image-#{number}.jpg") })
+    requested_urls = []
+    original_pages = adapter.method(:pages)
+    adapter.define_singleton_method(:pages) { |url| requested_urls << url; original_pages.call(url) }
+
+    with_adapter(adapter) do
+      get chapter_public_path(public_id: chapter.public_id)
+
+      assert_redirected_to source_series_chapter_path(source_slug: source.slug, series_slug: @series.to_param, chapter_identifier: chapter.public_id)
+      follow_redirect!
+
+      assert_response :success
+    end
+
+    assert_equal [ release.source_url ], requested_urls
+    assert_equal 2, progress.reload.page_index
+    assert_equal sources(:one), chapter.reload.source
+  end
+
+  test "replacement download uses its release URL and preserves the existing chapter" do
+    source = sources(:two)
+    SeriesSource.create!(series: @series, source: source, source_series_id: "replacement")
+    chapter = chapters(:two)
+    release = chapter.releases.create!(source: source, format: "pages", source_url: "https://example.com/replacement/2")
+
+    assert_no_difference "Chapter.count" do
+      post source_series_chapter_download_path(source_slug: source.slug, series_slug: @series.to_param, chapter_identifier: "2")
+    end
+
+    job = enqueued_jobs.find { |entry| entry[:job] == DownloadChapterJob }
+    arguments = ActiveJob::Arguments.deserialize(job[:args])
+
+    assert_equal release.source_url, arguments.first
+    assert_equal source.key, arguments.last[:source_key]
+    assert_equal "replacement", arguments.last[:source_series_id]
+    assert_equal release.id, arguments.last[:release_id]
+    assert_equal sources(:one), chapter.reload.source
+  end
+
+  test "canonical reader keeps using saved pages after a replacement is selected" do
+    source = sources(:two)
+    SeriesSource.create!(series: @series, source: source, source_series_id: "replacement")
+    chapter = chapters(:one)
+    chapter.releases.create!(source: source, format: "pages", source_url: "https://example.com/replacement/1")
+    user_series_follows(:one).update!(source_priority: [ source.key ])
+
+    get chapter_public_path(public_id: chapter.public_id)
+
+    assert_redirected_to source_series_chapter_path(source_slug: sources(:one).slug, series_slug: @series.to_param, chapter_identifier: chapter.public_id)
   end
 
   private

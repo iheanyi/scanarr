@@ -17,7 +17,7 @@ class CheckSourceForChaptersJob < ApplicationJob
     # Double-check at execution time (state may have changed since enqueue).
     # Broken/dead sources are skipped entirely; the health sweep's recheck
     # probe is the only scheduled traffic they receive.
-    return if source.rate_limited? || source.broken? || source.dead?
+    return if !source.enabled? || source.rate_limited? || source.broken? || source.dead?
 
     adapter = Scrapers::AdapterRegistry.for(source)
     series_source = series.series_sources.find_by(source: source)
@@ -27,39 +27,53 @@ class CheckSourceForChaptersJob < ApplicationJob
 
     chapters_data = adapter.chapters(source_series_id)
 
-    # Prefetch existing chapter identifiers to avoid per-chapter EXISTS queries (N+1)
-    existing_chapters = series.chapters
-      .pluck(:chapter_number, :language)
-      .map { |num, lang| [ num, lang ] }
-      .to_set
-
-    # Collect new chapters first, then batch notifications and downloads
+    # Keep chapter identity (and reading progress) stable across providers, while
+    # recording each provider's acquisition URL on its own release.
+    existing_chapters = series.chapters.includes(releases: :file_asset)
+      .index_by { |chapter| [ chapter.chapter_number, chapter.language || "en" ] }
     new_chapters = []
+    download_candidates = []
 
     chapters_data.each do |ch_data|
-      next if existing_chapters.include?([ ch_data.number, ch_data.language || "en" ])
+      key = [ ch_data.number.to_s, ch_data.language || "en" ]
+      chapter = existing_chapters[key]
 
-      chapter = series.chapters.create!(
-        chapter_number: ch_data.number,
-        title: ch_data.title,
-        language: ch_data.language || "en",
-        group: ch_data.group,
-        source: source,
-        source_url: ch_data.url,
-        published_at: ch_data.published_at
-      )
+      unless chapter
+        chapter = series.chapters.create!(
+          chapter_number: ch_data.number,
+          title: ch_data.title,
+          language: key.last,
+          group: ch_data.group,
+          source: source,
+          source_url: ch_data.url,
+          published_at: ch_data.published_at
+        )
+        existing_chapters[key] = chapter
+        NewChapterNotification.create!(user: follow.user, chapter: chapter)
+        new_chapters << chapter
+      end
 
-      NewChapterNotification.create!(
-        user: follow.user,
-        chapter: chapter
-      )
+      next if ch_data.url.blank?
 
-      new_chapters << chapter
+      release = chapter.releases.find { |candidate| candidate.source_id == source.id }
+      if release
+        release.update!(source_url: ch_data.url) if release.source_url != ch_data.url
+      else
+        release = chapter.releases.create!(source: source, source_url: ch_data.url, format: "pages")
+      end
+
+      # A previously discovered release may become preferred after replacement
+      # or switching from notify-only. Fill that gap, but leave failed assets
+      # for explicit retry and preserve saved/active downloads from any source.
+      needs_download = release.file_asset.nil? && chapter.releases.none? do |candidate|
+        candidate.file_asset&.download_status.in?(%w[complete queued pending downloading])
+      end
+      download_candidates << release if needs_download
     end
+    download_candidates.uniq!(&:id)
 
-    # Batch auto-download: enqueue all new chapters after creation is complete
-    if follow.auto_download? && new_chapters.any?
-      enqueue_downloads(new_chapters, follow, source, series_source)
+    if follow.auto_download? && download_candidates.any? && preferred_download_source_key(follow, series, source) == source.key
+      enqueue_downloads(download_candidates, series, source, series_source)
     end
 
     series_source&.record_check_success!
@@ -100,25 +114,38 @@ class CheckSourceForChaptersJob < ApplicationJob
     RATE_LIMIT_PATTERNS.any? { |pattern| message.include?(pattern) }
   end
 
-  def enqueue_downloads(chapters, follow, source, series_source)
-    # All chapters belong to the same series; cache the title to avoid N+1
-    series_title = chapters.first&.series&.canonical_title
+  def preferred_download_source_key(follow, series, fallback_source)
+    return fallback_source.key if follow.source_priority.blank?
 
-    chapters.each do |chapter|
-      next unless chapter.source_url.present?
+    eligible_keys = series.series_sources.includes(:source).filter_map do |mapping|
+      candidate = mapping.source
+      next if mapping.source_series_id.blank? || mapping.stale?
+      next unless candidate.enabled?
+      next if candidate.broken? || candidate.dead? || candidate.rate_limited?
 
-      # Use the follow's preferred source if set, otherwise use the discovering source
-      download_source = follow.preferred_source_for(chapter, source)
+      candidate.key
+    end.to_set
 
+    follow.source_priority.find { |key| eligible_keys.include?(key) } || fallback_source.key
+  end
+
+  def enqueue_downloads(releases, series, source, series_source)
+    releases.each do |release|
+      chapter = release.chapter
+
+      # A provider key must always travel with that provider's URL and series
+      # identifier. Substituting a preferred key here sends incompatible URLs
+      # to another adapter. The release also pins the existing chapter identity.
       DownloadChapterJob.perform_later(
-        chapter.source_url,
-        source_key: download_source.key,
-        series_title: series_title,
-        source_series_id: series_source&.source_series_id,
+        release.source_url,
+        source_key: source.key,
+        series_title: series.canonical_title,
+        source_series_id: series_source.source_series_id,
         chapter_number: chapter.chapter_number,
         chapter_title: chapter.title,
         language: chapter.language,
-        group: chapter.group
+        group: chapter.group,
+        release_id: release.id
       )
     end
   end
@@ -133,11 +160,11 @@ class CheckSourceForChaptersJob < ApplicationJob
       "ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full"
     end
 
-    html = %(<span id="notification-count" class="#{badge_classes}">#{unread_count > 0 ? display : ""}</span>)
+    html = %(<span data-notification-count="true" class="#{badge_classes}">#{unread_count > 0 ? display : ""}</span>)
 
     Turbo::StreamsChannel.broadcast_replace_to(
       [ user, :notifications ],
-      target: "notification-count",
+      targets: "[data-notification-count]",
       html: html
     )
   end

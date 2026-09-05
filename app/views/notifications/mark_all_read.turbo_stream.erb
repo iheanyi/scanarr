@@ -34,8 +34,8 @@
   </ul>
 <% end %>
 
-<%= turbo_stream.replace "notification-count" do %>
-  <span id="notification-count" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full">
+<%= turbo_stream.replace_all "[data-notification-count]" do %>
+  <span data-notification-count="true" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full">
   </span>
 <% end %>
 

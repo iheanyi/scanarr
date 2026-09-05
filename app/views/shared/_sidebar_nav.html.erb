@@ -1,96 +1,74 @@
-<% nav_link_attributes = lambda do |path|
-     base = "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors"
-     active = "bg-surface-2 text-foreground font-semibold"
-     inactive = "text-muted hover:text-foreground hover:bg-surface-2/60"
-     is_active = current_page?(path)
-
-     {
-       class: "#{base} #{is_active ? active : inactive}",
-       aria: (is_active ? { current: "page" } : nil),
-       data: { action: "click->drawer#close" }
-     }.compact
+<% nav_link_attributes = lambda do |path, active: current_page?(path)|
+     base = "flex min-h-11 items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors"
+     state = active ? "bg-surface-2 text-foreground font-semibold" : "text-muted hover:text-foreground hover:bg-surface-2/60"
+     { class: "#{base} #{state}", aria: (active ? { current: "page" } : nil), data: { action: "click->drawer#close" } }.compact
    end %>
+<% library_active = controller_name == "library" || controller_name == "series" || controller_name == "chapters" %>
+<% discover_active = controller_name == "sources" %>
+<% organize_paths = [ calendar_path, stats_path, export_path, source_migrations_path ] %>
+<% admin_active = controller_path.start_with?("admin/") || controller_name == "design_system" %>
 
 <div class="flex h-full flex-col gap-6">
-  <nav class="flex flex-col gap-6 text-sm text-muted" data-sidebar-nav="true">
-    <div class="space-y-2">
-      <span class="text-xs uppercase tracking-wider text-muted-2">Browse</span>
-      <div class="flex flex-col gap-0.5">
-        <%= link_to root_path, nav_link_attributes.call(root_path) do %>
-          <%= icon "house", class: "h-4 w-4 shrink-0" %>
-          Home
+  <nav aria-label="Main navigation" class="flex flex-col gap-5 text-sm text-muted" data-sidebar-nav="true">
+    <div class="space-y-0.5">
+      <%= link_to library_path, nav_link_attributes.call(library_path, active: library_active) do %>
+        <%= icon "book-open", class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+        Library
+      <% end %>
+      <%= link_to search_path, nav_link_attributes.call(search_path) do %>
+        <%= icon "search", class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+        Find manga
+      <% end %>
+      <%= link_to sources_path, nav_link_attributes.call(sources_path, active: discover_active) do %>
+        <%= icon "compass", class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+        Browse sources
+      <% end %>
+      <%= link_to reading_history_path, nav_link_attributes.call(reading_history_path) do %>
+        <%= icon "history", class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+        Reading history
+      <% end %>
+      <% if local_downloads_enabled? %>
+        <%= link_to offline_library_path, nav_link_attributes.call(offline_library_path) do %>
+          <%= icon "download", class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+          On this device
         <% end %>
-        <%= link_to library_path, nav_link_attributes.call(library_path) do %>
-          <%= icon "book-open", class: "h-4 w-4 shrink-0" %>
-          Library
-        <% end %>
-        <% if local_downloads_enabled? %>
-          <%= link_to offline_library_path, nav_link_attributes.call(offline_library_path) do %>
-            <%= icon "download", class: "h-4 w-4 shrink-0" %>
-            Offline
-          <% end %>
-        <% end %>
-        <%= link_to calendar_path, nav_link_attributes.call(calendar_path) do %>
-          <%= icon "calendar", class: "h-4 w-4 shrink-0" %>
-          Calendar
-        <% end %>
-        <%= link_to search_path, nav_link_attributes.call(search_path) do %>
-          <%= icon "search", class: "h-4 w-4 shrink-0" %>
-          Search
-        <% end %>
-        <%= link_to stats_path, nav_link_attributes.call(stats_path) do %>
-          <%= icon "chart-bar", class: "h-4 w-4 shrink-0" %>
-          Stats
-        <% end %>
-        <%= link_to reading_history_path, nav_link_attributes.call(reading_history_path) do %>
-          <%= icon "history", class: "h-4 w-4 shrink-0" %>
-          History
-        <% end %>
-        <%= link_to export_path, nav_link_attributes.call(export_path) do %>
-          <%= icon "archive", class: "h-4 w-4 shrink-0" %>
-          Export / Import
-        <% end %>
-        <%= link_to source_migrations_path, nav_link_attributes.call(source_migrations_path) do %>
-          <%= icon "arrow-right-left", class: "h-4 w-4 shrink-0" %>
-          Source Migration
-        <% end %>
-        <%= link_to settings_path, nav_link_attributes.call(settings_path) do %>
-          <%= icon "settings", class: "h-4 w-4 shrink-0" %>
-          Settings
-        <% end %>
-      </div>
+      <% end %>
     </div>
 
-    <% if current_user&.admin? %>
-    <div class="space-y-2">
-      <span class="text-xs uppercase tracking-wider text-muted-2">Admin</span>
-      <div class="flex flex-col gap-0.5">
-        <%= link_to admin_downloads_path, nav_link_attributes.call(admin_downloads_path) do %>
-          <%= icon "download", class: "h-4 w-4 shrink-0" %>
-          Downloads
-        <% end %>
-        <%= link_to "/admin/jobs", nav_link_attributes.call("/admin/jobs") do %>
-          <%= icon "cpu", class: "h-4 w-4 shrink-0" %>
-          Jobs
-        <% end %>
-        <%= link_to admin_scrapers_path, nav_link_attributes.call(admin_scrapers_path) do %>
-          <%= icon "activity", class: "h-4 w-4 shrink-0" %>
-          Scrapers
-        <% end %>
-        <%= link_to admin_backups_path, nav_link_attributes.call(admin_backups_path) do %>
-          <%= icon "hard-drive", class: "h-4 w-4 shrink-0" %>
-          Backups
-        <% end %>
-        <%= link_to admin_users_path, nav_link_attributes.call(admin_users_path) do %>
-          <%= icon "users", class: "h-4 w-4 shrink-0" %>
-          Users
-        <% end %>
-        <%= link_to design_system_path, nav_link_attributes.call(design_system_path) do %>
-          <%= icon "layers", class: "h-4 w-4 shrink-0" %>
-          Design System
+    <details class="group" <%= "open" if organize_paths.any? { |path| current_page?(path) } %>>
+      <summary class="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-3 text-sm text-muted hover:text-foreground">
+        Library tools
+        <%= icon "chevron-down", class: "h-4 w-4", aria: { hidden: true } %>
+      </summary>
+      <div class="mt-1 space-y-0.5">
+        <% [ [ calendar_path, "calendar", "Release calendar" ], [ stats_path, "chart-bar", "Reading stats" ], [ export_path, "archive", "Import / export" ], [ source_migrations_path, "arrow-right-left", "Change sources" ] ].each do |path, glyph, label| %>
+          <%= link_to path, nav_link_attributes.call(path) do %>
+            <%= icon glyph, class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+            <%= label %>
+          <% end %>
         <% end %>
       </div>
-    </div>
+    </details>
+
+    <% if current_user&.admin? %>
+      <details <%= "open" if admin_active %>>
+        <summary class="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-3 text-sm text-muted hover:text-foreground">
+          Server management
+          <%= icon "chevron-down", class: "h-4 w-4", aria: { hidden: true } %>
+        </summary>
+        <div class="mt-1 space-y-0.5">
+          <% [ [ admin_downloads_path, "download", "Server downloads" ], [ admin_source_catalog_path, "globe", "Source catalog" ], [ "/admin/jobs", "cpu", "Jobs" ], [ admin_scrapers_path, "activity", "Source health" ], [ admin_backups_path, "hard-drive", "Backups" ], [ admin_users_path, "users", "Users" ], [ design_system_path, "layers", "Design System" ] ].each do |path, glyph, label| %>
+            <%= link_to path, nav_link_attributes.call(path) do %>
+              <%= icon glyph, class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+              <%= label %>
+            <% end %>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+    <%= link_to settings_path, nav_link_attributes.call(settings_path) do %>
+      <%= icon "settings", class: "h-4 w-4 shrink-0", aria: { hidden: true } %>
+      Settings
     <% end %>
   </nav>
 
@@ -103,7 +81,7 @@
                 aria-label="Open notifications">
           <%= icon "bell", class: "h-4 w-4", aria: { hidden: true } %>
           <span>Notifications</span>
-          <span id="notification-count" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full <%= unread_notification_count > 0 ? "bg-accent text-[10px] font-semibold text-accent-foreground" : "" %>">
+          <span data-notification-count="true" class="ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full <%= unread_notification_count > 0 ? "bg-accent text-[10px] font-semibold text-accent-foreground" : "" %>">
             <%= unread_notification_count > 0 ? (unread_notification_count > 9 ? "9+" : unread_notification_count) : "" %>
           </span>
         </button>

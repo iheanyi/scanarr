@@ -81,3 +81,6 @@ application.registerActionOption("throttled", ({ element }: { element: Element }
 application.registerActionOption("whenOutside", ({ event, element }: { event: Event; element: Element }) => {
   return !element.contains(event.target as Node)
 })
+
+import SourceReplacementController from "./source_replacement_controller"
+application.register("source-replacement", SourceReplacementController)

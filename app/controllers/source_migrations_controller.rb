@@ -3,7 +3,8 @@
 class SourceMigrationsController < ApplicationController
   def index
     @sources = Source.all.order(:name)
-    @source_health = SeriesSource.group(:source_id).select(
+    @target_sources = @sources.select { |source| source.migration_target_rejection.nil? && Scrapers::AdapterRegistry.registered?(source.key) }
+    @source_health = SeriesSource.where(series_id: followed_series.select(:id)).group(:source_id).select(
       "source_id",
       "COUNT(*) as total_series",
       "SUM(CASE WHEN consecutive_failures >= 10 THEN 1 ELSE 0 END) as stale_count",
@@ -20,7 +21,8 @@ class SourceMigrationsController < ApplicationController
       from_source: from_source,
       to_source: to_source,
       user: current_user,
-      series_ids: selected_series_ids
+      series_ids: selected_series_ids,
+      auto_link: false
     ).preview
 
     unless result.success
@@ -36,9 +38,8 @@ class SourceMigrationsController < ApplicationController
     @from_source = from_source
     @to_source = to_source
     @result = result
-    @series_chapter_counts = build_chapter_count_map(result)
 
-    render :preview, status: :unprocessable_entity
+    render :preview, formats: [ :html ]
   end
 
   def create
@@ -49,30 +50,25 @@ class SourceMigrationsController < ApplicationController
       from_source: from_source,
       to_source: to_source,
       user: current_user,
-      series_ids: selected_series_ids
+      series_ids: selected_series_ids,
+      auto_link: false
     ).execute!
 
-    if result.success
-      message = "Migration complete! #{result.migrated.size} series migrated, " \
-                "#{result.already_on_target.size} already on target, " \
-                "#{result.no_match.size} could not be matched."
-      variant = :success
-    else
-      message = "Migration had errors: #{result.errors.first(3).join('; ')}"
-      variant = :danger
-    end
+    queue_replacement_checks(result, to_source)
 
-    respond_with_toast(
-      redirect_path: source_migrations_path,
-      message: message,
-      variant: variant,
-      turbo_redirect: true
-    )
+    @from_source = from_source
+    @to_source = to_source
+    @result = result
+    render :complete, formats: [ :html ]
   end
 
   def series_preview
     @series = Series.find_by_param!(params[:series_slug])
-    @from_source = Source.find_by(id: params[:from_source_id]) || @series.primary_source || @series.sources.first
+    unless followed_series.exists?(id: @series.id)
+      redirect_to library_series_path(series_slug: @series.to_param), alert: "Follow this series before choosing a replacement source."
+      return
+    end
+    @from_source = @series.sources.find_by(id: params[:from_source_id]) || preferred_source(@series)
     if @from_source.blank?
       respond_with_toast(
         redirect_path: library_series_path(series_slug: @series.to_param),
@@ -83,17 +79,33 @@ class SourceMigrationsController < ApplicationController
       return
     end
 
-    @current_chapter_count = @series.chapters.where(source: @from_source).count
-
-    discovery = SourceMigrationDiscoveryService.new(series: @series, from_source: @from_source).call
-    @candidates = discovery.candidates
-    @discovery_errors = discovery.errors
+    @target_sources = Source.order(:name).where.not(id: @from_source.id).select do |source|
+      source.migration_target_rejection.nil? && Scrapers::AdapterRegistry.registered?(source.key)
+    end
+    @candidates = []
+    @discovery_errors = []
+    if params[:matches_only] == "1"
+      if @target_sources.any? { |source| source.id.to_s == params[:to_source_id].to_s }
+        discovery = SourceMigrationDiscoveryService.new(series: @series, from_source: @from_source, source_id: params[:to_source_id]).call
+        @candidates = discovery.candidates
+        @discovery_errors = discovery.errors
+      else
+        @discovery_errors = [ "This provider is no longer available as a replacement. Choose another provider." ]
+      end
+      response.headers["Cache-Control"] = "no-store"
+      render partial: "source_migrations/matches", formats: [ :html ]
+    end
   end
 
   def series_create
-    @series = Series.find_by_param!(params[:series_slug])
-    @from_source = Source.find(params[:from_source_id])
+    @series = followed_series.find_by_param!(params[:series_slug])
+    @from_source = @series.sources.find(params[:from_source_id])
     @to_source = Source.find(params[:to_source_id])
+
+    if @from_source == @to_source
+      redirect_to library_series_migration_path(series_slug: @series.to_param, from_source_id: @from_source.id), alert: "Choose a different replacement source."
+      return
+    end
 
     # Validate the target before link_series_to_target! so a rejected
     # migration cannot leave behind a fresh SeriesSource link
@@ -130,14 +142,16 @@ class SourceMigrationsController < ApplicationController
       series_ids: [ @series.id ]
     ).execute!
 
+    queue_replacement_checks(result, @to_source)
+
     if result.success && result.migrated.any?
-      message = "Migrated #{@series.canonical_title} to #{@to_source.name}"
+      message = "Now using #{@to_source.name} for #{@series.canonical_title}. Checking for chapters in the background."
       variant = :success
-    elsif result.success
+    elsif result.success && result.already_on_target.any?
       message = "#{@series.canonical_title} was already using #{@to_source.name}"
       variant = :info
     else
-      message = "Migration had errors: #{result.errors.first(3).join('; ')}"
+      message = "Source unchanged. #{result.errors.first(3).join('; ').presence || 'No matching series was found.'}"
       variant = :danger
     end
 
@@ -159,6 +173,23 @@ class SourceMigrationsController < ApplicationController
 
   private
 
+  def followed_series
+    Series.where(library_series_id: current_user.user_series_follows.select(:library_series_id))
+  end
+
+  def preferred_source(series)
+    priority = current_user.user_series_follows.find_by(library_series_id: series.library_series_id)&.source_priority || []
+    sources = series.sources.to_a
+    priority.filter_map { |key| sources.find { |source| source.key == key } }.first || series.primary_source || sources.first
+  end
+
+  def queue_replacement_checks(result, source)
+    result.migrated.each do |series|
+      follow = current_user.user_series_follows.find_by(library_series_id: series.library_series_id)
+      CheckSourceForChaptersJob.perform_later(series.id, follow.id, source.id) if follow
+    end
+  end
+
   def selected_series_ids
     return nil unless params.key?(:series_ids)
 
@@ -178,15 +209,5 @@ class SourceMigrationsController < ApplicationController
     series_source = @series.series_sources.find_or_initialize_by(source: @to_source)
     series_source.source_series_id = source_series_id
     series_source.save!
-  end
-
-  def build_chapter_count_map(result)
-    series_ids = (result.already_on_target + result.link_candidates + result.no_match).map(&:id).uniq
-    return {} if series_ids.empty?
-
-    source_ids = [ @from_source.id, @to_source.id ]
-    Chapter.where(series_id: series_ids, source_id: source_ids)
-           .group(:series_id, :source_id)
-           .count
   end
 end

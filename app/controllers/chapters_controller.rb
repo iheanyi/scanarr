@@ -45,7 +45,7 @@ class ChaptersController < ApplicationController
     @source_pages = []
     @source_error = nil
     if @pages.empty?
-      source_url = @chapter.source_url || @release&.source_url
+      source_url = acquisition_url(@release)
       if source_url.present?
         begin
           @source_pages = fetch_source_pages(source_url)
@@ -67,7 +67,7 @@ class ChaptersController < ApplicationController
 
   def enqueue_download
     series_source = @series.series_sources.find_or_create_by!(source: @source)
-    source_url = @chapter.source_url || latest_release&.source_url
+    source_url = acquisition_url(latest_release)
 
     if source_url.blank?
       redirect_to source_series_chapter_path(
@@ -300,7 +300,7 @@ class ChaptersController < ApplicationController
     end
 
     if pages.empty?
-      source_url = @chapter.source_url || release&.source_url
+      source_url = acquisition_url(release)
       pages = fetch_source_pages(source_url).map do |page|
         {
           index: page.index,
@@ -343,10 +343,10 @@ class ChaptersController < ApplicationController
   def redirect
     chapter = Chapter.find_by!(public_id: params[:public_id])
     series = chapter.series
-    source = chapter.source || chapter.releases.first&.source
+    source = preferred_reading_source(chapter)
     raise ActiveRecord::RecordNotFound, "Source not found" unless source
 
-    identifier = chapter.chapter_number.presence || chapter.public_id
+    identifier = chapter.public_id
     redirect_to source_series_chapter_path(
       source_slug: source_slug(source),
       series_slug: series.to_param,
@@ -363,7 +363,7 @@ class ChaptersController < ApplicationController
                     .find_by_param!(params[:series_slug])
 
     identifier = params[:chapter_identifier].to_s
-    chapter_scope = @series.chapters.where(source: @source)
+    chapter_scope = chapters_for_source
     @chapter = chapter_scope.find_by(public_id: identifier) || chapter_scope.find_by(chapter_number: identifier)
     raise ActiveRecord::RecordNotFound, "Chapter not found" unless @chapter
   end
@@ -378,21 +378,48 @@ class ChaptersController < ApplicationController
       fa = release.file_asset
       next unless fa&.download_status == "complete"
 
-      first_page = fa.pages.order(:position).first
-      blob = first_page&.image_attachment&.blob
-      next unless blob
-
-      if ActiveStorage::Blob.service.exist?(blob.key)
-        return release
-      end
+      return release if readable_download?(release)
     end
 
     # Fall back to newest release (may have no download yet, or all are broken)
     releases.first
   end
 
+  def acquisition_url(release)
+    release&.source_url.presence || (@chapter.source_url if @chapter.source_id == @source.id)
+  end
+
+  def chapters_for_source
+    @series.chapters.where(source: @source).or(
+      @series.chapters.where(id: Release.where(source: @source).select(:chapter_id))
+    )
+  end
+
+  def readable_download?(release)
+    asset = release.file_asset
+    return false unless asset&.download_status == "complete"
+
+    blob = asset.pages.order(:position).first&.image_attachment&.blob
+    blob && blob.service.exist?(blob.key)
+  end
+
+  def preferred_reading_source(chapter)
+    releases = chapter.releases.includes(:source, :file_asset).order(created_at: :desc).to_a
+    saved = releases.find { |release| release.source && readable_download?(release) }
+    return saved.source if saved
+
+    follow = current_user&.user_series_follows&.find_by(library_series_id: chapter.series.library_series_id)
+    Array(follow&.source_priority).each do |key|
+      candidate = releases.find { |release| release.source&.key == key && release.source_url.present? }
+      return candidate.source if candidate
+      return chapter.source if chapter.source&.key == key && chapter.source_url.present?
+    end
+
+    chapter.source || releases.find { |release| release.source_url.present? }&.source
+  end
+
   def set_navigation
-    base = @series.chapters.where(source: @source)
+    base = @series.chapters.where(language: @chapter.language)
     current_val = @chapter.chapter_number_value
 
     if current_val

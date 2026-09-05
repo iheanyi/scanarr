@@ -136,6 +136,9 @@
           </div>
         <% end %>
 
+        <% if @user_follow&.source_priority&.first == @source.key && @series_source&.last_checked_at.nil? && !@check_error %>
+          <p class="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted">Waiting for the first chapter check from <%= @source.name %>. Saved chapters remain available.</p>
+        <% end %>
         <% if @check_error %>
           <div class="mt-2 flex items-start gap-2 rounded-2xl border border-danger/30 bg-danger-soft p-3">
             <%= icon "alert-triangle", class: "mt-0.5 h-4 w-4 shrink-0 text-danger" %>
@@ -172,12 +175,14 @@
 
                 <% if user_signed_in? %>
                   <%= render UI::FollowControlsComponent.new(series: @series, user_follow: @user_follow) %>
+                  <% if @user_follow %>
                   <%= render UI::ButtonComponent.new(
                     variant: :ghost,
                     size: :sm,
                     href: library_series_migration_path(series_slug: @series.to_param, from_source_id: @source.id)
                   ) do %>
-                    Migrate
+                    Replace source
+                  <% end %>
                   <% end %>
                 <% end %>
               </div>
@@ -357,7 +362,7 @@
     <% else %>
       <%= render UI::EmptyStateComponent.new(
         title: "No chapters available from this source yet",
-        description: "You can retry this source now or migrate your followed series to another source that has chapters.",
+        description: "Try another provider to find chapters. Your saved library stays intact.",
         compact: true
       ) do |empty| %>
         <% empty.with_icon do %>
@@ -371,8 +376,8 @@
             <%= link_to "Browse source",
                         source_browse_path(source_slug: @source.slug),
                         class: "inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-muted hover:text-foreground hover:border-muted" %>
-            <%= link_to "Try source migration",
-                        source_migrations_path(from_source_id: @source.id),
+            <%= link_to "Find a replacement source",
+                        library_series_migration_path(series_slug: @series.to_param, from_source_id: @source.id),
                         class: "inline-flex items-center rounded-md border border-accent/40 px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft" %>
           </div>
         <% end %>

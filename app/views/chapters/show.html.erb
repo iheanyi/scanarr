@@ -10,7 +10,7 @@
 <% is_rtl = @reading_style == "right_to_left" %>
 <% is_webtoon = @reading_style == "webtoon" %>
 <% is_paged_vertical = @reading_style == "vertical" %>
-<% next_chapter_url = @next_chapter ? source_series_chapter_path(source_slug: source_slug(@source), series_slug: @series.to_param, chapter_identifier: chapter_identifier(@next_chapter)) : nil %>
+<% next_chapter_url = @next_chapter ? chapter_public_path(public_id: @next_chapter.public_id) : nil %>
 <% next_chapter_title = @next_chapter ? "Chapter #{@next_chapter.chapter_number}" : nil %>
 <% offline_status = @offline_manifest_entry&.status || "unpinned" %>
 <% offline_capable = local_downloads_enabled? && (@chapter.source_url.present? || @release&.source_url.present? || @file_asset&.download_status == "complete") %>
@@ -78,42 +78,42 @@
                 <% if offline_capable %>
                   <span data-offline-cache-target="availableIndicator"
                         class="inline-flex h-4 w-4 items-center justify-center text-success"
-                        title="Available offline"
-                        aria-label="Available offline"
+                        title="Saved on this device"
+                        aria-label="Saved on this device"
                         <%= "hidden" unless offline_available %>>
                     <%= icon "check", class: "h-2.5 w-2.5" %>
-                    <span class="sr-only">Available offline</span>
+                    <span class="sr-only">Saved on this device</span>
                   </span>
                 <% end %>
               </div>
               <% if offline_capable %>
                 <div class="group/offline inline-flex items-center gap-1 rounded-full px-0.5 py-0.5">
-                  <span class="max-w-0 overflow-hidden whitespace-nowrap px-0 text-[10px] text-muted-2 tabular-nums text-right opacity-0 transition-all duration-150 group-hover/offline:max-w-10 group-hover/offline:px-1 group-hover/offline:opacity-100 group-focus-within/offline:max-w-10 group-focus-within/offline:px-1 group-focus-within/offline:opacity-100"
+                  <span class="whitespace-nowrap px-1 text-xs text-muted tabular-nums"
                         <%= "hidden" unless show_offline_cancel_icon %>
-                        data-offline-cache-target="progress"></span>
+                        data-offline-cache-target="progress" role="status" aria-live="polite"></span>
                   <button type="button"
-                          class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-info/35 hover:bg-surface hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          class="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/50 bg-surface/40 px-3 text-xs text-muted transition-colors hover:border-info/35 hover:bg-surface hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           data-action="click->offline-cache#download"
                           data-offline-cache-target="downloadButton"
                           <%= "hidden" unless show_offline_download_icon %>>
                     <%= icon "download", class: "h-3.5 w-3.5" %>
-                    <span class="sr-only">Download for offline</span>
+                    <span>Save on this device</span>
                   </button>
                   <button type="button"
-                          class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-warning/35 hover:bg-surface hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-warning/35 hover:bg-surface hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           data-action="click->offline-cache#cancel"
                           data-offline-cache-target="cancelButton"
                           <%= "hidden" unless show_offline_cancel_icon %>>
                     <%= icon "x", class: "h-3.5 w-3.5" %>
-                    <span class="sr-only">Cancel offline download</span>
+                    <span class="sr-only">Cancel device download</span>
                   </button>
                   <button type="button"
-                          class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-danger/35 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/50 bg-surface/40 text-muted-2 transition-colors hover:border-danger/35 hover:bg-surface hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           data-action="click->offline-cache#remove"
                           data-offline-cache-target="removeButton"
                           <%= "hidden" unless show_offline_remove_icon %>>
                     <%= icon "trash-2", class: "h-3.5 w-3.5" %>
-                    <span class="sr-only">Remove offline chapter</span>
+                    <span class="sr-only">Remove from this device</span>
                   </button>
                 </div>
               <% end %>
@@ -142,11 +142,7 @@
     <% if @previous_chapter || @next_chapter %>
       <div class="inline-flex items-center rounded-md border border-border bg-surface/60 p-1">
         <% if @previous_chapter %>
-          <%= link_to source_series_chapter_path(
-                        source_slug: source_slug(@source),
-                        series_slug: @series.to_param,
-                        chapter_identifier: chapter_identifier(@previous_chapter)
-                      ),
+          <%= link_to chapter_public_path(public_id: @previous_chapter.public_id),
                       class: "inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-foreground",
                       data: { turbo_preload: "" } do %>
             <%= icon "chevron-left", class: "h-3.5 w-3.5" %>
@@ -157,11 +153,7 @@
           <span class="mx-1 h-4 w-px bg-border"></span>
         <% end %>
         <% if @next_chapter %>
-          <%= link_to source_series_chapter_path(
-                        source_slug: source_slug(@source),
-                        series_slug: @series.to_param,
-                        chapter_identifier: chapter_identifier(@next_chapter)
-                      ),
+          <%= link_to chapter_public_path(public_id: @next_chapter.public_id),
                       class: "inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-foreground",
                       data: { turbo_preload: "" } do %>
             Next
@@ -170,13 +162,16 @@
         <% end %>
       </div>
     <% end %>
+    <% if offline_capable %>
+      <p data-offline-cache-target="error" role="alert" class="text-sm text-danger" hidden></p>
+    <% end %>
     <% if @chapter.source_url.present? || @release&.source_url.present? %>
       <% download_label = if @download_in_progress
                             @file_asset&.download_status == "downloading" ? "Downloading..." : "Download queued"
          elsif @file_asset.present?
-                            "Re-download this chapter"
+                            "Download again to server"
          else
-                            "Download this chapter"
+                            "Save to server"
          end %>
       <%= form_with url: source_series_chapter_download_path(
                       source_slug: source_slug(@source),

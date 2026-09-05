@@ -157,6 +157,17 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
 
   # --- Phase 3: Rate Limit Detection ---
 
+  test "returns early if source was disabled after enqueue" do
+    @source.update!(enabled: false)
+
+    with_raising_adapter(RuntimeError.new("Disabled source should not be contacted")) do
+      CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+    end
+
+    assert_nil @series_source.reload.last_checked_at
+    assert_equal 0, @series_source.consecutive_failures
+  end
+
   test "returns early if source is rate-limited" do
     @source.update!(rate_limited_until: 5.minutes.from_now)
 
@@ -334,21 +345,134 @@ class CheckSourceForChaptersJobTest < ActiveJob::TestCase
     ]
 
     with_fake_adapter(chapter_data) do
-      # The job should use a single pluck to check existing chapters,
-      # not one EXISTS per chapter_data item.
-      # With 7 chapters_data items, an N+1 would fire 7+ EXISTS queries.
-      # The fixed version fires 1 pluck + creates for the 2 new ones.
-      query_count = count_queries do
+      existence_queries = []
+      subscriber = ->(_name, _started, _finished, _id, payload) do
+        existence_queries << payload[:sql] if payload[:sql].match?(/SELECT 1 AS one FROM "chapters"/) && payload[:sql].include?('"chapter_number"')
+      end
+      ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
         CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
       end
 
-      # Should be well under 7 chapter-existence queries.
-      # A rough budget: pluck(1) + find_by(2) + creates(~6 for 2 chapters + 2 notifications) + broadcast(~3) + success update(1)
-      # The key assertion: query count should NOT scale linearly with chapter_data size.
-      assert_operator query_count, :<, 30, "Expected fewer than 30 queries (got #{query_count}); possible N+1 on chapter existence checks"
+      assert_empty existence_queries, "Chapter matching should use the prefetched index"
     end
 
     assert_equal 2, @series.chapters.where(chapter_number: %w[600 601]).count
+  end
+
+  test "replacement creates a release on the existing chapter and downloads with matching provider identifiers" do
+    chapter = chapters(:three)
+    @follow.update!(download_policy: :auto_download, source_priority: [ sources(:two).key, @source.key ])
+    data = ResultTypes::Chapter.new(number: chapter.chapter_number, language: "en", url: "https://weebcentral.com/chapters/replacement", group: "Different group")
+
+    with_fake_adapter([ data, data ]) do
+      assert_no_difference [ "Chapter.count", "NewChapterNotification.count" ] do
+        assert_enqueued_jobs 1, only: DownloadChapterJob do
+          CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+        end
+      end
+    end
+
+    replacement = chapter.releases.find_by!(source: @source)
+    job = enqueued_jobs.find { |entry| entry[:job] == DownloadChapterJob }
+    arguments = ActiveJob::Arguments.deserialize(job[:args])
+
+    assert_equal data.url, arguments.first
+    assert_equal @source.key, arguments.last[:source_key]
+    assert_equal @series_source.source_series_id, arguments.last[:source_series_id]
+    assert_equal replacement.id, arguments.last[:release_id]
+    assert_equal sources(:two), chapter.reload.source
+    assert_equal "failed", file_assets(:three).reload.download_status
+  end
+
+  test "replacement availability preserves saved downloads and does not notify twice" do
+    source = sources(:two)
+    source.update!(enabled: true)
+    SeriesSource.create!(series: @series, source: source, source_series_id: "replacement")
+    @follow.update!(download_policy: :auto_download)
+    chapter = chapters(:one)
+    data = ResultTypes::Chapter.new(number: chapter.chapter_number, language: "en", url: "https://example.com/new/chapter-1")
+
+    with_fake_adapter([ data ]) do
+      assert_no_difference [ "Chapter.count", "NewChapterNotification.count", "FileAsset.count" ] do
+        assert_no_enqueued_jobs only: DownloadChapterJob do
+          CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, source.id)
+        end
+      end
+    end
+
+    assert_equal data.url, chapter.releases.find_by!(source: source).source_url
+    assert_equal "complete", file_assets(:one).reload.download_status
+    assert_equal @source, chapter.reload.source
+  end
+
+  test "auto download waits for the preferred linked provider while still recording other releases" do
+    preferred = sources(:two)
+    preferred.update!(enabled: true)
+    SeriesSource.create!(series: @series, source: preferred, source_series_id: "preferred-series")
+    @follow.update!(download_policy: :auto_download, source_priority: [ preferred.key, @source.key ])
+    data = ResultTypes::Chapter.new(number: "901", language: "en", url: "https://weebcentral.com/chapters/901")
+
+    with_fake_adapter([ data ]) do
+      assert_no_enqueued_jobs only: DownloadChapterJob do
+        CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+      end
+    end
+
+    chapter = @series.chapters.find_by!(chapter_number: "901")
+
+    assert_equal data.url, chapter.releases.find_by!(source: @source).source_url
+
+    preferred_data = ResultTypes::Chapter.new(number: "901", language: "en", url: "https://example.com/preferred/901")
+
+    with_fake_adapter([ preferred_data ]) do
+      assert_enqueued_with(job: DownloadChapterJob, args: ->(args) { args.first == preferred_data.url && args.last[:source_key] == preferred.key }) do
+        assert_no_difference "Chapter.count" do
+          CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, preferred.id)
+        end
+      end
+    end
+  end
+
+  test "auto download falls back when preferred linked provider is unavailable" do
+    preferred = sources(:two)
+    SeriesSource.create!(series: @series, source: preferred, source_series_id: "preferred-series")
+    @follow.update!(download_policy: :auto_download, source_priority: [ preferred.key, @source.key ])
+    preferred.update!(health_status: "broken")
+    data = ResultTypes::Chapter.new(number: "902", language: "en", url: "https://weebcentral.com/chapters/902")
+
+    with_fake_adapter([ data ]) do
+      assert_enqueued_with(job: DownloadChapterJob, args: ->(args) { args.first == data.url && args.last[:source_key] == @source.key }) do
+        CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+      end
+    end
+  end
+
+  test "auto download picks up an existing preferred release after notify only" do
+    @follow.update!(download_policy: :notify_only, source_priority: [ @source.key ])
+    data = ResultTypes::Chapter.new(number: "903", language: "en", url: "https://weebcentral.com/chapters/903")
+
+    with_fake_adapter([ data ]) do
+      assert_no_enqueued_jobs only: DownloadChapterJob do
+        CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+      end
+
+      chapter = @series.chapters.find_by!(chapter_number: "903")
+      release = chapter.releases.find_by!(source: @source)
+      @follow.update!(download_policy: :auto_download)
+
+      assert_no_difference [ "Chapter.count", "Release.count", "NewChapterNotification.count" ] do
+        assert_enqueued_with(job: DownloadChapterJob, args: ->(args) { args.last[:release_id] == release.id }) do
+          CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+        end
+      end
+
+      clear_enqueued_jobs
+      release.create_file_asset!(format: "pages", download_status: "failed", download_error: "Needs retry")
+
+      assert_no_enqueued_jobs only: DownloadChapterJob do
+        CheckSourceForChaptersJob.perform_now(@series.id, @follow.id, @source.id)
+      end
+    end
   end
 
   private

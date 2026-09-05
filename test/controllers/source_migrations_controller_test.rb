@@ -33,13 +33,14 @@ class SourceMigrationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil SeriesSource.find_by(series: series, source: sources(:two))
   end
 
-  test "create turbo request redirects with flash" do
+  test "bulk replacement shows persistent results instead of losing unmatched titles in a toast" do
     post source_migrations_path,
          params: { from_source_id: sources(:one).id, to_source_id: sources(:two).id },
          headers: { "ACCEPT" => "text/vnd.turbo-stream.html" }
 
-    assert_redirected_to source_migrations_path
-    assert_includes flash[:notice], "Migration complete!"
+    assert_response :success
+    assert_select "h1", text: "Source replacement results"
+    assert_select "a", text: series(:one).canonical_title
   end
 
   test "series_create links candidate and migrates selected series" do
@@ -158,7 +159,116 @@ class SourceMigrationsControllerTest < ActionDispatch::IntegrationTest
     assert_nil SeriesSource.find_by(series: series, source: to_source)
   end
 
+  test "replacement starts without network discovery and only offers usable providers" do
+    sources(:two).update!(health_status: "broken")
+    with_stubbed_discovery(->(**) { raise "Unexpected network discovery" }) do
+      get library_series_migration_path(series_slug: series(:one).to_param)
+    end
+
+    assert_response :success
+    assert_select "h1", text: "Replace source"
+    assert_select "option[value='#{sources(:two).id}']", 0
+    assert_includes response.body, "Your saved chapters, reading history"
+  end
+
+  test "replacement shell schedules all eligible providers without waiting for discovery" do
+    sources(:two).update!(key: "mangadex")
+    with_stubbed_discovery(->(**) { raise "The shell must not call providers" }) do
+      get library_series_migration_path(series_slug: series(:one).to_param)
+    end
+
+    assert_response :success
+    assert_select "option[value='']", text: "All providers"
+    assert_select "[data-source-replacement-target='provider'][data-source-id='#{sources(:two).id}']"
+    assert_select "[data-source-replacement-target='provider'][data-source-id='#{sources(:mature).id}']"
+    assert_select "[data-source-replacement-target='provider'][data-source-id='#{sources(:one).id}']", 0
+    assert_includes response.body, "keep your current source"
+  end
+
+  test "provider becoming unavailable yields a retryable provider result" do
+    sources(:two).update!(health_status: "broken")
+    get library_series_migration_path(series_slug: series(:one).to_param, to_source_id: sources(:two).id, matches_only: 1)
+
+    assert_response :success
+    assert_select "[data-source-matches='#{sources(:two).id}'][data-source-error='true']"
+    assert_includes response.body, "no longer available"
+    assert_select "input[value='Use this match']", 0
+  end
+
+  test "replacement is scoped to the users followed series before any shared link is written" do
+    user_series_follows(:one).destroy!
+
+    assert_no_difference "SeriesSource.count" do
+      post library_series_migrate_path(series_slug: series(:one).to_param), params: {
+        from_source_id: sources(:one).id, to_source_id: sources(:two).id,
+        target_series_url: "https://example.com/title"
+      }
+    end
+
+    assert_response :not_found
+  end
+
+  test "successful replacement checks the new provider immediately" do
+    series = series(:one)
+    SeriesSource.create!(series: series, source: sources(:two), source_series_id: "TARGET")
+    user_series_follows(:one).update!(source_priority: [ sources(:one).key ])
+
+    assert_enqueued_with(job: CheckSourceForChaptersJob, args: [ series.id, user_series_follows(:one).id, sources(:two).id ]) do
+      post library_series_migrate_path(series_slug: series.to_param), params: {
+        from_source_id: sources(:one).id, to_source_id: sources(:two).id
+      }
+    end
+
+    assert_redirected_to library_series_path(series_slug: series.to_param)
+    assert_includes flash[:notice], "Checking for chapters in the background"
+  end
+
+  test "selected provider discovery has a review step without another confirmation dialog" do
+    sources(:two).update!(key: "mangadex")
+    candidate = SourceMigrationDiscoveryService::Candidate.new(
+      source: sources(:two), result: Scrapers::ResultTypes::SearchResult.new(id: "TARGET", title: "One Piece", url: "https://example.com/title"),
+      chapter_count: 12, confidence: 1.0, linked: false
+    )
+    second = candidate.with(result: Scrapers::ResultTypes::SearchResult.new(id: "EDITION2", title: "One Piece — Color Edition", url: "https://example.com/color"))
+    discovery = Object.new
+    discovery.define_singleton_method(:call) { SourceMigrationDiscoveryService::Result.new(candidates: [ candidate, second ], errors: []) }
+    received_source_id = nil
+    with_stubbed_discovery(->(**args) { received_source_id = args[:source_id]; discovery }) do
+      get library_series_migration_path(series_slug: series(:one).to_param, to_source_id: sources(:two).id, matches_only: 1)
+    end
+
+    assert_response :success
+    assert_equal sources(:two).id.to_s, received_source_id
+    assert_select "input[type=submit][value='Use this match']"
+    assert_select "form[action='#{library_series_migrate_path(series_slug: series(:one).to_param)}'] [data-turbo-confirm]", 0
+    assert_select "input[name=target_series_url][value='https://example.com/color']"
+    assert_select "input[name=target_series_url][value='https://example.com/title']"
+
+    adapter = Object.new
+    adapter.define_singleton_method(:series) do |url|
+      raise "Wrong match selected" unless url == "https://example.com/color"
+      Scrapers::ResultTypes::Series.new(id: "EDITION2", title: "One Piece — Color Edition", url: url)
+    end
+    with_stubbed_adapter_registry(registered: true, adapter: adapter) do
+      post library_series_migrate_path(series_slug: series(:one).to_param), params: {
+        from_source_id: sources(:one).id, to_source_id: sources(:two).id,
+        target_series_url: "https://example.com/color"
+      }
+    end
+
+    assert_equal "EDITION2", series(:one).series_sources.find_by!(source: sources(:two)).source_series_id
+    assert_redirected_to library_series_path(series_slug: series(:one).to_param)
+  end
+
   private
+
+  def with_stubbed_discovery(factory)
+    original = SourceMigrationDiscoveryService.method(:new)
+    SourceMigrationDiscoveryService.define_singleton_method(:new, factory)
+    yield
+  ensure
+    SourceMigrationDiscoveryService.define_singleton_method(:new, original)
+  end
 
   def with_stubbed_adapter_registry(registered:, adapter:)
     original_registered = Scrapers::AdapterRegistry.method(:registered?)

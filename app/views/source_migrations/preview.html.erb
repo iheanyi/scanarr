@@ -1,167 +1,45 @@
-<div class="space-y-8 max-w-4xl">
-  <% selectable_count = @result.already_on_target.size %>
-  <% auto_link_count = @result.link_candidates.size %>
+<div class="max-w-4xl space-y-6">
+  <%= render UI::PageHeaderComponent.new(title: "Review source replacement", description: "#{@from_source.name} → #{@to_source.name}") %>
+  <p class="text-sm text-muted">Saved chapters, reading history, and download settings stay unchanged. Only selected series will prefer the replacement provider.</p>
 
-  <%= render UI::PageHeaderComponent.new(
-    title: "Migration Preview",
-    description: "Review what will happen when migrating from #{@from_source.name} to #{@to_source.name}."
-  ) %>
-
-  <%# Summary %>
-  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
-    <h2 class="text-lg font-semibold">Migration Summary</h2>
-
-    <div class="rounded-md bg-surface-2 p-4">
-      <dl class="grid grid-cols-2 gap-2 text-sm">
-        <dt class="text-muted">From</dt>
-        <dd class="font-semibold"><%= @from_source.name %></dd>
-        <dt class="text-muted">To</dt>
-        <dd class="font-semibold"><%= @to_source.name %></dd>
-        <dt class="text-muted">Selectable now</dt>
-        <dd class="font-semibold text-success tabular-nums"><%= selectable_count %></dd>
-        <dt class="text-muted">Auto-link candidates</dt>
-        <dd class="font-semibold text-warning tabular-nums"><%= auto_link_count %></dd>
-      </dl>
-      <p class="mt-3 text-sm text-muted">
-        Linked series migrate directly. Checked auto-link candidates are searched on the target during migration and linked when an exact title match is found; anything without a match is left unchanged.
-      </p>
-    </div>
-  </section>
-
-  <%= form_with url: source_migrations_path, method: :post, class: "space-y-6" do |f| %>
-    <%= f.hidden_field :from_source_id, value: @from_source.id %>
-    <%= f.hidden_field :to_source_id, value: @to_source.id %>
-    <%= hidden_field_tag "series_ids[]", "" %>
-
-    <% if selectable_count.positive? %>
-      <section class="rounded-lg border border-border bg-surface p-6 space-y-4" data-controller="selection-toggle">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-lg font-semibold text-success">Select Series to Migrate (<%= selectable_count %>)</h2>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-muted" data-selection-toggle-target="count"><%= selectable_count %> selected</span>
-            <button type="button"
-                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
-                    data-action="selection-toggle#selectAll">
-              Check all
-            </button>
-            <button type="button"
-                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
-                    data-action="selection-toggle#clearAll">
-              Clear all
-            </button>
-          </div>
+  <% if @result.already_on_target.any? %>
+    <%= form_with url: source_migrations_path, method: :post, data: { turbo: false }, class: "space-y-4" do |f| %>
+      <%= f.hidden_field :from_source_id, value: @from_source.id %>
+      <%= f.hidden_field :to_source_id, value: @to_source.id %>
+      <%= hidden_field_tag "series_ids[]", "" %>
+      <section class="rounded-lg border border-border bg-surface p-5 space-y-3" data-controller="selection-toggle">
+        <h2 class="text-lg font-semibold">Previously linked titles</h2>
+        <p class="text-sm text-muted">These matches already exist in your library. Live availability is checked after switching.</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-sm text-muted" data-selection-toggle-target="count"><%= @result.already_on_target.size %> selected</span>
+          <button type="button" class="min-h-11 px-2 text-sm text-accent" data-action="selection-toggle#selectAll">Select all</button>
+          <button type="button" class="min-h-11 px-2 text-sm text-muted" data-action="selection-toggle#clearAll">Clear all</button>
         </div>
-        <p class="text-sm text-muted">Source priority is updated only for checked series.</p>
-
-        <div class="grid gap-3 sm:grid-cols-2">
-          <% @result.already_on_target.each do |series| %>
-            <% current_count = @series_chapter_counts.fetch([ series.id, @from_source.id ], 0) %>
-            <% target_count = @series_chapter_counts.fetch([ series.id, @to_source.id ], 0) %>
-            <label class="group flex gap-3 rounded-lg border border-border bg-surface-2 p-3 cursor-pointer hover:border-accent/40 hover:bg-surface">
-              <input type="checkbox"
-                     name="series_ids[]"
-                     value="<%= series.id %>"
-                     checked
-                     data-selection-toggle-target="checkbox"
-                     data-action="change->selection-toggle#toggle"
-                     class="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent">
-              <%= render UI::SeriesCoverComponent.new(
-                    url: series.cover_image_url,
-                    fallback_url: series.cover_fallback_url,
-                    alt: "#{series.canonical_title} cover",
-                    size: :sm,
-                    rounded: :md,
-                    class: "shrink-0"
-                  ) %>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-foreground line-clamp-2"><%= series.canonical_title %></p>
-                <dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <dt class="text-muted">Current (<%= @from_source.name %>)</dt>
-                  <dd class="text-foreground tabular-nums"><%= current_count %> chapters</dd>
-                  <dt class="text-muted">Target (<%= @to_source.name %>)</dt>
-                  <dd class="text-success tabular-nums"><%= target_count %> chapters</dd>
-                </dl>
-              </div>
-            </label>
-          <% end %>
-        </div>
+        <% @result.already_on_target.each do |series| %>
+          <label class="flex min-h-11 items-center gap-3 rounded-md border border-border p-3">
+            <input type="checkbox" name="series_ids[]" value="<%= series.id %>" checked data-selection-toggle-target="checkbox" data-action="change->selection-toggle#toggle" class="h-4 w-4 shrink-0">
+            <span class="min-w-0">
+              <span class="block font-medium"><%= series.canonical_title %></span>
+              <span class="text-xs text-muted">Linked to <%= @to_source.name %></span>
+            </span>
+          </label>
+        <% end %>
       </section>
-    <% else %>
-      <section class="rounded-lg border border-warning/30 bg-warning-soft p-6 space-y-2">
-        <h2 class="text-lg font-semibold text-warning">No selectable series for this source pair</h2>
-        <p class="text-sm text-warning/90">
-          There are currently no followed series linked to both <%= @from_source.name %> and <%= @to_source.name %>.
-        </p>
-      </section>
+      <%= f.submit "Replace source for selected series", class: "min-h-11 cursor-pointer rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground" %>
     <% end %>
-
-    <% if auto_link_count.positive? %>
-      <section class="rounded-lg border border-border bg-surface p-6 space-y-4" data-controller="selection-toggle">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-lg font-semibold text-warning">Auto-Link Candidates (<%= auto_link_count %>)</h2>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-muted" data-selection-toggle-target="count">0 selected</span>
-            <button type="button"
-                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
-                    data-action="selection-toggle#selectAll">
-              Check all
-            </button>
-            <button type="button"
-                    class="inline-flex items-center rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-surface-2 cursor-pointer"
-                    data-action="selection-toggle#clearAll">
-              Clear all
-            </button>
-          </div>
-        </div>
-        <p class="text-sm text-muted">These series are not linked on the target source yet. Check them to attempt an exact-title auto-link during migration, or link them manually via per-series migrate.</p>
-
-        <div class="grid gap-3 sm:grid-cols-2">
-          <% @result.link_candidates.each do |series| %>
-            <% current_count = @series_chapter_counts.fetch([ series.id, @from_source.id ], 0) %>
-            <label class="group flex gap-3 rounded-lg border border-border bg-surface-2 p-3 cursor-pointer hover:border-accent/40 hover:bg-surface">
-              <input type="checkbox"
-                     name="series_ids[]"
-                     value="<%= series.id %>"
-                     data-selection-toggle-target="checkbox"
-                     data-action="change->selection-toggle#toggle"
-                     class="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent">
-              <%= render UI::SeriesCoverComponent.new(
-                    url: series.cover_image_url,
-                    fallback_url: series.cover_fallback_url,
-                    alt: "#{series.canonical_title} cover",
-                    size: :sm,
-                    rounded: :md,
-                    class: "shrink-0"
-                  ) %>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold text-foreground line-clamp-2"><%= series.canonical_title %></p>
-                <dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                  <dt class="text-muted">Current (<%= @from_source.name %>)</dt>
-                  <dd class="text-foreground tabular-nums"><%= current_count %> chapters</dd>
-                  <dt class="text-muted">Target (<%= @to_source.name %>)</dt>
-                  <dd class="text-warning tabular-nums">Not linked</dd>
-                </dl>
-                <div class="mt-3">
-                  <%= link_to "Open per-series migrate",
-                              library_series_migration_path(series_slug: series.to_param, from_source_id: @from_source.id),
-                              class: "inline-flex items-center rounded-md border border-border px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-surface" %>
-                </div>
-              </div>
-            </label>
-          <% end %>
-        </div>
-      </section>
-    <% end %>
-
-    <div class="flex items-center gap-3">
-      <% if selectable_count.positive? || auto_link_count.positive? %>
-        <%= f.submit "Execute Migration",
-                     class: "inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent-strong cursor-pointer",
-                     data: { turbo_confirm: "Migrate selected series from #{@from_source.name} to #{@to_source.name}?" } %>
-      <% end %>
-
-      <%= link_to "Back", source_migrations_path,
-                  class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80" %>
-    </div>
   <% end %>
+
+  <% if @result.no_match.any? %>
+    <section class="rounded-lg border border-border bg-surface p-5 space-y-3">
+      <h2 class="text-lg font-semibold">Review these titles individually</h2>
+      <p class="text-sm text-muted">These titles have no existing link to the replacement. Review a match before switching to avoid selecting a different edition.</p>
+      <% @result.no_match.each do |series| %>
+        <%= link_to series.canonical_title, library_series_migration_path(series_slug: series.to_param, from_source_id: @from_source.id, to_source_id: @to_source.id), class: "flex min-h-11 items-center text-accent hover:underline" %>
+      <% end %>
+    </section>
+  <% end %>
+  <% if @result.already_on_target.empty? && @result.no_match.empty? %>
+    <%= render UI::EmptyStateComponent.new(title: "No followed series to replace", description: "Choose a provider used by a series you follow.", compact: true) %>
+  <% end %>
+  <%= link_to "Back to providers", source_migrations_path(from_source_id: @from_source.id), class: "inline-flex min-h-11 items-center text-muted hover:text-foreground" %>
 </div>

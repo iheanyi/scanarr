@@ -1,0 +1,26 @@
+<div class="max-w-4xl space-y-6">
+  <%= render UI::PageHeaderComponent.new(title: "Source replacement results", description: "#{@from_source.name} → #{@to_source.name}") %>
+  <p class="text-sm text-muted">Saved chapters and reading history stay in your library. Changed series are being checked for chapters in the background.</p>
+  <div class="rounded-lg border border-border bg-surface p-5">
+    <p><strong><%= @result.migrated.size %></strong> switched · <strong><%= @result.already_on_target.size %></strong> already preferred · <strong><%= @result.no_match.size %></strong> need a match</p>
+  </div>
+  <% if @result.errors.any? %>
+    <%= render UI::FlashMessageComponent.new(variant: :warning) do %>
+      <p class="font-semibold">Some replacements could not finish</p>
+      <% @result.errors.each do |error| %><p class="mt-2 break-words text-sm"><%= error %></p><% end %>
+    <% end %>
+  <% end %>
+  <% if @result.no_match.any? %>
+    <section class="rounded-lg border border-border bg-surface p-5 space-y-3">
+      <h2 class="font-semibold">Choose a match for these titles</h2>
+      <p class="text-sm text-muted">These series are unchanged. Review a replacement individually.</p>
+      <% @result.no_match.each do |series| %>
+        <%= link_to series.canonical_title, library_series_migration_path(series_slug: series.to_param, from_source_id: @from_source.id), class: "flex min-h-11 items-center text-accent hover:underline" %>
+      <% end %>
+    </section>
+  <% end %>
+  <div class="flex flex-wrap gap-4">
+    <%= link_to "Back to library", library_path, class: "inline-flex min-h-11 items-center text-accent hover:underline" %>
+    <%= link_to "Review another replacement", source_migrations_path(from_source_id: @from_source.id), class: "inline-flex min-h-11 items-center text-muted hover:text-foreground" %>
+  </div>
+</div>

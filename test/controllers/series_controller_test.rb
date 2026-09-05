@@ -65,7 +65,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes @response.body, "No chapters available from this source yet"
-    assert_includes @response.body, source_migrations_path(from_source_id: source.id)
+    assert_includes @response.body, library_series_migration_path(series_slug: series.to_param, from_source_id: source.id)
     assert_includes @response.body, source_search_path(source_slug: source.slug, q: series.canonical_title)
   end
 
@@ -107,6 +107,7 @@ class SeriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_show_renders_failed_download_error_dialog
+    file_assets(:one).update!(download_status: "failed")
     series = series(:one)
     chapter = chapters(:one)
     release = chapter.releases.create!(source: sources(:one), format: "pages", source_url: chapter.source_url)

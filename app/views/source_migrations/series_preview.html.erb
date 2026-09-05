@@ -1,94 +1,43 @@
-<div class="space-y-8 max-w-5xl">
-  <%= render UI::PageHeaderComponent.new(
-    title: "Migrate #{@series.canonical_title}",
-    description: "Compare source chapter counts and choose where this series should migrate."
-  ) %>
+<div class="max-w-4xl space-y-6" data-controller="source-replacement">
+  <%= link_to "Back to #{@series.canonical_title}", library_series_path(series_slug: @series.to_param), class: "inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground" %>
+  <%= render UI::PageHeaderComponent.new(title: "Replace source", description: @series.canonical_title) %>
 
-  <section class="rounded-lg border border-border bg-surface p-6">
-    <dl class="grid gap-2 text-sm sm:grid-cols-2">
-      <dt class="text-muted">Current source</dt>
-      <dd class="font-semibold text-foreground"><%= @from_source.name %></dd>
-      <dt class="text-muted">Current chapter count</dt>
-      <dd class="font-semibold text-foreground tabular-nums"><%= @current_chapter_count %></dd>
-    </dl>
+  <section class="rounded-lg border border-border bg-surface p-5 space-y-3">
+    <p class="text-sm text-muted">Current source <strong class="text-foreground"><%= @from_source.name %></strong></p>
+    <p class="text-sm text-foreground">Your saved chapters, reading history, and download settings stay in your library. The replacement becomes your preferred source for new chapter checks and downloads.</p>
+    <p class="text-xs text-muted">Chapter numbering and translations can differ. Review the matching title before switching; your saved pages are not replaced.</p>
   </section>
 
-  <% if @discovery_errors.any? %>
-    <%= render UI::FlashMessageComponent.new(variant: :warning) do %>
-      <p class="font-medium text-pretty">Some sources could not be checked:</p>
-      <ul class="mt-1 space-y-0.5 text-xs text-warning/80">
-        <% @discovery_errors.first(6).each do |error| %>
-          <li><%= error %></li>
-        <% end %>
-      </ul>
-    <% end %>
+  <section class="rounded-lg border border-border bg-surface p-5 space-y-4">
+    <h2 class="text-lg font-semibold">Choose the matching manga</h2>
+    <p class="text-sm text-muted">We check all available providers and show matches as they arrive. Compare titles, covers, and editions before choosing. Your current source stays unchanged until you select a match.</p>
+    <div>
+      <label for="replacement-provider-filter" class="mb-1 block text-sm font-medium">Show providers</label>
+      <%= select_tag :provider_filter, options_for_select([ [ "All providers", "" ] ] + @target_sources.map { |source| [ source.display_name_with_content_rating, source.id ] }, params[:to_source_id]), id: "replacement-provider-filter", class: "min-h-11 w-full rounded-md border border-border bg-surface-2 px-3 text-sm", data: { source_replacement_target: "filter", action: "change->source-replacement#filter" } %>
+    </div>
+    <p class="text-sm text-muted" role="status" aria-live="polite" data-source-replacement-target="status">Checking providers…</p>
+    <p class="text-xs text-muted">Disabled and broken providers are excluded. Results are limited to what each provider returns for this title.</p>
+    <noscript><p class="text-sm text-warning">Enable JavaScript to check providers on this page.</p></noscript>
+  </section>
+
+  <% if @target_sources.empty? %>
+    <p class="text-sm text-muted">No replacement providers are available. An administrator can enable a working provider in settings.</p>
   <% end %>
-
-  <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
-    <h2 class="text-lg font-semibold">Target Source Candidates</h2>
-
-    <% if @candidates.any? %>
-      <div class="space-y-3">
-        <% @candidates.each do |candidate| %>
-          <div class="rounded-md border border-border bg-surface-2 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div class="space-y-1">
-                <p class="font-semibold text-foreground"><%= candidate.source.name %></p>
-                <p class="text-xs text-muted">
-                  Match: <%= candidate.result.title %>
-                  <% if candidate.confidence >= 0.9 %>
-                    (high confidence)
-                  <% elsif candidate.confidence >= 0.7 %>
-                    (medium confidence)
-                  <% else %>
-                    (low confidence)
-                  <% end %>
-                </p>
-                <p class="text-xs text-muted tabular-nums">
-                  <% if candidate.chapter_count.present? %>
-                    <%= candidate.chapter_count %> <%= "chapter".pluralize(candidate.chapter_count) %>
-                  <% else %>
-                    Chapter count unavailable
-                  <% end %>
-                </p>
-              </div>
-
-              <% if candidate.linked %>
-                <%= form_with url: library_series_migrate_path(series_slug: @series.to_param), method: :post do |f| %>
-                  <%= f.hidden_field :from_source_id, value: @from_source.id %>
-                  <%= f.hidden_field :to_source_id, value: candidate.source.id %>
-                  <%= f.submit "Migrate",
-                               class: "inline-flex items-center gap-2 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-foreground hover:bg-accent-strong cursor-pointer",
-                               data: { turbo_confirm: "Migrate #{@series.canonical_title} from #{@from_source.name} to #{candidate.source.name}?" } %>
-                <% end %>
-              <% else %>
-                <%= form_with url: library_series_migrate_path(series_slug: @series.to_param), method: :post do |f| %>
-                  <%= f.hidden_field :from_source_id, value: @from_source.id %>
-                  <%= f.hidden_field :to_source_id, value: candidate.source.id %>
-                  <%= f.hidden_field :target_series_url, value: candidate.result.url %>
-                  <%= f.submit "Link & Migrate",
-                               class: "inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-surface cursor-pointer",
-                               data: { turbo_confirm: "Link #{@series.canonical_title} to #{candidate.source.name} and migrate?" } %>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    <% else %>
-      <%= render UI::EmptyStateComponent.new(
-        title: "No source candidates found",
-        description: "Try again later or import this series from another source first.",
-        compact: true
-      ) do |empty| %>
-        <% empty.with_icon do %>
-          <%= icon "search", class: "h-6 w-6" %>
-        <% end %>
-      <% end %>
-    <% end %>
-  </section>
-
-  <%= link_to "Back to Series",
-              library_series_path(series_slug: @series.to_param),
-              class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80" %>
+  <div class="space-y-4" data-source-replacement-target="matches"></div>
+  <details class="rounded-lg border border-border bg-surface p-5" data-provider-checks>
+    <summary class="min-h-11 cursor-pointer text-sm font-semibold">Provider checks and retries</summary>
+    <div class="space-y-3" data-source-replacement-target="checks">
+  <% @target_sources.each do |source| %>
+    <section class="rounded-lg border border-border bg-surface p-5 space-y-4"
+             data-source-replacement-target="provider"
+             data-source-id="<%= source.id %>"
+             data-source-url="<%= library_series_migration_path(series_slug: @series.to_param, from_source_id: @from_source.id, to_source_id: source.id, matches_only: 1) %>">
+      <h2 class="text-lg font-semibold"><%= source.display_name_with_content_rating %></h2>
+      <div data-provider-content><p class="text-sm text-muted">Waiting to check…</p></div>
+      <button type="button" hidden data-provider-retry class="min-h-11 text-sm text-accent hover:underline" data-action="source-replacement#retry">Retry this provider</button>
+    </section>
+  <% end %>
+    </div>
+  </details>
+  <p class="text-sm text-muted">None of these is right? You can <%= link_to "keep your current source", library_series_path(series_slug: @series.to_param), class: "text-accent hover:underline" %>.</p>
 </div>

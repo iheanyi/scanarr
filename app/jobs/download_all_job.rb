@@ -13,28 +13,26 @@ class DownloadAllJob < ApplicationJob
       return
     end
 
-    chapters = series.chapters.where(source: source).includes(releases: :file_asset)
+    chapters = series.chapters.where(source: source)
+      .or(series.chapters.where(id: Release.where(source: source).select(:chapter_id)))
+      .includes(releases: :file_asset)
     series_source = series.series_sources.find_by(source: source)
     enqueued = 0
     seen_numbers = Set.new
 
-    chapters.order(created_at: :desc).find_each do |chapter|
+    chapters.find_each(cursor: [ :created_at, :id ], order: [ :desc, :desc ]) do |chapter|
       # Skip duplicate chapter numbers (e.g. different language/group variants)
       next if seen_numbers.include?(chapter.chapter_number)
       seen_numbers.add(chapter.chapter_number)
-      next if chapter.source_url.blank?
+      releases = chapter.releases.to_a
+      release = releases.select { |candidate| candidate.source_id == source.id }.max_by(&:created_at)
+      source_url = release&.source_url.presence || (chapter.source_url if chapter.source_id == source.id)
+      next if source_url.blank?
 
-      # Skip if already downloaded or in progress
-      latest_release = chapter.releases.to_a.max_by(&:created_at)
-      file_asset = latest_release&.file_asset
-      next if file_asset&.download_status.in?(%w[queued pending downloading complete])
+      # Preserve downloads from every provider. Replacement only fills gaps.
+      next if releases.any? { |candidate| candidate.file_asset&.download_status.in?(%w[queued pending downloading complete]) }
 
-      release = latest_release || chapter.releases.find_or_create_by!(source: source)
-
-      # Skip if this release already has a complete/in-progress download
-      if release.file_asset&.download_status.in?(%w[queued pending downloading complete])
-        next
-      end
+      release ||= chapter.releases.create!(source: source, source_url: source_url, format: "pages")
 
       chapter_path = LibraryPathBuilder.new(series: series, source: source).chapter_path(chapter)
       existing_file_asset = release.file_asset
@@ -62,7 +60,7 @@ class DownloadAllJob < ApplicationJob
       broadcast_admin_download_update(file_asset, existing: existing_file_asset.present?)
 
       DownloadChapterJob.perform_later(
-        chapter.source_url,
+        source_url,
         source_key: source.key,
         series_title: series.canonical_title,
         source_series_id: series_source&.source_series_id,
@@ -82,7 +80,7 @@ class DownloadAllJob < ApplicationJob
 
   def broadcast_chapter_update(chapter, source, series)
     chapter.reload
-    latest_release = chapter.releases.includes(:file_asset).order(created_at: :desc).first
+    latest_release = chapter.releases.where(source: source).includes(:file_asset).order(created_at: :desc).first
     Turbo::StreamsChannel.broadcast_replace_to(
       [ series, :downloads ],
       target: ActionView::RecordIdentifier.dom_id(chapter),

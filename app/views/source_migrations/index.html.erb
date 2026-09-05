@@ -1,12 +1,12 @@
 <div class="space-y-8 max-w-4xl">
   <%= render UI::PageHeaderComponent.new(
-    title: "Source Migration",
-    description: "Monitor source health and migrate your library between sources."
+    title: "Replace sources",
+    description: "Change where your followed manga comes from. Saved chapters and reading history stay in your library."
   ) %>
 
   <%# Source Health Dashboard %>
   <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
-    <h2 class="text-lg font-semibold">Source Health</h2>
+    <h2 class="text-lg font-semibold">Your followed series by provider</h2>
 
     <div class="divide-y divide-border">
       <% @sources.each do |source| %>
@@ -59,18 +59,18 @@
   <%# Migration Tool %>
   <section class="rounded-lg border border-border bg-surface p-6 space-y-4">
     <div>
-      <h2 class="text-lg font-semibold">Migrate Source</h2>
+      <h2 class="text-lg font-semibold">Replace a provider for multiple series</h2>
       <p class="text-sm text-muted mt-1">
-        Move your followed series from one source to another. Only series you follow
-        that exist on both sources will be migrated.
+        Review the series you follow, then select which ones should use a replacement provider.
+        Existing matches can switch immediately; other titles need matching first.
       </p>
     </div>
 
-    <%= form_with url: preview_source_migrations_path, method: :post, class: "space-y-4" do |f| %>
+    <%= form_with url: preview_source_migrations_path, method: :post, data: { turbo: false }, class: "space-y-4" do |f| %>
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
-          <label class="block text-sm font-medium text-foreground mb-1">From Source</label>
-          <select name="from_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
+          <label for="from_source_id" class="block text-sm font-medium text-foreground mb-1">Current provider</label>
+          <select id="from_source_id" required name="from_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
             <option value="">Select source...</option>
             <% @sources.each do |source| %>
               <option value="<%= source.id %>" <%= "selected" if params[:from_source_id].to_s == source.id.to_s %>><%= source.display_name_with_content_rating %></option>
@@ -79,17 +79,17 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-foreground mb-1">To Source</label>
-          <select name="to_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
+          <label for="to_source_id" class="block text-sm font-medium text-foreground mb-1">Replacement provider</label>
+          <select id="to_source_id" required name="to_source_id" class="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/30">
             <option value="">Select source...</option>
-            <% @sources.each do |source| %>
+            <% @target_sources.each do |source| %>
               <option value="<%= source.id %>" <%= "selected" if params[:to_source_id].to_s == source.id.to_s %>><%= source.display_name_with_content_rating %></option>
             <% end %>
           </select>
         </div>
       </div>
 
-      <%= f.submit "Preview Migration",
+      <%= f.submit "Review series",
                     class: "inline-flex items-center gap-2 rounded-md border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-2/80 cursor-pointer" %>
     <% end %>
   </section>
