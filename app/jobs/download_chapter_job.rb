@@ -245,12 +245,11 @@ class DownloadChapterJob < ApplicationJob
       # Pre-process the WebP display variant so it's ready before the user opens the chapter
       page.preprocess_display_variant!
 
-      @file_asset.update!(pages_downloaded: position)
+      @file_asset.increment!(:pages_downloaded, touch: true)
 
       # Broadcast progress updates every 5 pages to reduce rendering overhead
       # Each broadcast renders a full partial, so less frequent = less CPU in the job
       if (position % 5).zero? || position == @pages.size
-        broadcast_admin_download_update
         broadcast_chapter_update(@chapter, @source)
       end
 
@@ -264,34 +263,37 @@ class DownloadChapterJob < ApplicationJob
     return if skip_download?
     return if stop_if_cancelled!
 
-    pages = @file_asset.pages.includes(image_attachment: :blob).order(:position)
-    page_count = pages.count
+    page_count = @file_asset.pages.joins(:image_attachment).count
+    expected = @file_asset.pages_expected.to_i
 
-    # Verify blobs actually exist on disk before marking complete
-    # (page.image.attached? only checks the DB association, not the actual file)
-    sample_pages = [ pages.first, pages.last ].compact.uniq
-    missing = sample_pages.any? { |p| p.image.blob && !ActiveStorage::Blob.service.exist?(p.image.blob.key) }
-
-    if missing
+    if expected.zero? || page_count != expected || @file_asset.pages.count != expected
       @file_asset.update!(
         page_count: page_count,
         download_status: "failed",
-        pages_downloaded: @file_asset.pages_downloaded,
-        download_error: "Download verification failed: blob files missing from storage"
+        pages_downloaded: page_count,
+        download_error: "Download incomplete: expected #{expected} pages, downloaded #{page_count}"
       )
-      Rails.logger.error "DownloadChapterJob: Blob verification failed for file_asset #{@file_asset.id}"
       broadcast_chapter_update(@chapter, @source)
       return
     end
 
+    # Packaging opens and verifies every image through its configured storage
+    # service. Only publish completion after the archive is successfully stored.
+    @file_asset.archive.purge if @file_asset.archive.attached?
+    ChapterPackager.new(@file_asset).package!
     @file_asset.update!(
       page_count: page_count,
       download_status: "complete",
-      pages_downloaded: page_count
+      pages_downloaded: page_count,
+      download_error: nil
     )
-    @file_asset.archive.purge if @file_asset.archive.attached?
-    ChapterPackager.new(@file_asset).package!
 
+    broadcast_chapter_update(@chapter, @source)
+  rescue ActiveStorage::FileNotFoundError, ActiveStorage::IntegrityError => error
+    @file_asset.update!(
+      download_status: "failed",
+      download_error: "Download verification failed: #{error.class}"
+    )
     broadcast_chapter_update(@chapter, @source)
   end
 

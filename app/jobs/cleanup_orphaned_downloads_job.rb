@@ -12,7 +12,8 @@ class CleanupOrphanedDownloadsJob < ApplicationJob
       first_page = file_asset.pages.includes(image_attachment: :blob).order(:position).first
       next unless first_page&.image&.blob
 
-      unless ActiveStorage::Blob.service.exist?(first_page.image.blob.key)
+      blob = first_page.image.blob
+      unless blob.service.exist?(blob.key)
         file_asset.update!(
           download_status: "failed",
           download_error: FileAsset::ORPHANED_BLOBS_ERROR

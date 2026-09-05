@@ -84,6 +84,7 @@ services:
   sidekiq:
     <<: *app
     restart: unless-stopped
+    stop_grace_period: 30s
     command: bundle exec sidekiq -C config/sidekiq.yml
     depends_on:
       postgres:

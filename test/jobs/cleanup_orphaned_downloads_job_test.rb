@@ -32,4 +32,29 @@ class CleanupOrphanedDownloadsJobTest < ActiveJob::TestCase
     assert_equal "complete", file_asset.download_status
     assert_nil file_asset.download_error
   end
+
+  test "checks the original blob service after changing the default storage" do
+    file_asset = file_assets(:one)
+    file_asset.update!(download_status: "complete", download_error: nil)
+    blob = file_asset.pages.order(:position).first.image.blob
+    original_service = ActiveStorage::Blob.service
+
+    Dir.mktmpdir("changed-default-storage") do |directory|
+      ActiveStorage::Blob.service = ActiveStorage::Service.configure(
+        :changed_default,
+        changed_default: { service: "Disk", root: directory }
+      )
+
+      assert blob.service.exist?(blob.key)
+      assert_not ActiveStorage::Blob.service.exist?(blob.key)
+
+      CleanupOrphanedDownloadsJob.perform_now
+      file_asset.reload
+
+      assert_equal "complete", file_asset.download_status
+      assert_nil file_asset.download_error
+    end
+  ensure
+    ActiveStorage::Blob.service = original_service
+  end
 end

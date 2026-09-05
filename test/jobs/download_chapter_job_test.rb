@@ -116,6 +116,76 @@ class DownloadChapterJobTest < ActiveSupport::TestCase
     assert_equal 2, release.file_asset.pages_expected
   end
 
+  def test_partial_download_is_failed_instead_of_published_as_complete
+    http = FakeHttpClient.new("https://img.example.com/page-2.jpg" => tiny_png)
+    successful_get = http.method(:get)
+    http.define_singleton_method(:get) do |url|
+      if url.end_with?("page-1.jpg")
+        FakeHttpClient::Response.new(status: 503, body: "Unavailable", headers: {})
+      else
+        successful_get.call(url)
+      end
+    end
+
+    release = DownloadChapterJob.perform_now(
+      "https://weebcentral.com/chapters/incomplete",
+      source_key: "weeb_central", series_title: "Incomplete chapter", chapter_number: "1",
+      adapter: FakeAdapter.new, http: http
+    )
+
+    asset = release.file_asset.reload
+
+    assert_equal "failed", asset.download_status
+    assert_equal 2, asset.pages_expected
+    assert_equal 1, asset.pages_downloaded
+    assert_equal [ 2 ], asset.pages.pluck(:position)
+    assert_match "expected 2 pages, downloaded 1", asset.download_error
+    assert_not asset.archive.attached?
+  end
+
+  def test_empty_page_list_is_failed_instead_of_published_as_complete
+    adapter = FakeAdapter.new
+    adapter.define_singleton_method(:pages) { |_url| [] }
+
+    release = DownloadChapterJob.perform_now(
+      "https://weebcentral.com/chapters/empty",
+      source_key: "weeb_central", series_title: "Empty chapter", chapter_number: "1",
+      adapter: adapter
+    )
+
+    asset = release.file_asset.reload
+
+    assert_equal "failed", asset.download_status
+    assert_equal 0, asset.pages_downloaded
+    assert_not asset.archive.attached?
+  end
+
+  def test_missing_page_blob_cannot_publish_a_complete_download
+    http = FakeHttpClient.new(
+      "https://img.example.com/page-1.jpg" => tiny_png,
+      "https://img.example.com/page-2.jpg" => tiny_png
+    )
+    job = DownloadChapterJob.new(
+      "https://weebcentral.com/chapters/missing-blob",
+      source_key: "weeb_central", series_title: "Missing blob", chapter_number: "1",
+      adapter: FakeAdapter.new, http: http
+    ).tap do |instance|
+      instance.define_singleton_method(:finalize) do
+        page = @file_asset.pages.first
+        page.image.blob.service.delete(page.image.blob.key)
+        super()
+      end
+    end
+
+    job.perform_now
+
+    asset = Release.find_by!(source_url: "https://weebcentral.com/chapters/missing-blob").file_asset
+
+    assert_equal "failed", asset.download_status
+    assert_match "Download verification failed", asset.download_error
+    assert_not asset.archive.attached?
+  end
+
   def test_perform_later_runs_under_sidekiq_adapter_with_continuable_steps
     chapter_url = "https://weebcentral.com/chapters/sidekiq-#{SecureRandom.hex(4)}"
     adapter = FakeAdapter.new
